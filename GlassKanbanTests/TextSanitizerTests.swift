@@ -33,8 +33,8 @@ final class TextSanitizerTests: XCTestCase {
     }
 
     func testPreviewSkipsStatusTag() {
-        XCTAssertEqual(TextSanitizer.notesPreview("Wichtige Notiz\n#next"), "Wichtige Notiz")
-        XCTAssertEqual(TextSanitizer.notesPreview("#progress"), "")
+        XCTAssertEqual(TextSanitizer.notesPreview("Wichtige Notiz\n#nächstes"), "Wichtige Notiz")
+        XCTAssertEqual(TextSanitizer.notesPreview("#bearbeitung"), "")
     }
 
     func testPreviewStripsInlineURL() {

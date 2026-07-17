@@ -4,6 +4,7 @@ import SwiftUI
 /// two lines, the notes preview always reserves one (spec: uniform cards).
 struct CardView: View {
     let card: KanbanCard
+    @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
@@ -38,7 +39,32 @@ struct CardView: View {
         }
         .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
         .contentShape(RoundedRectangle(cornerRadius: 11))
+        .onTapGesture(count: 2) {
+            openInReminders()
+        }
+        .contextMenu {
+            Button("In Erinnerungen öffnen") {
+                openInReminders()
+            }
+        }
+        .help("Doppelklick: in Erinnerungen öffnen")
         .accessibilityElement(children: .combine)
+        .accessibilityAction(named: "In Erinnerungen öffnen") {
+            openInReminders()
+        }
+    }
+
+    /// Editing happens in the Reminders app (spec: the board is read-only
+    /// apart from drag & drop). Deep link to this reminder; if no link can
+    /// be resolved, at least bring Reminders to the front.
+    private func openInReminders() {
+        if let url = store.deepLinkURL(forCardID: card.id),
+           NSWorkspace.shared.open(url) {
+            return
+        }
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.reminders") {
+            NSWorkspace.shared.openApplication(at: appURL, configuration: NSWorkspace.OpenConfiguration())
+        }
     }
 
     private var cardBackground: AnyShapeStyle {

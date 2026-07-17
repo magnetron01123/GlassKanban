@@ -74,8 +74,8 @@ anfasst.
 | Spalte (intern/technisch) | Anzeige (Deutsch) | Hashtag in den Notizen |
 |---|---|---|
 | Backlog | Backlog | kein Tag (Standard/Fallback) |
-| Next | Als Nächstes | `#next` |
-| In Progress | In Bearbeitung | `#progress` |
+| Next | Als Nächstes | `#nächstes` |
+| In Progress | In Bearbeitung | `#bearbeitung` |
 | Done | Erledigt | — (`isCompleted = true`, kein Tag) |
 
 Backlog bekommt bewusst **keinen** eigenen Hashtag (kein `#backlog`), sondern bedeutet immer
@@ -87,8 +87,8 @@ und ohne Tag) würden sonst auseinanderlaufen können.
 | Ziel-Spalte | Aktion in den Notizen |
 |---|---|
 | Backlog | vorhandene Status-Zeile entfernen |
-| Als Nächstes | Status-Zeile entfernen, `#next` als neue, eigene letzte Zeile anhängen |
-| In Bearbeitung | Status-Zeile entfernen, `#progress` als neue, eigene letzte Zeile anhängen |
+| Als Nächstes | Status-Zeile entfernen, `#nächstes` als neue, eigene letzte Zeile anhängen |
+| In Bearbeitung | Status-Zeile entfernen, `#bearbeitung` als neue, eigene letzte Zeile anhängen |
 | Erledigt | `isCompleted = true` setzen, Status-Zeile entfernen |
 
 Der restliche Notiztext bleibt bei jeder Aktion unverändert; der Hashtag wird von der App
@@ -248,7 +248,7 @@ nativen Mac-App statt eines austauschbaren Tools?
 ## Bekannte Risiken / offene Punkte
 
 - Nutzer muss beim ersten Start den Vollzugriff auf Erinnerungen im Systemdialog genehmigen.
-- Enthält der eigene Notiztext zufällig bereits `#backlog`/`#next`/`#progress`, würde das als
+- Enthält der eigene Notiztext zufällig bereits `#backlog`/`#nächstes`/`#bearbeitung`, würde das als
   Status interpretiert — in der Praxis unwahrscheinlich, aber beim Hashtag-Parsing zu bedenken.
 - Werden mehrere erkannte Hashtags gleichzeitig in den Notizen gefunden (z. B. durch manuelles
   Bearbeiten in Reminders), braucht es eine klare Regel (z. B. der zuletzt hinzugefügte/erste

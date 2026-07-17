@@ -24,8 +24,8 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
     /// Done is expressed via `isCompleted`.
     var tag: String? {
         switch self {
-        case .next: "#next"
-        case .inProgress: "#progress"
+        case .next: "#nächstes"
+        case .inProgress: "#bearbeitung"
         case .backlog, .done: nil
         }
     }

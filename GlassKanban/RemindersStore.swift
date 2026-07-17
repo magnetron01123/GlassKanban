@@ -141,14 +141,16 @@ final class RemindersStore: ObservableObject {
     }
 
     /// Data hygiene from the spec: completed reminders keep no stale status
-    /// tag, and multiple tags are normalized to a single one (last tag wins).
-    /// Converges: after one rewrite there is at most one tag, so this never
-    /// causes a save loop via EKEventStoreChanged.
+    /// tag, multiple tags are normalized to a single one (last tag wins),
+    /// and legacy English tags are migrated to the German ones.
+    /// Converges: after one rewrite there is exactly one current-format tag
+    /// (or none), so this never causes a save loop via EKEventStoreChanged.
     private func performTagHygiene(on reminders: [EKReminder]) {
         var dirty = false
         for reminder in reminders {
             let needsCleanup = (reminder.isCompleted && StatusTagger.hasStatusTag(reminder.notes))
                 || StatusTagger.tagCount(reminder.notes) > 1
+                || StatusTagger.hasLegacyTag(reminder.notes)
             guard needsCleanup else { continue }
             let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
             reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
@@ -214,5 +216,12 @@ final class RemindersStore: ObservableObject {
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all
+    }
+
+    /// URL that opens this card's reminder directly in the Reminders app,
+    /// or nil if no deep link could be resolved.
+    func deepLinkURL(forCardID id: String) -> URL? {
+        guard let reminder = eventStore.calendarItem(withIdentifier: id) as? EKReminder else { return nil }
+        return ReminderDeepLink.url(for: reminder)
     }
 }

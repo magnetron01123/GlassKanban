@@ -11,14 +11,25 @@ import Foundation
 ///   as its own last line. Backlog and Done write no tag at all.
 enum StatusTagger {
 
-    static let nextRegex = #/#next\b/#.ignoresCase()
-    static let progressRegex = #/#progress\b/#.ignoresCase()
+    /// Written tag is "#nächstes"; the umlaut-free spelling "#naechstes"
+    /// is accepted when reading (e.g. typed on the go without umlauts).
+    static let nextRegex = #/#n(?:ä|ae)chstes\b/#.ignoresCase()
+    static let progressRegex = #/#bearbeitung\b/#.ignoresCase()
+
+    /// Legacy English tags from earlier builds. Recognized when reading and
+    /// normalized to the German tags by the next hygiene pass.
+    static let legacyNextRegex = #/#next\b/#.ignoresCase()
+    static let legacyProgressRegex = #/#progress\b/#.ignoresCase()
+
+    private static var nextRegexes: [Regex<Substring>] { [nextRegex, legacyNextRegex] }
+    private static var progressRegexes: [Regex<Substring>] { [progressRegex, legacyProgressRegex] }
+    static var allTagRegexes: [Regex<Substring>] { nextRegexes + progressRegexes }
 
     static func status(fromNotes notes: String?, isCompleted: Bool) -> KanbanStatus {
         if isCompleted { return .done }
         guard let notes, !notes.isEmpty else { return .backlog }
-        let lastNext = notes.ranges(of: nextRegex).last
-        let lastProgress = notes.ranges(of: progressRegex).last
+        let lastNext = lastRange(in: notes, of: nextRegexes)
+        let lastProgress = lastRange(in: notes, of: progressRegexes)
         switch (lastNext, lastProgress) {
         case (nil, nil):
             return .backlog
@@ -31,9 +42,20 @@ enum StatusTagger {
         }
     }
 
+    private static func lastRange(in text: String, of regexes: [Regex<Substring>]) -> Range<String.Index>? {
+        regexes
+            .flatMap { text.ranges(of: $0) }
+            .max { $0.lowerBound < $1.lowerBound }
+    }
+
     static func tagCount(_ notes: String?) -> Int {
         guard let notes else { return 0 }
-        return notes.ranges(of: nextRegex).count + notes.ranges(of: progressRegex).count
+        return allTagRegexes.reduce(0) { $0 + notes.ranges(of: $1).count }
+    }
+
+    static func hasLegacyTag(_ notes: String?) -> Bool {
+        guard let notes else { return false }
+        return notes.contains(legacyNextRegex) || notes.contains(legacyProgressRegex)
     }
 
     static func hasStatusTag(_ notes: String?) -> Bool {
@@ -63,8 +85,9 @@ enum StatusTagger {
         text.components(separatedBy: "\n")
             .map { line in
                 var cleaned = line
-                cleaned.replace(nextRegex, with: "")
-                cleaned.replace(progressRegex, with: "")
+                for regex in allTagRegexes {
+                    cleaned.replace(regex, with: "")
+                }
                 guard cleaned != line else { return line }
                 cleaned.replace(#/[ \t]{2,}/#, with: " ")
                 return cleaned.trimmingCharacters(in: .whitespaces)

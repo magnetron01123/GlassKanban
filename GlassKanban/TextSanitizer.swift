@@ -24,8 +24,9 @@ enum TextSanitizer {
             .map { line in
                 var cleaned = line
                 cleaned.replace(urlRegex, with: "")
-                cleaned.replace(StatusTagger.nextRegex, with: "")
-                cleaned.replace(StatusTagger.progressRegex, with: "")
+                for regex in StatusTagger.allTagRegexes {
+                    cleaned.replace(regex, with: "")
+                }
                 cleaned.replace(#/\s{2,}/#, with: " ")
                 return cleaned.trimmingCharacters(in: .whitespaces)
             }
