@@ -37,8 +37,8 @@ Spaltenwechsel unverändert.
 | Spalte (technisch) | Anzeige (Deutsch) | Hashtag in den Notizen |
 |---|---|---|
 | Backlog | Backlog | kein Tag (Standard/Fallback) |
-| Next | Als Nächstes | `#nächstes` |
-| In Progress | In Bearbeitung | `#bearbeitung` |
+| Next | Als Nächstes | `#alsnächstes` |
+| In Progress | In Bearbeitung | `#inbearbeitung` |
 | Done | Erledigt | — (`isCompleted = true`, kein Tag) |
 
 **Schreiben (bei Drag & Drop):**
@@ -46,8 +46,8 @@ Spaltenwechsel unverändert.
 | Ziel-Spalte | Aktion in den Notizen |
 |---|---|
 | Backlog | vorhandene Status-Zeile entfernen |
-| Als Nächstes | Status-Zeile entfernen, `#nächstes` als neue, eigene letzte Zeile anhängen |
-| In Bearbeitung | Status-Zeile entfernen, `#bearbeitung` als neue, eigene letzte Zeile anhängen |
+| Als Nächstes | Status-Zeile entfernen, `#alsnächstes` als neue, eigene letzte Zeile anhängen |
+| In Bearbeitung | Status-Zeile entfernen, `#inbearbeitung` als neue, eigene letzte Zeile anhängen |
 | Erledigt | `isCompleted = true` setzen, Status-Zeile entfernen |
 
 **Lesen:** Hashtag wird an beliebiger Stelle im Notizen-Text gesucht (nicht nur letzte Zeile).
@@ -94,7 +94,7 @@ Sortierung innerhalb einer Spalte nach Fälligkeitsdatum.
 **Links werden immer ausgeblendet:** Bevor Titel oder Notizen angezeigt werden, entfernt die
 App alle URL-artigen Textteile aus der Anzeige (z. B. per Regex-Erkennung). Das betrifft nur
 die Darstellung — der eigentliche Reminders-Eintrag bleibt unverändert, es wird nichts in
-EventKit zurückgeschrieben. Der Status-Hashtag (`#nächstes`/`#bearbeitung`) wird aus der
+EventKit zurückgeschrieben. Der Status-Hashtag (`#alsnächstes`/`#inbearbeitung`) wird aus der
 Notizen-Vorschau ebenfalls immer herausgefiltert, da er ein internes Steuerzeichen ist, kein
 echter Notizinhalt.
 

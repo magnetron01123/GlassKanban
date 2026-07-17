@@ -11,18 +11,25 @@ import Foundation
 ///   as its own last line. Backlog and Done write no tag at all.
 enum StatusTagger {
 
-    /// Written tag is "#nächstes"; the umlaut-free spelling "#naechstes"
+    /// Written tag is "#alsnächstes"; the umlaut-free spelling "#alsnaechstes"
     /// is accepted when reading (e.g. typed on the go without umlauts).
-    static let nextRegex = #/#n(?:ä|ae)chstes\b/#.ignoresCase()
-    static let progressRegex = #/#bearbeitung\b/#.ignoresCase()
+    static let nextRegex = #/#alsn(?:ä|ae)chstes\b/#.ignoresCase()
+    static let progressRegex = #/#inbearbeitung\b/#.ignoresCase()
 
-    /// Legacy English tags from earlier builds. Recognized when reading and
-    /// normalized to the German tags by the next hygiene pass.
-    static let legacyNextRegex = #/#next\b/#.ignoresCase()
-    static let legacyProgressRegex = #/#progress\b/#.ignoresCase()
+    /// Tags from earlier builds (English, then a shorter German form).
+    /// Recognized when reading and normalized to the current tags above by
+    /// the next hygiene pass.
+    static let legacyNextRegexes: [Regex<Substring>] = [
+        #/#n(?:ä|ae)chstes\b/#.ignoresCase(),
+        #/#next\b/#.ignoresCase(),
+    ]
+    static let legacyProgressRegexes: [Regex<Substring>] = [
+        #/#bearbeitung\b/#.ignoresCase(),
+        #/#progress\b/#.ignoresCase(),
+    ]
 
-    private static var nextRegexes: [Regex<Substring>] { [nextRegex, legacyNextRegex] }
-    private static var progressRegexes: [Regex<Substring>] { [progressRegex, legacyProgressRegex] }
+    private static var nextRegexes: [Regex<Substring>] { [nextRegex] + legacyNextRegexes }
+    private static var progressRegexes: [Regex<Substring>] { [progressRegex] + legacyProgressRegexes }
     static var allTagRegexes: [Regex<Substring>] { nextRegexes + progressRegexes }
 
     static func status(fromNotes notes: String?, isCompleted: Bool) -> KanbanStatus {
@@ -55,7 +62,7 @@ enum StatusTagger {
 
     static func hasLegacyTag(_ notes: String?) -> Bool {
         guard let notes else { return false }
-        return notes.contains(legacyNextRegex) || notes.contains(legacyProgressRegex)
+        return (legacyNextRegexes + legacyProgressRegexes).contains { notes.contains($0) }
     }
 
     static func hasStatusTag(_ notes: String?) -> Bool {
