@@ -26,6 +26,7 @@
 		C831C7F9A270718B155C00E3 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
 		CF6FC09044300C4AEE056EF2 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BD228B20A88109D18DAA5 /* Models.swift */; };
 		D10E1E7C10AD77A2A5815F45 /* TextSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF53DB3FE2E8D54F03CE48E9 /* TextSanitizerTests.swift */; };
+		D3765DBF0B271BAFF4FFD965 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5DCA4E02A36CF7D719EC339 /* DesignSystem.swift */; };
 		F02B830CE81DFD65A6C33E55 /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
 		F497DB173B495A88ADCD4821 /* RemindersStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DFB23226AD6A320E58F33 /* RemindersStore.swift */; };
 /* End PBXBuildFile section */
@@ -52,6 +53,7 @@
 		EC1A968F6964BFEE0832A01A /* ColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnView.swift; sourceTree = "<group>"; };
 		EE77523ACBD14B219E0031C5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		EF53DB3FE2E8D54F03CE48E9 /* TextSanitizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizerTests.swift; sourceTree = "<group>"; };
+		F5DCA4E02A36CF7D719EC339 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -82,6 +84,7 @@
 				E363E5F11832E63EE2539D70 /* CardView.swift */,
 				EC1A968F6964BFEE0832A01A /* ColumnView.swift */,
 				EE77523ACBD14B219E0031C5 /* ContentView.swift */,
+				F5DCA4E02A36CF7D719EC339 /* DesignSystem.swift */,
 				6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */,
 				C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */,
 				10ECC48E9096FEF7E8FFDCB5 /* Info.plist */,
@@ -186,6 +189,7 @@
 				17AAD6984070753493382FA9 /* CardView.swift in Sources */,
 				1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */,
 				BA331CEEE97A7000C960DB81 /* ContentView.swift in Sources */,
+				D3765DBF0B271BAFF4FFD965 /* DesignSystem.swift in Sources */,
 				1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */,
 				8935EE20B247C64B80C071A6 /* Models.swift in Sources */,
 				933FC5C8E315A609199EBE84 /* Quotes.swift in Sources */,

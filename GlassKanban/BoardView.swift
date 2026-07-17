@@ -3,14 +3,15 @@ import SwiftUI
 struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: Board.columnSpacing) {
             ForEach(KanbanStatus.allCases) { status in
                 ColumnView(status: status)
             }
         }
-        .padding(12)
+        .padding(Board.boardPadding)
         .frame(minWidth: 960, minHeight: 560)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -19,10 +20,7 @@ struct BoardView: View {
         .toolbar {
             if store.streak > 0 {
                 ToolbarItem(placement: .navigation) {
-                    Text("🔥 \(store.streak)")
-                        .font(.system(size: 12, weight: .semibold))
-                        .monospacedDigit()
-                        .help("\(store.streak) Tage in Folge mindestens eine Aufgabe erledigt")
+                    streakPill
                 }
             }
             ToolbarItemGroup(placement: .primaryAction) {
@@ -38,6 +36,31 @@ struct BoardView: View {
                     isActive: store.dueFilter != .all)
             }
         }
+    }
+
+    /// Streak counter as a small glass capsule — the one place where Liquid
+    /// Glass is appropriate (control layer, not content).
+    @ViewBuilder
+    private var streakPill: some View {
+        let label = HStack(spacing: 4) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(.orange.gradient)
+            Text("\(store.streak)")
+                .font(.system(size: 12, weight: .semibold))
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 3)
+
+        Group {
+            if reduceTransparency {
+                label.background(.quaternary.opacity(0.6), in: Capsule())
+            } else {
+                label.glassEffect(in: .capsule)
+            }
+        }
+        .help("\(store.streak) Tage in Folge mindestens eine Aufgabe erledigt")
     }
 
     private func filterMenu<F: CaseIterable & Identifiable & Hashable>(
@@ -73,10 +96,12 @@ struct QuoteBar: View {
     var body: some View {
         Text(Quotes.quote())
             .font(.system(size: 12))
+            .fontDesign(.serif)
             .italic()
             .foregroundStyle(.tertiary)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
+            .padding(.vertical, 9)
             .background(.bar)
+            .overlay(alignment: .top) { Divider() }
     }
 }
