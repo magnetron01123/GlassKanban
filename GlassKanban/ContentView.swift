@@ -1,28 +1,53 @@
 import SwiftUI
 
-// Platzhalter-Ansicht — die eigentliche Implementierung (EventKit-Datenschicht,
-// Hashtag-Status, Drag & Drop, Filter, Motivation) folgt gemäß MVP.md.
 struct ContentView: View {
-    private let columnNames = ["Backlog", "Als Nächstes", "In Bearbeitung", "Erledigt"]
+    @EnvironmentObject private var store: RemindersStore
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
-        HStack(spacing: 14) {
-            ForEach(columnNames, id: \.self) { name in
-                VStack {
-                    Text(name)
-                        .font(.headline)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding()
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+        Group {
+            switch store.accessState {
+            case .granted:
+                BoardView()
+            case .denied:
+                AccessDeniedView()
+            case .unknown, .requesting:
+                ProgressView("Zugriff auf Erinnerungen…")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .padding()
-        .frame(minWidth: 900, minHeight: 600)
+        .containerBackground(windowBackground, for: .window)
+        .task {
+            await store.start()
+        }
+    }
+
+    private var windowBackground: AnyShapeStyle {
+        reduceTransparency
+            ? AnyShapeStyle(Color(nsColor: .windowBackgroundColor))
+            : AnyShapeStyle(.ultraThinMaterial)
     }
 }
 
-#Preview {
-    ContentView()
+struct AccessDeniedView: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "lock.circle")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text("Kein Zugriff auf Erinnerungen")
+                .font(.headline)
+            Text("Glass Kanban benötigt Vollzugriff auf deine Erinnerungen, um das Board anzuzeigen. Erlaube den Zugriff in den Systemeinstellungen unter Datenschutz & Sicherheit → Erinnerungen.")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: 400)
+            Button("Systemeinstellungen öffnen") {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
 }

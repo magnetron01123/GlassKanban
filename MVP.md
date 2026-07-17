@@ -37,8 +37,8 @@ Spaltenwechsel unverändert.
 | Spalte (technisch) | Anzeige (Deutsch) | Hashtag in den Notizen |
 |---|---|---|
 | Backlog | Backlog | kein Tag (Standard/Fallback) |
-| Next | Als Nächstes | `#next` |
-| In Progress | In Bearbeitung | `#progress` |
+| Next | Als Nächstes | `#nächstes` |
+| In Progress | In Bearbeitung | `#bearbeitung` |
 | Done | Erledigt | — (`isCompleted = true`, kein Tag) |
 
 **Schreiben (bei Drag & Drop):**
@@ -46,8 +46,8 @@ Spaltenwechsel unverändert.
 | Ziel-Spalte | Aktion in den Notizen |
 |---|---|
 | Backlog | vorhandene Status-Zeile entfernen |
-| Als Nächstes | Status-Zeile entfernen, `#next` als neue, eigene letzte Zeile anhängen |
-| In Bearbeitung | Status-Zeile entfernen, `#progress` als neue, eigene letzte Zeile anhängen |
+| Als Nächstes | Status-Zeile entfernen, `#nächstes` als neue, eigene letzte Zeile anhängen |
+| In Bearbeitung | Status-Zeile entfernen, `#bearbeitung` als neue, eigene letzte Zeile anhängen |
 | Erledigt | `isCompleted = true` setzen, Status-Zeile entfernen |
 
 **Lesen:** Hashtag wird an beliebiger Stelle im Notizen-Text gesucht (nicht nur letzte Zeile).
@@ -72,6 +72,14 @@ Notizen, Fälligkeit, Priorität) passiert ausschließlich in der nativen Remind
 Einzige Schreib-Interaktion: Drag & Drop einer Karte zwischen den vier Spalten (siehe
 Datenmodell oben).
 
+**Doppelklick auf eine Karte** öffnet die Aufgabe direkt im Bearbeitungs-Popover der
+Reminders-App (Deep Link `x-apple-reminderkit://REMCDReminder/<interne UUID>/details`;
+die interne UUID wird über `calendarItemExternalIdentifier` bzw. als Fallback über das
+private Backing-Objekt aufgelöst — undokumentiertes Schema, bei Wegfall öffnet sich
+ersatzweise die Reminders-App selbst). Damit bleibt das Bearbeiten vollständig in
+Reminders, ist aber nur einen Doppelklick entfernt. Zusätzlich per Kontextmenü
+("In Erinnerungen öffnen") erreichbar.
+
 ## Karten-Anzeige (MVP: minimal)
 
 Jede Karte zeigt:
@@ -86,7 +94,7 @@ Sortierung innerhalb einer Spalte nach Fälligkeitsdatum.
 **Links werden immer ausgeblendet:** Bevor Titel oder Notizen angezeigt werden, entfernt die
 App alle URL-artigen Textteile aus der Anzeige (z. B. per Regex-Erkennung). Das betrifft nur
 die Darstellung — der eigentliche Reminders-Eintrag bleibt unverändert, es wird nichts in
-EventKit zurückgeschrieben. Der Status-Hashtag (`#next`/`#progress`) wird aus der
+EventKit zurückgeschrieben. Der Status-Hashtag (`#nächstes`/`#bearbeitung`) wird aus der
 Notizen-Vorschau ebenfalls immer herausgefiltert, da er ein internes Steuerzeichen ist, kein
 echter Notizinhalt.
 
