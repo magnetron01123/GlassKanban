@@ -4,6 +4,7 @@ struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @State private var showStreak = false
 
     var body: some View {
         HStack(alignment: .top, spacing: Board.columnSpacing) {
@@ -11,17 +12,14 @@ struct BoardView: View {
                 ColumnView(status: status)
             }
         }
+        .frame(maxWidth: Board.boardMaxWidth)
+        .frame(maxWidth: .infinity)   // center the board as an object in the window
         .padding(Board.boardPadding)
-        .frame(minWidth: 960, minHeight: 560)
+        .frame(minWidth: Board.boardMinWidth, minHeight: 560)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            QuoteBar()
-        }
         .toolbar {
-            if store.streak > 0 {
-                ToolbarItem(placement: .navigation) {
-                    streakPill
-                }
+            ToolbarItem(placement: .navigation) {
+                streakPill
             }
             ToolbarItemGroup(placement: .primaryAction) {
                 filterMenu(
@@ -34,34 +32,62 @@ struct BoardView: View {
                     systemImage: "calendar",
                     selection: $store.dueFilter,
                     isActive: store.dueFilter != .all)
+                remindersButton
             }
         }
     }
 
-    /// Streak counter as a small glass capsule — the one place where Liquid
-    /// Glass is appropriate (control layer, not content).
-    @ViewBuilder
+    // MARK: - Streak pill + popover
+
+    /// The streak counter, clickable to reveal details. The flame fills as the
+    /// day's work gets done (see StreakStats.flameLevel).
     private var streakPill: some View {
-        let label = HStack(spacing: 4) {
-            Image(systemName: "flame.fill")
-                .font(.system(size: 10))
-                .foregroundStyle(.orange.gradient)
-            Text("\(store.streak)")
+        Button {
+            showStreak.toggle()
+        } label: {
+            pillLabel
+        }
+        .buttonStyle(.plain)
+        .help("Streak-Details anzeigen")
+        .popover(isPresented: $showStreak, arrowEdge: .bottom) {
+            StreakPopover(stats: store.streakStats)
+                .frame(width: 260)
+        }
+    }
+
+    @ViewBuilder
+    private var pillLabel: some View {
+        let content = HStack(spacing: 4) {
+            FlameIcon(level: store.streakStats.flameLevel)
+            Text("\(store.streakStats.current)")
                 .font(.system(size: 12, weight: .semibold))
                 .monospacedDigit()
         }
         .padding(.horizontal, 9)
         .padding(.vertical, 3)
 
-        Group {
-            if reduceTransparency {
-                label.background(.quaternary.opacity(0.6), in: Capsule())
-            } else {
-                label.glassEffect(in: .capsule)
-            }
+        if reduceTransparency {
+            content.background(.quaternary.opacity(0.6), in: Capsule())
+        } else {
+            content.glassEffect(in: .capsule)
         }
-        .help("\(store.streak) Tage in Folge mindestens eine Aufgabe erledigt")
     }
+
+    // MARK: - Reminders jump
+
+    /// The one prominent, accent-colored control: it makes clear you leave the
+    /// board to Reminders (where tasks are created and edited).
+    private var remindersButton: some View {
+        Button {
+            store.openRemindersApp()
+        } label: {
+            Label("Erinnerungen", systemImage: "arrow.up.forward.app")
+        }
+        .buttonStyle(.glassProminent)
+        .help("Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)")
+    }
+
+    // MARK: - Filters
 
     private func filterMenu<F: CaseIterable & Identifiable & Hashable>(
         title: String,
@@ -91,17 +117,3 @@ protocol FilterDisplayable {
 
 extension PriorityFilter: FilterDisplayable {}
 extension DueFilter: FilterDisplayable {}
-
-struct QuoteBar: View {
-    var body: some View {
-        Text(Quotes.quote())
-            .font(.system(size: 12))
-            .fontDesign(.serif)
-            .italic()
-            .foregroundStyle(.tertiary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 9)
-            .background(.bar)
-            .overlay(alignment: .top) { Divider() }
-    }
-}

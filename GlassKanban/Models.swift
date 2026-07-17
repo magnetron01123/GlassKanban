@@ -29,6 +29,14 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
         case .backlog, .done: nil
         }
     }
+
+    /// Backlog and Done are storage lanes that can hold many items, so their
+    /// cards are shown as compact rows. The two working lanes (Als Nächstes,
+    /// In Bearbeitung) keep full sticky-note cards and stay the focus — a
+    /// card visibly grows when pulled into the work in progress.
+    var usesCompactCards: Bool {
+        self == .backlog || self == .done
+    }
 }
 
 /// Immutable display model for one card, derived from an `EKReminder`.

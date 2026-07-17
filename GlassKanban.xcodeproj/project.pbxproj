@@ -12,6 +12,7 @@
 		17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */; };
 		1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1A968F6964BFEE0832A01A /* ColumnView.swift */; };
 		1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */; };
+		2FA0675B56569C16EB972A13 /* StreakPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B365227CBE04B748E55FE /* StreakPopover.swift */; };
 		74BF0AB21BF4C7B800C413D1 /* StatusTaggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */; };
 		875104CDC32ECDEB5C2494F0 /* FilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5178AE744F393F737442A5 /* FilterTests.swift */; };
 		8935EE20B247C64B80C071A6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BD228B20A88109D18DAA5 /* Models.swift */; };
@@ -33,6 +34,7 @@
 
 /* Begin PBXFileReference section */
 		10ECC48E9096FEF7E8FFDCB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		1C6B365227CBE04B748E55FE /* StreakPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakPopover.swift; sourceTree = "<group>"; };
 		4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculatorTests.swift; sourceTree = "<group>"; };
 		4F5178AE744F393F737442A5 /* FilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterTests.swift; sourceTree = "<group>"; };
 		616551F8C95C166758DC62DD /* TextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizer.swift; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 				73CAB35E9902F258F00D82A7 /* SettingsView.swift */,
 				C8099603D0D48B34633EB69D /* StatusTagger.swift */,
 				61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */,
+				1C6B365227CBE04B748E55FE /* StreakPopover.swift */,
 				616551F8C95C166758DC62DD /* TextSanitizer.swift */,
 			);
 			path = GlassKanban;
@@ -198,6 +201,7 @@
 				A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */,
 				9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */,
 				17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */,
+				2FA0675B56569C16EB972A13 /* StreakPopover.swift in Sources */,
 				9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

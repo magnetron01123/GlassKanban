@@ -1,5 +1,6 @@
 import EventKit
 import SwiftUI
+import AppKit
 
 /// The single data layer of the app. Reads reminders via EventKit, derives
 /// `KanbanCard`s, and performs the only write operations the app has:
@@ -18,9 +19,14 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var accessState: AccessState = .unknown
     @Published private(set) var cards: [KanbanCard] = []
     @Published private(set) var reminderCalendars: [EKCalendar] = []
-    @Published private(set) var streak: Int = 0
+    @Published private(set) var streakStats = StreakStats()
+    /// Card that was just completed, for the brief "settle" animation.
+    /// Cleared automatically shortly after.
+    @Published private(set) var recentlyCompletedID: String?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
+
+    var streak: Int { streakStats.current }
 
     /// Calendar identifiers the user excluded in Settings (e.g. a shopping
     /// list). Persisted in UserDefaults; everything else is included.
@@ -94,7 +100,7 @@ final class RemindersStore: ObservableObject {
         let included = reminderCalendars.filter { !excludedCalendarIDs.contains($0.calendarIdentifier) }
         guard !included.isEmpty else {
             cards = []
-            streak = 0
+            streakStats = StreakStats()
             return
         }
 
@@ -109,7 +115,7 @@ final class RemindersStore: ObservableObject {
 
         performTagHygiene(on: incomplete + completed)
 
-        streak = StreakCalculator.streak(completionDates: completed.compactMap(\.completionDate))
+        streakStats = StreakCalculator.stats(completionDates: completed.compactMap(\.completionDate))
 
         let doneWindowStart = calendar.date(
             byAdding: .day, value: -Self.doneWindowDays, to: calendar.startOfDay(for: .now))!
@@ -165,9 +171,12 @@ final class RemindersStore: ObservableObject {
 
     // MARK: - Writing (the app's only write: moving a card)
 
-    func move(cardID: String, to status: KanbanStatus) {
-        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
-        guard StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted) != status else { return }
+    /// Moves a card to another column. Returns whether anything actually
+    /// changed, so the UI can give feedback (haptics) only on a real move.
+    @discardableResult
+    func move(cardID: String, to status: KanbanStatus) -> Bool {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return false }
+        guard StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted) != status else { return false }
 
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
         reminder.isCompleted = (status == .done)
@@ -175,7 +184,7 @@ final class RemindersStore: ObservableObject {
             try eventStore.save(reminder, commit: true)
         } catch {
             scheduleRefresh()
-            return
+            return false
         }
 
         // Optimistic UI update; the EventKit change notification will
@@ -184,7 +193,29 @@ final class RemindersStore: ObservableObject {
             cards[index].status = status
             cards[index].completionDate = (status == .done) ? .now : nil
         }
+        if status == .done {
+            flagRecentlyCompleted(cardID)
+        }
         scheduleRefresh()
+        return true
+    }
+
+    /// Marks a card as just-completed for ~0.7 s so its view can play the
+    /// settle animation, then clears the flag.
+    private func flagRecentlyCompleted(_ id: String) {
+        recentlyCompletedID = id
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(700))
+            guard let self, self.recentlyCompletedID == id else { return }
+            self.recentlyCompletedID = nil
+        }
+    }
+
+    /// Opens the Reminders app (where all tasks are created and edited — the
+    /// board itself is read-only apart from drag & drop).
+    func openRemindersApp() {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.reminders") else { return }
+        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
     }
 
     // MARK: - Board queries
