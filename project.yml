@@ -1,0 +1,35 @@
+name: GlassKanban
+options:
+  bundleIdPrefix: com.davidtrogemann
+  deploymentTarget:
+    macOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  GlassKanban:
+    type: application
+    platform: macOS
+    sources:
+      - path: GlassKanban
+    info:
+      path: GlassKanban/Info.plist
+      properties:
+        NSRemindersFullAccessUsageDescription: >-
+          Glass Kanban zeigt deine Erinnerungen als Kanban-Board an und benötigt dafür
+          Lesezugriff auf deine Erinnerungen.
+        NSHumanReadableCopyright: ""
+        LSApplicationCategoryType: public.app-category.productivity
+    entitlements:
+      path: GlassKanban/GlassKanban.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.personal-information.calendars: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanban
+        PRODUCT_NAME: Glass Kanban
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_STYLE: Automatic
