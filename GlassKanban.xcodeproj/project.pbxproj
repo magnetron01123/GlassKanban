@@ -7,16 +7,49 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		095FD46B8BF0F4B3C0DF18D0 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */; };
+		17AAD6984070753493382FA9 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E363E5F11832E63EE2539D70 /* CardView.swift */; };
+		17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */; };
+		1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1A968F6964BFEE0832A01A /* ColumnView.swift */; };
 		1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */; };
+		74BF0AB21BF4C7B800C413D1 /* StatusTaggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */; };
+		875104CDC32ECDEB5C2494F0 /* FilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5178AE744F393F737442A5 /* FilterTests.swift */; };
+		8935EE20B247C64B80C071A6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BD228B20A88109D18DAA5 /* Models.swift */; };
+		933FC5C8E315A609199EBE84 /* Quotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90FCB71A569048BBBF9674CF /* Quotes.swift */; };
+		9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD1B4A61352C1461953925D /* BoardView.swift */; };
+		9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
+		9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
+		A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CAB35E9902F258F00D82A7 /* SettingsView.swift */; };
+		B5100A228F130EF0A3292797 /* StreakCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */; };
 		BA331CEEE97A7000C960DB81 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE77523ACBD14B219E0031C5 /* ContentView.swift */; };
+		C831C7F9A270718B155C00E3 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
+		CF6FC09044300C4AEE056EF2 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BD228B20A88109D18DAA5 /* Models.swift */; };
+		D10E1E7C10AD77A2A5815F45 /* TextSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF53DB3FE2E8D54F03CE48E9 /* TextSanitizerTests.swift */; };
+		F02B830CE81DFD65A6C33E55 /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
+		F497DB173B495A88ADCD4821 /* RemindersStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DFB23226AD6A320E58F33 /* RemindersStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		10ECC48E9096FEF7E8FFDCB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculatorTests.swift; sourceTree = "<group>"; };
+		4F5178AE744F393F737442A5 /* FilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterTests.swift; sourceTree = "<group>"; };
+		616551F8C95C166758DC62DD /* TextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizer.swift; sourceTree = "<group>"; };
+		61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculator.swift; sourceTree = "<group>"; };
 		6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassKanban.entitlements; sourceTree = "<group>"; };
+		73CAB35E9902F258F00D82A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		90FCB71A569048BBBF9674CF /* Quotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quotes.swift; sourceTree = "<group>"; };
+		9AD1B4A61352C1461953925D /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKanbanApp.swift; sourceTree = "<group>"; };
 		C611793427062C2E7A24FAFF /* GlassKanban.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassKanban.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C67BD228B20A88109D18DAA5 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		C8099603D0D48B34633EB69D /* StatusTagger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTagger.swift; sourceTree = "<group>"; };
+		E363E5F11832E63EE2539D70 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
+		E38DFB23226AD6A320E58F33 /* RemindersStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersStore.swift; sourceTree = "<group>"; };
+		E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTaggerTests.swift; sourceTree = "<group>"; };
+		E5272D2C4DBE0783C0F124A4 /* GlassKanbanTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlassKanbanTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EC1A968F6964BFEE0832A01A /* ColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnView.swift; sourceTree = "<group>"; };
 		EE77523ACBD14B219E0031C5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		EF53DB3FE2E8D54F03CE48E9 /* TextSanitizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -24,17 +57,39 @@
 			isa = PBXGroup;
 			children = (
 				C258B197D26D22AB4AC8E407 /* GlassKanban */,
+				7204D7B9E911C3DE365C3B14 /* GlassKanbanTests */,
 				E1026DE1BDE4A386F11C48E3 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		7204D7B9E911C3DE365C3B14 /* GlassKanbanTests */ = {
+			isa = PBXGroup;
+			children = (
+				4F5178AE744F393F737442A5 /* FilterTests.swift */,
+				E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */,
+				4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */,
+				EF53DB3FE2E8D54F03CE48E9 /* TextSanitizerTests.swift */,
+			);
+			path = GlassKanbanTests;
 			sourceTree = "<group>";
 		};
 		C258B197D26D22AB4AC8E407 /* GlassKanban */ = {
 			isa = PBXGroup;
 			children = (
+				9AD1B4A61352C1461953925D /* BoardView.swift */,
+				E363E5F11832E63EE2539D70 /* CardView.swift */,
+				EC1A968F6964BFEE0832A01A /* ColumnView.swift */,
 				EE77523ACBD14B219E0031C5 /* ContentView.swift */,
 				6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */,
 				C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */,
 				10ECC48E9096FEF7E8FFDCB5 /* Info.plist */,
+				C67BD228B20A88109D18DAA5 /* Models.swift */,
+				90FCB71A569048BBBF9674CF /* Quotes.swift */,
+				E38DFB23226AD6A320E58F33 /* RemindersStore.swift */,
+				73CAB35E9902F258F00D82A7 /* SettingsView.swift */,
+				C8099603D0D48B34633EB69D /* StatusTagger.swift */,
+				61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */,
+				616551F8C95C166758DC62DD /* TextSanitizer.swift */,
 			);
 			path = GlassKanban;
 			sourceTree = "<group>";
@@ -43,6 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				C611793427062C2E7A24FAFF /* GlassKanban.app */,
+				E5272D2C4DBE0783C0F124A4 /* GlassKanbanTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -50,6 +106,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0EDFD732189A876BD712EB9A /* GlassKanbanTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0501AAA1732B9959C598C2BA /* Build configuration list for PBXNativeTarget "GlassKanbanTests" */;
+			buildPhases = (
+				AC8CBECE76EA3D850F3CBBB4 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GlassKanbanTests;
+			packageProductDependencies = (
+			);
+			productName = GlassKanbanTests;
+			productReference = E5272D2C4DBE0783C0F124A4 /* GlassKanbanTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		2D414BB36D63C91B572E6F51 /* GlassKanban */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B09AFE9375D830BC374573FB /* Build configuration list for PBXNativeTarget "GlassKanban" */;
@@ -96,6 +169,7 @@
 			projectRoot = "";
 			targets = (
 				2D414BB36D63C91B572E6F51 /* GlassKanban */,
+				0EDFD732189A876BD712EB9A /* GlassKanbanTests */,
 			);
 		};
 /* End PBXProject section */
@@ -105,8 +179,33 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */,
+				17AAD6984070753493382FA9 /* CardView.swift in Sources */,
+				1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */,
 				BA331CEEE97A7000C960DB81 /* ContentView.swift in Sources */,
 				1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */,
+				8935EE20B247C64B80C071A6 /* Models.swift in Sources */,
+				933FC5C8E315A609199EBE84 /* Quotes.swift in Sources */,
+				F497DB173B495A88ADCD4821 /* RemindersStore.swift in Sources */,
+				A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */,
+				9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */,
+				17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */,
+				9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AC8CBECE76EA3D850F3CBBB4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				875104CDC32ECDEB5C2494F0 /* FilterTests.swift in Sources */,
+				CF6FC09044300C4AEE056EF2 /* Models.swift in Sources */,
+				C831C7F9A270718B155C00E3 /* StatusTagger.swift in Sources */,
+				74BF0AB21BF4C7B800C413D1 /* StatusTaggerTests.swift in Sources */,
+				095FD46B8BF0F4B3C0DF18D0 /* StreakCalculator.swift in Sources */,
+				B5100A228F130EF0A3292797 /* StreakCalculatorTests.swift in Sources */,
+				F02B830CE81DFD65A6C33E55 /* TextSanitizer.swift in Sources */,
+				D10E1E7C10AD77A2A5815F45 /* TextSanitizerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,6 +227,22 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.davidtrogemann.GlassKanban;
 				PRODUCT_NAME = "Glass Kanban";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		197C5D743B0ED2FC97D7B0C3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.davidtrogemann.GlassKanbanTests;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -186,7 +301,7 @@
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 6.0;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -251,7 +366,7 @@
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 6.0;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -274,9 +389,34 @@
 			};
 			name = Release;
 		};
+		F67C11E6BFC78210376B557F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.davidtrogemann.GlassKanbanTests;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0501AAA1732B9959C598C2BA /* Build configuration list for PBXNativeTarget "GlassKanbanTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				197C5D743B0ED2FC97D7B0C3 /* Debug */,
+				F67C11E6BFC78210376B557F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		B09AFE9375D830BC374573FB /* Build configuration list for PBXNativeTarget "GlassKanban" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
