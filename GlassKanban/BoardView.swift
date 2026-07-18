@@ -12,6 +12,16 @@ struct BoardView: View {
                 ColumnView(status: status)
             }
         }
+        // Four wordless empty lanes read as a broken app. Individual lanes stay
+        // silent — only the whole board being blank is worth a sentence, and
+        // then exactly one, laid over the lanes rather than inside them.
+        .overlay {
+            if let emptiness = store.emptiness {
+                EmptyBoardNotice(emptiness: emptiness) {
+                    store.resetFilters()
+                }
+            }
+        }
         // Lanes flex between ticket-friendly bounds; the whole block sits
         // centered in the window like a board mounted on a wall.
         .frame(maxWidth: .infinity)
