@@ -56,7 +56,10 @@ struct ListsSettingsView: View {
 }
 
 struct GeneralSettingsView: View {
+    @EnvironmentObject private var store: RemindersStore
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+
+    private static let maxWIPLimit = 20
 
     var body: some View {
         Form {
@@ -73,7 +76,38 @@ struct GeneralSettingsView: View {
                         launchAtLogin = SMAppService.mainApp.status == .enabled
                     }
                 }
+
+            // Deliberately the only place a limit can be changed: a limit you
+            // can raise from the board, in the moment it gets inconvenient,
+            // stops being a commitment.
+            Section {
+                ForEach(KanbanStatus.allCases.filter(\.supportsWIPLimit)) { status in
+                    Stepper(value: limitBinding(for: status), in: 0...Self.maxWIPLimit) {
+                        HStack {
+                            Text(status.displayName)
+                            Spacer()
+                            Text(limitLabel(for: status))
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            } header: {
+                Text("Work-in-Progress-Limits")
+                    .help("Lieber abschließen als stapeln")
+            }
         }
         .formStyle(.grouped)
+    }
+
+    private func limitBinding(for status: KanbanStatus) -> Binding<Int> {
+        Binding(
+            get: { store.wipLimits[status.rawValue] ?? 0 },
+            set: { store.setWIPLimit($0, for: status) })
+    }
+
+    private func limitLabel(for status: KanbanStatus) -> String {
+        let limit = store.wipLimits[status.rawValue] ?? 0
+        return limit > 0 ? "\(limit)" : "Kein Limit"
     }
 }

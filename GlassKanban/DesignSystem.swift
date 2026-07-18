@@ -42,6 +42,12 @@ enum Board {
     static let cardRadius: CGFloat = 11
     static let badgeRadius: CGFloat = 6
 
+    /// A WIP limit is a statement about *capacity*, not urgency, so it stays
+    /// out of the warm family (orange = due today, red = overdue). Teal reads
+    /// as neutral flow and, unlike the accent colour, cannot collide with a
+    /// user who runs their system in orange.
+    static let wipLimitTint = Color.teal
+
     // Contours
     static let columnBorder = Color.primary.opacity(0.12)
     static let cardBorder = Color.primary.opacity(0.10)
