@@ -17,7 +17,12 @@ final class CardSortingTests: XCTestCase {
     /// Fixed "today" for every case below.
     private var now: Date { date(2026, 7, 18) }
 
-    private func card(_ title: String, priority: Int = 0, due: Date? = nil) -> KanbanCard {
+    private func card(
+        _ title: String,
+        priority: Int = 0,
+        due: Date? = nil,
+        modified: Date? = nil
+    ) -> KanbanCard {
         KanbanCard(
             id: title,
             title: title,
@@ -29,7 +34,8 @@ final class CardSortingTests: XCTestCase {
             listName: "Test",
             listColor: .accentColor,
             completionDate: nil,
-            isRecurring: false)
+            isRecurring: false,
+            lastModifiedDate: modified)
     }
 
     private func sortedTitles(_ cards: [KanbanCard]) -> [String] {
@@ -90,6 +96,23 @@ final class CardSortingTests: XCTestCase {
         XCTAssertEqual(
             sortedTitles(cards),
             ["overdue high", "today medium", "today no priority"])
+    }
+
+    // MARK: - Days in column (dwell time)
+
+    func testDaysInColumnCountsWholeDays() {
+        XCTAssertEqual(
+            card("t", modified: date(2026, 7, 16)).daysInColumn(calendar: calendar, now: now), 2)
+        XCTAssertEqual(
+            card("t", modified: date(2026, 7, 18)).daysInColumn(calendar: calendar, now: now), 0)
+        XCTAssertNil(card("t").daysInColumn(calendar: calendar, now: now))
+    }
+
+    func testDaysInColumnIgnoresTimeOfDay() {
+        let lateEvening = calendar.date(
+            from: DateComponents(year: 2026, month: 7, day: 16, hour: 23, minute: 50))!
+        XCTAssertEqual(
+            card("t", modified: lateEvening).daysInColumn(calendar: calendar, now: now), 2)
     }
 
     func testTomorrowIsNotUrgent() {

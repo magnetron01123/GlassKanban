@@ -73,6 +73,11 @@ struct KanbanCard: Identifiable, Equatable {
     let listColor: Color
     var completionDate: Date?
     let isRecurring: Bool
+    /// EventKit's last-modified timestamp. Used as an approximation for
+    /// "when did this card enter its column": moving a card rewrites its
+    /// notes, which bumps this date. Content edits reset it too — an
+    /// accepted trade-off for an ambient board.
+    let lastModifiedDate: Date?
 
     /// Reminders-style priority marks: high = "!!!", medium = "!!", low = "!"
     /// (EventKit convention: 1–4 high, 5 medium, 6–9 low, 0 none).
@@ -94,6 +99,17 @@ struct KanbanCard: Identifiable, Equatable {
         case 6...9: 2
         default: 3
         }
+    }
+
+    /// Whole days this card has been sitting in its column (approximated via
+    /// `lastModifiedDate`). The card shows it only from 2 days on — fresh is
+    /// normal and needs no label; only lingering is a signal.
+    func daysInColumn(calendar: Calendar = .current, now: Date = .now) -> Int? {
+        guard let lastModifiedDate else { return nil }
+        return calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: lastModifiedDate),
+            to: calendar.startOfDay(for: now)).day
     }
 
     /// Overdue or due today. These float to the top of their lane whatever

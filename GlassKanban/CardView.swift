@@ -66,30 +66,43 @@ struct CardView: View {
 
     // MARK: - Layouts
 
-    /// A note with a body: title on top, content beneath, context pinned to
-    /// the bottom edge — and a minimum height so even a bare card holds the
-    /// shape of a sticky note rather than collapsing into a title bar.
+    /// Ticket anatomy in three zones divided by hairlines, like a ruled
+    /// index card. The header carries the card's PROCESS state (title, how
+    /// long it has been sitting here), the footer carries the TASK's facts
+    /// (due date, recurrence, source list) — the two time signals stay in
+    /// opposite corners so they can never be confused.
     private var fullBody: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            titleText
-                .font(.system(size: 14, weight: .semibold))
-                .lineLimit(3)
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if !card.notesExcerpt.isEmpty {
-                Text(card.notesExcerpt)
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                titleText
+                    .font(.system(size: 14, weight: .semibold))
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                agingLabel
+            }
+            .padding(EdgeInsets(top: 11, leading: 14, bottom: 9, trailing: 12))
+
+            zoneDivider
+
+            Group {
+                if card.notesExcerpt.isEmpty {
+                    Spacer(minLength: 8)
+                } else {
+                    Text(card.notesExcerpt)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(EdgeInsets(top: 8, leading: 14, bottom: 8, trailing: 12))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                }
             }
 
-            Spacer(minLength: 6)
+            zoneDivider
 
-            // Meta row: due date + recurrence on the left, source list on
-            // the right — the card carries its context without tooltips.
             HStack(spacing: 6) {
                 if let badge = fullBadge {
                     badgeView(badge)
@@ -103,12 +116,39 @@ struct CardView: View {
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
             }
+            .padding(EdgeInsets(top: 8, leading: 14, bottom: 9, trailing: 12))
         }
-        .padding(EdgeInsets(top: 13, leading: 14, bottom: 12, trailing: 13))
         .frame(
             maxWidth: .infinity,
             minHeight: Board.fullCardMinHeight,
             alignment: .topLeading)
+    }
+
+    /// Hairline between ticket zones, inset to the text margin so it reads
+    /// as a rule on the card, not a cut through it.
+    private var zoneDivider: some View {
+        Rectangle()
+            .fill(Board.cardBorder)
+            .frame(height: 1)
+            .padding(.leading, 14)
+            .padding(.trailing, 12)
+    }
+
+    /// Dwell time, top right in the header: process state, deliberately far
+    /// from the due date in the footer. Appears from 2 days on.
+    @ViewBuilder
+    private var agingLabel: some View {
+        if let days = card.daysInColumn(), days >= 2 {
+            HStack(spacing: 3) {
+                Image(systemName: "clock")
+                    .font(.system(size: 9))
+                Text("\(days) Tage")
+                    .font(.system(size: 11))
+                    .monospacedDigit()
+            }
+            .foregroundStyle(.tertiary)
+            .help("Seit \(days) Tagen in dieser Spalte")
+        }
     }
 
     /// Backlog: everything needed to decide what to pull next.
