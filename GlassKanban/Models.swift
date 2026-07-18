@@ -52,6 +52,18 @@ struct KanbanCard: Identifiable, Equatable {
     let listName: String
     let listColor: Color
     var completionDate: Date?
+    let isRecurring: Bool
+
+    /// Reminders-style priority marks: high = "!!!", medium = "!!", low = "!"
+    /// (EventKit convention: 1–4 high, 5 medium, 6–9 low, 0 none).
+    var priorityMarks: String? {
+        switch priority {
+        case 1...4: "!!!"
+        case 5: "!!"
+        case 6...9: "!"
+        default: nil
+        }
+    }
 }
 
 /// Priority filter groups following the EventKit convention:

@@ -3,10 +3,10 @@ import SwiftUI
 /// One card, styled as a paper sticky note tinted in its Reminders list color.
 ///
 /// Two shapes:
-/// - full (Als Nächstes / In Bearbeitung): hero title over two lines, a notes
-///   preview, and a due badge when there is one.
-/// - compact (Backlog / Erledigt): a single-line row so storage lanes stay
-///   dense and the working lanes keep the focus.
+/// - full (Als Nächstes / In Bearbeitung): hero title with priority marks,
+///   optional notes preview, and a meta row (due date, recurrence, list).
+/// - compact (Backlog / Erledigt): a single-line row with date so storage
+///   lanes stay dense and the working lanes keep the focus.
 struct CardView: View {
     let card: KanbanCard
     var compact = false
@@ -62,20 +62,32 @@ struct CardView: View {
 
     private var fullBody: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(displayTitle)
+            titleText
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(card.status == .done ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-                .strikethrough(card.status == .done)
-                .lineLimit(2, reservesSpace: true)
+                .lineLimit(2)
                 .multilineTextAlignment(.leading)
 
-            Text(card.notesPreview)
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-                .lineLimit(1, reservesSpace: true)
+            if !card.notesPreview.isEmpty {
+                Text(card.notesPreview)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
 
-            if let badge = fullBadge {
-                badgeView(badge)
+            // Meta row: due date + recurrence on the left, source list on
+            // the right — the card carries its context without tooltips.
+            HStack(spacing: 6) {
+                if let badge = fullBadge {
+                    badgeView(badge)
+                }
+                if card.isRecurring {
+                    repeatIcon
+                }
+                Spacer(minLength: 8)
+                Text(card.listName)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
             }
         }
         .padding(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 12))
@@ -84,18 +96,40 @@ struct CardView: View {
 
     private var compactBody: some View {
         HStack(spacing: 8) {
-            Text(displayTitle)
+            titleText
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(card.status == .done ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-                .strikethrough(card.status == .done)
                 .lineLimit(1)
             Spacer(minLength: 0)
-            if let badge = compactBadge {
+            if card.isRecurring {
+                repeatIcon
+            }
+            if card.status == .done, let completed = card.completionDate {
+                Text(completed.formatted(.dateTime.day().month()))
+                    .font(.system(size: 11))
+                    .monospacedDigit()
+                    .foregroundStyle(.tertiary)
+            } else if let badge = compactBadge {
                 badgeView(badge)
             }
         }
         .padding(EdgeInsets(top: 9, leading: 14, bottom: 9, trailing: 10))
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Title with Reminders-style priority marks ("!!" ) in front.
+    private var titleText: Text {
+        let base = Text(displayTitle)
+            .foregroundStyle(card.status == .done ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+            .strikethrough(card.status == .done)
+        guard let marks = card.priorityMarks, card.status != .done else { return base }
+        return Text(marks).foregroundStyle(.orange).bold() + Text(" ") + base
+    }
+
+    private var repeatIcon: some View {
+        Image(systemName: "repeat")
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .help("Wiederholende Erinnerung")
     }
 
     private var displayTitle: String {
@@ -173,12 +207,12 @@ struct CardView: View {
         card.dueDate.map(badge(for:))
     }
 
-    /// Compact cards only surface urgency (overdue / today); everything else
-    /// stays quiet to keep storage lanes calm.
+    /// Compact cards always carry their date when they have one — essential
+    /// in the backlog, where recurring reminders resurface by date. Urgency
+    /// still tints, everything else stays a quiet grey.
     private var compactBadge: BadgeInfo? {
         guard card.status != .done, let due = card.dueDate else { return nil }
-        let info = badge(for: due)
-        return info.tint == nil ? nil : info
+        return badge(for: due)
     }
 
     private func badge(for due: Date) -> BadgeInfo {

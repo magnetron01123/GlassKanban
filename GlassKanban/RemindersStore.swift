@@ -143,7 +143,8 @@ final class RemindersStore: ObservableObject {
             status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted),
             listName: calendar.title,
             listColor: Color(nsColor: calendar.color ?? .controlAccentColor),
-            completionDate: reminder.completionDate)
+            completionDate: reminder.completionDate,
+            isRecurring: reminder.hasRecurrenceRules)
     }
 
     /// Data hygiene from the spec: completed reminders keep no stale status
