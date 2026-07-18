@@ -18,6 +18,9 @@ enum Board {
     static let columnMaxWidth: CGFloat = 400
     static let boardMinWidth: CGFloat = columnMinWidth * 4 + columnSpacing * 3 + boardPadding * 2
     static let cardSpacing: CGFloat = 8
+    /// Working-lane cards hold this much height even when nearly empty, so
+    /// they read as sticky notes with a body instead of flat title bars.
+    static let fullCardMinHeight: CGFloat = 118
 
     // Radii (mockup: column 14, card 11, badge 6)
     static let columnRadius: CGFloat = 14

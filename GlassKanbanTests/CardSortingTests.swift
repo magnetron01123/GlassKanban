@@ -14,11 +14,15 @@ final class CardSortingTests: XCTestCase {
         calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12))!
     }
 
+    /// Fixed "today" for every case below.
+    private var now: Date { date(2026, 7, 18) }
+
     private func card(_ title: String, priority: Int = 0, due: Date? = nil) -> KanbanCard {
         KanbanCard(
             id: title,
             title: title,
             notesPreview: "",
+            notesExcerpt: "",
             dueDate: due,
             priority: priority,
             status: .backlog,
@@ -29,7 +33,9 @@ final class CardSortingTests: XCTestCase {
     }
 
     private func sortedTitles(_ cards: [KanbanCard]) -> [String] {
-        cards.sorted(by: KanbanCard.byPriorityThenDate).map(\.title)
+        cards
+            .sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+            .map(\.title)
     }
 
     // MARK: - Priority rank
@@ -45,7 +51,7 @@ final class CardSortingTests: XCTestCase {
 
     // MARK: - Sorting
 
-    func testPriorityBeatsDueDate() {
+    func testPriorityBeatsDueDateAmongNonUrgentCards() {
         let cards = [
             card("undated low", priority: 9),
             card("high next year", priority: 1, due: date(2027, 1, 1)),
@@ -55,6 +61,43 @@ final class CardSortingTests: XCTestCase {
         XCTAssertEqual(
             sortedTitles(cards),
             ["high next year", "medium later", "undated low", "none tomorrow"])
+    }
+
+    // MARK: - Urgency outranks priority
+
+    func testDueTodayFloatsAbovePriorityWork() {
+        let cards = [
+            card("high in september", priority: 1, due: date(2026, 9, 1)),
+            card("unprioritized today", priority: 0, due: now),
+        ]
+        XCTAssertEqual(sortedTitles(cards), ["unprioritized today", "high in september"])
+    }
+
+    func testOverdueFloatsAbovePriorityWork() {
+        let cards = [
+            card("high in september", priority: 1, due: date(2026, 9, 1)),
+            card("unprioritized overdue", priority: 0, due: date(2026, 7, 10)),
+        ]
+        XCTAssertEqual(sortedTitles(cards), ["unprioritized overdue", "high in september"])
+    }
+
+    func testPriorityStillOrdersWithinTheUrgentGroup() {
+        let cards = [
+            card("today no priority", priority: 0, due: now),
+            card("overdue high", priority: 1, due: date(2026, 7, 10)),
+            card("today medium", priority: 5, due: now),
+        ]
+        XCTAssertEqual(
+            sortedTitles(cards),
+            ["overdue high", "today medium", "today no priority"])
+    }
+
+    func testTomorrowIsNotUrgent() {
+        XCTAssertFalse(
+            card("t", due: date(2026, 7, 19)).isUrgent(calendar: calendar, now: now))
+        XCTAssertTrue(
+            card("t", due: now).isUrgent(calendar: calendar, now: now))
+        XCTAssertFalse(card("t").isUrgent(calendar: calendar, now: now))
     }
 
     func testDueDateOrdersWithinSamePriority() {

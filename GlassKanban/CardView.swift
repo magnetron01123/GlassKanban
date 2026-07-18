@@ -66,19 +66,27 @@ struct CardView: View {
 
     // MARK: - Layouts
 
+    /// A note with a body: title on top, content beneath, context pinned to
+    /// the bottom edge — and a minimum height so even a bare card holds the
+    /// shape of a sticky note rather than collapsing into a title bar.
     private var fullBody: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 7) {
             titleText
                 .font(.system(size: 14, weight: .semibold))
-                .lineLimit(2)
+                .lineLimit(3)
                 .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
 
-            if !card.notesPreview.isEmpty {
-                Text(card.notesPreview)
+            if !card.notesExcerpt.isEmpty {
+                Text(card.notesExcerpt)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+
+            Spacer(minLength: 6)
 
             // Meta row: due date + recurrence on the left, source list on
             // the right — the card carries its context without tooltips.
@@ -96,8 +104,11 @@ struct CardView: View {
                     .lineLimit(1)
             }
         }
-        .padding(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 12))
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(EdgeInsets(top: 13, leading: 14, bottom: 12, trailing: 13))
+        .frame(
+            maxWidth: .infinity,
+            minHeight: Board.fullCardMinHeight,
+            alignment: .topLeading)
     }
 
     /// Backlog: everything needed to decide what to pull next.

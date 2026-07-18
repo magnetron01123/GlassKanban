@@ -18,7 +18,18 @@ enum TextSanitizer {
     /// First non-empty line of the notes after removing URLs and status tags.
     /// The card shows this in a single line; truncation happens in the view.
     static func notesPreview(_ raw: String?) -> String {
-        guard let raw else { return "" }
+        cleanedNoteLines(raw).first ?? ""
+    }
+
+    /// Up to `maxLines` cleaned note lines, joined for display on the roomier
+    /// cards in the working lanes. Truncation still happens in the view.
+    static func notesExcerpt(_ raw: String?, maxLines: Int = 3) -> String {
+        cleanedNoteLines(raw).prefix(maxLines).joined(separator: "\n")
+    }
+
+    /// Note lines with URLs and status tags stripped, blanks dropped.
+    private static func cleanedNoteLines(_ raw: String?) -> [String] {
+        guard let raw else { return [] }
         return raw
             .components(separatedBy: .newlines)
             .map { line in
@@ -30,6 +41,6 @@ enum TextSanitizer {
                 cleaned.replace(#/\s{2,}/#, with: " ")
                 return cleaned.trimmingCharacters(in: .whitespaces)
             }
-            .first { !$0.isEmpty } ?? ""
+            .filter { !$0.isEmpty }
     }
 }

@@ -62,7 +62,10 @@ enum CardDensity {
 struct KanbanCard: Identifiable, Equatable {
     let id: String
     let title: String
+    /// One line, for compact rows and tooltips.
     let notesPreview: String
+    /// Several lines, for the roomier cards in the working lanes.
+    let notesExcerpt: String
     let dueDate: Date?
     let priority: Int
     var status: KanbanStatus
@@ -93,21 +96,41 @@ struct KanbanCard: Identifiable, Equatable {
         }
     }
 
-    /// Order for the open lanes: priority first, then the earliest due date
-    /// (undated cards last), then title so the order never jitters.
-    static func byPriorityThenDate(_ lhs: KanbanCard, _ rhs: KanbanCard) -> Bool {
-        if lhs.priorityRank != rhs.priorityRank {
-            return lhs.priorityRank < rhs.priorityRank
-        }
-        switch (lhs.dueDate, rhs.dueDate) {
-        case let (.some(l), .some(r)) where l != r:
-            return l < r
-        case (.some, nil):
-            return true
-        case (nil, .some):
-            return false
-        default:
-            return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+    /// Overdue or due today. These float to the top of their lane whatever
+    /// their priority: what is due now must not hide beneath work that is
+    /// merely important. Matches exactly when the card shows a tinted date
+    /// badge, so the rule is visible on the board.
+    func isUrgent(calendar: Calendar = .current, now: Date = .now) -> Bool {
+        guard let dueDate else { return false }
+        return calendar.isDate(dueDate, inSameDayAs: now) || dueDate < calendar.startOfDay(for: now)
+    }
+
+    /// Order for the open lanes: urgency first, then priority, then the
+    /// earliest due date (undated cards last), then title so the order
+    /// never jitters between refreshes.
+    static func openLaneOrder(
+        calendar: Calendar = .current,
+        now: Date = .now
+    ) -> (KanbanCard, KanbanCard) -> Bool {
+        { lhs, rhs in
+            let lhsUrgent = lhs.isUrgent(calendar: calendar, now: now)
+            let rhsUrgent = rhs.isUrgent(calendar: calendar, now: now)
+            if lhsUrgent != rhsUrgent {
+                return lhsUrgent
+            }
+            if lhs.priorityRank != rhs.priorityRank {
+                return lhs.priorityRank < rhs.priorityRank
+            }
+            switch (lhs.dueDate, rhs.dueDate) {
+            case let (.some(l), .some(r)) where l != r:
+                return l < r
+            case (.some, nil):
+                return true
+            case (nil, .some):
+                return false
+            default:
+                return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+            }
         }
     }
 }

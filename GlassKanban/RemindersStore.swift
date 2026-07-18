@@ -138,6 +138,7 @@ final class RemindersStore: ObservableObject {
             id: reminder.calendarItemIdentifier,
             title: TextSanitizer.displayTitle(reminder.title),
             notesPreview: TextSanitizer.notesPreview(reminder.notes),
+            notesExcerpt: TextSanitizer.notesExcerpt(reminder.notes),
             dueDate: reminder.dueDateComponents.flatMap { Foundation.Calendar.current.date(from: $0) },
             priority: reminder.priority,
             status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted),
@@ -231,7 +232,7 @@ final class RemindersStore: ObservableObject {
             // Finished work reads newest first; priority no longer matters.
             return filtered.sorted { ($0.completionDate ?? .distantPast) > ($1.completionDate ?? .distantPast) }
         }
-        return filtered.sorted(by: KanbanCard.byPriorityThenDate)
+        return filtered.sorted(by: KanbanCard.openLaneOrder())
     }
 
     func resetFilters() {
