@@ -274,6 +274,10 @@ struct CardView: View {
     private struct BadgeInfo {
         let label: String
         let tint: Color?
+        /// Solid fill instead of a tint. Reserved for overdue — the one
+        /// state that has already failed and should catch the eye from
+        /// across the room. Everything else stays quiet.
+        var isEmphasized = false
     }
 
     /// Full cards (never Done) show the due date when there is one; the
@@ -296,7 +300,7 @@ struct CardView: View {
             return BadgeInfo(label: "Heute", tint: .orange)
         }
         if due < calendar.startOfDay(for: .now) {
-            return BadgeInfo(label: "Überfällig", tint: .red)
+            return BadgeInfo(label: "Überfällig", tint: .red, isEmphasized: true)
         }
         if calendar.isDateInTomorrow(due) {
             return BadgeInfo(label: "Morgen", tint: nil)
@@ -304,16 +308,26 @@ struct CardView: View {
         return BadgeInfo(label: due.formatted(.dateTime.day().month()), tint: nil)
     }
 
+    /// Three weights, so urgency reads at a glance: solid (overdue), tinted
+    /// (today), quiet grey (everything else).
     private func badgeView(_ info: BadgeInfo) -> some View {
         Text(info.label)
             .font(.system(size: 11, weight: .semibold))
             .monospacedDigit()
-            .foregroundStyle(info.tint.map(AnyShapeStyle.init) ?? AnyShapeStyle(.secondary))
+            .foregroundStyle(badgeForeground(info))
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .background(
-                info.tint.map { AnyShapeStyle($0.opacity(0.14)) } ?? AnyShapeStyle(.quaternary.opacity(0.6)),
-                in: RoundedRectangle(cornerRadius: Board.badgeRadius))
+            .background(badgeBackground(info), in: RoundedRectangle(cornerRadius: Board.badgeRadius))
+    }
+
+    private func badgeForeground(_ info: BadgeInfo) -> AnyShapeStyle {
+        if info.isEmphasized { return AnyShapeStyle(.white) }
+        return info.tint.map(AnyShapeStyle.init) ?? AnyShapeStyle(.secondary)
+    }
+
+    private func badgeBackground(_ info: BadgeInfo) -> AnyShapeStyle {
+        guard let tint = info.tint else { return AnyShapeStyle(.quaternary.opacity(0.6)) }
+        return AnyShapeStyle(info.isEmphasized ? tint : tint.opacity(0.14))
     }
 
     // MARK: - Motivation animations
