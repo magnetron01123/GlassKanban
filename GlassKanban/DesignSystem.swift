@@ -9,11 +9,13 @@ import AppKit
 /// near-opaque paper sticky notes resting on top. Depth comes from
 /// contrasting treatments (fill, contour, shadow), not from stacking blur.
 enum Board {
-    // Layout — the board is a centered object, not stretched to the screen.
-    static let boardPadding: CGFloat = 16
-    static let columnSpacing: CGFloat = 14
-    static let columnMinWidth: CGFloat = 230
-    static let columnMaxWidth: CGFloat = 300
+    // Layout — a centered block of four substantial lanes with real air
+    // between them; lanes flex within ticket-friendly bounds instead of
+    // stretching across the whole display.
+    static let boardPadding: CGFloat = 20
+    static let columnSpacing: CGFloat = 20
+    static let columnMinWidth: CGFloat = 280
+    static let columnMaxWidth: CGFloat = 400
     static let boardMinWidth: CGFloat = columnMinWidth * 4 + columnSpacing * 3 + boardPadding * 2
     static let cardSpacing: CGFloat = 8
 
@@ -23,17 +25,18 @@ enum Board {
     static let badgeRadius: CGFloat = 6
 
     // Contours
-    static let columnBorder = Color.primary.opacity(0.10)
+    static let columnBorder = Color.primary.opacity(0.12)
     static let cardBorder = Color.primary.opacity(0.10)
     /// Top edge of a card catches light, like the edge of a paper note.
     static let cardTopHighlight = Color.white.opacity(0.5)
 
-    /// List color laid over the paper fill — this is what makes a card read
-    /// as a colored sticky note. Kept subtle so the board stays calm.
-    static let cardTintOpacity: Double = 0.12
+    /// Cards stay neutral paper (Apple surfaces are never tinted wholesale);
+    /// the Reminders list color appears as a slim marker stripe on the
+    /// leading edge, the way physical tickets carry a color code.
+    static let cardStripeWidth: CGFloat = 3
 
     // Recessed column fill (replaces glass-on-glass material)
-    static let columnFill = Color.primary.opacity(0.045)
+    static let columnFill = Color.primary.opacity(0.055)
     static let columnInnerShadow = Color.black.opacity(0.10)
 
     // Card shadows: tight contact shadow + soft ambient = physical elevation

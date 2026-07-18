@@ -28,6 +28,7 @@ struct CardView: View {
             if compact { compactBody } else { fullBody }
         }
         .background { surface }
+        .overlay(alignment: .leading) { listStripe }
         .overlay { contour }
         .overlay { topHighlight }
         .overlay { flashOverlay }
@@ -76,7 +77,7 @@ struct CardView: View {
                 badgeView(badge)
             }
         }
-        .padding(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12))
+        .padding(EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 12))
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -92,7 +93,7 @@ struct CardView: View {
                 badgeView(badge)
             }
         }
-        .padding(EdgeInsets(top: 7, leading: 12, bottom: 7, trailing: 10))
+        .padding(EdgeInsets(top: 9, leading: 14, bottom: 9, trailing: 10))
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -105,10 +106,17 @@ struct CardView: View {
     private var surface: some View {
         RoundedRectangle(cornerRadius: Board.cardRadius)
             .fill(cardFill)
-            .overlay {
-                RoundedRectangle(cornerRadius: Board.cardRadius)
-                    .fill(card.listColor.opacity(Board.cardTintOpacity))
-            }
+    }
+
+    /// Slim list-color marker along the leading edge — the ticket's color
+    /// code, inset like a physical tab so it reads as part of the card.
+    private var listStripe: some View {
+        Capsule()
+            .fill(card.listColor.opacity(card.status == .done ? 0.45 : 0.9))
+            .frame(width: Board.cardStripeWidth)
+            .padding(.vertical, compact ? 7 : 9)
+            .padding(.leading, 5)
+            .allowsHitTesting(false)
     }
 
     /// Near-opaque "paper" so cards read as physical objects on the recessed

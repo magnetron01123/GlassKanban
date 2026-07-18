@@ -8,7 +8,7 @@ struct FlameIcon: View {
 
     var body: some View {
         Image(systemName: level == 0 ? "flame" : "flame.fill")
-            .font(.system(size: 11))
+            .font(.system(size: 12))
             .foregroundStyle(style)
     }
 

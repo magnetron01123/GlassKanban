@@ -26,10 +26,8 @@ struct ColumnView: View {
         status == .next && store.cards(for: .inProgress).isEmpty && !cards.isEmpty
     }
 
-    /// Erledigt shows today's progress ("3 heute") instead of a running total
-    /// — an endowed-progress nudge. Other columns show their card count.
-    private var headerCount: Int {
-        guard status == .done else { return cards.count }
+    /// Completions done today, for the Erledigt header hint.
+    private var todayCount: Int {
         let calendar = Calendar.current
         return cards.filter { $0.completionDate.map(calendar.isDateInToday) ?? false }.count
     }
@@ -98,14 +96,17 @@ struct ColumnView: View {
             Text(status.displayName)
                 .font(.system(size: 13, weight: .semibold))
             Spacer()
-            Text(status == .done ? "\(headerCount) heute" : "\(headerCount)")
+            // Erledigt counts today's completions ("2 · heute 1") as a quiet
+            // progress hint; a bare "0 heute" next to visible cards read as
+            // a bug, so the total always leads.
+            Text(status == .done && todayCount > 0 ? "\(cards.count) · heute \(todayCount)" : "\(cards.count)")
                 .font(.system(size: 11, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 2)
                 .background(.quaternary.opacity(0.8), in: Capsule())
-                .help(status == .done ? "\(headerCount) heute erledigt · \(cards.count) gesamt" : "\(cards.count) Karten")
+                .help(status == .done ? "\(todayCount) heute erledigt · \(cards.count) sichtbar" : "\(cards.count) Karten")
         }
         .padding(EdgeInsets(top: 12, leading: 14, bottom: 10, trailing: 12))
     }

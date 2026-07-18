@@ -3,7 +3,6 @@ import SwiftUI
 struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var showStreak = false
 
     var body: some View {
@@ -12,12 +11,11 @@ struct BoardView: View {
                 ColumnView(status: status)
             }
         }
-        // Columns keep their sticky-note width and pack to the leading edge,
-        // the way real kanban boards do; the remaining board surface reads as
-        // room to grow rather than a frame around a floating island.
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // Lanes flex between ticket-friendly bounds; the whole block sits
+        // centered in the window like a board mounted on a wall.
+        .frame(maxWidth: .infinity)
         .padding(Board.boardPadding)
-        .frame(minWidth: Board.boardMinWidth, minHeight: 560, alignment: .leading)
+        .frame(minWidth: Board.boardMinWidth, minHeight: 560)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
             // Only shown once there is a streak — a "0" pill next to the
@@ -46,36 +44,25 @@ struct BoardView: View {
     // MARK: - Streak pill + popover
 
     /// The streak counter, clickable to reveal details. The flame fills as the
-    /// day's work gets done (see StreakStats.flameLevel).
+    /// day's work gets done (see StreakStats.flameLevel). No custom background:
+    /// the macOS 26 toolbar already wraps its items in Liquid Glass, and glass
+    /// inside glass renders as a boxed artifact.
     private var streakPill: some View {
         Button {
             showStreak.toggle()
         } label: {
-            pillLabel
+            HStack(spacing: 4) {
+                FlameIcon(level: store.streakStats.flameLevel)
+                Text("\(store.streakStats.current)")
+                    .font(.system(size: 12, weight: .semibold))
+                    .monospacedDigit()
+            }
+            .padding(.horizontal, 2)
         }
-        .buttonStyle(.plain)
         .help("Streak-Details anzeigen")
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
             StreakPopover(stats: store.streakStats)
                 .frame(width: 260)
-        }
-    }
-
-    @ViewBuilder
-    private var pillLabel: some View {
-        let content = HStack(spacing: 4) {
-            FlameIcon(level: store.streakStats.flameLevel)
-            Text("\(store.streakStats.current)")
-                .font(.system(size: 12, weight: .semibold))
-                .monospacedDigit()
-        }
-        .padding(.horizontal, 9)
-        .padding(.vertical, 3)
-
-        if reduceTransparency {
-            content.background(.quaternary.opacity(0.6), in: Capsule())
-        } else {
-            content.glassEffect(in: .capsule)
         }
     }
 
