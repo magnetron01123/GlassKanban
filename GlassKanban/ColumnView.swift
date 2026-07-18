@@ -7,6 +7,9 @@ struct ColumnView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var isTargeted = false
     @State private var expanded = false
+    /// Height of a real card in this lane, so the drop placeholder can match
+    /// it exactly instead of guessing at a constant.
+    @State private var cardHeight: CGFloat?
 
     private var cards: [KanbanCard] { store.cards(for: status) }
     private var singleLine: Bool { status.cardDensity.isSingleLine }
@@ -55,6 +58,9 @@ struct ColumnView: View {
                         CardView(card: card, pullSignal: pullActive && index == 0)
                             .contentShape(.dragPreview, RoundedRectangle(cornerRadius: Board.cardRadius))
                             .draggable(card.id)
+                            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                                if index == 0 { cardHeight = height }
+                            }
                     }
 
                     if isTargeted {
@@ -123,8 +129,14 @@ struct ColumnView: View {
             .background(
                 Color.accentColor.opacity(0.05),
                 in: RoundedRectangle(cornerRadius: Board.cardRadius))
-            .frame(height: singleLine ? 34 : 72)
+            .frame(height: slotHeight)
             .transition(.opacity)
+    }
+
+    /// Matches a real card in this lane; falls back to the lane's own card
+    /// metrics while the lane is still empty.
+    private var slotHeight: CGFloat {
+        cardHeight ?? (singleLine ? Board.compactCardHeight : Board.fullCardMinHeight)
     }
 
     private var moreButton: some View {

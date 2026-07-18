@@ -21,6 +21,10 @@ enum Board {
     /// Working-lane cards hold this much height even when nearly empty, so
     /// they read as sticky notes with a body instead of flat title bars.
     static let fullCardMinHeight: CGFloat = 118
+    /// One-line rows in the storage lanes: 13pt text plus 9pt padding above
+    /// and below. Only used for the drop placeholder in an empty lane —
+    /// once a lane holds a card, its real height is measured instead.
+    static let compactCardHeight: CGFloat = 34
     /// A card only reports its dwell time once it has lingered this long —
     /// below it, sitting in a column is simply normal.
     static let agingThresholdDays = 3
