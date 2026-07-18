@@ -59,8 +59,6 @@ struct ColumnView: View {
 
                     if isTargeted {
                         insertionSlot
-                    } else if cards.isEmpty {
-                        emptyState
                     }
                 }
                 .padding(.horizontal, 10)
@@ -127,16 +125,6 @@ struct ColumnView: View {
                 in: RoundedRectangle(cornerRadius: Board.cardRadius))
             .frame(height: singleLine ? 34 : 72)
             .transition(.opacity)
-    }
-
-    /// An empty "Als Nächstes" invites a pull from the backlog — the one
-    /// empty state where guidance creates motion; the others stay neutral.
-    private var emptyState: some View {
-        Text(status == .next ? "Aus dem Backlog ziehen" : "Keine Karten")
-            .font(.system(size: 12))
-            .foregroundStyle(.quaternary)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 24)
     }
 
     private var moreButton: some View {
