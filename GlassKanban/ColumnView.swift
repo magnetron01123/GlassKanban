@@ -6,7 +6,6 @@ struct ColumnView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var isTargeted = false
     @State private var expanded = false
-    @State private var cardWidth: CGFloat = 260
 
     private var cards: [KanbanCard] { store.cards(for: status) }
     private var compact: Bool { status.usesCompactCards }
@@ -45,16 +44,13 @@ struct ColumnView: View {
             ScrollView {
                 LazyVStack(spacing: compact ? 5 : Board.cardSpacing) {
                     ForEach(Array(displayedCards.enumerated()), id: \.element.id) { index, card in
+                        // No custom drag preview: SwiftUI rasterizes preview
+                        // closures into a bitmap, which turned rotation and
+                        // material fills into a pixelated snapshot. The
+                        // system's native lift preview renders the card
+                        // itself crisply and adds its own depth.
                         CardView(card: card, compact: compact, pullSignal: pullActive && index == 0)
-                            .draggable(card.id) {
-                                // The "picked up" card: keeps its real width
-                                // (no size jump), tilts, and lifts its shadow.
-                                CardView(card: card, compact: compact)
-                                    .environmentObject(store)
-                                    .frame(width: cardWidth)
-                                    .rotationEffect(.degrees(2))
-                                    .shadow(color: .black.opacity(0.25), radius: 14, y: 8)
-                            }
+                            .draggable(card.id)
                     }
 
                     if isTargeted {
@@ -63,7 +59,6 @@ struct ColumnView: View {
                         emptyState
                     }
                 }
-                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { cardWidth = $0 }
                 .padding(.horizontal, 10)
                 .padding(.top, 10)
                 .padding(.bottom, 12)
