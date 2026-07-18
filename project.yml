@@ -25,6 +25,13 @@ targets:
           Lesezugriff auf deine Erinnerungen.
         NSHumanReadableCopyright: ""
         LSApplicationCategoryType: public.app-category.productivity
+        # The app's own strings are German, but AppKit localizes the standard
+        # menus (Bearbeiten, Darstellung, Fenster, Hilfe) from the bundle's
+        # declared languages — without this it hands out English ones next to
+        # German content.
+        CFBundleDevelopmentRegion: de
+        CFBundleLocalizations:
+          - de
     entitlements:
       path: GlassKanban/GlassKanban.entitlements
       properties:

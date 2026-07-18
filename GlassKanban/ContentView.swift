@@ -16,16 +16,53 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .containerBackground(windowBackground, for: .window)
+        .background { windowBackground.ignoresSafeArea() }
         .task {
             await store.start()
         }
     }
 
-    private var windowBackground: AnyShapeStyle {
-        reduceTransparency
-            ? AnyShapeStyle(Color(nsColor: .windowBackgroundColor))
-            : AnyShapeStyle(.ultraThinMaterial)
+    @ViewBuilder
+    private var windowBackground: some View {
+        if reduceTransparency {
+            Color(nsColor: .windowBackgroundColor)
+        } else {
+            WindowGlass()
+        }
+    }
+}
+
+/// The window's glass, pinned to its active appearance.
+///
+/// A SwiftUI `Material` becomes an `NSVisualEffectView` whose state defaults to
+/// `.followsWindowActiveState`: the moment the window stops being key, macOS
+/// desaturates it into flat grey. That default assumes a window you work *in*
+/// and want to recede while you look elsewhere. This board is the opposite — it
+/// sits open on a second screen to be looked at all day, so it spends nearly
+/// all its life inactive, and following the active state would show the glass
+/// the app is named for only in the rare moments it has focus.
+///
+/// `.containerBackground(for: .window)` gives no access to that state, so the
+/// effect view is created here instead. It reaches under the title bar (the
+/// view ignores the safe area and the title bar is made transparent), which is
+/// what `containerBackground` otherwise handled.
+private struct WindowGlass: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .underWindowBackground
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {
+        view.state = .active
+        // The title bar has to stop painting its own strip, or it cuts a flat
+        // band across the glass below it. The window keeps its own background:
+        // clearing that leaves nothing opaque behind the effect view and the
+        // whole window renders invisible.
+        guard let window = view.window, !window.titlebarAppearsTransparent else { return }
+        window.titlebarAppearsTransparent = true
     }
 }
 
