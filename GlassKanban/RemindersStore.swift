@@ -20,9 +20,10 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var cards: [KanbanCard] = []
     @Published private(set) var reminderCalendars: [EKCalendar] = []
     @Published private(set) var streakStats = StreakStats()
-    /// Card that was just completed, for the brief "settle" animation.
-    /// Cleared automatically shortly after.
-    @Published private(set) var recentlyCompletedID: String?
+    /// Cards that were just completed, for the brief "settle" animation —
+    /// whether completed here or elsewhere (a shared list on someone else's
+    /// device). Cleared automatically shortly after.
+    @Published private(set) var recentlyCompletedIDs: Set<String> = []
     /// Card currently being dragged. Observed alongside the drag — the drop
     /// payload is not readable while merely hovering — so a lane can tell
     /// whether a drop would actually move anything.
@@ -50,6 +51,8 @@ final class RemindersStore: ObservableObject {
 
     private let eventStore = EKEventStore()
     private var refreshTask: Task<Void, Never>?
+    private var midnightTimer: Timer?
+    private var hasLoadedOnce = false
 
     init() {
         excludedCalendarIDs = Set(UserDefaults.standard.stringArray(forKey: Self.excludedKey) ?? [])
@@ -70,7 +73,42 @@ final class RemindersStore: ObservableObject {
         }
         guard accessState == .granted else { return }
         observeChanges()
+        observeDayBoundary()
         await refresh()
+    }
+
+    /// "Heute", "Überfällig", the sort order and the flame are all relative
+    /// to now — but they are only recomputed when data changes. On a board
+    /// that stays open for days, that means waking up to yesterday's world,
+    /// so the day boundary and returning from sleep force a refresh.
+    private func observeDayBoundary() {
+        scheduleMidnightRefresh()
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.scheduleMidnightRefresh()
+                self?.scheduleRefresh()
+            }
+        }
+    }
+
+    private func scheduleMidnightRefresh() {
+        midnightTimer?.invalidate()
+        // A few seconds past midnight, so the new day has definitely begun.
+        guard let nextMidnight = Calendar.current.nextDate(
+            after: .now,
+            matching: DateComponents(hour: 0, minute: 0, second: 5),
+            matchingPolicy: .nextTime) else { return }
+
+        let timer = Timer(fire: nextMidnight, interval: 0, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.scheduleMidnightRefresh()
+                await self?.refresh()
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        midnightTimer = timer
     }
 
     private func observeChanges() {
@@ -125,7 +163,18 @@ final class RemindersStore: ObservableObject {
             byAdding: .day, value: -Self.doneWindowDays, to: calendar.startOfDay(for: .now))!
         let visibleCompleted = completed.filter { ($0.completionDate ?? .distantPast) >= doneWindowStart }
 
-        cards = (incomplete + visibleCompleted).compactMap(Self.card(from:))
+        let refreshed = (incomplete + visibleCompleted).compactMap(Self.card(from:))
+
+        // Work finished elsewhere (a shared list on another device) gets the
+        // same settle animation as our own. Skipped on the very first load,
+        // where every completed card would look brand new.
+        if hasLoadedOnce {
+            let wasDone = Set(cards.filter { $0.status == .done }.map(\.id))
+            let isDone = Set(refreshed.filter { $0.status == .done }.map(\.id))
+            flagRecentlyCompleted(isDone.subtracting(wasDone))
+        }
+        cards = refreshed
+        hasLoadedOnce = true
     }
 
     private func fetchReminders(matching predicate: NSPredicate) async -> [EKReminder] {
@@ -201,20 +250,20 @@ final class RemindersStore: ObservableObject {
             cards[index].completionDate = (status == .done) ? .now : nil
         }
         if status == .done {
-            flagRecentlyCompleted(cardID)
+            flagRecentlyCompleted([cardID])
         }
         scheduleRefresh()
         return true
     }
 
-    /// Marks a card as just-completed for ~0.7 s so its view can play the
-    /// settle animation, then clears the flag.
-    private func flagRecentlyCompleted(_ id: String) {
-        recentlyCompletedID = id
+    /// Marks cards as just-completed for ~0.7 s so their views can play the
+    /// settle animation, then clears the flags.
+    private func flagRecentlyCompleted(_ ids: Set<String>) {
+        guard !ids.isEmpty else { return }
+        recentlyCompletedIDs.formUnion(ids)
         Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(700))
-            guard let self, self.recentlyCompletedID == id else { return }
-            self.recentlyCompletedID = nil
+            self?.recentlyCompletedIDs.subtract(ids)
         }
     }
 

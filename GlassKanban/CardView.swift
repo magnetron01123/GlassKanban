@@ -40,7 +40,12 @@ struct CardView: View {
         .overlay { topHighlight }
         .overlay { flashOverlay }
         .shadow(color: contactShadow.color, radius: contactShadow.radius, y: contactShadow.y)
-        .shadow(color: Board.cardShadowAmbient.color, radius: Board.cardShadowAmbient.radius, y: Board.cardShadowAmbient.y)
+        // Finished work sits flatter: it keeps the contact shadow but loses
+        // the ambient one, so it recedes without losing its paper edge.
+        .shadow(
+            color: card.status == .done ? .clear : Board.cardShadowAmbient.color,
+            radius: Board.cardShadowAmbient.radius,
+            y: Board.cardShadowAmbient.y)
         .shadow(color: pullGlowColor, radius: pullGlowRadius)
         .scaleEffect(settleScale)
         .offset(y: isHovered && !reduceMotion ? -1 : 0)
@@ -60,7 +65,7 @@ struct CardView: View {
             updateBreathing(pullSignal)
             // The completed card appears fresh in Erledigt with the flag
             // already set, so trigger the settle here rather than on change.
-            playSettle(if: store.recentlyCompletedID)
+            playSettleIfFlagged()
         }
     }
 
@@ -82,7 +87,7 @@ struct CardView: View {
                 Spacer(minLength: 0)
                 agingLabel
             }
-            .padding(EdgeInsets(top: 11, leading: 14, bottom: 9, trailing: 12))
+            .padding(EdgeInsets(top: 11, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
 
             zoneDivider
 
@@ -96,7 +101,7 @@ struct CardView: View {
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(EdgeInsets(top: 8, leading: 14, bottom: 8, trailing: 12))
+                        .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 8, trailing: Board.cardInsetTrailing))
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
             }
@@ -118,7 +123,7 @@ struct CardView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            .padding(EdgeInsets(top: 8, leading: 14, bottom: 9, trailing: 12))
+            .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
         }
         .frame(
             maxWidth: .infinity,
@@ -132,8 +137,8 @@ struct CardView: View {
         Rectangle()
             .fill(Board.cardBorder)
             .frame(height: 1)
-            .padding(.leading, 14)
-            .padding(.trailing, 12)
+            .padding(.leading, Board.cardInsetLeading)
+            .padding(.trailing, Board.cardInsetTrailing)
     }
 
     /// Dwell time, top right in the header: process state, deliberately far
@@ -167,7 +172,7 @@ struct CardView: View {
                 badgeView(badge)
             }
         }
-        .padding(EdgeInsets(top: 9, leading: 14, bottom: 9, trailing: 10))
+        .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -176,17 +181,20 @@ struct CardView: View {
         titleText
             .font(.system(size: 13, weight: .medium))
             .lineLimit(1)
-            .padding(EdgeInsets(top: 9, leading: 14, bottom: 9, trailing: 12))
+            .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Title with Reminders-style priority marks ("!!" ) in front.
+    /// Title with Reminders-style priority marks ("!!") in front. The marks
+    /// are neutral on purpose: their count already encodes priority, and
+    /// colouring them would spend orange — which on this board means "due
+    /// today" — on a second, unrelated meaning.
     private var titleText: Text {
         let base = Text(displayTitle)
             .foregroundStyle(card.status == .done ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
             .strikethrough(card.status == .done)
         guard let marks = card.priorityMarks, card.status != .done else { return base }
-        return Text(marks).foregroundStyle(.orange).bold() + Text(" ") + base
+        return Text(marks).foregroundStyle(.secondary).bold() + Text(" ") + base
     }
 
     private var repeatIcon: some View {
@@ -234,7 +242,7 @@ struct CardView: View {
     private var cardFill: Color {
         reduceTransparency
             ? Color(nsColor: .controlBackgroundColor)
-            : Board.cardFill(colorScheme)
+            : Board.cardFill(colorScheme, isDone: card.status == .done)
     }
 
     private var contour: some View {
@@ -242,13 +250,18 @@ struct CardView: View {
             .strokeBorder(Board.cardBorder)
     }
 
+    /// Light catching the top edge. Only in dark mode: on white paper a white
+    /// highlight is invisible, so in light mode this was pure render cost.
+    @ViewBuilder
     private var topHighlight: some View {
-        RoundedRectangle(cornerRadius: Board.cardRadius)
-            .strokeBorder(
-                LinearGradient(colors: [Board.cardTopHighlight, .clear], startPoint: .top, endPoint: .center),
-                lineWidth: 1)
-            .blendMode(.plusLighter)
-            .allowsHitTesting(false)
+        if colorScheme == .dark {
+            RoundedRectangle(cornerRadius: Board.cardRadius)
+                .strokeBorder(
+                    LinearGradient(colors: [Board.cardTopHighlight, .clear], startPoint: .top, endPoint: .center),
+                    lineWidth: 1)
+                .blendMode(.plusLighter)
+                .allowsHitTesting(false)
+        }
     }
 
     private var flashOverlay: some View {
@@ -333,8 +346,8 @@ struct CardView: View {
     // MARK: - Motivation animations
 
     /// Brief squish-and-settle plus a green flash when this card completes.
-    private func playSettle(if id: String?) {
-        guard id == card.id, !reduceMotion else { return }
+    private func playSettleIfFlagged() {
+        guard store.recentlyCompletedIDs.contains(card.id), !reduceMotion else { return }
         Task { @MainActor in
             settleScale = 0.94
             settleFlash = true

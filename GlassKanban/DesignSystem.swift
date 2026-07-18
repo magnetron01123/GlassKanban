@@ -18,6 +18,14 @@ enum Board {
     static let columnMaxWidth: CGFloat = 400
     static let boardMinWidth: CGFloat = columnMinWidth * 4 + columnSpacing * 3 + boardPadding * 2
     static let cardSpacing: CGFloat = 8
+    /// The lane's inner margin — one value for the header, its hairline, the
+    /// cards and the "more" button, so everything inside a lane shares a
+    /// single left edge.
+    static let laneMargin: CGFloat = 12
+    /// A card's own text margins. Leading is wider because the list stripe
+    /// sits inside it; the zone hairlines follow the same insets.
+    static let cardInsetLeading: CGFloat = 14
+    static let cardInsetTrailing: CGFloat = 12
     /// Working-lane cards hold this much height even when nearly empty, so
     /// they read as sticky notes with a body instead of flat title bars.
     static let fullCardMinHeight: CGFloat = 118
@@ -54,8 +62,15 @@ enum Board {
         scheme == .dark ? Color.black.opacity(0.25) : Color.black.opacity(0.065)
     }
 
-    static func cardFill(_ scheme: ColorScheme) -> Color {
-        scheme == .dark ? Color(white: 0.25) : .white
+    /// Finished work recedes a step — but only a step. Dimming it to the
+    /// ~92% that "receding" suggests would collapse the contrast against
+    /// the lane (measured: 28 grey values down to 6) and undo the elevation
+    /// entirely, so the paper stays bright and the shadow does the receding.
+    static func cardFill(_ scheme: ColorScheme, isDone: Bool = false) -> Color {
+        if scheme == .dark {
+            return isDone ? Color(white: 0.22) : Color(white: 0.25)
+        }
+        return isDone ? Color(white: 0.97) : .white
     }
 
     static let columnInnerShadow = Color.black.opacity(0.10)

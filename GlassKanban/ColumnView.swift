@@ -54,7 +54,7 @@ struct ColumnView: View {
             Rectangle()
                 .fill(Board.columnBorder)
                 .frame(height: 1)
-                .padding(.horizontal, 10)
+                .padding(.horizontal, Board.laneMargin)
 
             ScrollView {
                 LazyVStack(spacing: singleLine ? 5 : Board.cardSpacing) {
@@ -79,13 +79,19 @@ struct ColumnView: View {
                             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                                 if index == 0 { cardHeight = height }
                             }
+                            // A card arriving in a lane settles into place
+                            // instead of blinking on: it grows the last few
+                            // percent into the shape this lane gives it.
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.93).combined(with: .opacity),
+                                removal: .opacity))
                     }
 
                     if showsDropFeedback {
                         insertionSlot
                     }
                 }
-                .padding(.horizontal, 10)
+                .padding(.horizontal, Board.laneMargin)
                 .padding(.top, 10)
                 .padding(.bottom, 12)
             }
@@ -135,7 +141,7 @@ struct ColumnView: View {
                 .background(.quaternary.opacity(0.8), in: Capsule())
                 .help(status == .done ? "\(todayCount) heute erledigt · \(cards.count) sichtbar" : "\(cards.count) Karten")
         }
-        .padding(EdgeInsets(top: 12, leading: 14, bottom: 10, trailing: 12))
+        .padding(EdgeInsets(top: 12, leading: Board.laneMargin, bottom: 10, trailing: Board.laneMargin))
     }
 
     // MARK: - Pieces
@@ -169,9 +175,8 @@ struct ColumnView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 7)
         }
-        .buttonStyle(.plain)
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
-        .padding(.horizontal, 10)
+        .buttonStyle(.glass)
+        .padding(.horizontal, Board.laneMargin)
         .padding(.bottom, 10)
     }
 

@@ -14,16 +14,18 @@ struct FlameIcon: View {
 
     private var style: AnyShapeStyle {
         switch level {
-        case 0: AnyShapeStyle(.tertiary)
+        // Secondary, not tertiary: inside the toolbar's glass a tertiary
+        // outline reads as a disabled control rather than a state.
+        case 0: AnyShapeStyle(.secondary)
         case 1: AnyShapeStyle(Color.orange.opacity(0.7))
         default: AnyShapeStyle(Color.orange.gradient)
         }
     }
 }
 
-/// Details behind the streak pill: current run, the last 7 days, today's and
-/// this week's progress (Progress Principle), the best run, and the daily
-/// motivational quote — a deliberate moment instead of permanent screen noise.
+/// Details behind the streak pill: the current run and what it counts, the
+/// last 7 days, today's and this week's progress (Progress Principle) and
+/// the longest run — a deliberate moment instead of permanent screen noise.
 struct StreakPopover: View {
     let stats: StreakStats
 
@@ -78,8 +80,8 @@ struct StreakPopover: View {
             ForEach(stats.last7) { day in
                 VStack(spacing: 3) {
                     Text(weekdayLetter(day.date))
-                        .font(.system(size: 9))
-                        .foregroundStyle(.tertiary)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
                     Circle()
                         .fill(day.didComplete ? AnyShapeStyle(Color.orange.gradient) : AnyShapeStyle(.quaternary))
                         .frame(width: 9, height: 9)
