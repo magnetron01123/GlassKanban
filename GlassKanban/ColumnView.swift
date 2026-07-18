@@ -48,8 +48,11 @@ struct ColumnView: View {
                         // closures into a bitmap, which turned rotation and
                         // material fills into a pixelated snapshot. The
                         // system's native lift preview renders the card
-                        // itself crisply and adds its own depth.
+                        // itself crisply and adds its own depth; the
+                        // drag-preview content shape rounds its corners so
+                        // no rectangular snapshot edge shows behind them.
                         CardView(card: card, compact: compact, pullSignal: pullActive && index == 0)
+                            .contentShape(.dragPreview, RoundedRectangle(cornerRadius: Board.cardRadius))
                             .draggable(card.id)
                     }
 

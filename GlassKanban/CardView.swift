@@ -106,6 +106,14 @@ struct CardView: View {
     private var surface: some View {
         RoundedRectangle(cornerRadius: Board.cardRadius)
             .fill(cardFill)
+            .overlay {
+                // Brighten the paper over the material so cards clearly sit
+                // above the recessed lane (elevated in dark mode, too).
+                if !reduceTransparency {
+                    RoundedRectangle(cornerRadius: Board.cardRadius)
+                        .fill(Color(nsColor: .controlBackgroundColor).opacity(Board.cardPaperOpacity))
+                }
+            }
     }
 
     /// Slim list-color marker along the leading edge — the ticket's color

@@ -38,8 +38,13 @@ enum Board {
     static let cardStripeWidth: CGFloat = 3
 
     // Recessed column fill (replaces glass-on-glass material)
-    static let columnFill = Color.primary.opacity(0.055)
+    static let columnFill = Color.primary.opacity(0.065)
     static let columnInnerShadow = Color.black.opacity(0.10)
+
+    /// Solid system background layered over the card material: lifts the
+    /// paper clearly off the recessed lane in both light and dark mode
+    /// while keeping a trace of translucency.
+    static let cardPaperOpacity: Double = 0.5
 
     // Card shadows: tight contact shadow + soft ambient = physical elevation
     static let cardShadowResting = (color: Color.black.opacity(0.10), radius: CGFloat(1.5), y: CGFloat(1))
