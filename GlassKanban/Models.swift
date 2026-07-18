@@ -107,6 +107,21 @@ struct KanbanCard: Identifiable, Equatable {
     /// accepted trade-off for an ambient board.
     let lastModifiedDate: Date?
 
+    /// Everything the search looks at, in one place: the title plus whatever
+    /// notes the board itself would show. Built once per card rather than
+    /// stitched together on every keystroke.
+    var searchHaystack: String { "\(title)\n\(notesExcerpt)" }
+
+    /// Whether this card matches a search term. Case- and diacritic-insensitive
+    /// like the Reminders app, and forgiving about word order: every word has
+    /// to appear somewhere, not as one contiguous phrase.
+    func matches(search term: String) -> Bool {
+        let words = term.split(whereSeparator: \.isWhitespace)
+        guard !words.isEmpty else { return true }
+        let haystack = searchHaystack
+        return words.allSatisfy { haystack.localizedStandardContains($0) }
+    }
+
     /// Reminders-style priority marks: high = "!!!", medium = "!!", low = "!"
     /// (EventKit convention: 1–4 high, 5 medium, 6–9 low, 0 none).
     var priorityMarks: String? {

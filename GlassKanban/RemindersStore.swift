@@ -30,6 +30,7 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var draggingCardID: String?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
+    @Published var searchText: String = ""
 
     var streak: Int { streakStats.current }
 
@@ -335,6 +336,7 @@ final class RemindersStore: ObservableObject {
             $0.status == status
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
+                && $0.matches(search: searchText)
         }
         if status == .done {
             // Finished work reads newest first; priority no longer matters.
@@ -346,7 +348,43 @@ final class RemindersStore: ObservableObject {
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all
+        searchText = ""
     }
+
+    // MARK: - Find field
+
+    /// True while the board shows less than everything. The find control wears
+    /// this: a board must never be filtered without saying so, or cards look
+    /// lost rather than hidden.
+    var isFiltering: Bool {
+        priorityFilter != .all || dueFilter != .all || !searchText.isEmpty
+    }
+
+    /// Active restrictions, for the badge on the collapsed find control.
+    var activeRestrictionCount: Int {
+        (priorityFilter != .all ? 1 : 0)
+            + (dueFilter != .all ? 1 : 0)
+            + (searchText.isEmpty ? 0 : 1)
+    }
+
+    // MARK: - Empty board
+
+    /// Why the whole board is blank — the two reasons need different answers,
+    /// and a wordless empty window reads as a broken app either way. Nil while
+    /// anything is visible; individual empty lanes stay silent (see
+    /// ColumnView.showsPullSlot).
+    enum Emptiness {
+        /// Nothing to show anywhere: no reminders in the chosen lists.
+        case nothingToDo
+        /// There is work, but the current find settings hide all of it.
+        case filteredAway
+    }
+
+    var emptiness: Emptiness? {
+        guard KanbanStatus.allCases.allSatisfy({ cards(for: $0).isEmpty }) else { return nil }
+        return isFiltering ? .filteredAway : .nothingToDo
+    }
+
 
     /// URL that opens this card's reminder directly in the Reminders app,
     /// or nil if no deep link could be resolved.
