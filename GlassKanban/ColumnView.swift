@@ -24,6 +24,17 @@ struct ColumnView: View {
 
     private var hiddenCount: Int { cards.count - displayedCards.count }
 
+    /// True while a card from this very lane is being dragged. Dropping it
+    /// back here changes nothing, so the lane must not promise a landing
+    /// spot it will not honour.
+    private var isDragSource: Bool {
+        guard let draggingID = store.draggingCardID else { return false }
+        return cards.contains { $0.id == draggingID }
+    }
+
+    /// Only lanes that would actually receive the card light up.
+    private var showsDropFeedback: Bool { isTargeted && !isDragSource }
+
     /// Pull invitation: nothing in progress but something queued up next.
     private var pullActive: Bool {
         status == .next && store.cards(for: .inProgress).isEmpty && !cards.isEmpty
@@ -58,12 +69,19 @@ struct ColumnView: View {
                         CardView(card: card, pullSignal: pullActive && index == 0)
                             .contentShape(.dragPreview, RoundedRectangle(cornerRadius: Board.cardRadius))
                             .draggable(card.id)
+                            // Runs alongside the system drag purely to note
+                            // which card is moving. Deliberately additive:
+                            // if it ever stops firing, dragging still works.
+                            .simultaneousGesture(
+                                DragGesture(minimumDistance: 6)
+                                    .onChanged { _ in store.beginDrag(cardID: card.id) }
+                                    .onEnded { _ in store.endDrag() })
                             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                                 if index == 0 { cardHeight = height }
                             }
                     }
 
-                    if isTargeted {
+                    if showsDropFeedback {
                         insertionSlot
                     }
                 }
@@ -84,14 +102,16 @@ struct ColumnView: View {
             alignment: .top)
         .background { columnSurface }
         .overlay { columnContour }
-        .animation(Board.dropTargetAnimation, value: isTargeted)
+        .animation(Board.dropTargetAnimation, value: showsDropFeedback)
         .dropDestination(for: String.self) { ids, _ in
+            store.endDrag()
             guard let id = ids.first else { return false }
             let changed = store.move(cardID: id, to: status)
             if changed { Haptics.drop() }
             return changed
         } isTargeted: { targeted in
-            if targeted && !isTargeted { Haptics.alignmentTick() }
+            // No tick for the lane the card came from — nothing snaps there.
+            if targeted && !isTargeted && !isDragSource { Haptics.alignmentTick() }
             isTargeted = targeted
         }
     }
@@ -173,7 +193,7 @@ struct ColumnView: View {
             .overlay {
                 // Accent wash while a drag hovers over the lane.
                 RoundedRectangle(cornerRadius: Board.columnRadius)
-                    .fill(Color.accentColor.opacity(isTargeted ? 0.07 : 0))
+                    .fill(Color.accentColor.opacity(showsDropFeedback ? 0.07 : 0))
             }
             .overlay {
                 // Inner top shadow: the lane is carved into the board.
@@ -190,10 +210,10 @@ struct ColumnView: View {
     private var columnContour: some View {
         RoundedRectangle(cornerRadius: Board.columnRadius)
             .strokeBorder(
-                isTargeted
+                showsDropFeedback
                     ? AnyShapeStyle(Color.accentColor.opacity(0.7))
                     : AnyShapeStyle(Board.columnBorder),
-                lineWidth: isTargeted ? 1.5 : 1)
+                lineWidth: showsDropFeedback ? 1.5 : 1)
     }
 
     private var columnFill: AnyShapeStyle {

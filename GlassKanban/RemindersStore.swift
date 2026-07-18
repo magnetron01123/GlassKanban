@@ -23,6 +23,10 @@ final class RemindersStore: ObservableObject {
     /// Card that was just completed, for the brief "settle" animation.
     /// Cleared automatically shortly after.
     @Published private(set) var recentlyCompletedID: String?
+    /// Card currently being dragged. Observed alongside the drag — the drop
+    /// payload is not readable while merely hovering — so a lane can tell
+    /// whether a drop would actually move anything.
+    @Published private(set) var draggingCardID: String?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
 
@@ -212,6 +216,18 @@ final class RemindersStore: ObservableObject {
             guard let self, self.recentlyCompletedID == id else { return }
             self.recentlyCompletedID = nil
         }
+    }
+
+    func beginDrag(cardID: String) {
+        guard draggingCardID != cardID else { return }
+        draggingCardID = cardID
+    }
+
+    /// A drag that ends outside any lane leaves this set; that is harmless,
+    /// because lanes only read it while a drag is hovering, and the next
+    /// drag overwrites it.
+    func endDrag() {
+        draggingCardID = nil
     }
 
     /// Opens the Reminders app (where all tasks are created and edited — the
