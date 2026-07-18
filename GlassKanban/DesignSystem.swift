@@ -87,9 +87,11 @@ enum Board {
     static let hoverAnimation: Animation = .easeOut(duration: 0.16)
     static let dropTargetAnimation: Animation = .easeOut(duration: 0.15)
     /// Card "settling" into Erledigt — a small reward on completion.
+    /// The board's only recurring animation: motion is spent on things that
+    /// just happened, never on a standing invitation. An empty lane is its own
+    /// pull signal — Kanban's answer to "what should I start next" has always
+    /// been the free slot on the board, not an effect layered over it.
     static let settleAnimation: Animation = .spring(response: 0.32, dampingFraction: 0.5)
-    /// Slow breathing glow inviting the user to pull the next card.
-    static let pullBreath: Animation = .easeInOut(duration: 1.7).repeatForever(autoreverses: true)
 }
 
 /// Subtle trackpad haptics — a sensory reward for moving and completing work.

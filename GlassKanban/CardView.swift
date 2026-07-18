@@ -10,9 +10,6 @@ import SwiftUI
 /// - minimal (Erledigt): the title alone.
 struct CardView: View {
     let card: KanbanCard
-    /// The top card of "Als Nächstes" breathes when there is nothing in
-    /// progress — a quiet invitation to pull the next task.
-    var pullSignal = false
 
     private var density: CardDensity { card.status.cardDensity }
 
@@ -24,7 +21,6 @@ struct CardView: View {
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
     @State private var settleFlash = false
-    @State private var breathe = false
 
     var body: some View {
         Group {
@@ -46,7 +42,6 @@ struct CardView: View {
             color: card.status == .done ? .clear : Board.cardShadowAmbient.color,
             radius: Board.cardShadowAmbient.radius,
             y: Board.cardShadowAmbient.y)
-        .shadow(color: pullGlowColor, radius: pullGlowRadius)
         .scaleEffect(settleScale)
         .offset(y: isHovered && !reduceMotion ? -1 : 0)
         .contentShape(RoundedRectangle(cornerRadius: Board.cardRadius))
@@ -60,9 +55,7 @@ struct CardView: View {
         .help(helpText)
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
-        .onChange(of: pullSignal) { _, active in updateBreathing(active) }
         .onAppear {
-            updateBreathing(pullSignal)
             // The completed card appears fresh in Erledigt with the flag
             // already set, so trigger the settle here rather than on change.
             playSettleIfFlagged()
@@ -274,14 +267,6 @@ struct CardView: View {
         isHovered ? Board.cardShadowHover : Board.cardShadowResting
     }
 
-    private var pullGlowColor: Color {
-        pullSignal ? Color.accentColor.opacity(breathe ? 0.5 : 0.12) : .clear
-    }
-
-    private var pullGlowRadius: CGFloat {
-        pullSignal ? (breathe ? 12 : 5) : 0
-    }
-
     // MARK: - Badges
 
     private struct BadgeInfo {
@@ -354,18 +339,6 @@ struct CardView: View {
             try? await Task.sleep(for: .milliseconds(20))
             withAnimation(Board.settleAnimation) { settleScale = 1 }
             withAnimation(.easeOut(duration: 0.55)) { settleFlash = false }
-        }
-    }
-
-    private func updateBreathing(_ active: Bool) {
-        guard !reduceMotion else {
-            breathe = false
-            return
-        }
-        if active {
-            withAnimation(Board.pullBreath) { breathe = true }
-        } else {
-            withAnimation(.easeOut(duration: 0.2)) { breathe = false }
         }
     }
 
