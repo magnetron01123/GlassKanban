@@ -14,8 +14,6 @@ enum Board {
     static let columnSpacing: CGFloat = 14
     static let columnMinWidth: CGFloat = 230
     static let columnMaxWidth: CGFloat = 300
-    /// Cap so cards keep sticky-note proportions on wide displays.
-    static let boardMaxWidth: CGFloat = columnMaxWidth * 4 + columnSpacing * 3
     static let boardMinWidth: CGFloat = columnMinWidth * 4 + columnSpacing * 3 + boardPadding * 2
     static let cardSpacing: CGFloat = 8
 

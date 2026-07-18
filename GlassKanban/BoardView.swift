@@ -12,10 +12,12 @@ struct BoardView: View {
                 ColumnView(status: status)
             }
         }
-        .frame(maxWidth: Board.boardMaxWidth)
-        .frame(maxWidth: .infinity)   // center the board as an object in the window
+        // Columns keep their sticky-note width and pack to the leading edge,
+        // the way real kanban boards do; the remaining board surface reads as
+        // room to grow rather than a frame around a floating island.
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Board.boardPadding)
-        .frame(minWidth: Board.boardMinWidth, minHeight: 560)
+        .frame(minWidth: Board.boardMinWidth, minHeight: 560, alignment: .leading)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
             // Only shown once there is a streak — a "0" pill next to the
