@@ -2,17 +2,19 @@ import SwiftUI
 
 /// One card, styled as a paper sticky note tinted in its Reminders list color.
 ///
-/// Two shapes:
+/// Three shapes, driven by the lane's information density:
 /// - full (Als Nächstes / In Bearbeitung): hero title with priority marks,
 ///   optional notes preview, and a meta row (due date, recurrence, list).
-/// - compact (Backlog / Erledigt): a single-line row with date so storage
-///   lanes stay dense and the working lanes keep the focus.
+/// - compact (Backlog): one line with what you need to triage — priority,
+///   recurrence, due date.
+/// - minimal (Erledigt): the title alone.
 struct CardView: View {
     let card: KanbanCard
-    var compact = false
     /// The top card of "Als Nächstes" breathes when there is nothing in
     /// progress — a quiet invitation to pull the next task.
     var pullSignal = false
+
+    private var density: CardDensity { card.status.cardDensity }
 
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -26,7 +28,11 @@ struct CardView: View {
 
     var body: some View {
         Group {
-            if compact { compactBody } else { fullBody }
+            switch density {
+            case .full: fullBody
+            case .compact: compactBody
+            case .minimal: minimalBody
+            }
         }
         .background { surface }
         .overlay(alignment: .leading) { listStripe }
@@ -94,6 +100,7 @@ struct CardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Backlog: everything needed to decide what to pull next.
     private var compactBody: some View {
         HStack(spacing: 8) {
             titleText
@@ -103,17 +110,21 @@ struct CardView: View {
             if card.isRecurring {
                 repeatIcon
             }
-            if card.status == .done, let completed = card.completionDate {
-                Text(completed.formatted(.dateTime.day().month()))
-                    .font(.system(size: 11))
-                    .monospacedDigit()
-                    .foregroundStyle(.tertiary)
-            } else if let badge = compactBadge {
+            if let badge = compactBadge {
                 badgeView(badge)
             }
         }
         .padding(EdgeInsets(top: 9, leading: 14, bottom: 9, trailing: 10))
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Erledigt: the work is done — the name is the only thing left to say.
+    private var minimalBody: some View {
+        titleText
+            .font(.system(size: 13, weight: .medium))
+            .lineLimit(1)
+            .padding(EdgeInsets(top: 9, leading: 14, bottom: 9, trailing: 12))
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Title with Reminders-style priority marks ("!!" ) in front.
@@ -136,7 +147,7 @@ struct CardView: View {
     /// carries it — information without pixels.
     private var helpText: String {
         var lines: [String] = []
-        if compact && !card.notesPreview.isEmpty {
+        if density.isSingleLine && !card.notesPreview.isEmpty {
             lines.append(card.notesPreview)
         }
         lines.append("\(card.listName) · Doppelklick öffnet Erinnerungen")
@@ -160,7 +171,7 @@ struct CardView: View {
         Capsule()
             .fill(card.listColor.opacity(card.status == .done ? 0.45 : 0.9))
             .frame(width: Board.cardStripeWidth)
-            .padding(.vertical, compact ? 7 : 9)
+            .padding(.vertical, density.isSingleLine ? 7 : 9)
             .padding(.leading, 5)
             .allowsHitTesting(false)
     }

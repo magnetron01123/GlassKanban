@@ -9,15 +9,13 @@ import AppKit
 /// near-opaque paper sticky notes resting on top. Depth comes from
 /// contrasting treatments (fill, contour, shadow), not from stacking blur.
 enum Board {
-    // Layout — a centered block of four lanes with real air between them.
-    // Extra width flows to the working lanes first (wide stage in the
-    // middle, slim shelves at the edges): storage lanes cap early, working
-    // lanes keep growing.
+    // Layout — a centered block of four equally wide lanes with real air
+    // between them. Focus comes from what the cards reveal (see
+    // KanbanStatus.cardDensity), not from lane geometry.
     static let boardPadding: CGFloat = 20
     static let columnSpacing: CGFloat = 20
     static let columnMinWidth: CGFloat = 280
-    static let storageColumnMaxWidth: CGFloat = 320
-    static let workColumnMaxWidth: CGFloat = 440
+    static let columnMaxWidth: CGFloat = 400
     static let boardMinWidth: CGFloat = columnMinWidth * 4 + columnSpacing * 3 + boardPadding * 2
     static let cardSpacing: CGFloat = 8
 

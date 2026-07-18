@@ -9,7 +9,7 @@ struct ColumnView: View {
     @State private var expanded = false
 
     private var cards: [KanbanCard] { store.cards(for: status) }
-    private var compact: Bool { status.usesCompactCards }
+    private var singleLine: Bool { status.cardDensity.isSingleLine }
 
     /// Backlog can be huge, so it shows a capped stack with "N weitere".
     private var displayedCards: [KanbanCard] {
@@ -43,7 +43,7 @@ struct ColumnView: View {
                 .padding(.horizontal, 10)
 
             ScrollView {
-                LazyVStack(spacing: compact ? 5 : Board.cardSpacing) {
+                LazyVStack(spacing: singleLine ? 5 : Board.cardSpacing) {
                     ForEach(Array(displayedCards.enumerated()), id: \.element.id) { index, card in
                         // No custom drag preview: SwiftUI rasterizes preview
                         // closures into a bitmap, which turned rotation and
@@ -52,7 +52,7 @@ struct ColumnView: View {
                         // itself crisply and adds its own depth; the
                         // drag-preview content shape rounds its corners so
                         // no rectangular snapshot edge shows behind them.
-                        CardView(card: card, compact: compact, pullSignal: pullActive && index == 0)
+                        CardView(card: card, pullSignal: pullActive && index == 0)
                             .contentShape(.dragPreview, RoundedRectangle(cornerRadius: Board.cardRadius))
                             .draggable(card.id)
                     }
@@ -75,7 +75,7 @@ struct ColumnView: View {
         }
         .frame(
             minWidth: Board.columnMinWidth,
-            maxWidth: compact ? Board.storageColumnMaxWidth : Board.workColumnMaxWidth,
+            maxWidth: Board.columnMaxWidth,
             maxHeight: .infinity,
             alignment: .top)
         .background { columnSurface }
@@ -125,7 +125,7 @@ struct ColumnView: View {
             .background(
                 Color.accentColor.opacity(0.05),
                 in: RoundedRectangle(cornerRadius: Board.cardRadius))
-            .frame(height: compact ? 34 : 72)
+            .frame(height: singleLine ? 34 : 72)
             .transition(.opacity)
     }
 

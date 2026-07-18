@@ -30,13 +30,30 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Backlog and Done are storage lanes that can hold many items, so their
-    /// cards are shown as compact rows. The two working lanes (Als Nächstes,
-    /// In Bearbeitung) keep full sticky-note cards and stay the focus — a
-    /// card visibly grows when pulled into the work in progress.
-    var usesCompactCards: Bool {
-        self == .backlog || self == .done
+    /// How much a card in this lane reveals. The information gradient is the
+    /// board's focus mechanism: the working lanes carry everything, the
+    /// backlog carries what you need to decide, and finished work carries
+    /// nothing but its name.
+    var cardDensity: CardDensity {
+        switch self {
+        case .next, .inProgress: .full
+        case .backlog: .compact
+        case .done: .minimal
+        }
     }
+}
+
+/// Information density of a card, derived from its lane.
+enum CardDensity {
+    /// Working lanes: title, notes, due date, recurrence, source list.
+    case full
+    /// Backlog: one line with what you need to triage — priority, date,
+    /// recurrence.
+    case compact
+    /// Erledigt: the title alone. It is done; nothing else matters.
+    case minimal
+
+    var isSingleLine: Bool { self != .full }
 }
 
 /// Immutable display model for one card, derived from an `EKReminder`.
@@ -62,6 +79,35 @@ struct KanbanCard: Identifiable, Equatable {
         case 5: "!!"
         case 6...9: "!"
         default: nil
+        }
+    }
+
+    /// Sort rank for priority. EventKit numbers priorities the other way
+    /// round (1 = highest) and uses 0 for "none", which has to sort last.
+    var priorityRank: Int {
+        switch priority {
+        case 1...4: 0
+        case 5: 1
+        case 6...9: 2
+        default: 3
+        }
+    }
+
+    /// Order for the open lanes: priority first, then the earliest due date
+    /// (undated cards last), then title so the order never jitters.
+    static func byPriorityThenDate(_ lhs: KanbanCard, _ rhs: KanbanCard) -> Bool {
+        if lhs.priorityRank != rhs.priorityRank {
+            return lhs.priorityRank < rhs.priorityRank
+        }
+        switch (lhs.dueDate, rhs.dueDate) {
+        case let (.some(l), .some(r)) where l != r:
+            return l < r
+        case (.some, nil):
+            return true
+        case (nil, .some):
+            return false
+        default:
+            return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
         }
     }
 }

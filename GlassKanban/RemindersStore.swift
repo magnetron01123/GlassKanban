@@ -228,21 +228,10 @@ final class RemindersStore: ObservableObject {
                 && dueFilter.matches($0.dueDate)
         }
         if status == .done {
+            // Finished work reads newest first; priority no longer matters.
             return filtered.sorted { ($0.completionDate ?? .distantPast) > ($1.completionDate ?? .distantPast) }
         }
-        return filtered.sorted { lhs, rhs in
-            switch (lhs.dueDate, rhs.dueDate) {
-            case let (.some(l), .some(r)):
-                if l != r { return l < r }
-                return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
-            case (.some, nil):
-                return true
-            case (nil, .some):
-                return false
-            case (nil, nil):
-                return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
-            }
-        }
+        return filtered.sorted(by: KanbanCard.byPriorityThenDate)
     }
 
     func resetFilters() {

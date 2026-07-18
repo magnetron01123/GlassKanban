@@ -27,6 +27,7 @@
 		CF6FC09044300C4AEE056EF2 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BD228B20A88109D18DAA5 /* Models.swift */; };
 		D10E1E7C10AD77A2A5815F45 /* TextSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF53DB3FE2E8D54F03CE48E9 /* TextSanitizerTests.swift */; };
 		D3765DBF0B271BAFF4FFD965 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5DCA4E02A36CF7D719EC339 /* DesignSystem.swift */; };
+		D5D9047BF7E12AD928F47F76 /* CardSortingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */; };
 		F02B830CE81DFD65A6C33E55 /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
 		F497DB173B495A88ADCD4821 /* RemindersStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DFB23226AD6A320E58F33 /* RemindersStore.swift */; };
 /* End PBXBuildFile section */
@@ -46,6 +47,7 @@
 		C611793427062C2E7A24FAFF /* GlassKanban.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassKanban.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C67BD228B20A88109D18DAA5 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		C8099603D0D48B34633EB69D /* StatusTagger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTagger.swift; sourceTree = "<group>"; };
+		DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSortingTests.swift; sourceTree = "<group>"; };
 		E363E5F11832E63EE2539D70 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		E38DFB23226AD6A320E58F33 /* RemindersStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersStore.swift; sourceTree = "<group>"; };
 		E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTaggerTests.swift; sourceTree = "<group>"; };
@@ -69,6 +71,7 @@
 		7204D7B9E911C3DE365C3B14 /* GlassKanbanTests */ = {
 			isa = PBXGroup;
 			children = (
+				DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */,
 				4F5178AE744F393F737442A5 /* FilterTests.swift */,
 				E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */,
 				4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */,
@@ -206,6 +209,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D5D9047BF7E12AD928F47F76 /* CardSortingTests.swift in Sources */,
 				875104CDC32ECDEB5C2494F0 /* FilterTests.swift in Sources */,
 				CF6FC09044300C4AEE056EF2 /* Models.swift in Sources */,
 				C831C7F9A270718B155C00E3 /* StatusTagger.swift in Sources */,
