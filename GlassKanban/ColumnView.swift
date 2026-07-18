@@ -4,6 +4,7 @@ struct ColumnView: View {
     let status: KanbanStatus
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isTargeted = false
     @State private var expanded = false
 
@@ -196,6 +197,6 @@ struct ColumnView: View {
     private var columnFill: AnyShapeStyle {
         reduceTransparency
             ? AnyShapeStyle(Color(nsColor: .underPageBackgroundColor))
-            : AnyShapeStyle(Board.columnFill)
+            : AnyShapeStyle(Board.columnFill(colorScheme))
     }
 }

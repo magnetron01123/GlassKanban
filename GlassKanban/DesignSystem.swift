@@ -37,14 +37,20 @@ enum Board {
     /// leading edge, the way physical tickets carry a color code.
     static let cardStripeWidth: CGFloat = 3
 
-    // Recessed column fill (replaces glass-on-glass material)
-    static let columnFill = Color.primary.opacity(0.065)
-    static let columnInnerShadow = Color.black.opacity(0.10)
+    // Surfaces. Cards are OPAQUE paper: translucent materials made card
+    // brightness depend on the wallpaper behind the window, which inverted
+    // the elevation (cards rendered darker than the lanes). Solid fills keep
+    // the depth order deterministic — lanes always recede below the window
+    // glass, paper always sits above them ("elevated = lighter" in dark).
+    static func columnFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.black.opacity(0.25) : Color.black.opacity(0.065)
+    }
 
-    /// Solid system background layered over the card material: lifts the
-    /// paper clearly off the recessed lane in both light and dark mode
-    /// while keeping a trace of translucency.
-    static let cardPaperOpacity: Double = 0.5
+    static func cardFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color(white: 0.25) : .white
+    }
+
+    static let columnInnerShadow = Color.black.opacity(0.10)
 
     // Card shadows: tight contact shadow + soft ambient = physical elevation
     static let cardShadowResting = (color: Color.black.opacity(0.10), radius: CGFloat(1.5), y: CGFloat(1))

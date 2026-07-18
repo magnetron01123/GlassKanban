@@ -17,6 +17,7 @@ struct CardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
@@ -106,14 +107,6 @@ struct CardView: View {
     private var surface: some View {
         RoundedRectangle(cornerRadius: Board.cardRadius)
             .fill(cardFill)
-            .overlay {
-                // Brighten the paper over the material so cards clearly sit
-                // above the recessed lane (elevated in dark mode, too).
-                if !reduceTransparency {
-                    RoundedRectangle(cornerRadius: Board.cardRadius)
-                        .fill(Color(nsColor: .controlBackgroundColor).opacity(Board.cardPaperOpacity))
-                }
-            }
     }
 
     /// Slim list-color marker along the leading edge — the ticket's color
@@ -127,12 +120,12 @@ struct CardView: View {
             .allowsHitTesting(false)
     }
 
-    /// Near-opaque "paper" so cards read as physical objects on the recessed
-    /// lanes, instead of glass on glass.
-    private var cardFill: AnyShapeStyle {
+    /// Opaque "paper" so cards read as physical objects on the recessed
+    /// lanes — independent of whatever wallpaper shines through the window.
+    private var cardFill: Color {
         reduceTransparency
-            ? AnyShapeStyle(Color(nsColor: .controlBackgroundColor))
-            : AnyShapeStyle(.thickMaterial)
+            ? Color(nsColor: .controlBackgroundColor)
+            : Board.cardFill(colorScheme)
     }
 
     private var contour: some View {
