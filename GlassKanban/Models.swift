@@ -41,6 +41,34 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
         case .done: .minimal
         }
     }
+
+    /// Lanes that can carry a WIP limit: the two working lanes. Backlog and
+    /// Erledigt are deliberately unbounded — one is the standing stack, the
+    /// other only grows.
+    var supportsWIPLimit: Bool {
+        switch self {
+        case .next, .inProgress: true
+        case .backlog, .done: false
+        }
+    }
+
+    /// Whether crossing the limit interrupts with a question. Only "In
+    /// Bearbeitung": Kanban limits work *in progress*, not what is merely
+    /// planned. A full queue is normal planning; too many things started at
+    /// once is the expensive mistake. Keeping the interruption to one lane
+    /// also keeps the app's only modal nag to a single, justified spot.
+    var asksBeforeExceedingLimit: Bool { self == .inProgress }
+
+    /// Default limit for a fresh install. Personal Kanban's rule of thumb for
+    /// one person: 2–3 things actually in progress, a slightly roomier queue
+    /// that must not become a second backlog.
+    var defaultWIPLimit: Int {
+        switch self {
+        case .inProgress: 3
+        case .next: 5
+        case .backlog, .done: 0
+        }
+    }
 }
 
 /// Information density of a card, derived from its lane.
@@ -78,6 +106,21 @@ struct KanbanCard: Identifiable, Equatable {
     /// notes, which bumps this date. Content edits reset it too — an
     /// accepted trade-off for an ambient board.
     let lastModifiedDate: Date?
+
+    /// Everything the search looks at, in one place: the title plus whatever
+    /// notes the board itself would show. Built once per card rather than
+    /// stitched together on every keystroke.
+    var searchHaystack: String { "\(title)\n\(notesExcerpt)" }
+
+    /// Whether this card matches a search term. Case- and diacritic-insensitive
+    /// like the Reminders app, and forgiving about word order: every word has
+    /// to appear somewhere, not as one contiguous phrase.
+    func matches(search term: String) -> Bool {
+        let words = term.split(whereSeparator: \.isWhitespace)
+        guard !words.isEmpty else { return true }
+        let haystack = searchHaystack
+        return words.allSatisfy { haystack.localizedStandardContains($0) }
+    }
 
     /// Reminders-style priority marks: high = "!!!", medium = "!!", low = "!"
     /// (EventKit convention: 1–4 high, 5 medium, 6–9 low, 0 none).

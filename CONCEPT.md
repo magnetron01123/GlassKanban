@@ -130,9 +130,69 @@ höchstens eine spätere, rein kosmetische Verbesserung, keine funktionale Notwe
 
 | Filter | Datenquelle | Einschränkung |
 |---|---|---|
+| **Suche** | `EKReminder.title` + `notes` (Volltext, lokal) | keine |
 | **Dringlichkeit** | `EKReminder.priority` (0–9, gruppiert: Hoch/Mittel/Niedrig/Keine) | keine |
 | **Fälligkeit** | `EKReminder.dueDateComponents` (z. B. Überfällig/Heute/Diese Woche/Ohne Datum) | keine |
 | **Verantwortliche Person** | `EKCalendarItem.attendees` (`EKParticipant`) | **nur lesend.** Funktioniert nur bei über iCloud **geteilten** Listen. EventKit erlaubt kein programmatisches Zuweisen — das Zuweisen einer Person zu einer Erinnerung muss weiterhin in der nativen Reminders-App erfolgen. Glass Kanban kann nur anzeigen und danach filtern. |
+
+### Finden: ein Bedienelement statt drei — Konzeptvorschlag
+
+**Ausgangsproblem:** Suche, Dringkeit und Fälligkeit sind für den Nutzer *eine* Aufgabe
+(„finde ein Ticket"), stehen im Chrome aber als getrennte Elemente. Heute sind das zwei
+Filtermenüs; mit einer Suche wären es drei. Genau die falsche Richtung für ein Board, das
+den ganzen Tag ruhig dastehen soll.
+
+**Leitsatz, der die Lösung bestimmt:** Minimalismus heißt nicht, Bedienelemente zu
+*verstecken*, sondern *weniger* davon zu haben. Verstecken kostet Auffindbarkeit und spart
+nichts — die Funktion existiert ja weiter, sie ist nur schwerer zu finden. Zusammenlegen
+spart wirklich.
+
+**Empfehlung: ein einziges „Finden"-Element, das alle drei Funktionen enthält.**
+
+| Zustand | Was im Chrome zu sehen ist |
+|---|---|
+| **Ruhe** (der Normalfall) | Ein Lupensymbol. Sonst nichts. Das ist *weniger* Chrome als heute, nicht mehr. |
+| **Aktiv** (Klick oder ⌘F) | Das Feld wächst auf; Dringlichkeit und Fälligkeit liegen als Tokens/Scopes **im selben Feld** (`searchable(text:tokens:)` bzw. `.searchScopes`). Alles zum Finden an einem Ort. |
+| **Gefiltert** | Das eingeklappte Symbol trägt den Zustand: eingefärbt, mit Anzahl aktiver Einschränkungen. |
+
+Der dritte Zustand ist die **Sicherheitsbedingung, nicht Deko**: Ein Board darf niemals
+gefiltert sein, ohne dass man das sieht. Sonst fehlen Karten und man sucht den Fehler in
+den Daten statt im Filter. Verstecken ohne diese Rückmeldung wäre der eigentliche
+Designfehler.
+
+Damit sinkt das Dauer-Chrome auf **zwei Elemente**: Lupe (finden) und
+Erinnerungen-Knopf (anlegen) — zwei klar getrennte Funktionen, keine Sammlung von Reglern.
+
+**Verhalten der Suche selbst:**
+
+- Sie ist ein Filter wie die anderen: wirkt gleichzeitig auf **alle vier Spalten** und
+  verkleinert nur, was sichtbar ist. Keine Trefferliste, kein Sprung, keine eigene Ansicht —
+  das Board bleibt das Board und schrumpft zusammen.
+- **Durchsucht** werden Titel und Notizen, ohne Groß-/Kleinschreibung und ohne Diakritika
+  (`localizedStandardContains`) — dieselbe Nachsicht wie die Reminders-App. Der
+  Status-Hashtag wird vor dem Vergleich entfernt, sonst träfe „bearbeitung" schlagartig
+  eine ganze Spalte.
+- **Kein Suchverlauf, keine Vorschläge, kein Index** — wäre sonst der einzige Ort, an dem
+  die App etwas über den Nutzer speichert, und widerspräche „lokal, speichert selbst
+  nichts". Die Suche existiert nur, solange etwas im Feld steht.
+- **Leeres Feld = kein Filter**, wie „Alle" bei den beiden anderen.
+
+**Bewusst verworfen:**
+
+- *Chrome bei Hover einblenden* — löst zwar „ich will die Knöpfe nicht sehen", aber
+  Elemente, die beim Mausweg erscheinen und verschwinden, sind auf einem Board mit
+  Drag & Drop unruhig, aus zwei Metern Entfernung unsichtbar und schlecht auffindbar. Ein
+  ruhendes Symbol ist stiller als bewegliche Teile.
+- *Nur Tastenkürzel, gar kein sichtbares Element* — maximal minimal, aber für Filter, die
+  man selten braucht und deshalb vergisst, nicht auffindbar genug.
+- *Eigene Filterleiste unter der Toolbar* — dauerhafte Fläche für eine gelegentliche
+  Funktion; genau das Gegenteil des Ziels.
+
+**Offener Punkt, den die Suche mit den bestehenden Filtern teilt:** Ist gefiltert, zeigen
+die Spaltenzähler die *sichtbare*, nicht die tatsächliche Menge (mit WIP-Limit also z. B.
+`1 / 3`, obwohl real vier Karten in Bearbeitung sind). Das ist heute schon so und fällt mit
+einer Suche nur häufiger auf. Der eingefärbte Zustand am Finden-Symbol ist die minimale
+Antwort darauf — eine Markierung an einer Stelle statt an jeder Spalte.
 
 ## MVP-Funktionsumfang
 
@@ -155,6 +215,14 @@ nicht nötig, das deckt der Spaltenwechsel bereits ab.
 
 ## Motivation (leichtgewichtige Gamification)
 
+**Psychologie, etablierte Produktivitätstechniken und Minimalismus werden bewusst und
+positiv genutzt** — sowohl um die tatsächliche Produktivität beim Arbeiten mit dem Board zu
+steigern, als auch um die Nutzung der App selbst angenehm und selbstverständlich zu machen.
+Leitplanke dabei ist immer „belohnen, nie bestrafen": Mechanismen laden ein, sie schränken
+nicht ein und beschämen nicht. Minimalismus ist in diesem Sinn nicht nur Ästhetik, sondern
+selbst ein Produktivitäts-Hebel — weniger visuelles Rauschen senkt die Schwelle, die App
+überhaupt regelmäßig zu öffnen, passend zum Anspruch, dauerhaft geöffnet zu bleiben.
+
 Damit die App nicht nur ein reines Produktivitäts-Werkzeug ist, zwei bewusst kleine,
 technisch günstige Zusätze — ausdrücklich **keine** Punkte/Levels/Badges/Bestenlisten, das
 würde für ein Einzelnutzer-Ambient-Board zu viel Komplexität ohne echten Mehrwert bedeuten:
@@ -167,6 +235,22 @@ würde für ein Einzelnutzer-Ambient-Board zu viel Komplexität ohne echten Mehr
   (~20 Sätze, u. a. an die Personal-Kanban-Philosophie angelehnt), Auswahl nach Kalendertag —
   ändert sich jeden Tag, bleibt am selben Tag stabil. Komplett offline, keine Analyse des
   Nutzerverhaltens, kein Server.
+
+**Weitere, an anderer Stelle bereits ausgearbeitete Anwendungen desselben Grundsatzes:**
+
+- **Sensorik & Belohnungsmomente** (Trackpad-Haptik, Settle-Moment beim Erledigen, sich
+  füllende Streak-Flamme nach Goal-Gradient-Effekt, Tages-/Wochenfortschritt nach Endowed
+  Progress/Progress Principle) — volle Herleitung in
+  [design/iteration-2-concept.md](design/iteration-2-concept.md), Punkt 7.
+- **Grenze, die sich daraus ergibt:** Bewegung gehört Dingen, die *gerade passiert sind* —
+  nie einer stehenden Einladung. Eine Dauer-Animation wird binnen Tagen weggefiltert und
+  entwertet dabei die Momente, die sich Aufmerksamkeit verdient haben. Deshalb wurde das
+  pulsierende Pull-Signal nach dem Praxistest wieder entfernt: Kanbans Pull-Signal ist der
+  freie Platz auf dem Board selbst, kein Effekt darüber.
+- **WIP-Limits:** bewusste, aber vorsichtig eingehegte Anwendung von
+  Selbstverpflichtungs-Psychologie (Reibung statt Verbot, Details in
+  [design/wip-limit-concept.md](design/wip-limit-concept.md)) — dort auch offen benannt, wo
+  das in Spannung zu „belohnen, nie bestrafen" gerät und wie das eingegrenzt wird.
 
 ## Design-Anspruch
 
@@ -181,6 +265,14 @@ gegenständliches Objekt auf dem Screen statt "Software", die auffällt. Produkt
 nicht laut/motivierend inszeniert, sondern über Reduktion und Klarheit vermittelt. Das ist eine
 Richtungsvorgabe/Orientierung für Optik und Ton, keine harte Spezifikation.
 
+**Kanban als Gestaltungsmaßstab, nicht nur als Datenmodell:** Personal Kanban prägt nicht
+nur, *was* die App speichert (Spalten, Status), sondern soll bei jeder Design-Entscheidung
+mitgedacht werden — als eine der Fragen, an denen sich Gestaltung orientiert, neben Liquid
+Glass und Minimalismus. Wo eine Kanban-Praxis (WIP-Limits, Pull-Prinzip, explizite
+Prozessregeln, Sichtbarkeit von Arbeit) eine Gestaltungsfrage berührt, hat sie Gewicht bei der
+Entscheidung — nicht nur dort, wo sie ohnehin schon Feature ist. Die Hover-Tipps weiter unten
+sind ein konkretes Beispiel dieser Haltung, kein Sonderfall.
+
 Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
 
 - Durchgängig Liquid-Glass-Materialien (Spaltenhintergründe, Karten, Filterleiste)
@@ -191,6 +283,35 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
 - Dringlichkeit/Fälligkeit dezent über Farbe/SF Symbols statt aufdringlicher Badges
 - Da nichts inhaltlich in der App bearbeitet wird, darf die Fläche komplett auf ruhige,
   reduzierte Darstellung statt Formulare/Eingabefelder optimiert werden
+- **Beispiel Pull-Signal am freien Platz:** Ist „In Bearbeitung" leer und liegt anderswo
+  offene Arbeit, zeigt die Spalte einen kartengroßen, gestrichelten Platzhalter mit einer
+  Zeile („Frei für die nächste Aufgabe"). Das Signal sitzt bewusst an der **leeren Stelle**,
+  nicht an einer Karte: So wird kein Ticket zum Favoriten erklärt, und es entspricht dem
+  Pull-Prinzip, bei dem am physischen Board immer der freie Platz ruft. Statisch, ohne Farbe,
+  ohne Bewegung — es verschwindet in dem Moment, in dem gezogen wurde. Ersetzt das frühere
+  pulsierende Leuchten an der obersten „Als Nächstes"-Karte, das eine Karte bevorzugte,
+  dauerhaft animiert war und mit der Interaktionsfarbe kollidierte.
+  **Regel dahinter: höchstens eine Einladung auf dem Board, und nur dort, wo Nichtstun
+  etwas kostet.** Ein leeres „Als Nächstes" bekommt deshalb bewusst *keinen* Platzhalter —
+  nicht vorgeplant zu haben ist unproblematisch, solange etwas in Arbeit ist. Zwei
+  Platzhalter nebeneinander würden das Board wie ein auszufüllendes Formular wirken lassen
+  (besonders beim ersten Start, wenn alles im Backlog liegt) und die Aufforderung mehrdeutig
+  machen. Backlog und Erledigt schweigen leer ohnehin — „In Bearbeitung" ist die begründete
+  Ausnahme, nicht „Als Nächstes" die vergessene.
+- **Beispiel Hover-Tipps:** An Stellen, wo die App bereits eine stille Kanban-Regel *hat*,
+  aber nirgends *erklärt* (z. B. ein WIP-Limit, das Pull-Prinzip im Backlog, der Unterschied
+  zwischen Zusage-Warteschlange und Ablage), trägt das jeweilige UI-Element einen kurzen
+  Hover-Tooltip — ein Fragment, kein ganzer Satz, keine separate Anleitung. Wissen entsteht
+  im Moment der Berührung, nicht über Onboarding.
+
+**Warum das zur bestehenden Philosophie passt, nicht nur zusätzlich dazu:** Ein
+`.help(...)`-Tooltip ist ein Standard-SwiftUI-Mechanismus, kein Custom-UI — bleibt
+unsichtbar bis zum Hover (Minimalismus: kein Dauertext, kein neues Element, keine
+Onboarding-Fläche), ist rein statischer, in der App gebündelter Text wie die
+täglichen Motivations-Sätze (lokal/offline: keine Server-Anfrage, keine Analyse,
+welche Tipps gelesen werden), und fügt sich als natives Systemverhalten unauffällig
+in bestehende Mac-Konventionen ein (native Apple-App statt Custom-Tooling). Konkret
+angewendet z. B. im WIP-Limit-Konzept ([design/wip-limit-concept.md](design/wip-limit-concept.md)).
 
 ## Mac-/Apple-spezifische Vertiefung
 

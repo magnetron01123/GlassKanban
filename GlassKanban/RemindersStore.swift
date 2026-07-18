@@ -30,6 +30,7 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var draggingCardID: String?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
+    @Published var searchText: String = ""
 
     var streak: Int { streakStats.current }
 
@@ -42,7 +43,17 @@ final class RemindersStore: ObservableObject {
         }
     }
 
+    /// WIP limits per working lane, keyed by `KanbanStatus.rawValue`.
+    /// 0 means "no limit" — no separate on/off switch needed. Persisted in
+    /// UserDefaults like the excluded lists.
+    @Published var wipLimits: [String: Int] {
+        didSet {
+            UserDefaults.standard.set(wipLimits, forKey: Self.wipLimitsKey)
+        }
+    }
+
     private static let excludedKey = "excludedCalendarIDs"
+    private static let wipLimitsKey = "wipLimits"
 
     /// Completed reminders are shown in "Erledigt" for this many days.
     private static let doneWindowDays = 14
@@ -56,6 +67,36 @@ final class RemindersStore: ObservableObject {
 
     init() {
         excludedCalendarIDs = Set(UserDefaults.standard.stringArray(forKey: Self.excludedKey) ?? [])
+        // First launch starts with the recommended limits rather than none:
+        // the feature should work without visiting Settings once.
+        wipLimits = UserDefaults.standard.dictionary(forKey: Self.wipLimitsKey) as? [String: Int]
+            ?? Dictionary(
+                uniqueKeysWithValues: KanbanStatus.allCases
+                    .filter(\.supportsWIPLimit)
+                    .map { ($0.rawValue, $0.defaultWIPLimit) })
+    }
+
+    // MARK: - WIP limits
+
+    /// The configured limit for a lane, or nil if the lane has none (either
+    /// unsupported or explicitly set to 0).
+    func wipLimit(for status: KanbanStatus) -> Int? {
+        guard status.supportsWIPLimit, let limit = wipLimits[status.rawValue], limit > 0 else {
+            return nil
+        }
+        return limit
+    }
+
+    func setWIPLimit(_ limit: Int, for status: KanbanStatus) {
+        wipLimits[status.rawValue] = max(0, limit)
+    }
+
+    /// Whether a lane currently holds more cards than its limit allows.
+    /// Counts what the board actually shows (filters included) so the number
+    /// on screen and the rule always agree.
+    func isOverWIPLimit(_ status: KanbanStatus) -> Bool {
+        guard let limit = wipLimit(for: status) else { return false }
+        return cards(for: status).count > limit
     }
 
     // MARK: - Access & lifecycle
@@ -227,12 +268,14 @@ final class RemindersStore: ObservableObject {
 
     // MARK: - Writing (the app's only write: moving a card)
 
-    /// Moves a card to another column. Returns whether anything actually
-    /// changed, so the UI can give feedback (haptics) only on a real move.
+    /// Moves a card to another column. Returns the column it came from if
+    /// anything actually changed, so the UI can give feedback (haptics) only
+    /// on a real move — and can offer to put the card back.
     @discardableResult
-    func move(cardID: String, to status: KanbanStatus) -> Bool {
-        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return false }
-        guard StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted) != status else { return false }
+    func move(cardID: String, to status: KanbanStatus) -> KanbanStatus? {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
+        let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
+        guard origin != status else { return nil }
 
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
         reminder.isCompleted = (status == .done)
@@ -240,7 +283,7 @@ final class RemindersStore: ObservableObject {
             try eventStore.save(reminder, commit: true)
         } catch {
             scheduleRefresh()
-            return false
+            return nil
         }
 
         // Optimistic UI update; the EventKit change notification will
@@ -253,7 +296,7 @@ final class RemindersStore: ObservableObject {
             flagRecentlyCompleted([cardID])
         }
         scheduleRefresh()
-        return true
+        return origin
     }
 
     /// Marks cards as just-completed for ~0.7 s so their views can play the
@@ -293,6 +336,7 @@ final class RemindersStore: ObservableObject {
             $0.status == status
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
+                && $0.matches(search: searchText)
         }
         if status == .done {
             // Finished work reads newest first; priority no longer matters.
@@ -304,7 +348,43 @@ final class RemindersStore: ObservableObject {
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all
+        searchText = ""
     }
+
+    // MARK: - Find field
+
+    /// True while the board shows less than everything. The find control wears
+    /// this: a board must never be filtered without saying so, or cards look
+    /// lost rather than hidden.
+    var isFiltering: Bool {
+        priorityFilter != .all || dueFilter != .all || !searchText.isEmpty
+    }
+
+    /// Active restrictions, for the badge on the collapsed find control.
+    var activeRestrictionCount: Int {
+        (priorityFilter != .all ? 1 : 0)
+            + (dueFilter != .all ? 1 : 0)
+            + (searchText.isEmpty ? 0 : 1)
+    }
+
+    // MARK: - Empty board
+
+    /// Why the whole board is blank — the two reasons need different answers,
+    /// and a wordless empty window reads as a broken app either way. Nil while
+    /// anything is visible; individual empty lanes stay silent (see
+    /// ColumnView.showsPullSlot).
+    enum Emptiness {
+        /// Nothing to show anywhere: no reminders in the chosen lists.
+        case nothingToDo
+        /// There is work, but the current find settings hide all of it.
+        case filteredAway
+    }
+
+    var emptiness: Emptiness? {
+        guard KanbanStatus.allCases.allSatisfy({ cards(for: $0).isEmpty }) else { return nil }
+        return isFiltering ? .filteredAway : .nothingToDo
+    }
+
 
     /// URL that opens this card's reminder directly in the Reminders app,
     /// or nil if no deep link could be resolved.

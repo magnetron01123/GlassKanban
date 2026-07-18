@@ -4,11 +4,22 @@ struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showStreak = false
+    @State private var showFind = false
 
     var body: some View {
         HStack(alignment: .top, spacing: Board.columnSpacing) {
             ForEach(KanbanStatus.allCases) { status in
                 ColumnView(status: status)
+            }
+        }
+        // Four wordless empty lanes read as a broken app. Individual lanes stay
+        // silent — only the whole board being blank is worth a sentence, and
+        // then exactly one, laid over the lanes rather than inside them.
+        .overlay {
+            if let emptiness = store.emptiness {
+                EmptyBoardNotice(emptiness: emptiness) {
+                    store.resetFilters()
+                }
             }
         }
         // Lanes flex between ticket-friendly bounds; the whole block sits
@@ -25,20 +36,21 @@ struct BoardView: View {
                     streakPill
                 }
             }
-            ToolbarItemGroup(placement: .primaryAction) {
-                filterMenu(
-                    title: "Dringlichkeit",
-                    systemImage: "flag",
-                    selection: $store.priorityFilter,
-                    isActive: store.priorityFilter != .all)
-                filterMenu(
-                    title: "Fälligkeit",
-                    systemImage: "calendar",
-                    selection: $store.dueFilter,
-                    isActive: store.dueFilter != .all)
+            // Two separate glass groups, not one: narrowing the view down and
+            // leaving for Reminders are different jobs, and sharing a capsule
+            // would dilute the one deliberately prominent button on the board.
+            ToolbarItem(placement: .primaryAction) {
+                findButton
+            }
+            ToolbarSpacer(.fixed, placement: .primaryAction)
+            ToolbarItem(placement: .primaryAction) {
                 remindersButton
             }
         }
+        // The window paints its own always-active glass edge to edge (see
+        // WindowGlass); an opaque toolbar strip on top would cut a flat band
+        // across it. The toolbar items keep their own Liquid Glass.
+        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
     }
 
     // MARK: - Streak pill + popover
@@ -63,6 +75,33 @@ struct BoardView: View {
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
             StreakPopover(stats: store.streakStats)
                 .frame(width: 260)
+        }
+    }
+
+    // MARK: - Find
+
+    /// Search, urgency and due date are one job for the user — "find a ticket" —
+    /// so they share one control instead of three pieces of chrome. At rest it
+    /// is a single glyph; everything else lives in a popover, which floats
+    /// above the board rather than pushing it down: this window is meant to
+    /// stand still all day, and a bar sliding in would move every card.
+    private var findButton: some View {
+        Button {
+            showFind.toggle()
+        } label: {
+            Label("Finden", systemImage: "magnifyingglass")
+                .symbolVariant(store.isFiltering ? .fill : .none)
+        }
+        .keyboardShortcut("f")
+        // A board must never be filtered without saying so, or cards look lost
+        // rather than hidden. The glyph carries that state even when closed.
+        .tint(store.isFiltering ? Color.accentColor : nil)
+        .help(store.isFiltering
+            ? "Board ist gefiltert — \(store.activeRestrictionCount) aktiv (⌘F)"
+            : "Aufgabe finden (⌘F)")
+        .popover(isPresented: $showFind, arrowEdge: .bottom) {
+            FindPopover()
+                .environmentObject(store)
         }
     }
 
@@ -98,33 +137,4 @@ struct BoardView: View {
         return NSWorkspace.shared.icon(forFile: url.path)
     }()
 
-    // MARK: - Filters
-
-    private func filterMenu<F: CaseIterable & Identifiable & Hashable>(
-        title: String,
-        systemImage: String,
-        selection: Binding<F>,
-        isActive: Bool
-    ) -> some View where F.AllCases: RandomAccessCollection, F: FilterDisplayable {
-        Menu {
-            Picker(title, selection: selection) {
-                ForEach(F.allCases) { option in
-                    Text(option.displayName).tag(option)
-                }
-            }
-            .pickerStyle(.inline)
-        } label: {
-            Label(title, systemImage: systemImage)
-                .symbolVariant(isActive ? .fill : .none)
-        }
-        .help(isActive ? "\(title): gefiltert" : "\(title): alle anzeigen")
-    }
 }
-
-/// Small protocol so both filter enums share one toolbar menu builder.
-protocol FilterDisplayable {
-    var displayName: String { get }
-}
-
-extension PriorityFilter: FilterDisplayable {}
-extension DueFilter: FilterDisplayable {}
