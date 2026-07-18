@@ -21,6 +21,9 @@ enum Board {
     /// Working-lane cards hold this much height even when nearly empty, so
     /// they read as sticky notes with a body instead of flat title bars.
     static let fullCardMinHeight: CGFloat = 118
+    /// A card only reports its dwell time once it has lingered this long —
+    /// below it, sitting in a column is simply normal.
+    static let agingThresholdDays = 3
 
     // Radii (mockup: column 14, card 11, badge 6)
     static let columnRadius: CGFloat = 14

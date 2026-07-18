@@ -135,10 +135,10 @@ struct CardView: View {
     }
 
     /// Dwell time, top right in the header: process state, deliberately far
-    /// from the due date in the footer. Appears from 2 days on.
+    /// from the due date in the footer.
     @ViewBuilder
     private var agingLabel: some View {
-        if let days = card.daysInColumn(), days >= 2 {
+        if let days = card.daysInColumn(), days >= Board.agingThresholdDays {
             HStack(spacing: 3) {
                 Image(systemName: "clock")
                     .font(.system(size: 9))

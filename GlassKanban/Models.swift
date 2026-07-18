@@ -102,8 +102,8 @@ struct KanbanCard: Identifiable, Equatable {
     }
 
     /// Whole days this card has been sitting in its column (approximated via
-    /// `lastModifiedDate`). The card shows it only from 2 days on — fresh is
-    /// normal and needs no label; only lingering is a signal.
+    /// `lastModifiedDate`). The card shows it only from `agingThresholdDays`
+    /// on — fresh is normal and needs no label; only lingering is a signal.
     func daysInColumn(calendar: Calendar = .current, now: Date = .now) -> Int? {
         guard let lastModifiedDate else { return nil }
         return calendar.dateComponents(
