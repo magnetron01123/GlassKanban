@@ -129,8 +129,10 @@ struct ColumnView: View {
             .transition(.opacity)
     }
 
+    /// An empty "Als Nächstes" invites a pull from the backlog — the one
+    /// empty state where guidance creates motion; the others stay neutral.
     private var emptyState: some View {
-        Text("Keine Karten")
+        Text(status == .next ? "Aus dem Backlog ziehen" : "Keine Karten")
             .font(.system(size: 12))
             .foregroundStyle(.quaternary)
             .frame(maxWidth: .infinity)

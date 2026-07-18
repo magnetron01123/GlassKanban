@@ -46,7 +46,7 @@ struct CardView: View {
         .contextMenu {
             Button("In Erinnerungen öffnen") { openInReminders() }
         }
-        .help("\(card.listName) · Doppelklick öffnet Erinnerungen")
+        .help(helpText)
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
         .onChange(of: pullSignal) { _, active in updateBreathing(active) }
@@ -130,6 +130,17 @@ struct CardView: View {
             .font(.system(size: 9, weight: .semibold))
             .foregroundStyle(.secondary)
             .help("Wiederholende Erinnerung")
+    }
+
+    /// Compact rows have no room for the notes preview, so the tooltip
+    /// carries it — information without pixels.
+    private var helpText: String {
+        var lines: [String] = []
+        if compact && !card.notesPreview.isEmpty {
+            lines.append(card.notesPreview)
+        }
+        lines.append("\(card.listName) · Doppelklick öffnet Erinnerungen")
+        return lines.joined(separator: "\n")
     }
 
     private var displayTitle: String {
