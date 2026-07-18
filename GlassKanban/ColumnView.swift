@@ -74,7 +74,11 @@ struct ColumnView: View {
                 moreButton
             }
         }
-        .frame(minWidth: Board.columnMinWidth, maxWidth: Board.columnMaxWidth, maxHeight: .infinity, alignment: .top)
+        .frame(
+            minWidth: Board.columnMinWidth,
+            maxWidth: compact ? Board.storageColumnMaxWidth : Board.workColumnMaxWidth,
+            maxHeight: .infinity,
+            alignment: .top)
         .background { columnSurface }
         .overlay { columnContour }
         .animation(Board.dropTargetAnimation, value: isTargeted)

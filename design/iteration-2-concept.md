@@ -156,6 +156,44 @@ Bewusst **verworfen:** Gruppierung nach Liste/Datum mit Zwischenüberschriften
 (die bestehenden Filter Dringlichkeit/Fälligkeit wirken bereits auf alle
 Spalten).
 
+## 9. Freiraum auf breiten Displays: „Raum arbeitet für den Fokus"
+
+**Problem:** Auf einem 27"+-Display bleibt neben dem zentrierten Board
+Freifläche. Hart links gepackt wirkte sie tot, zentriert wirkt sie als
+Rahmen — aber sie soll sich *verdient* anfühlen, nicht übrig.
+
+**Baustein 1 — Asymmetrisch atmende Spalten (Kern-Empfehlung).**
+Zusätzliche Breite geht zuerst dorthin, wo gearbeitet wird: Die
+Arbeitsspalten („Als Nächstes", „In Bearbeitung") dürfen bis ~440 pt
+wachsen, die Ablagen (Backlog, Erledigt) sind bei ~320 pt gedeckelt
+(`layoutPriority` bzw. unterschiedliche maxWidth). Das Aufmerksamkeits-
+Gefälle aus Punkt 8 bekommt damit auch eine horizontale Dimension: breite
+Bühne in der Mitte, schmale Regale an den Rändern. Der Restfreiraum
+schrumpft spürbar und das Board wirkt komponiert statt gleichförmig.
+
+**Baustein 2 — Ambient-Bilanz im Freiraum (VOM PO ABGELEHNT, bleibt nur
+als dokumentierte Idee).**
+Ist das Fenster deutlich breiter als das Board (~200 pt Rest pro Seite),
+erscheint unten links im Freiraum eine einzige stille Zeile in Tertiärfarbe:
+
+    Heute 3 · Woche 12 · Bester Lauf 14 Tage
+
+Keine Box, kein Icon — nur Typografie auf dem Fensterglas, wie eine
+Gravur am Rand des Schreibtischs. Auf schmalen Fenstern existiert sie
+nicht (kein Chrome-Comeback durch die Hintertür); die Details bleiben im
+Streak-Popover.
+
+**Bewusst verworfen:**
+- *Inspector-/Detailspalte im Freiraum* (Klick auf Karte zeigt Details
+  rechts) — dupliziert die Erinnerungen-App und weicht die Read-only-
+  Philosophie auf.
+- *Quick-Drop-Zonen beim Ziehen* („hier fallen lassen → Erledigt" am
+  Rand) — Gimmick, zerstört die Ruhe.
+- *Uhr/Datum/Widgets im Freiraum* — dupliziert Menüleiste bzw. gehört
+  ins WidgetKit-Thema (BACKLOG.md).
+- *Fensterglas im Freiraum durchsichtiger machen* — technisch nicht
+  regional steuerbar, und der Desktop schimmert ohnehin schon durch.
+
 ## Umsetzungsreihenfolge (wenn freigegeben)
 
 1. Layout + Karten inkl. kompakter Randspalten (Punkte 1–3, 8) — größter

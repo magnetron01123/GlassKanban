@@ -35,7 +35,11 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanban
         PRODUCT_NAME: Glass Kanban
         GENERATE_INFOPLIST_FILE: false
-        CODE_SIGN_STYLE: Automatic
+        # Local self-signed identity ("Glass Kanban Development" in the login
+        # keychain): keeps the code signature stable across builds so macOS
+        # remembers the Reminders permission instead of re-prompting.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: Glass Kanban Development
   GlassKanbanTests:
     type: bundle.unit-test
     platform: macOS
