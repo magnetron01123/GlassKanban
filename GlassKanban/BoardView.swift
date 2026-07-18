@@ -3,26 +3,26 @@ import SwiftUI
 struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var showStreak = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: Board.columnSpacing) {
             ForEach(KanbanStatus.allCases) { status in
                 ColumnView(status: status)
             }
         }
-        .padding(12)
-        .frame(minWidth: 960, minHeight: 560)
+        // Lanes flex between ticket-friendly bounds; the whole block sits
+        // centered in the window like a board mounted on a wall.
+        .frame(maxWidth: .infinity)
+        .padding(Board.boardPadding)
+        .frame(minWidth: Board.boardMinWidth, minHeight: 560)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            QuoteBar()
-        }
         .toolbar {
-            if store.streak > 0 {
+            // Only shown once there is a streak — a "0" pill next to the
+            // window controls just looks broken.
+            if store.streakStats.current > 0 {
                 ToolbarItem(placement: .navigation) {
-                    Text("🔥 \(store.streak)")
-                        .font(.system(size: 12, weight: .semibold))
-                        .monospacedDigit()
-                        .help("\(store.streak) Tage in Folge mindestens eine Aufgabe erledigt")
+                    streakPill
                 }
             }
             ToolbarItemGroup(placement: .primaryAction) {
@@ -36,9 +36,69 @@ struct BoardView: View {
                     systemImage: "calendar",
                     selection: $store.dueFilter,
                     isActive: store.dueFilter != .all)
+                remindersButton
             }
         }
     }
+
+    // MARK: - Streak pill + popover
+
+    /// The streak counter, clickable to reveal details. The flame fills as the
+    /// day's work gets done (see StreakStats.flameLevel). No custom background:
+    /// the macOS 26 toolbar already wraps its items in Liquid Glass, and glass
+    /// inside glass renders as a boxed artifact.
+    private var streakPill: some View {
+        Button {
+            showStreak.toggle()
+        } label: {
+            HStack(spacing: 4) {
+                FlameIcon(level: store.streakStats.flameLevel)
+                Text("\(store.streakStats.current)")
+                    .font(.system(size: 12, weight: .semibold))
+                    .monospacedDigit()
+            }
+            .padding(.horizontal, 2)
+        }
+        .help("Tage nacheinander mit mindestens einer erledigten Aufgabe")
+        .popover(isPresented: $showStreak, arrowEdge: .bottom) {
+            StreakPopover(stats: store.streakStats)
+                .frame(width: 260)
+        }
+    }
+
+    // MARK: - Reminders jump
+
+    /// The one prominent control on the board. It carries Reminders' own app
+    /// icon: no wording identifies another app as unmistakably as its icon,
+    /// and the trailing arrow says you are leaving this window.
+    private var remindersButton: some View {
+        Button {
+            store.openRemindersApp()
+        } label: {
+            HStack(spacing: 5) {
+                if let icon = Self.remindersAppIcon {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 15, height: 15)
+                }
+                Text("Erinnerungen")
+                Image(systemName: "arrow.up.forward")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .buttonStyle(.glass)
+        .help("Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)")
+    }
+
+    /// The real Reminders icon, read from the installed app once.
+    private static let remindersAppIcon: NSImage? = {
+        guard let url = NSWorkspace.shared.urlForApplication(
+            withBundleIdentifier: "com.apple.reminders") else { return nil }
+        return NSWorkspace.shared.icon(forFile: url.path)
+    }()
+
+    // MARK: - Filters
 
     private func filterMenu<F: CaseIterable & Identifiable & Hashable>(
         title: String,
@@ -68,15 +128,3 @@ protocol FilterDisplayable {
 
 extension PriorityFilter: FilterDisplayable {}
 extension DueFilter: FilterDisplayable {}
-
-struct QuoteBar: View {
-    var body: some View {
-        Text(Quotes.quote())
-            .font(.system(size: 12))
-            .italic()
-            .foregroundStyle(.tertiary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .background(.bar)
-    }
-}

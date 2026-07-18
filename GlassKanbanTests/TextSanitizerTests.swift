@@ -50,4 +50,28 @@ final class TextSanitizerTests: XCTestCase {
     func testPreviewUsesFirstNonEmptyLine() {
         XCTAssertEqual(TextSanitizer.notesPreview("\n\nDritte Zeile zählt"), "Dritte Zeile zählt")
     }
+
+    // MARK: - Excerpt (several lines, for the working-lane cards)
+
+    func testExcerptKeepsSeveralLinesAndDropsBlanks() {
+        XCTAssertEqual(
+            TextSanitizer.notesExcerpt("Erste\n\nZweite\nDritte"),
+            "Erste\nZweite\nDritte")
+    }
+
+    func testExcerptStopsAtMaxLines() {
+        XCTAssertEqual(
+            TextSanitizer.notesExcerpt("Eins\nZwei\nDrei\nVier", maxLines: 2),
+            "Eins\nZwei")
+    }
+
+    func testExcerptStripsURLsAndStatusTags() {
+        XCTAssertEqual(
+            TextSanitizer.notesExcerpt("Siehe https://example.com hier\n#inbearbeitung\nRest"),
+            "Siehe hier\nRest")
+    }
+
+    func testExcerptOfNilIsEmpty() {
+        XCTAssertEqual(TextSanitizer.notesExcerpt(nil), "")
+    }
 }

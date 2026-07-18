@@ -10,7 +10,7 @@ Erinnerungs-Zugriff.
 ## Funktionsweise
 
 - **Vier Spalten:** Backlog → Als Nächstes → In Bearbeitung → Erledigt
-- **Status als Hashtag in den Notizen** (`#nächstes`, `#bearbeitung`) — die
+- **Status als Hashtag in den Notizen** (`#alsnächstes`, `#inbearbeitung`) — die
   Listenzugehörigkeit der Erinnerung bleibt unangetastet, Backlog = kein Tag,
   Erledigt = abgehakt (`isCompleted`)
 - **Drag & Drop** zwischen den Spalten ist die einzige Schreib-Interaktion; Aufgaben

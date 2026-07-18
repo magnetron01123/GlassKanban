@@ -15,9 +15,16 @@ struct GlassKanbanApp: App {
             ContentView()
                 .environmentObject(store)
         }
-        .defaultSize(width: 1120, height: 700)
+        .defaultSize(width: 1280, height: 760)
         .commands {
             CommandMenu("Board") {
+                Button("In Erinnerungen öffnen") {
+                    store.openRemindersApp()
+                }
+                .keyboardShortcut("n")
+
+                Divider()
+
                 Button("Aktualisieren") {
                     store.scheduleRefresh()
                 }

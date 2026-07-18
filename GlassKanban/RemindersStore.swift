@@ -1,5 +1,6 @@
 import EventKit
 import SwiftUI
+import AppKit
 
 /// The single data layer of the app. Reads reminders via EventKit, derives
 /// `KanbanCard`s, and performs the only write operations the app has:
@@ -18,9 +19,19 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var accessState: AccessState = .unknown
     @Published private(set) var cards: [KanbanCard] = []
     @Published private(set) var reminderCalendars: [EKCalendar] = []
-    @Published private(set) var streak: Int = 0
+    @Published private(set) var streakStats = StreakStats()
+    /// Cards that were just completed, for the brief "settle" animation —
+    /// whether completed here or elsewhere (a shared list on someone else's
+    /// device). Cleared automatically shortly after.
+    @Published private(set) var recentlyCompletedIDs: Set<String> = []
+    /// Card currently being dragged. Observed alongside the drag — the drop
+    /// payload is not readable while merely hovering — so a lane can tell
+    /// whether a drop would actually move anything.
+    @Published private(set) var draggingCardID: String?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
+
+    var streak: Int { streakStats.current }
 
     /// Calendar identifiers the user excluded in Settings (e.g. a shopping
     /// list). Persisted in UserDefaults; everything else is included.
@@ -40,6 +51,8 @@ final class RemindersStore: ObservableObject {
 
     private let eventStore = EKEventStore()
     private var refreshTask: Task<Void, Never>?
+    private var midnightTimer: Timer?
+    private var hasLoadedOnce = false
 
     init() {
         excludedCalendarIDs = Set(UserDefaults.standard.stringArray(forKey: Self.excludedKey) ?? [])
@@ -60,7 +73,42 @@ final class RemindersStore: ObservableObject {
         }
         guard accessState == .granted else { return }
         observeChanges()
+        observeDayBoundary()
         await refresh()
+    }
+
+    /// "Heute", "Überfällig", the sort order and the flame are all relative
+    /// to now — but they are only recomputed when data changes. On a board
+    /// that stays open for days, that means waking up to yesterday's world,
+    /// so the day boundary and returning from sleep force a refresh.
+    private func observeDayBoundary() {
+        scheduleMidnightRefresh()
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.scheduleMidnightRefresh()
+                self?.scheduleRefresh()
+            }
+        }
+    }
+
+    private func scheduleMidnightRefresh() {
+        midnightTimer?.invalidate()
+        // A few seconds past midnight, so the new day has definitely begun.
+        guard let nextMidnight = Calendar.current.nextDate(
+            after: .now,
+            matching: DateComponents(hour: 0, minute: 0, second: 5),
+            matchingPolicy: .nextTime) else { return }
+
+        let timer = Timer(fire: nextMidnight, interval: 0, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.scheduleMidnightRefresh()
+                await self?.refresh()
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        midnightTimer = timer
     }
 
     private func observeChanges() {
@@ -94,7 +142,7 @@ final class RemindersStore: ObservableObject {
         let included = reminderCalendars.filter { !excludedCalendarIDs.contains($0.calendarIdentifier) }
         guard !included.isEmpty else {
             cards = []
-            streak = 0
+            streakStats = StreakStats()
             return
         }
 
@@ -109,13 +157,24 @@ final class RemindersStore: ObservableObject {
 
         performTagHygiene(on: incomplete + completed)
 
-        streak = StreakCalculator.streak(completionDates: completed.compactMap(\.completionDate))
+        streakStats = StreakCalculator.stats(completionDates: completed.compactMap(\.completionDate))
 
         let doneWindowStart = calendar.date(
             byAdding: .day, value: -Self.doneWindowDays, to: calendar.startOfDay(for: .now))!
         let visibleCompleted = completed.filter { ($0.completionDate ?? .distantPast) >= doneWindowStart }
 
-        cards = (incomplete + visibleCompleted).compactMap(Self.card(from:))
+        let refreshed = (incomplete + visibleCompleted).compactMap(Self.card(from:))
+
+        // Work finished elsewhere (a shared list on another device) gets the
+        // same settle animation as our own. Skipped on the very first load,
+        // where every completed card would look brand new.
+        if hasLoadedOnce {
+            let wasDone = Set(cards.filter { $0.status == .done }.map(\.id))
+            let isDone = Set(refreshed.filter { $0.status == .done }.map(\.id))
+            flagRecentlyCompleted(isDone.subtracting(wasDone))
+        }
+        cards = refreshed
+        hasLoadedOnce = true
     }
 
     private func fetchReminders(matching predicate: NSPredicate) async -> [EKReminder] {
@@ -132,12 +191,15 @@ final class RemindersStore: ObservableObject {
             id: reminder.calendarItemIdentifier,
             title: TextSanitizer.displayTitle(reminder.title),
             notesPreview: TextSanitizer.notesPreview(reminder.notes),
+            notesExcerpt: TextSanitizer.notesExcerpt(reminder.notes),
             dueDate: reminder.dueDateComponents.flatMap { Foundation.Calendar.current.date(from: $0) },
             priority: reminder.priority,
             status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted),
             listName: calendar.title,
             listColor: Color(nsColor: calendar.color ?? .controlAccentColor),
-            completionDate: reminder.completionDate)
+            completionDate: reminder.completionDate,
+            isRecurring: reminder.hasRecurrenceRules,
+            lastModifiedDate: reminder.lastModifiedDate)
     }
 
     /// Data hygiene from the spec: completed reminders keep no stale status
@@ -165,9 +227,12 @@ final class RemindersStore: ObservableObject {
 
     // MARK: - Writing (the app's only write: moving a card)
 
-    func move(cardID: String, to status: KanbanStatus) {
-        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
-        guard StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted) != status else { return }
+    /// Moves a card to another column. Returns whether anything actually
+    /// changed, so the UI can give feedback (haptics) only on a real move.
+    @discardableResult
+    func move(cardID: String, to status: KanbanStatus) -> Bool {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return false }
+        guard StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted) != status else { return false }
 
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
         reminder.isCompleted = (status == .done)
@@ -175,7 +240,7 @@ final class RemindersStore: ObservableObject {
             try eventStore.save(reminder, commit: true)
         } catch {
             scheduleRefresh()
-            return
+            return false
         }
 
         // Optimistic UI update; the EventKit change notification will
@@ -184,7 +249,41 @@ final class RemindersStore: ObservableObject {
             cards[index].status = status
             cards[index].completionDate = (status == .done) ? .now : nil
         }
+        if status == .done {
+            flagRecentlyCompleted([cardID])
+        }
         scheduleRefresh()
+        return true
+    }
+
+    /// Marks cards as just-completed for ~0.7 s so their views can play the
+    /// settle animation, then clears the flags.
+    private func flagRecentlyCompleted(_ ids: Set<String>) {
+        guard !ids.isEmpty else { return }
+        recentlyCompletedIDs.formUnion(ids)
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(700))
+            self?.recentlyCompletedIDs.subtract(ids)
+        }
+    }
+
+    func beginDrag(cardID: String) {
+        guard draggingCardID != cardID else { return }
+        draggingCardID = cardID
+    }
+
+    /// A drag that ends outside any lane leaves this set; that is harmless,
+    /// because lanes only read it while a drag is hovering, and the next
+    /// drag overwrites it.
+    func endDrag() {
+        draggingCardID = nil
+    }
+
+    /// Opens the Reminders app (where all tasks are created and edited — the
+    /// board itself is read-only apart from drag & drop).
+    func openRemindersApp() {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.reminders") else { return }
+        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
     }
 
     // MARK: - Board queries
@@ -196,21 +295,10 @@ final class RemindersStore: ObservableObject {
                 && dueFilter.matches($0.dueDate)
         }
         if status == .done {
+            // Finished work reads newest first; priority no longer matters.
             return filtered.sorted { ($0.completionDate ?? .distantPast) > ($1.completionDate ?? .distantPast) }
         }
-        return filtered.sorted { lhs, rhs in
-            switch (lhs.dueDate, rhs.dueDate) {
-            case let (.some(l), .some(r)):
-                if l != r { return l < r }
-                return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
-            case (.some, nil):
-                return true
-            case (nil, .some):
-                return false
-            case (nil, nil):
-                return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
-            }
-        }
+        return filtered.sorted(by: KanbanCard.openLaneOrder())
     }
 
     func resetFilters() {

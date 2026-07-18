@@ -21,7 +21,17 @@ Begründung, warum später (oder warum grundsätzlich nicht).
 ## Board-Struktur
 
 - **WIP-Limit für "In Bearbeitung"** — passt thematisch zur Personal-Kanban-Philosophie,
-  aber zusätzlicher Konfigurations- und UI-Aufwand fürs Erst-Release.
+  aber zusätzlicher Konfigurations- und UI-Aufwand fürs Erst-Release. Gedachte Umsetzung:
+  ab n Karten färbt sich die Zähler-Kapsel der Spalte dezent amber, kein Blocken, kein
+  Text — nur ein leises "zu viel offen". Offene Frage: fester Wert oder in den
+  Einstellungen konfigurierbar.
+- **Swimlane-Trennung im Backlog ("Heute-Absatz")** — dringliche Karten (überfällig/heute)
+  schwimmen bereits nach oben, gehen aber nahtlos in den Rest über. Eine einzige feine
+  Trennlinie unter der letzten dringlichen Karte würde den Backlog in zwei stille Absätze
+  teilen: "heute dran" und "später" — kein Text, keine Farbe, nur Raum-Typografie (vgl.
+  Things' Today-Moment). Gehört inhaltlich mit dem WIP-Limit zusammen: beide machen
+  *Menge* sichtbar, ohne zu bevormunden. Zurückgestellt, bis das Kartendesign final ist,
+  weil beide Signale sonst mit der Dringlichkeitsfarbe konkurrieren könnten.
 - **Mehrere Boards** — MVP ist bewusst ein einzelnes Board.
 - **Konfigurierbare Spaltenanzahl/-namen** — MVP hat vier feste Spalten.
 - **Manuelle Kartenreihenfolge innerhalb einer Spalte** — MVP sortiert automatisch nach
