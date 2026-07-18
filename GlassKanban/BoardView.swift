@@ -18,8 +18,12 @@ struct BoardView: View {
         .frame(minWidth: Board.boardMinWidth, minHeight: 560)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                streakPill
+            // Only shown once there is a streak — a "0" pill next to the
+            // window controls just looks broken.
+            if store.streakStats.current > 0 {
+                ToolbarItem(placement: .navigation) {
+                    streakPill
+                }
             }
             ToolbarItemGroup(placement: .primaryAction) {
                 filterMenu(
@@ -82,6 +86,7 @@ struct BoardView: View {
             store.openRemindersApp()
         } label: {
             Label("Erinnerungen", systemImage: "arrow.up.forward.app")
+                .labelStyle(.titleAndIcon)
         }
         .buttonStyle(.glassProminent)
         .help("Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)")

@@ -16,7 +16,6 @@
 		74BF0AB21BF4C7B800C413D1 /* StatusTaggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */; };
 		875104CDC32ECDEB5C2494F0 /* FilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5178AE744F393F737442A5 /* FilterTests.swift */; };
 		8935EE20B247C64B80C071A6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BD228B20A88109D18DAA5 /* Models.swift */; };
-		933FC5C8E315A609199EBE84 /* Quotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90FCB71A569048BBBF9674CF /* Quotes.swift */; };
 		9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD1B4A61352C1461953925D /* BoardView.swift */; };
 		9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
 		9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
@@ -41,7 +40,6 @@
 		61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculator.swift; sourceTree = "<group>"; };
 		6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassKanban.entitlements; sourceTree = "<group>"; };
 		73CAB35E9902F258F00D82A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		90FCB71A569048BBBF9674CF /* Quotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quotes.swift; sourceTree = "<group>"; };
 		916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderDeepLink.swift; sourceTree = "<group>"; };
 		9AD1B4A61352C1461953925D /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKanbanApp.swift; sourceTree = "<group>"; };
@@ -91,7 +89,6 @@
 				C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */,
 				10ECC48E9096FEF7E8FFDCB5 /* Info.plist */,
 				C67BD228B20A88109D18DAA5 /* Models.swift */,
-				90FCB71A569048BBBF9674CF /* Quotes.swift */,
 				916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */,
 				E38DFB23226AD6A320E58F33 /* RemindersStore.swift */,
 				73CAB35E9902F258F00D82A7 /* SettingsView.swift */,
@@ -195,7 +192,6 @@
 				D3765DBF0B271BAFF4FFD965 /* DesignSystem.swift in Sources */,
 				1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */,
 				8935EE20B247C64B80C071A6 /* Models.swift in Sources */,
-				933FC5C8E315A609199EBE84 /* Quotes.swift in Sources */,
 				C633F382DEFE9FD32C03C6A7 /* ReminderDeepLink.swift in Sources */,
 				F497DB173B495A88ADCD4821 /* RemindersStore.swift in Sources */,
 				A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */,

@@ -42,15 +42,6 @@ struct StreakPopover: View {
                 statLine("Diese Woche", "\(stats.weekCount)")
                 statLine("Bester Lauf", "\(stats.best) Tage")
             }
-
-            Divider()
-
-            Text(Quotes.quote())
-                .font(.system(size: 12))
-                .fontDesign(.serif)
-                .italic()
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
     }
