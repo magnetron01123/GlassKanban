@@ -29,25 +29,48 @@ struct StreakPopover: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                FlameIcon(level: stats.flameLevel)
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    FlameIcon(level: stats.flameLevel)
+                    Text(title)
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                // Without this the number is a mystery: it says nothing
+                // about what is being counted.
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             weekStrip
 
             VStack(alignment: .leading, spacing: 4) {
-                statLine("Heute erledigt", "\(stats.todayCount)")
-                statLine("Diese Woche", "\(stats.weekCount)")
-                statLine("Bester Lauf", "\(stats.best) Tage")
+                statLine("Heute erledigt", Self.tasks(stats.todayCount))
+                statLine("Diese Woche", Self.tasks(stats.weekCount))
+                statLine("Längste Folge", Self.days(stats.best))
             }
         }
         .padding(16)
     }
 
     private var title: String {
-        stats.current == 0 ? "Noch kein Lauf heute" : "\(stats.current) Tage in Folge"
+        stats.current == 0 ? "Keine Folge" : "\(Self.days(stats.current)) in Folge"
+    }
+
+    private var subtitle: String {
+        stats.current == 0
+            ? "Erledige heute eine Aufgabe, um eine Folge zu starten."
+            : "So viele Tage nacheinander hast du mindestens eine Aufgabe erledigt."
+    }
+
+    /// German plurals — "1 Tag" but "2 Tage", "1 Aufgabe" but "2 Aufgaben".
+    private static func days(_ count: Int) -> String {
+        count == 1 ? "1 Tag" : "\(count) Tage"
+    }
+
+    private static func tasks(_ count: Int) -> String {
+        count == 1 ? "1 Aufgabe" : "\(count) Aufgaben"
     }
 
     private var weekStrip: some View {

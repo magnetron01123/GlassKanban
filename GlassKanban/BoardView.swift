@@ -59,7 +59,7 @@ struct BoardView: View {
             }
             .padding(.horizontal, 2)
         }
-        .help("Streak-Details anzeigen")
+        .help("Tage nacheinander mit mindestens einer erledigten Aufgabe")
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
             StreakPopover(stats: store.streakStats)
                 .frame(width: 260)
@@ -68,18 +68,35 @@ struct BoardView: View {
 
     // MARK: - Reminders jump
 
-    /// The one prominent, accent-colored control: it makes clear you leave the
-    /// board to Reminders (where tasks are created and edited).
+    /// The one prominent control on the board. It carries Reminders' own app
+    /// icon: no wording identifies another app as unmistakably as its icon,
+    /// and the trailing arrow says you are leaving this window.
     private var remindersButton: some View {
         Button {
             store.openRemindersApp()
         } label: {
-            Label("Erinnerungen", systemImage: "arrow.up.forward.app")
-                .labelStyle(.titleAndIcon)
+            HStack(spacing: 5) {
+                if let icon = Self.remindersAppIcon {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 15, height: 15)
+                }
+                Text("Erinnerungen")
+                Image(systemName: "arrow.up.forward")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
         }
-        .buttonStyle(.glassProminent)
-        .help("Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)")
+        .buttonStyle(.glass)
+        .help("Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)")
     }
+
+    /// The real Reminders icon, read from the installed app once.
+    private static let remindersAppIcon: NSImage? = {
+        guard let url = NSWorkspace.shared.urlForApplication(
+            withBundleIdentifier: "com.apple.reminders") else { return nil }
+        return NSWorkspace.shared.icon(forFile: url.path)
+    }()
 
     // MARK: - Filters
 
