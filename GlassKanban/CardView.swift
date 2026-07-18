@@ -111,9 +111,11 @@ struct CardView: View {
                     repeatIcon
                 }
                 Spacer(minLength: 8)
+                // Secondary, not tertiary: on opaque paper the tertiary
+                // style washes out to the point of being unreadable.
                 Text(card.listName)
                     .font(.system(size: 11))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             .padding(EdgeInsets(top: 8, leading: 14, bottom: 9, trailing: 12))
@@ -146,7 +148,7 @@ struct CardView: View {
                     .font(.system(size: 11))
                     .monospacedDigit()
             }
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(.secondary)
             .help("Seit \(days) Tagen in dieser Spalte")
         }
     }
