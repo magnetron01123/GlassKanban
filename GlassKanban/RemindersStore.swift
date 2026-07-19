@@ -317,6 +317,47 @@ final class RemindersStore: ObservableObject {
         return origin
     }
 
+    /// Creates a content-empty reminder — no title, no notes, hence no status
+    /// hashtag — so it appears in Backlog immediately, then hands off editing
+    /// to the Reminders app itself (Glass Kanban never authors real content).
+    func createBacklogTicket() {
+        guard let calendar = targetCalendarForNewTicket() else { return }
+
+        let reminder = EKReminder(eventStore: eventStore)
+        reminder.calendar = calendar
+
+        do {
+            try eventStore.save(reminder, commit: true)
+        } catch {
+            scheduleRefresh()
+            return
+        }
+
+        scheduleRefresh()
+
+        // Mirrors CardView.openInReminders(): try the deep link, fall back to
+        // simply bringing Reminders to the front so the user isn't stranded.
+        if let url = ReminderDeepLink.url(for: reminder), NSWorkspace.shared.open(url) {
+            return
+        }
+        openRemindersApp()
+    }
+
+    /// `defaultCalendarForNewReminders()`, unless that list is excluded from
+    /// the board — then the first included calendar, so the new ticket is
+    /// visible immediately. Nil only if there are no reminder calendars at all.
+    private func targetCalendarForNewTicket() -> EKCalendar? {
+        let includedIDs = reminderCalendars
+            .filter { !excludedCalendarIDs.contains($0.calendarIdentifier) }
+            .map(\.calendarIdentifier)
+        guard let targetID = BacklogTicketTargeting.targetCalendarIdentifier(
+            defaultCalendarID: eventStore.defaultCalendarForNewReminders()?.calendarIdentifier,
+            excludedIDs: excludedCalendarIDs,
+            includedCalendarIDsInDisplayOrder: includedIDs
+        ) else { return nil }
+        return reminderCalendars.first { $0.calendarIdentifier == targetID }
+    }
+
     /// Marks cards as just-completed for ~0.7 s so their views can play the
     /// settle animation, then clears the flags.
     private func flagRecentlyCompleted(_ ids: Set<String>) {

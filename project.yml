@@ -58,6 +58,7 @@ targets:
       - path: GlassKanban/StatusTagger.swift
       - path: GlassKanban/TextSanitizer.swift
       - path: GlassKanban/StreakCalculator.swift
+      - path: GlassKanban/BacklogTicketTargeting.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanbanTests
