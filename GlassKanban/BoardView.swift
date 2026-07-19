@@ -100,7 +100,7 @@ struct BoardView: View {
             HStack(spacing: 4) {
                 FlameIcon(level: store.streakStats.flameLevel)
                 Text("\(store.streakStats.current)")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(BoardText.value)
                     .monospacedDigit()
                     .contentTransition(.numericText())
             }
@@ -136,7 +136,7 @@ struct BoardView: View {
                 Image(systemName: "magnifyingglass")
                 if store.isFiltering {
                     Text("\(store.activeRestrictionCount)")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(BoardText.value)
                         .monospacedDigit()
                         .contentTransition(.numericText())
                 }
@@ -182,7 +182,7 @@ struct BoardView: View {
                 }
                 Text("Erinnerungen")
                 Image(systemName: "arrow.up.forward")
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(BoardText.glyph)
                     .foregroundStyle(.secondary)
             }
         }

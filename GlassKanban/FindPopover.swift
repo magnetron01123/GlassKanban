@@ -33,7 +33,7 @@ struct FindPopover: View {
                     store.resetFilters()
                 }
                 .buttonStyle(.link)
-                .font(.system(size: 12))
+                .font(BoardText.body)
             }
         }
         .padding(14)
@@ -65,7 +65,9 @@ struct FindPopover: View {
         .font(.system(size: 13))
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        // Same recessed wash as a chip, but deliberately not `Board.chipShape`:
+        // this is an input control, and a capsule would make it read as a value.
+        .background(.quaternary.opacity(Board.chipFill), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 
     /// One filter as a label plus a menu, so the row reads like a sentence
@@ -79,7 +81,6 @@ struct FindPopover: View {
     ) -> some View where F: Hashable & Identifiable & FilterDisplayable {
         HStack(spacing: 8) {
             Label(title, systemImage: systemImage)
-                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Spacer()
             Picker(title, selection: selection) {
@@ -91,6 +92,10 @@ struct FindPopover: View {
             .pickerStyle(.menu)
             .fixedSize()
         }
+        // Set on the row, not on the label: the label was 12pt while the
+        // Picker kept the 13pt control default, so a row meant to read as one
+        // sentence ("Dringlichkeit: Hoch") was set in two sizes.
+        .font(BoardText.body)
     }
 }
 

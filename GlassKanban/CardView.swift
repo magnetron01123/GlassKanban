@@ -112,7 +112,7 @@ struct CardView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 titleText
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(BoardText.title)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -128,7 +128,7 @@ struct CardView: View {
                     Spacer(minLength: 8)
                 } else {
                     Text(card.notesExcerpt)
-                        .font(.system(size: 12))
+                        .font(BoardText.body)
                         .foregroundStyle(.secondary)
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
@@ -151,7 +151,7 @@ struct CardView: View {
                 // Secondary, not tertiary: on opaque paper the tertiary
                 // style washes out to the point of being unreadable.
                 Text(card.listName)
-                    .font(.system(size: 11))
+                    .font(BoardText.meta)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -180,9 +180,9 @@ struct CardView: View {
         if let days = card.daysInColumn(), days >= Board.agingThresholdDays {
             HStack(spacing: 3) {
                 Image(systemName: "clock")
-                    .font(.system(size: 9))
+                    .font(BoardText.glyph)
                 Text("\(days) Tage")
-                    .font(.system(size: 11))
+                    .font(BoardText.meta)
                     .monospacedDigit()
             }
             .foregroundStyle(.secondary)
@@ -194,7 +194,7 @@ struct CardView: View {
     private var compactBody: some View {
         HStack(spacing: 8) {
             titleText
-                .font(.system(size: 13, weight: .medium))
+                .font(BoardText.titleCompact)
                 .lineLimit(1)
             Spacer(minLength: 0)
             if card.isRecurring {
@@ -211,7 +211,7 @@ struct CardView: View {
     /// Erledigt: the work is done — the name is the only thing left to say.
     private var minimalBody: some View {
         titleText
-            .font(.system(size: 13, weight: .medium))
+            .font(BoardText.titleCompact)
             .lineLimit(1)
             .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -234,7 +234,7 @@ struct CardView: View {
 
     private var repeatIcon: some View {
         Image(systemName: "repeat")
-            .font(.system(size: 9, weight: .semibold))
+            .font(BoardText.glyph)
             .foregroundStyle(.secondary)
             .help("Wiederholende Erinnerung")
     }
@@ -313,11 +313,21 @@ struct CardView: View {
     /// code, inset like a physical tab so it reads as part of the card.
     private var listStripe: some View {
         Capsule()
-            .fill(card.listColor.opacity(card.status == .done ? 0.45 : 0.9))
+            .fill(stripeColor.opacity(card.status == .done ? 0.45 : 0.9))
             .frame(width: Board.cardStripeWidth)
             .padding(.vertical, density.isSingleLine ? 7 : 9)
             .padding(.leading, 5)
             .allowsHitTesting(false)
+    }
+
+    /// Reminders list colours are chosen by the user and some are very light —
+    /// a pale yellow stripe vanishes on white paper, and the stripe is the only
+    /// channel carrying the source list on compact rows. Mixing in a little
+    /// label colour keeps every list distinguishable without shifting its hue:
+    /// `labelColor` is near-black in light mode and near-white in dark, so the
+    /// stripe moves away from the card's own fill in both.
+    private var stripeColor: Color {
+        card.listColor.mix(with: Color(nsColor: .labelColor), by: 0.18)
     }
 
     /// Opaque "paper" so cards read as physical objects on the recessed
@@ -399,12 +409,12 @@ struct CardView: View {
     /// (today), quiet grey (everything else).
     private func badgeView(_ info: BadgeInfo) -> some View {
         Text(info.label)
-            .font(.system(size: 11, weight: .semibold))
+            .font(BoardText.chip)
             .monospacedDigit()
             .foregroundStyle(badgeForeground(info))
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .background(badgeBackground(info), in: Board.badgeShape)
+            .background(badgeBackground(info), in: Board.chipShape)
     }
 
     /// The tint colours the capsule, never the label. System orange as 11pt
@@ -417,7 +427,7 @@ struct CardView: View {
     }
 
     private func badgeBackground(_ info: BadgeInfo) -> AnyShapeStyle {
-        guard let tint = info.tint else { return AnyShapeStyle(.quaternary.opacity(0.6)) }
+        guard let tint = info.tint else { return AnyShapeStyle(.quaternary.opacity(Board.chipFill)) }
         if info.isEmphasized { return AnyShapeStyle(Board.overdueFill) }
         return AnyShapeStyle(tint.opacity(Board.badgeTintFill))
     }

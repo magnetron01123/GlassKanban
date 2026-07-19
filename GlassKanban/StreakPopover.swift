@@ -5,11 +5,21 @@ import SwiftUI
 /// the personal daily target is reached (goal-gradient effect).
 struct FlameIcon: View {
     let level: Int
+    /// Sized by its context rather than fixed: this sits beside 12pt text in
+    /// the toolbar and beside the 14pt title in the popover, and a glyph that
+    /// ignores its companion text reads as misaligned in one of the two.
+    var size: CGFloat = 12
 
     var body: some View {
         Image(systemName: level == 0 ? "flame" : "flame.fill")
-            .font(.system(size: 12))
+            .font(.system(size: size))
             .foregroundStyle(style)
+            // Reaching the day's target is the reward moment the concept asks
+            // for; without these it is a one-frame glyph swap.
+            .contentTransition(.symbolEffect(.replace))
+            .symbolEffect(.bounce, value: level)
+            // The button around it carries the spoken label.
+            .accessibilityHidden(true)
     }
 
     private var style: AnyShapeStyle {
@@ -33,14 +43,14 @@ struct StreakPopover: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
-                    FlameIcon(level: stats.flameLevel)
+                    FlameIcon(level: stats.flameLevel, size: 14)
                     Text(title)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(BoardText.title)
                 }
                 // Without this the number is a mystery: it says nothing
                 // about what is being counted.
                 Text(subtitle)
-                    .font(.system(size: 11))
+                    .font(BoardText.meta)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -80,7 +90,7 @@ struct StreakPopover: View {
             ForEach(stats.last7) { day in
                 VStack(spacing: 3) {
                     Text(weekdayLetter(day.date))
-                        .font(.system(size: 10))
+                        .font(BoardText.meta)
                         .foregroundStyle(.secondary)
                     Circle()
                         .fill(day.didComplete ? AnyShapeStyle(Color.orange.gradient) : AnyShapeStyle(.quaternary))
@@ -106,12 +116,14 @@ struct StreakPopover: View {
     private func statLine(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 12))
+                .font(BoardText.body)
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
-                .font(.system(size: 12, weight: .medium))
+                .font(BoardText.body)
+                .fontWeight(.medium)
                 .monospacedDigit()
+                .contentTransition(.numericText())
         }
     }
 

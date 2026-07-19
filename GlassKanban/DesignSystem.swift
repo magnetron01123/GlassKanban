@@ -43,7 +43,6 @@ enum Board {
     // wider than the lane holding it.
     static let columnRadius: CGFloat = 14
     static let cardRadius: CGFloat = 11
-    static let badgeRadius: CGFloat = 6
 
     // Shapes. Always `.continuous`: `RoundedRectangle(cornerRadius:)` defaults
     // to `.circular`, a plain arc, while every shape macOS itself draws — the
@@ -53,7 +52,16 @@ enum Board {
     // tokens so the style cannot be forgotten at an individual call site.
     static let columnShape = RoundedRectangle(cornerRadius: columnRadius, style: .continuous)
     static let cardShape = RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
-    static let badgeShape = RoundedRectangle(cornerRadius: badgeRadius, style: .continuous)
+
+    /// One shape for every chip that carries a small, quiet value — the date
+    /// badge on a card and the count in a lane header. These had drifted into
+    /// three different treatments for one role (rounded rect 6, capsule,
+    /// rounded rect 7) at two different fill strengths. Same role, same shape,
+    /// same fill; the capsule is also what macOS 26 uses for value chips.
+    /// The search field deliberately stays a rounded rect: it is an input
+    /// control, not a value, and should not read as one.
+    static let chipShape = Capsule()
+    static let chipFill: Double = 0.7
 
     /// A WIP limit is a statement about *capacity*, not urgency, so it stays
     /// out of the warm family (orange = due today, red = overdue). Teal reads
@@ -134,6 +142,37 @@ enum Board {
     /// pull signal — Kanban's answer to "what should I start next" has always
     /// been the free slot on the board, not an effect layered over it.
     static let settleAnimation: Animation = .spring(response: 0.32, dampingFraction: 0.5)
+}
+
+/// The board's type scale.
+///
+/// Typography was the one design axis with no tokens: every size sat inline
+/// at its call site. That is how the lane header and the card title ended up
+/// 13pt and 14pt at the same weight and the same colour — a difference too
+/// small to read as hierarchy, so the two competed instead of ranking.
+/// Separation now comes from weight and colour (see `Board.headerStyle`),
+/// not from a single point of size.
+enum BoardText {
+    /// Card title in the working lanes — the board's primary content.
+    static let title = Font.system(size: 14, weight: .semibold)
+    /// Card title in the single-line lanes, where a row is a list entry
+    /// rather than a ticket.
+    static let titleCompact = Font.system(size: 13, weight: .medium)
+    /// Lane header. Always paired with the secondary foreground: a header
+    /// labels content, it is not content.
+    static let header = Font.system(size: 13, weight: .semibold)
+    /// Running text — notes excerpt, popover copy.
+    static let body = Font.system(size: 12)
+    /// Chips: date badges, lane counts, dwell time.
+    static let chip = Font.system(size: 11, weight: .semibold)
+    /// Quiet metadata — list name, "N weitere anzeigen", weekday letters.
+    static let meta = Font.system(size: 11)
+    /// Inline symbols sitting beside `meta` or `chip` text. Deliberately
+    /// smaller than its companion text: a glyph reads at a smaller size than
+    /// a letterform does.
+    static let glyph = Font.system(size: 9, weight: .semibold)
+    /// A single emphasised number — the streak counter.
+    static let value = Font.system(size: 12, weight: .semibold)
 }
 
 /// Subtle trackpad haptics — a sensory reward for moving and completing work.

@@ -156,8 +156,15 @@ struct ColumnView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
+            // Secondary, and that is the hierarchy: the header sat at 13pt
+            // semibold in the primary colour while card titles sit at 14pt
+            // semibold in the same colour — one point apart, so the label of
+            // a group competed with the content inside it. Size alone was
+            // never going to carry that distinction; colour does.
             Text(status.displayName)
-                .font(.system(size: 13, weight: .semibold))
+                .font(BoardText.header)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
             Spacer()
             // A lane header states one number: how many cards are in it. The
             // Erledigt header also carried today's count ("7 · heute 2"),
@@ -165,7 +172,7 @@ struct ColumnView: View {
             // two different things. It survives in the tooltip and the
             // accessibility label — information without pixels.
             Text(countLabel)
-                .font(.system(size: 11, weight: .semibold))
+                .font(BoardText.chip)
                 .monospacedDigit()
                 // Counts change one at a time; rolling the digit is how the
                 // system animates a number that means something.
@@ -180,9 +187,9 @@ struct ColumnView: View {
                 .padding(.vertical, 2)
                 .background {
                     if isOverLimit {
-                        Capsule().fill(Board.wipLimitTint.opacity(Board.wipCapsuleFill))
+                        Board.chipShape.fill(Board.wipLimitTint.opacity(Board.wipCapsuleFill))
                     } else {
-                        Capsule().fill(.quaternary.opacity(0.8))
+                        Board.chipShape.fill(.quaternary.opacity(Board.chipFill))
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: isOverLimit)
@@ -246,7 +253,8 @@ struct ColumnView: View {
                 // with the WIP dialog ("Weniger gleichzeitig, mehr fertig") so
                 // the board speaks about its principle in one vocabulary.
                 Text("Fertig werden beginnt hier")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(BoardText.body)
+                    .fontWeight(.medium)
                     .foregroundStyle(.secondary)
             }
             .transition(.opacity)
@@ -266,7 +274,8 @@ struct ColumnView: View {
             withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded = true }
         } label: {
             Text("\(hiddenCount) weitere anzeigen")
-                .font(.system(size: 11, weight: .medium))
+                .font(BoardText.meta)
+                .fontWeight(.medium)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 7)
