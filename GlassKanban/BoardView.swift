@@ -47,10 +47,18 @@ struct BoardView: View {
                 remindersButton
             }
         }
-        // The window paints its own always-active glass edge to edge (see
-        // WindowGlass); an opaque toolbar strip on top would cut a flat band
-        // across it. The toolbar items keep their own Liquid Glass.
-        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+        // Deliberately NOT `.toolbarBackgroundVisibility(.hidden, …)`.
+        //
+        // Hiding the toolbar's shared background does not make the toolbar
+        // disappear — it takes away the surface the items sit on, so every
+        // item falls back to carrying its own Liquid Glass capsule. Compared
+        // side by side with Safari, whose toolbar buttons are bare glyphs at
+        // rest, that read as two raised plates floating over the board.
+        //
+        // The band this was written to avoid does not appear: on macOS 26 the
+        // toolbar background is the scroll edge effect, transparent until
+        // content scrolls under it, and this board never scrolls at window
+        // level — its lanes scroll individually.
         // One alert for the whole board, driven by the store, so it fires for
         // every route into a move — drag, context menu, VoiceOver action.
         .alert(overflowTitle, isPresented: overflowBinding, presenting: store.pendingOverflow) { overflow in
@@ -108,6 +116,11 @@ struct BoardView: View {
         }
         // A bare number plus a decorative flame announces as "1" — true and
         // useless. The label says what the number counts.
+        // Note: unlike the two trailing items, this keeps a faint container.
+        // That capsule is drawn by the toolbar for `.navigation` placement and
+        // does not respond to the button style — `.plain` renders it too.
+        // Removing it would mean moving the streak out of that placement.
+        .buttonStyle(.borderless)
         .accessibilityLabel("Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe")
         .help("Tage nacheinander mit mindestens einer erledigten Aufgabe")
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
@@ -142,6 +155,7 @@ struct BoardView: View {
                 }
             }
         }
+        .buttonStyle(.borderless)
         .keyboardShortcut("f")
         // A board must never be filtered without saying so, or cards look lost
         // rather than hidden.
@@ -186,6 +200,7 @@ struct BoardView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .buttonStyle(.borderless)
         .tint(.accentColor)
         .help("Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)")
     }
