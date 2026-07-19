@@ -159,9 +159,11 @@ struct ColumnView: View {
             Text(status.displayName)
                 .font(.system(size: 13, weight: .semibold))
             Spacer()
-            // Erledigt counts today's completions ("2 · heute 1") as a quiet
-            // progress hint; a bare "0 heute" next to visible cards read as
-            // a bug, so the total always leads.
+            // A lane header states one number: how many cards are in it. The
+            // Erledigt header also carried today's count ("7 · heute 2"),
+            // which made the one piece of permanent chrome on every lane say
+            // two different things. It survives in the tooltip and the
+            // accessibility label — information without pixels.
             Text(countLabel)
                 .font(.system(size: 11, weight: .semibold))
                 .monospacedDigit()
@@ -197,9 +199,6 @@ struct ColumnView: View {
     /// The rule belongs on the board, not just in Settings ("make policies
     /// explicit"), so the limit rides along in the count itself.
     private var countLabel: String {
-        if status == .done && todayCount > 0 {
-            return "\(cards.count) · heute \(todayCount)"
-        }
         if let wipLimit {
             return "\(cards.count) / \(wipLimit)"
         }
