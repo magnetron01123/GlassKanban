@@ -131,7 +131,8 @@ Ausdrücklich **keine** Punkte/Levels/Badges/Bestenlisten.
 
 ## Design
 
-- Liquid-Glass-Materialien durchgängig (Spalten, Karten, Filterleiste, Toolbar)
+- Liquid Glass auf der Chrome-Ebene (Fensterrücken, Toolbar, Popover); Spalten sind
+  eingelassene Mulden, Karten deckendes Papier — siehe CONCEPT.md, Abschnitt Design-Anspruch
 - Typografie/Abstände nach Apple HIG (SF Pro)
 - Dezente Animationen bei Spaltenwechsel und Live-Updates
 - Automatisches Light/Dark Mode + System-Akzentfarbe

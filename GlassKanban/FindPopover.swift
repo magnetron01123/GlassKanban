@@ -65,7 +65,7 @@ struct FindPopover: View {
         .font(.system(size: 13))
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 7))
+        .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 
     /// One filter as a label plus a menu, so the row reads like a sentence

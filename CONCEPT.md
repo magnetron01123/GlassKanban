@@ -211,7 +211,7 @@ nicht nötig, das deckt der Spaltenwechsel bereits ab.
 - Karten zeigen: Titel, Fälligkeitsdatum, Priorität, Notizen, zugewiesene Person (falls vorhanden) — nur Anzeige
 - Drag & Drop zwischen Spalten
 - Filterleiste: Dringlichkeit, Fälligkeit, Verantwortliche Person
-- Glass-Design (Liquid Glass / `.ultraThinMaterial` etc.), siehe Design-Anspruch unten
+- Glass-Design (Liquid Glass auf der Chrome-Ebene), siehe Design-Anspruch unten
 
 ## Motivation (leichtgewichtige Gamification)
 
@@ -275,7 +275,13 @@ sind ein konkretes Beispiel dieser Haltung, kein Sonderfall.
 
 Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
 
-- Durchgängig Liquid-Glass-Materialien (Spaltenhintergründe, Karten, Filterleiste)
+- Liquid Glass bleibt der Bedienoberfläche vorbehalten — Fensterrücken, Toolbar, Popover.
+  Die Inhaltsebene ist bewusst kein Glas: Spalten sind eingelassene Mulden, Karten sind
+  deckendes Papier. Tiefe entsteht durch Fläche, Kontur und Schatten, nicht durch
+  gestapelte Unschärfe. Der Grund ist gemessen, nicht ästhetisch: durchscheinende Karten
+  koppeln ihre Helligkeit an das Wallpaper und kehren dadurch die Tiefenordnung um
+  (Karten wirken dunkler als die Mulde, in der sie liegen). Das ist zugleich Apples
+  eigenes Liquid-Glass-Modell — Glas ist Chrome, nie Inhalt.
 - Sauberes Typografie- und Abstandssystem nach Apple HIG (SF Pro, klare Hierarchie)
 - Dezente Bewegung: sanfte Animationen beim Spaltenwechsel (Drag & Drop), beim
   Live-Update aus Reminders (z. B. Karte erscheint/verschwindet mit Fade/Slide)

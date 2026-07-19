@@ -31,6 +31,19 @@ final class RemindersStore: ObservableObject {
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
     @Published var searchText: String = ""
+    /// Set when a move pushed a limited lane past its WIP limit. Lives here
+    /// rather than in the lane view so every route into `move` — drag & drop,
+    /// the card's context menu, the VoiceOver action — raises the same
+    /// question. A limit that only applies to mouse users is not a limit.
+    @Published var pendingOverflow: PendingOverflow?
+
+    /// A card that just pushed its lane past the limit, awaiting an answer.
+    struct PendingOverflow: Identifiable {
+        let cardID: String
+        let origin: KanbanStatus
+        let status: KanbanStatus
+        var id: String { cardID }
+    }
 
     var streak: Int { streakStats.current }
 
@@ -294,6 +307,11 @@ final class RemindersStore: ObservableObject {
         }
         if status == .done {
             flagRecentlyCompleted([cardID])
+        }
+        // Asked after the move, never before it: the board does not block a
+        // drop, it lets the work land and then offers to put it back.
+        if status.asksBeforeExceedingLimit, isOverWIPLimit(status) {
+            pendingOverflow = PendingOverflow(cardID: cardID, origin: origin, status: status)
         }
         scheduleRefresh()
         return origin

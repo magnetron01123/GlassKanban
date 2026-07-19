@@ -87,8 +87,20 @@ struct StreakPopover: View {
                         .frame(width: 9, height: 9)
                 }
                 .frame(maxWidth: .infinity)
+                // A filled-vs-grey dot under a one-letter label is two signals
+                // VoiceOver cannot read: the letter is ambiguous and the fill
+                // carries the entire meaning. Say both.
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(dayLabel(day))
             }
         }
+    }
+
+    private func dayLabel(_ day: DayCompletion) -> String {
+        let calendar = Calendar.current
+        let index = calendar.component(.weekday, from: day.date) - 1
+        let name = calendar.weekdaySymbols[index]
+        return day.didComplete ? "\(name): erledigt" : "\(name): nichts erledigt"
     }
 
     private func statLine(_ label: String, _ value: String) -> some View {
