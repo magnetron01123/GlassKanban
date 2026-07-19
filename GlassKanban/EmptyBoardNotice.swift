@@ -13,7 +13,8 @@ struct EmptyBoardNotice: View {
     var body: some View {
         VStack(spacing: 10) {
             Text(line)
-                .font(.system(size: 14, weight: .medium))
+                .font(BoardText.title)
+                .fontWeight(.medium)
                 .foregroundStyle(.secondary)
 
             // Only the filtered case gets a control: being done is not a
@@ -21,7 +22,7 @@ struct EmptyBoardNotice: View {
             if emptiness == .filteredAway {
                 Button("Filter zurücksetzen", action: onReset)
                     .buttonStyle(.link)
-                    .font(.system(size: 12))
+                    .font(BoardText.body)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

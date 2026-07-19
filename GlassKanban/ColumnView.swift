@@ -4,14 +4,14 @@ struct ColumnView: View {
     let status: KanbanStatus
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var contrast
     @State private var isTargeted = false
     @State private var expanded = false
     /// Height of a real card in this lane, so the drop placeholder can match
     /// it exactly instead of guessing at a constant.
     @State private var cardHeight: CGFloat?
-    /// Set when a drop pushed this lane past its WIP limit.
-    @State private var overflow: Overflow?
 
     private var cards: [KanbanCard] { store.cards(for: status) }
     private var singleLine: Bool { status.cardDensity.isSingleLine }
@@ -59,7 +59,7 @@ struct ColumnView: View {
 
             // Hairline between header and cards, like a physical label strip.
             Rectangle()
-                .fill(Board.columnBorder)
+                .fill(Board.columnBorder(contrast))
                 .frame(height: 1)
                 .padding(.horizontal, Board.laneMargin)
 
@@ -74,13 +74,16 @@ struct ColumnView: View {
                         // drag-preview content shape rounds its corners so
                         // no rectangular snapshot edge shows behind them.
                         CardView(card: card)
-                            .contentShape(.dragPreview, RoundedRectangle(cornerRadius: Board.cardRadius))
+                            .contentShape(.dragPreview, Board.cardShape)
                             .draggable(card.id)
                             // Runs alongside the system drag purely to note
                             // which card is moving. Deliberately additive:
                             // if it ever stops firing, dragging still works.
+                            // Threshold 0 so it can never lag the system drag
+                            // — at 6pt the source lane briefly treated the
+                            // card as foreign and offered itself as a target.
                             .simultaneousGesture(
-                                DragGesture(minimumDistance: 6)
+                                DragGesture(minimumDistance: 0)
                                     .onChanged { _ in store.beginDrag(cardID: card.id) }
                                     .onEnded { _ in store.endDrag() })
                             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
@@ -90,8 +93,13 @@ struct ColumnView: View {
                             // A card arriving in a lane settles into place
                             // instead of blinking on: it grows the last few
                             // percent into the shape this lane gives it.
+                            // Erledigt is the exception — a completed card
+                            // plays its own settle animation, and running both
+                            // scales at once made the arrival stutter.
                             .transition(.asymmetric(
-                                insertion: .scale(scale: 0.93).combined(with: .opacity),
+                                insertion: status == .done
+                                    ? .opacity
+                                    : .scale(scale: 0.93).combined(with: .opacity),
                                 removal: .opacity))
                     }
 
@@ -123,78 +131,65 @@ struct ColumnView: View {
             store.endDrag()
             guard let id = ids.first else { return false }
             // A drop destination has to answer synchronously, so the move
-            // always goes through first and the question follows it.
-            guard let origin = store.move(cardID: id, to: status) else { return false }
+            // always goes through first and the WIP question — raised by the
+            // store, for every move route — follows it.
+            guard store.move(cardID: id, to: status) != nil else { return false }
             Haptics.drop()
-            if status.asksBeforeExceedingLimit, store.isOverWIPLimit(status) {
-                overflow = Overflow(cardID: id, origin: origin)
-            }
             return true
         } isTargeted: { targeted in
             // No tick for the lane the card came from — nothing snaps there.
             if targeted && !isTargeted && !isDragSource { Haptics.alignmentTick() }
             isTargeted = targeted
         }
-        .alert(overflowTitle, isPresented: overflowBinding, presenting: overflow) { overflow in
-            // Every easy way out of this dialog respects the limit: the safe
-            // action is the prominent one, carries Return, and — via the
-            // cancel role — Escape too. Overloading takes a deliberate click.
-            Button("Erst abschließen", role: .cancel) {
-                store.move(cardID: overflow.cardID, to: overflow.origin)
-            }
-            .keyboardShortcut(.defaultAction)
-            // "Passt schon" rather than "Trotzdem": the board does not get to
-            // decide that the user is wrong about their own capacity.
-            Button("Passt schon") {}
-        } message: { _ in
-            // The Kanban idea in four words, no jargon and no lecture — then
-            // an offer, not an instruction.
-            Text("Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?")
+        // A lane that empties must forget its last card's height, or the
+        // standing pull slot gets sized by whatever happened to be here last.
+        .onChange(of: displayedCards.isEmpty) { _, isEmpty in
+            if isEmpty { cardHeight = nil }
         }
-    }
-
-    /// A card that just pushed this lane past its limit, pending the user's
-    /// answer.
-    private struct Overflow: Identifiable {
-        let cardID: String
-        let origin: KanbanStatus
-        var id: String { cardID }
-    }
-
-    private var overflowBinding: Binding<Bool> {
-        Binding(get: { overflow != nil }, set: { if !$0 { overflow = nil } })
-    }
-
-    private var overflowTitle: String {
-        guard let limit = wipLimit else { return status.displayName }
-        return "\(status.displayName): \(cards.count) von \(limit)"
+        // Without this a card announces its title and nothing about where it
+        // is — on a board, the lane is half the meaning.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(status.displayName), \(countHelp)")
     }
 
     // MARK: - Header
 
     private var header: some View {
         HStack(spacing: 8) {
+            // Secondary, and that is the hierarchy: the header sat at 13pt
+            // semibold in the primary colour while card titles sit at 14pt
+            // semibold in the same colour — one point apart, so the label of
+            // a group competed with the content inside it. Size alone was
+            // never going to carry that distinction; colour does.
             Text(status.displayName)
-                .font(.system(size: 13, weight: .semibold))
+                .font(BoardText.header)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
             Spacer()
-            // Erledigt counts today's completions ("2 · heute 1") as a quiet
-            // progress hint; a bare "0 heute" next to visible cards read as
-            // a bug, so the total always leads.
+            // A lane header states one number: how many cards are in it. The
+            // Erledigt header also carried today's count ("7 · heute 2"),
+            // which made the one piece of permanent chrome on every lane say
+            // two different things. It survives in the tooltip and the
+            // accessibility label — information without pixels.
             Text(countLabel)
-                .font(.system(size: 11, weight: .semibold))
+                .font(BoardText.chip)
                 .monospacedDigit()
-                // The middle weight of the board's badge scale: tinted text on
-                // a tinted backdrop. Tinted text alone was too faint on glass;
-                // a solid fill would borrow the weight reserved for overdue —
+                // Counts change one at a time; rolling the digit is how the
+                // system animates a number that means something.
+                .contentTransition(.numericText())
+                // The middle weight of the board's badge scale: a tinted
+                // backdrop, never tinted text. Teal on teal measured ~2:1 —
+                // the capsule carries the colour, the label stays legible.
+                // A solid fill would borrow the weight reserved for overdue;
                 // being over capacity is worth noticing, not an emergency.
-                .foregroundStyle(isOverLimit ? AnyShapeStyle(Board.wipLimitTint) : AnyShapeStyle(.secondary))
+                .foregroundStyle(isOverLimit ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .padding(.horizontal, 7)
                 .padding(.vertical, 2)
                 .background {
                     if isOverLimit {
-                        Capsule().fill(Board.wipLimitTint.opacity(0.32))
+                        Board.chipShape.fill(Board.wipLimitTint.opacity(Board.wipCapsuleFill))
                     } else {
-                        Capsule().fill(.quaternary.opacity(0.8))
+                        Board.chipShape.fill(.quaternary.opacity(Board.chipFill))
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: isOverLimit)
@@ -211,9 +206,6 @@ struct ColumnView: View {
     /// The rule belongs on the board, not just in Settings ("make policies
     /// explicit"), so the limit rides along in the count itself.
     private var countLabel: String {
-        if status == .done && todayCount > 0 {
-            return "\(cards.count) · heute \(todayCount)"
-        }
         if let wipLimit {
             return "\(cards.count) / \(wipLimit)"
         }
@@ -234,13 +226,11 @@ struct ColumnView: View {
 
     /// Dashed placeholder marking where the dragged card will land.
     private var insertionSlot: some View {
-        RoundedRectangle(cornerRadius: Board.cardRadius)
+        Board.cardShape
             .strokeBorder(
                 Color.accentColor.opacity(0.35),
                 style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
-            .background(
-                Color.accentColor.opacity(0.05),
-                in: RoundedRectangle(cornerRadius: Board.cardRadius))
+            .background(Color.accentColor.opacity(0.05), in: Board.cardShape)
             .frame(height: slotHeight)
             .transition(.opacity)
     }
@@ -252,7 +242,7 @@ struct ColumnView: View {
     /// standing invitation, not an event, and the board spends motion only on
     /// things that just happened.
     private var pullSlot: some View {
-        RoundedRectangle(cornerRadius: Board.cardRadius)
+        Board.cardShape
             .strokeBorder(
                 Color.primary.opacity(0.25),
                 style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
@@ -263,7 +253,8 @@ struct ColumnView: View {
                 // with the WIP dialog ("Weniger gleichzeitig, mehr fertig") so
                 // the board speaks about its principle in one vocabulary.
                 Text("Fertig werden beginnt hier")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(BoardText.body)
+                    .fontWeight(.medium)
                     .foregroundStyle(.secondary)
             }
             .transition(.opacity)
@@ -277,10 +268,14 @@ struct ColumnView: View {
 
     private var moreButton: some View {
         Button {
-            withAnimation(.easeOut(duration: 0.2)) { expanded = true }
+            // Expanding drops 15+ cards into the lane at once — the largest
+            // layout change the board can make, and the one most worth
+            // gating on Reduce Motion.
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded = true }
         } label: {
             Text("\(hiddenCount) weitere anzeigen")
-                .font(.system(size: 11, weight: .medium))
+                .font(BoardText.meta)
+                .fontWeight(.medium)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 7)
@@ -303,16 +298,16 @@ struct ColumnView: View {
     // MARK: - Recessed lane surface
 
     private var columnSurface: some View {
-        RoundedRectangle(cornerRadius: Board.columnRadius)
+        Board.columnShape
             .fill(columnFill)
             .overlay {
                 // Accent wash while a drag hovers over the lane.
-                RoundedRectangle(cornerRadius: Board.columnRadius)
+                Board.columnShape
                     .fill(Color.accentColor.opacity(showsDropFeedback ? 0.07 : 0))
             }
             .overlay {
                 // Inner top shadow: the lane is carved into the board.
-                RoundedRectangle(cornerRadius: Board.columnRadius)
+                Board.columnShape
                     .inset(by: 0.5)
                     .strokeBorder(
                         LinearGradient(colors: [Board.columnInnerShadow, .clear], startPoint: .top, endPoint: .center),
@@ -323,17 +318,15 @@ struct ColumnView: View {
     }
 
     private var columnContour: some View {
-        RoundedRectangle(cornerRadius: Board.columnRadius)
+        Board.columnShape
             .strokeBorder(
-                showsDropFeedback
-                    ? AnyShapeStyle(Color.accentColor.opacity(0.7))
-                    : AnyShapeStyle(Board.columnBorder),
+                showsDropFeedback ? Color.accentColor.opacity(0.7) : Board.columnBorder(contrast),
                 lineWidth: showsDropFeedback ? 1.5 : 1)
     }
 
-    private var columnFill: AnyShapeStyle {
+    private var columnFill: Color {
         reduceTransparency
-            ? AnyShapeStyle(Color(nsColor: .underPageBackgroundColor))
-            : AnyShapeStyle(Board.columnFill(colorScheme))
+            ? Color(nsColor: .underPageBackgroundColor)
+            : Board.columnFill(colorScheme)
     }
 }

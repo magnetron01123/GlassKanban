@@ -1,13 +1,15 @@
 import SwiftUI
 import AppKit
 
-/// Design tokens for the board, ported from design/board-mockup.html and
-/// iteration 2 (design/iteration-2-concept.md).
+/// Design tokens for the board (see design/iteration-2-concept.md).
 ///
 /// Depth model ("a real kanban board"): the window is the only large glass
 /// surface, columns are recessed lanes cut into the board, cards are
 /// near-opaque paper sticky notes resting on top. Depth comes from
 /// contrasting treatments (fill, contour, shadow), not from stacking blur.
+///
+/// This is also the Liquid Glass model Apple describes: glass belongs to the
+/// chrome — window backdrop, toolbar, popovers — never to the content plane.
 enum Board {
     // Layout — a centered block of four equally wide lanes with real air
     // between them. Focus comes from what the cards reveal (see
@@ -37,10 +39,29 @@ enum Board {
     /// below it, sitting in a column is simply normal.
     static let agingThresholdDays = 3
 
-    // Radii (mockup: column 14, card 11, badge 6)
+    // Radii, stepped down with nesting depth so a card's corner never looks
+    // wider than the lane holding it.
     static let columnRadius: CGFloat = 14
     static let cardRadius: CGFloat = 11
-    static let badgeRadius: CGFloat = 6
+
+    // Shapes. Always `.continuous`: `RoundedRectangle(cornerRadius:)` defaults
+    // to `.circular`, a plain arc, while every shape macOS itself draws — the
+    // window, sheets, popovers and each Liquid Glass control — is the
+    // continuous squircle. Mixing the two is the difference between "native"
+    // and "nearly native" that a viewer notices but cannot name. Exported as
+    // tokens so the style cannot be forgotten at an individual call site.
+    static let columnShape = RoundedRectangle(cornerRadius: columnRadius, style: .continuous)
+    static let cardShape = RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
+
+    /// One shape for every chip that carries a small, quiet value — the date
+    /// badge on a card and the count in a lane header. These had drifted into
+    /// three different treatments for one role (rounded rect 6, capsule,
+    /// rounded rect 7) at two different fill strengths. Same role, same shape,
+    /// same fill; the capsule is also what macOS 26 uses for value chips.
+    /// The search field deliberately stays a rounded rect: it is an input
+    /// control, not a value, and should not read as one.
+    static let chipShape = Capsule()
+    static let chipFill: Double = 0.7
 
     /// A WIP limit is a statement about *capacity*, not urgency, so it stays
     /// out of the warm family (orange = due today, red = overdue). Teal reads
@@ -48,9 +69,32 @@ enum Board {
     /// user who runs their system in orange.
     static let wipLimitTint = Color.teal
 
-    // Contours
-    static let columnBorder = Color.primary.opacity(0.12)
-    static let cardBorder = Color.primary.opacity(0.10)
+    // Badges. Three weights carry urgency: solid (overdue), tinted (today),
+    // quiet grey (everything else). System colours are calibrated as fills and
+    // glyphs, never as small text on a light background — Reminders and
+    // Calendar both use orange as a plane, not as a label. So the tint colours
+    // the capsule and the label always takes a system text colour.
+    static let badgeTintFill: Double = 0.22
+    /// System red behind white 11pt semibold lands near 3.5:1 — under the
+    /// 4.5:1 minimum. Darkening the fill keeps the alarm and clears the bar.
+    static let overdueFill = Color.red.mix(with: .black, by: 0.24)
+    /// The over-limit capsule needs the same treatment as a badge: teal text
+    /// on a teal wash measured ~2:1, so the label moves to the system colour
+    /// and the capsule carries the teal.
+    static let wipCapsuleFill: Double = 0.28
+
+    // Contours. Depth here is carried almost entirely by contour rather than
+    // fill (the lane wash is only 6.5% in light mode), so Increase Contrast
+    // has to reach these values — otherwise the setting does nothing on the
+    // board's two most important edges.
+    static func columnBorder(_ contrast: ColorSchemeContrast) -> Color {
+        Color.primary.opacity(contrast == .increased ? 0.30 : 0.12)
+    }
+
+    static func cardBorder(_ contrast: ColorSchemeContrast) -> Color {
+        Color.primary.opacity(contrast == .increased ? 0.26 : 0.10)
+    }
+
     /// Top edge of a card catches light, like the edge of a paper note.
     static let cardTopHighlight = Color.white.opacity(0.5)
 
@@ -98,6 +142,37 @@ enum Board {
     /// pull signal — Kanban's answer to "what should I start next" has always
     /// been the free slot on the board, not an effect layered over it.
     static let settleAnimation: Animation = .spring(response: 0.32, dampingFraction: 0.5)
+}
+
+/// The board's type scale.
+///
+/// Typography was the one design axis with no tokens: every size sat inline
+/// at its call site. That is how the lane header and the card title ended up
+/// 13pt and 14pt at the same weight and the same colour — a difference too
+/// small to read as hierarchy, so the two competed instead of ranking.
+/// Separation now comes from weight and colour (see `Board.headerStyle`),
+/// not from a single point of size.
+enum BoardText {
+    /// Card title in the working lanes — the board's primary content.
+    static let title = Font.system(size: 14, weight: .semibold)
+    /// Card title in the single-line lanes, where a row is a list entry
+    /// rather than a ticket.
+    static let titleCompact = Font.system(size: 13, weight: .medium)
+    /// Lane header. Always paired with the secondary foreground: a header
+    /// labels content, it is not content.
+    static let header = Font.system(size: 13, weight: .semibold)
+    /// Running text — notes excerpt, popover copy.
+    static let body = Font.system(size: 12)
+    /// Chips: date badges, lane counts, dwell time.
+    static let chip = Font.system(size: 11, weight: .semibold)
+    /// Quiet metadata — list name, "N weitere anzeigen", weekday letters.
+    static let meta = Font.system(size: 11)
+    /// Inline symbols sitting beside `meta` or `chip` text. Deliberately
+    /// smaller than its companion text: a glyph reads at a smaller size than
+    /// a letterform does.
+    static let glyph = Font.system(size: 9, weight: .semibold)
+    /// A single emphasised number — the streak counter.
+    static let value = Font.system(size: 12, weight: .semibold)
 }
 
 /// Subtle trackpad haptics — a sensory reward for moving and completing work.

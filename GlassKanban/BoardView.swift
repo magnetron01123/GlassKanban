@@ -47,10 +47,50 @@ struct BoardView: View {
                 remindersButton
             }
         }
-        // The window paints its own always-active glass edge to edge (see
-        // WindowGlass); an opaque toolbar strip on top would cut a flat band
-        // across it. The toolbar items keep their own Liquid Glass.
-        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+        // Deliberately NOT `.toolbarBackgroundVisibility(.hidden, …)`.
+        //
+        // Hiding the toolbar's shared background does not make the toolbar
+        // disappear — it takes away the surface the items sit on, so every
+        // item falls back to carrying its own Liquid Glass capsule. Compared
+        // side by side with Safari, whose toolbar buttons are bare glyphs at
+        // rest, that read as two raised plates floating over the board.
+        //
+        // The band this was written to avoid does not appear: on macOS 26 the
+        // toolbar background is the scroll edge effect, transparent until
+        // content scrolls under it, and this board never scrolls at window
+        // level — its lanes scroll individually.
+        // One alert for the whole board, driven by the store, so it fires for
+        // every route into a move — drag, context menu, VoiceOver action.
+        .alert(overflowTitle, isPresented: overflowBinding, presenting: store.pendingOverflow) { overflow in
+            // Every easy way out of this dialog respects the limit: the safe
+            // action is the prominent one, carries Return, and — via the
+            // cancel role — Escape too. Overloading takes a deliberate click.
+            Button("Erst abschließen", role: .cancel) {
+                store.move(cardID: overflow.cardID, to: overflow.origin)
+            }
+            .keyboardShortcut(.defaultAction)
+            // "Passt schon" rather than "Trotzdem": the board does not get to
+            // decide that the user is wrong about their own capacity.
+            Button("Passt schon") {}
+        } message: { _ in
+            // The Kanban idea in four words, no jargon and no lecture — then
+            // an offer, not an instruction.
+            Text("Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?")
+        }
+    }
+
+    private var overflowBinding: Binding<Bool> {
+        Binding(
+            get: { store.pendingOverflow != nil },
+            set: { if !$0 { store.pendingOverflow = nil } })
+    }
+
+    private var overflowTitle: String {
+        guard let overflow = store.pendingOverflow else { return "" }
+        guard let limit = store.wipLimit(for: overflow.status) else {
+            return overflow.status.displayName
+        }
+        return "\(overflow.status.displayName): \(store.cards(for: overflow.status).count) von \(limit)"
     }
 
     // MARK: - Streak pill + popover
@@ -58,7 +98,9 @@ struct BoardView: View {
     /// The streak counter, clickable to reveal details. The flame fills as the
     /// day's work gets done (see StreakStats.flameLevel). No custom background:
     /// the macOS 26 toolbar already wraps its items in Liquid Glass, and glass
-    /// inside glass renders as a boxed artifact.
+    /// inside glass renders as a boxed artifact. Every item in this toolbar
+    /// obeys that rule — see `remindersButton` for what happens when one does
+    /// not.
     private var streakPill: some View {
         Button {
             showStreak.toggle()
@@ -66,11 +108,15 @@ struct BoardView: View {
             HStack(spacing: 4) {
                 FlameIcon(level: store.streakStats.flameLevel)
                 Text("\(store.streakStats.current)")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(BoardText.value)
                     .monospacedDigit()
+                    .contentTransition(.numericText())
             }
             .padding(.horizontal, 2)
         }
+        // A bare number plus a decorative flame announces as "1" — true and
+        // useless. The label says what the number counts.
+        .accessibilityLabel("Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe")
         .help("Tage nacheinander mit mindestens einer erledigten Aufgabe")
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
             StreakPopover(stats: store.streakStats)
@@ -89,13 +135,28 @@ struct BoardView: View {
         Button {
             showFind.toggle()
         } label: {
-            Label("Finden", systemImage: "magnifyingglass")
-                .symbolVariant(store.isFiltering ? .fill : .none)
+            // The count, not just a colour. There is no `magnifyingglass.fill`
+            // in SF Symbols, so the old `.symbolVariant(.fill)` was a no-op and
+            // the tint was carrying the whole "board is filtered" message on
+            // its own — invisible to anyone who does not separate those hues,
+            // and gone entirely at a glance from across the room.
+            HStack(spacing: 4) {
+                Image(systemName: "magnifyingglass")
+                if store.isFiltering {
+                    Text("\(store.activeRestrictionCount)")
+                        .font(BoardText.value)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                }
+            }
         }
         .keyboardShortcut("f")
         // A board must never be filtered without saying so, or cards look lost
-        // rather than hidden. The glyph carries that state even when closed.
+        // rather than hidden.
         .tint(store.isFiltering ? Color.accentColor : nil)
+        .accessibilityLabel(store.isFiltering
+            ? "Finden, Board ist gefiltert, \(store.activeRestrictionCount) Einschränkungen aktiv"
+            : "Aufgabe finden")
         .help(store.isFiltering
             ? "Board ist gefiltert — \(store.activeRestrictionCount) aktiv (⌘F)"
             : "Aufgabe finden (⌘F)")
@@ -110,6 +171,13 @@ struct BoardView: View {
     /// The one prominent control on the board. It carries Reminders' own app
     /// icon: no wording identifies another app as unmistakably as its icon,
     /// and the trailing arrow says you are leaving this window.
+    ///
+    /// Prominence comes from the accent colour, not from a second material.
+    /// This carried `.buttonStyle(.glass)`, which broke the rule stated above
+    /// on `streakPill`: the toolbar already wraps its items in Liquid Glass,
+    /// so an explicit glass style composited a second capsule on top and the
+    /// button read as a raised plate with a hard rim. `.glass` was not buying
+    /// prominence either — it renders at the same weight as a plain item.
     private var remindersButton: some View {
         Button {
             store.openRemindersApp()
@@ -122,11 +190,11 @@ struct BoardView: View {
                 }
                 Text("Erinnerungen")
                 Image(systemName: "arrow.up.forward")
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(BoardText.glyph)
                     .foregroundStyle(.secondary)
             }
         }
-        .buttonStyle(.glass)
+        .tint(.accentColor)
         .help("Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)")
     }
 

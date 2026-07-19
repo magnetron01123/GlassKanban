@@ -17,10 +17,17 @@ struct CardView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var contrast
 
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
     @State private var settleFlash = false
+    @FocusState private var isFocused: Bool
+
+    /// Lanes this card can be sent to — everything except where it already is.
+    private var moveTargets: [KanbanStatus] {
+        KanbanStatus.allCases.filter { $0 != card.status }
+    }
 
     var body: some View {
         Group {
@@ -44,17 +51,49 @@ struct CardView: View {
             y: Board.cardShadowAmbient.y)
         .scaleEffect(settleScale)
         .offset(y: isHovered && !reduceMotion ? -1 : 0)
-        .contentShape(RoundedRectangle(cornerRadius: Board.cardRadius))
+        // The card being dragged stays visible in its source lane, which reads
+        // as "it is still here" while the cursor carries a copy of it. Ghosting
+        // it says the original has been lifted.
+        .opacity(store.draggingCardID == card.id ? 0.4 : 1)
+        .animation(reduceMotion ? nil : Board.hoverAnimation, value: store.draggingCardID)
+        .contentShape(Board.cardShape)
+        .focusable()
+        .focused($isFocused)
+        .overlay { focusRing }
+        // Return matches what double-click does, so the keyboard path is not a
+        // lesser version of the pointer one.
+        .onKeyPress(.return) {
+            openInReminders()
+            return .handled
+        }
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
         .onTapGesture(count: 2) { openInReminders() }
         .contextMenu {
             Button("In Erinnerungen öffnen") { openInReminders() }
+            Divider()
+            // Drag & drop is the accelerator; this is the route that works
+            // without a pointer. Both go through store.move, so the WIP
+            // question fires either way.
+            Menu("Verschieben nach") {
+                ForEach(moveTargets) { target in
+                    Button(target.displayName) { store.move(cardID: card.id, to: target) }
+                }
+            }
         }
         .help(helpText)
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(accessibilityLabel)
         .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
+        .accessibilityActions {
+            ForEach(moveTargets) { target in
+                Button("Verschieben nach \(target.displayName)") {
+                    store.move(cardID: card.id, to: target)
+                }
+            }
+        }
         .onAppear {
             // The completed card appears fresh in Erledigt with the flag
             // already set, so trigger the settle here rather than on change.
@@ -73,7 +112,7 @@ struct CardView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 titleText
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(BoardText.title)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -89,7 +128,7 @@ struct CardView: View {
                     Spacer(minLength: 8)
                 } else {
                     Text(card.notesExcerpt)
-                        .font(.system(size: 12))
+                        .font(BoardText.body)
                         .foregroundStyle(.secondary)
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
@@ -112,7 +151,7 @@ struct CardView: View {
                 // Secondary, not tertiary: on opaque paper the tertiary
                 // style washes out to the point of being unreadable.
                 Text(card.listName)
-                    .font(.system(size: 11))
+                    .font(BoardText.meta)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -128,7 +167,7 @@ struct CardView: View {
     /// as a rule on the card, not a cut through it.
     private var zoneDivider: some View {
         Rectangle()
-            .fill(Board.cardBorder)
+            .fill(Board.cardBorder(contrast))
             .frame(height: 1)
             .padding(.leading, Board.cardInsetLeading)
             .padding(.trailing, Board.cardInsetTrailing)
@@ -141,9 +180,9 @@ struct CardView: View {
         if let days = card.daysInColumn(), days >= Board.agingThresholdDays {
             HStack(spacing: 3) {
                 Image(systemName: "clock")
-                    .font(.system(size: 9))
+                    .font(BoardText.glyph)
                 Text("\(days) Tage")
-                    .font(.system(size: 11))
+                    .font(BoardText.meta)
                     .monospacedDigit()
             }
             .foregroundStyle(.secondary)
@@ -155,7 +194,7 @@ struct CardView: View {
     private var compactBody: some View {
         HStack(spacing: 8) {
             titleText
-                .font(.system(size: 13, weight: .medium))
+                .font(BoardText.titleCompact)
                 .lineLimit(1)
             Spacer(minLength: 0)
             if card.isRecurring {
@@ -172,7 +211,7 @@ struct CardView: View {
     /// Erledigt: the work is done — the name is the only thing left to say.
     private var minimalBody: some View {
         titleText
-            .font(.system(size: 13, weight: .medium))
+            .font(BoardText.titleCompact)
             .lineLimit(1)
             .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -184,15 +223,18 @@ struct CardView: View {
     /// today" — on a second, unrelated meaning.
     private var titleText: Text {
         let base = Text(displayTitle)
-            .foregroundStyle(card.status == .done ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+            .foregroundStyle(card.status == .done ? HierarchicalShapeStyle.secondary : .primary)
             .strikethrough(card.status == .done)
         guard let marks = card.priorityMarks, card.status != .done else { return base }
-        return Text(marks).foregroundStyle(.secondary).bold() + Text(" ") + base
+        // Interpolation rather than `+`: concatenating Text is deprecated as
+        // of macOS 26 and each run keeps its own styling this way.
+        let marksText = Text(marks).foregroundStyle(.secondary).bold()
+        return Text("\(marksText) \(base)")
     }
 
     private var repeatIcon: some View {
         Image(systemName: "repeat")
-            .font(.system(size: 9, weight: .semibold))
+            .font(BoardText.glyph)
             .foregroundStyle(.secondary)
             .help("Wiederholende Erinnerung")
     }
@@ -212,22 +254,80 @@ struct CardView: View {
         card.title.isEmpty ? "Ohne Titel" : card.title
     }
 
+    /// Built explicitly rather than left to `children: .combine`. Combining
+    /// reads the priority marks as punctuation ("exclamation exclamation"),
+    /// never mentions that a card is done — strikethrough carries no
+    /// semantics — and reduces the list colour, which is the only channel
+    /// carrying the source list on compact rows, to nothing at all.
+    /// The lane itself is announced by the column's accessibility container.
+    private var accessibilityLabel: String {
+        var parts: [String] = []
+        if card.status == .done {
+            parts.append("Erledigt")
+        }
+        if let priority = priorityDescription {
+            parts.append(priority)
+        }
+        parts.append(displayTitle)
+        if let due = card.dueDate {
+            parts.append("Fällig \(badge(for: due).label)")
+        }
+        if card.isRecurring {
+            parts.append("Wiederholend")
+        }
+        parts.append("Liste \(card.listName)")
+        if let days = card.daysInColumn(), days >= Board.agingThresholdDays {
+            parts.append("Seit \(days) Tagen in dieser Spalte")
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    private var priorityDescription: String? {
+        switch card.priority {
+        case 1...4: "Hohe Priorität"
+        case 5: "Mittlere Priorität"
+        case 6...9: "Niedrige Priorität"
+        default: nil
+        }
+    }
+
     // MARK: - Surface (sticky note)
 
     private var surface: some View {
-        RoundedRectangle(cornerRadius: Board.cardRadius)
-            .fill(cardFill)
+        Board.cardShape.fill(cardFill)
+    }
+
+    /// Keyboard focus. Drawn outside the card's own contour so it reads as the
+    /// system focus ring rather than a change to the card itself.
+    @ViewBuilder
+    private var focusRing: some View {
+        if isFocused {
+            Board.cardShape
+                .strokeBorder(Color.accentColor, lineWidth: 2)
+                .padding(-2)
+                .allowsHitTesting(false)
+        }
     }
 
     /// Slim list-color marker along the leading edge — the ticket's color
     /// code, inset like a physical tab so it reads as part of the card.
     private var listStripe: some View {
         Capsule()
-            .fill(card.listColor.opacity(card.status == .done ? 0.45 : 0.9))
+            .fill(stripeColor.opacity(card.status == .done ? 0.45 : 0.9))
             .frame(width: Board.cardStripeWidth)
             .padding(.vertical, density.isSingleLine ? 7 : 9)
             .padding(.leading, 5)
             .allowsHitTesting(false)
+    }
+
+    /// Reminders list colours are chosen by the user and some are very light —
+    /// a pale yellow stripe vanishes on white paper, and the stripe is the only
+    /// channel carrying the source list on compact rows. Mixing in a little
+    /// label colour keeps every list distinguishable without shifting its hue:
+    /// `labelColor` is near-black in light mode and near-white in dark, so the
+    /// stripe moves away from the card's own fill in both.
+    private var stripeColor: Color {
+        card.listColor.mix(with: Color(nsColor: .labelColor), by: 0.18)
     }
 
     /// Opaque "paper" so cards read as physical objects on the recessed
@@ -239,8 +339,7 @@ struct CardView: View {
     }
 
     private var contour: some View {
-        RoundedRectangle(cornerRadius: Board.cardRadius)
-            .strokeBorder(Board.cardBorder)
+        Board.cardShape.strokeBorder(Board.cardBorder(contrast))
     }
 
     /// Light catching the top edge. Only in dark mode: on white paper a white
@@ -248,7 +347,7 @@ struct CardView: View {
     @ViewBuilder
     private var topHighlight: some View {
         if colorScheme == .dark {
-            RoundedRectangle(cornerRadius: Board.cardRadius)
+            Board.cardShape
                 .strokeBorder(
                     LinearGradient(colors: [Board.cardTopHighlight, .clear], startPoint: .top, endPoint: .center),
                     lineWidth: 1)
@@ -258,7 +357,7 @@ struct CardView: View {
     }
 
     private var flashOverlay: some View {
-        RoundedRectangle(cornerRadius: Board.cardRadius)
+        Board.cardShape
             .fill(Color.green.opacity(settleFlash ? 0.18 : 0))
             .allowsHitTesting(false)
     }
@@ -310,33 +409,43 @@ struct CardView: View {
     /// (today), quiet grey (everything else).
     private func badgeView(_ info: BadgeInfo) -> some View {
         Text(info.label)
-            .font(.system(size: 11, weight: .semibold))
+            .font(BoardText.chip)
             .monospacedDigit()
             .foregroundStyle(badgeForeground(info))
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .background(badgeBackground(info), in: RoundedRectangle(cornerRadius: Board.badgeRadius))
+            .background(badgeBackground(info), in: Board.chipShape)
     }
 
+    /// The tint colours the capsule, never the label. System orange as 11pt
+    /// text on white paper measures ~2.2:1, well under the 4.5:1 minimum —
+    /// and Apple never uses it that way either: in Reminders and Calendar
+    /// orange is always a plane or a glyph.
     private func badgeForeground(_ info: BadgeInfo) -> AnyShapeStyle {
         if info.isEmphasized { return AnyShapeStyle(.white) }
-        return info.tint.map(AnyShapeStyle.init) ?? AnyShapeStyle(.secondary)
+        return info.tint == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary)
     }
 
     private func badgeBackground(_ info: BadgeInfo) -> AnyShapeStyle {
-        guard let tint = info.tint else { return AnyShapeStyle(.quaternary.opacity(0.6)) }
-        return AnyShapeStyle(info.isEmphasized ? tint : tint.opacity(0.14))
+        guard let tint = info.tint else { return AnyShapeStyle(.quaternary.opacity(Board.chipFill)) }
+        if info.isEmphasized { return AnyShapeStyle(Board.overdueFill) }
+        return AnyShapeStyle(tint.opacity(Board.badgeTintFill))
     }
 
     // MARK: - Motivation animations
 
     /// Brief squish-and-settle plus a green flash when this card completes.
+    /// One timeline: the squish is animated too. Setting `settleScale` without
+    /// an animation snapped the card 6% instantly before the spring took over,
+    /// which read as a glitch rather than a reward.
     private func playSettleIfFlagged() {
         guard store.recentlyCompletedIDs.contains(card.id), !reduceMotion else { return }
         Task { @MainActor in
-            settleScale = 0.94
-            settleFlash = true
-            try? await Task.sleep(for: .milliseconds(20))
+            withAnimation(.easeOut(duration: 0.09)) {
+                settleScale = 0.94
+                settleFlash = true
+            }
+            try? await Task.sleep(for: .milliseconds(90))
             withAnimation(Board.settleAnimation) { settleScale = 1 }
             withAnimation(.easeOut(duration: 0.55)) { settleFlash = false }
         }

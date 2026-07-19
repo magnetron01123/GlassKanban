@@ -49,7 +49,21 @@ struct ContentView: View {
 private struct WindowGlass: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
-        view.material = .underWindowBackground
+        // `.hudWindow`, not `.underWindowBackground`. Apple's guidance is to
+        // pick a material by semantic role, and by that rule a window root
+        // takes `.underWindowBackground` — which is what this was. But that
+        // material is nearly opaque: it is designed for the plate *beneath* a
+        // window, not for a surface you are meant to see through, and it left
+        // an app named "Glass Kanban" with no readable glass at its normal
+        // window size.
+        //
+        // The semantic role here genuinely is the HUD one: this is not a
+        // document window you work inside, it is an ambient panel that sits on
+        // the desktop all day and is meant to belong to the wallpaper behind
+        // it. `.hudWindow` is the material for exactly that, and the board
+        // stays legible because no text sits on bare glass — lane headers ride
+        // the lane wash, and every card is opaque paper.
+        view.material = .hudWindow
         view.blendingMode = .behindWindow
         view.state = .active
         return view
