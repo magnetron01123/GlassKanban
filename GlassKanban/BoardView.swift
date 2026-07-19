@@ -116,11 +116,6 @@ struct BoardView: View {
         }
         // A bare number plus a decorative flame announces as "1" — true and
         // useless. The label says what the number counts.
-        // Note: unlike the two trailing items, this keeps a faint container.
-        // That capsule is drawn by the toolbar for `.navigation` placement and
-        // does not respond to the button style — `.plain` renders it too.
-        // Removing it would mean moving the streak out of that placement.
-        .buttonStyle(.borderless)
         .accessibilityLabel("Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe")
         .help("Tage nacheinander mit mindestens einer erledigten Aufgabe")
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
@@ -155,7 +150,6 @@ struct BoardView: View {
                 }
             }
         }
-        .buttonStyle(.borderless)
         .keyboardShortcut("f")
         // A board must never be filtered without saying so, or cards look lost
         // rather than hidden.
@@ -200,7 +194,6 @@ struct BoardView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .buttonStyle(.borderless)
         .tint(.accentColor)
         .help("Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)")
     }
