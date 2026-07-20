@@ -21,6 +21,7 @@
 		9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD1B4A61352C1461953925D /* BoardView.swift */; };
 		9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
 		9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
+		A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */; };
 		A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CAB35E9902F258F00D82A7 /* SettingsView.swift */; };
 		B5100A228F130EF0A3292797 /* StreakCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */; };
 		BA331CEEE97A7000C960DB81 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE77523ACBD14B219E0031C5 /* ContentView.swift */; };
@@ -39,6 +40,7 @@
 		0C252FF02D5162B99A3F30F7 /* WIPLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WIPLimitTests.swift; sourceTree = "<group>"; };
 		10ECC48E9096FEF7E8FFDCB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1C6B365227CBE04B748E55FE /* StreakPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakPopover.swift; sourceTree = "<group>"; };
+		2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculatorTests.swift; sourceTree = "<group>"; };
 		4F5178AE744F393F737442A5 /* FilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterTests.swift; sourceTree = "<group>"; };
 		616551F8C95C166758DC62DD /* TextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizer.swift; sourceTree = "<group>"; };
@@ -90,6 +92,7 @@
 		C258B197D26D22AB4AC8E407 /* GlassKanban */ = {
 			isa = PBXGroup;
 			children = (
+				2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */,
 				9AD1B4A61352C1461953925D /* BoardView.swift */,
 				E363E5F11832E63EE2539D70 /* CardView.swift */,
 				EC1A968F6964BFEE0832A01A /* ColumnView.swift */,
@@ -146,6 +149,7 @@
 			buildConfigurationList = B09AFE9375D830BC374573FB /* Build configuration list for PBXNativeTarget "GlassKanban" */;
 			buildPhases = (
 				A567494CDC0049B0AF77743C /* Sources */,
+				AF49A5C6088C655EB51FC0D2 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -191,6 +195,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AF49A5C6088C655EB51FC0D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A567494CDC0049B0AF77743C /* Sources */ = {

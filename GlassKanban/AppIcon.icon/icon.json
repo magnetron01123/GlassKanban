@@ -1,0 +1,53 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.85490,0.85490,0.85490,1.00000",
+      "display-p3:0.58824,0.58824,0.58824,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "storage-panes.png",
+          "name" : "Storage lanes"
+        }
+      ],
+      "lighting" : "individual",
+      "name" : "Storage",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.35
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.8
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "focus-pane.png",
+          "name" : "Work in progress"
+        }
+      ],
+      "lighting" : "individual",
+      "name" : "Focus",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.8
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}
