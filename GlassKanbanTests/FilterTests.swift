@@ -57,4 +57,88 @@ final class FilterTests: XCTestCase {
         XCTAssertTrue(DueFilter.noDate.matches(nil, calendar: calendar, now: now))
         XCTAssertFalse(DueFilter.noDate.matches(now, calendar: calendar, now: now))
     }
+
+    // MARK: - Recurring (reference "now": Friday, 2026-07-17, week Mon 13 – Sun 19)
+
+    private func card(
+        recurring: Bool,
+        due: Date?,
+        status: KanbanStatus = .backlog
+    ) -> KanbanCard {
+        KanbanCard(
+            id: "card",
+            title: "Pflanzen umtopfen",
+            notesPreview: "",
+            notesExcerpt: "",
+            dueDate: due,
+            priority: 0,
+            status: status,
+            listName: "Test",
+            listColor: .accentColor,
+            completionDate: nil,
+            isRecurring: recurring,
+            lastModifiedDate: nil)
+    }
+
+    private func isVisible(
+        _ filter: RecurringFilter,
+        _ card: KanbanCard,
+        now: Date = Date(timeIntervalSince1970: 0)
+    ) -> Bool {
+        filter.matches(card, calendar: calendar, now: now)
+    }
+
+    func testNonRecurringCardsAreNeverHidden() {
+        let now = date(2026, 7, 17)
+        let farFuture = card(recurring: false, due: date(2026, 12, 24))
+        XCTAssertTrue(isVisible(.hiddenUntilDue, farFuture, now: now))
+    }
+
+    func testRecurringCardDueBeyondThisWeekIsHidden() {
+        let now = date(2026, 7, 17)
+        XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 20)), now: now))
+        XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 8, 17)), now: now))
+    }
+
+    func testRecurringCardAppearsOnceItReachesTheDueWindow() {
+        let now = date(2026, 7, 17)
+        // Overdue, today and the rest of this calendar week all qualify.
+        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 10)), now: now))
+        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 17)), now: now))
+        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 19)), now: now))
+    }
+
+    /// Without a date there is no way to tell when it comes round again, so
+    /// hiding it would remove it from the board indefinitely.
+    func testRecurringCardWithoutDueDateStaysVisible() {
+        let now = date(2026, 7, 17)
+        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: nil), now: now))
+    }
+
+    /// Pulling a card into a lane is a decision the user made; completing it
+    /// is a record. Neither is the board's to hide.
+    func testOnlyBacklogHidesRecurringCards() {
+        let now = date(2026, 7, 17)
+        let due = date(2026, 8, 17)
+        for status in KanbanStatus.allCases where status != .backlog {
+            XCTAssertTrue(
+                isVisible(.hiddenUntilDue, card(recurring: true, due: due, status: status), now: now),
+                "\(status.displayName) must not hide recurring cards")
+        }
+    }
+
+    func testAlwaysVisibleShowsEverything() {
+        let now = date(2026, 7, 17)
+        XCTAssertTrue(isVisible(.alwaysVisible, card(recurring: true, due: date(2026, 12, 24)), now: now))
+        XCTAssertTrue(isVisible(.alwaysVisible, card(recurring: true, due: nil), now: now))
+    }
+
+    /// The resting value is part of the rule, not an implementation detail:
+    /// it is the one filter whose default already hides something, and the
+    /// store leans on that when deciding whether the board counts as filtered.
+    /// (How the store reports that is exercised through the board itself —
+    /// this bundle compiles pure logic only, with no app host.)
+    func testDefaultIsTheHidingValue() {
+        XCTAssertEqual(RecurringFilter.allCases.first, .hiddenUntilDue)
+    }
 }

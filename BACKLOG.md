@@ -67,20 +67,8 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   EventKit-Verhalten geprüft werden — kein Blocker fürs MVP, aber ein bekannter blinder Fleck.
   (Das ↻-Icon auf der Karte, das eine Wiederholung überhaupt erst sichtbar macht, gibt es
   bereits — `CardView.repeatIcon` — hier geht es nur noch um das Verhalten beim Abhaken.)
-- **Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten** — heute zeigt Backlog
-  jede Erinnerung mit Datum, auch eine, die monatlich wiederkehrt und erst in drei Wochen wieder
-  dran ist. Das verwässert das Backlog mit Karten, die gerade keine echte Entscheidungsoption
-  sind (Personal-Kanban-Gedanke: eine Karte im Backlog soll etwas sein, das man als Nächstes
-  anfassen könnte — nicht Hintergrundrauschen). Entschieden: **Standard = ausgeblendet**, bis
-  die Karte in dasselbe Fälligkeitsfenster fällt, das Badges schon heute nutzen (Überfällig/
-  Heute/Diese Woche) — keine neue Fläche, keine Markierung, die Karte erscheint dann einfach mit
-  der ohnehin vorhandenen Ankunfts-Animation. Sichtbar/umschaltbar gemacht über eine **dritte
-  Zeile im bestehenden Find-Popover** ("Wiederkehrende", gleiche Bauart wie "Dringlichkeit" und
-  "Fälligkeit"): Standardwert "Verborgen bis fällig", umschaltbar auf "Immer anzeigen" — dann
-  erscheint (wie bei den anderen beiden Filtern beim Abweichen vom Standard) auch der
-  "Alles zurücksetzen"-Link. Der Standardwert selbst zählt nicht als aktive Filterung, genau wie
-  "Alle" bei den anderen beiden Zeilen nicht zählt — nur "Immer anzeigen" ist eine bewusste
-  Nutzerentscheidung. Abhängig davon, wie die Fragen oben zum Abhak-Verhalten ausgehen.
+- ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt, siehe
+  MVP.md (Filterleiste, Zeile "Wiederkehrende").
 
 ## Fensterverhalten
 

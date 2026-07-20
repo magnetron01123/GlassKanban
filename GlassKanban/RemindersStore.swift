@@ -30,6 +30,10 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var draggingCardID: String?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
+    /// Not persisted, like the two filters above: `hiddenUntilDue` is the
+    /// board's normal state, so every launch should start there rather than
+    /// resuming a wide-open Backlog the user opened once, weeks ago.
+    @Published var recurringFilter: RecurringFilter = .hiddenUntilDue
     @Published var searchText: String = ""
     /// Set when a move pushed a limited lane past its WIP limit. Lives here
     /// rather than in the lane view so every route into `move` — drag & drop,
@@ -354,6 +358,7 @@ final class RemindersStore: ObservableObject {
             $0.status == status
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
+                && recurringFilter.matches($0)
                 && $0.matches(search: searchText)
         }
         if status == .done {
@@ -366,6 +371,7 @@ final class RemindersStore: ObservableObject {
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all
+        recurringFilter = .hiddenUntilDue
         searchText = ""
     }
 
@@ -374,6 +380,12 @@ final class RemindersStore: ObservableObject {
     /// True while the board shows less than everything. The find control wears
     /// this: a board must never be filtered without saying so, or cards look
     /// lost rather than hidden.
+    ///
+    /// `recurringFilter` deliberately never counts here. Its default hides
+    /// cards, but as the board's normal state — badging that would leave the
+    /// find control permanently lit, which is precisely the standing
+    /// attention-grab this feature exists to avoid. Its other value shows
+    /// *more* than the default and is not a restriction either.
     var isFiltering: Bool {
         priorityFilter != .all || dueFilter != .all || !searchText.isEmpty
     }
@@ -383,6 +395,13 @@ final class RemindersStore: ObservableObject {
         (priorityFilter != .all ? 1 : 0)
             + (dueFilter != .all ? 1 : 0)
             + (searchText.isEmpty ? 0 : 1)
+    }
+
+    /// Whether anything in the find popover sits away from its default —
+    /// which is a wider question than `isFiltering`, because "Immer anzeigen"
+    /// is a departure worth being able to undo without being a restriction.
+    var canResetFindSettings: Bool {
+        isFiltering || recurringFilter != .hiddenUntilDue
     }
 
     // MARK: - Empty board

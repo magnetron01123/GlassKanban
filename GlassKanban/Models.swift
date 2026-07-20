@@ -264,3 +264,60 @@ enum DueFilter: String, CaseIterable, Identifiable {
         }
     }
 }
+
+/// Whether recurring reminders that are not due yet take up space in Backlog.
+///
+/// A recurring reminder always carries a *next* due date, so a monthly chore
+/// would otherwise sit in Backlog every single day of the month. Backlog is
+/// meant to hold what could be pulled next; something that comes back on its
+/// own in three weeks is not a decision, it is background noise — and every
+/// card that is not a real option makes the ones that are harder to see.
+///
+/// Unlike the other two filters this one does not rest at "show everything":
+/// `hiddenUntilDue` is the board's normal operating mode and `alwaysVisible`
+/// is the deviation. It is still a visible row rather than a silent rule,
+/// for the same reason the WIP limit rides along in the lane count: a board
+/// must be able to say what it is not showing ("make policies explicit").
+enum RecurringFilter: String, CaseIterable, Identifiable {
+    /// Default. The card joins Backlog once it reaches the same due window
+    /// `DueFilter` already calls Überfällig / Heute / Diese Woche.
+    case hiddenUntilDue
+    case alwaysVisible
+
+    var id: String { rawValue }
+
+    /// Short enough to sit beside its label in the 260pt popover: the first
+    /// wording ("Verborgen bis fällig") pushed the row past the width and
+    /// wrapped "Wiederkehrende" into a column one letter wide.
+    var displayName: String {
+        switch self {
+        case .hiddenUntilDue: "Erst wenn fällig"
+        case .alwaysVisible: "Immer"
+        }
+    }
+
+    /// The due window a recurring card has to reach before it appears.
+    /// Composed from `DueFilter` rather than restated, so "this week" cannot
+    /// come to mean two different things in one app. The calendar-week edge
+    /// is deliberate: the week's chores arrive together on Monday morning
+    /// instead of trickling in on a rolling seven-day clock.
+    private static let visibleWindow: [DueFilter] = [.overdue, .today, .thisWeek]
+
+    /// Only Backlog ever hides anything. A recurring card the user has
+    /// already pulled into a working lane is a decision they made, and a
+    /// completed one is a record of work done — neither is ours to hide.
+    func matches(_ card: KanbanCard, calendar: Calendar = .current, now: Date = .now) -> Bool {
+        switch self {
+        case .alwaysVisible:
+            return true
+        case .hiddenUntilDue:
+            guard card.isRecurring, card.status == .backlog else { return true }
+            // Without a due date there is no way to tell when it comes round
+            // again, so it stays visible rather than disappearing for good.
+            guard let dueDate = card.dueDate else { return true }
+            return Self.visibleWindow.contains {
+                $0.matches(dueDate, calendar: calendar, now: now)
+            }
+        }
+    }
+}
