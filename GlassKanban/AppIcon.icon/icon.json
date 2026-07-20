@@ -1,49 +1,51 @@
 {
   "fill" : {
-    "linear-gradient" : [
-      "display-p3:0.85490,0.85490,0.85490,1.00000",
-      "display-p3:0.58824,0.58824,0.58824,1.00000"
-    ]
+    "solid" : "display-p3:0.55294,0.56078,0.56863,1.00000"
   },
+  "fill-specializations" : [
+    {
+      "appearance" : "dark",
+      "value" : {
+        "solid" : "display-p3:0.24706,0.25098,0.25490,1.00000"
+      }
+    }
+  ],
   "groups" : [
     {
       "layers" : [
         {
-          "fill" : {
-            "solid" : "display-p3:0.40000,0.40000,0.40000,1.00000"
-          },
-          "image-name" : "storage-panes.png",
-          "name" : "Storage lanes"
+          "image-name" : "columns-outer.png",
+          "name" : "Backlog and Erledigt"
         }
       ],
       "lighting" : "individual",
-      "name" : "Storage",
+      "name" : "Outer columns",
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.35
+        "opacity" : 0.3
       },
       "specular" : true,
       "translucency" : {
         "enabled" : true,
-        "value" : 0.25
+        "value" : 0.5
       }
     },
     {
       "layers" : [
         {
-          "image-name" : "focus-pane.png",
-          "name" : "Work in progress"
+          "image-name" : "columns-center.png",
+          "name" : "In Bearbeitung"
         }
       ],
       "lighting" : "individual",
-      "name" : "Focus",
+      "name" : "Center column",
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.5
+        "opacity" : 0.55
       },
       "specular" : true,
       "translucency" : {
-        "enabled" : false,
+        "enabled" : true,
         "value" : 0.5
       }
     }

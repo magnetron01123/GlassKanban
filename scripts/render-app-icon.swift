@@ -32,7 +32,12 @@ private enum Design {
     static let artworkRatio: CGFloat = 824.0 / 1024.0
     static let artworkCornerRatio: CGFloat = 185.4 / 824.0
 
-    static let paneCorner: CGFloat = 11
+    static let paneCorner: CGFloat = 10
+
+    /// Slight overlap, not a stack. What separates the columns is the middle
+    /// one's shadow falling on the two behind it — which is why it sits in its
+    /// own group (Icon Composer attaches shadows per group, never per layer).
+    static let overlap: CGFloat = 8
 
     /// Every pane carries a rim all the way round, not just a highlight on its
     /// top edge. An earlier draft lit only the top, and where the panes
@@ -42,24 +47,21 @@ private enum Design {
     static let rimWidth: CGFloat = 1.0
     static let contactRimWidth: CGFloat = 1.1
 
-    /// The two storage panes (Backlog, Erledigt): shorter and fainter, sitting
-    /// behind. Both say the same thing — stored, not being worked on — which
-    /// is why three panes stand in for the board's four columns.
-    static let backWidth: CGFloat = 48
-    static let backTop: CGFloat = 43
-    static let backHeight: CGFloat = 74
-    static let backLeftX: CGFloat = 14
-    static let backRightX: CGFloat = 98
+    /// Three columns of equal size — one board, three of the same thing. The
+    /// middle one is emphasised by sitting in front, not by being larger or a
+    /// different colour: an earlier version made it taller and tinted the
+    /// outer two darker, which turned them into a different kind of object and
+    /// the board reading was gone.
+    static let columnWidth: CGFloat = 44
+    static let columnTop: CGFloat = 34
+    static let columnHeight: CGFloat = 92
 
-    /// The work in progress: wider, taller, brighter, in front, casting a
-    /// shadow on the other two. Kanban's whole discipline is the WIP limit —
-    /// "stop starting, start finishing" — so the eye belongs here, not on the
-    /// archive. The width ratio mirrors the 440-to-320pt split the real board
-    /// uses on wide displays.
-    static let frontWidth: CGFloat = 58
-    static let frontX: CGFloat = 51
-    static let frontTop: CGFloat = 34
-    static let frontHeight: CGFloat = 92
+    /// Centred row: three columns less the two overlaps.
+    static var rowStart: CGFloat {
+        (grid - (columnWidth * 3 - overlap * 2)) / 2
+    }
+    static var centerX: CGFloat { rowStart + columnWidth - overlap }
+    static var rightX: CGFloat { centerX + columnWidth - overlap }
 
     /// Above this pixel size the icon carries its own outer drop shadow. Below
     /// it the shadow only eats pixels the silhouette needs.
@@ -144,22 +146,23 @@ private extension Color {
 private enum Parts {
     case full
     case backgroundOnly
-    case backPanes
-    case frontPane
-    /// Bare silhouettes for the `.icon` bundle. Icon Composer layers are
-    /// shapes, not pictures: macOS derives the glass, the specular highlight
-    /// and the shadow from them, and does it per appearance. Handing it the
-    /// painted version would mean two glass treatments stacked on each other.
-    case silhouetteBackPanes
-    case silhouetteFrontPane
+    /// The two outer columns, and the middle one, as flat white shapes. Icon
+    /// Composer layers are shapes, not pictures: macOS derives the glass, the
+    /// specular highlight and the shadow from them. Handing it a painted
+    /// version would stack two glass treatments on each other.
+    ///
+    /// Split in two because they overlap: the middle column needs its own
+    /// shadow to read as being in front, and shadows are per group.
+    case outerColumns
+    case centerColumn
 
     var drawsBackground: Bool { self == .full || self == .backgroundOnly }
-    var drawsBack: Bool { self == .full || self == .backPanes || self == .silhouetteBackPanes }
-    var drawsFront: Bool { self == .full || self == .frontPane || self == .silhouetteFrontPane }
+    var drawsOuter: Bool { self == .full || self == .outerColumns }
+    var drawsCenter: Bool { self == .full || self == .centerColumn }
     /// Only the finished icon carries the outer silhouette and its shadow —
     /// Icon Composer applies its own mask and lighting to bare layers.
     var isMasked: Bool { self == .full }
-    var isSilhouette: Bool { self == .silhouetteBackPanes || self == .silhouetteFrontPane }
+    var isSilhouette: Bool { self == .outerColumns || self == .centerColumn }
 }
 
 private struct IconArtwork: View {
@@ -191,16 +194,13 @@ private struct IconArtwork: View {
                     .offset(x: inset, y: inset)
             }
 
-            if parts.drawsBack {
-                backPane(x: Design.backLeftX)
-                backPane(x: Design.backRightX)
+            if parts.drawsOuter {
+                boardColumn(x: Design.rowStart, style: palette.back)
+                boardColumn(x: Design.rightX, style: palette.back)
             }
 
-            if parts.drawsFront {
-                pane(
-                    Design.frontX, Design.frontTop, Design.frontWidth, Design.frontHeight,
-                    style: palette.front,
-                    shadow: palette.frontShadow)
+            if parts.drawsCenter {
+                boardColumn(x: Design.centerX, style: palette.front)
             }
         }
         .frame(width: canvas, height: canvas)
@@ -217,22 +217,19 @@ private struct IconArtwork: View {
             y: side * 0.012)
     }
 
-    private func backPane(x: CGFloat) -> some View {
-        pane(x, Design.backTop, Design.backWidth, Design.backHeight,
-             style: palette.back, shadow: nil)
+    /// One column. In the shipped `.icon` this is a flat white shape and macOS
+    /// lights it; the painted fill and edges below only feed the fallback
+    /// asset catalog and the previews.
+    private func boardColumn(x: CGFloat, style: Pane) -> some View {
+        column(x, Design.columnTop, Design.columnWidth, Design.columnHeight, style: style)
     }
 
-    /// One glass pane: a fill that fades downward, a dark contact edge, a
-    /// bright specular edge, and — for the front pane — a shadow onto the two
-    /// behind it. Drawn in that order because the specular has to sit on top
-    /// of the contact line, not under it.
-    private func pane(
+    private func column(
         _ x: CGFloat,
         _ y: CGFloat,
         _ width: CGFloat,
         _ height: CGFloat,
-        style: Pane,
-        shadow: Double?
+        style: Pane
     ) -> some View {
         let shape = RoundedRectangle(cornerRadius: Design.paneCorner * unit, style: .continuous)
         return shape
@@ -265,10 +262,6 @@ private struct IconArtwork: View {
                 }
             }
             .frame(width: width * unit, height: height * unit)
-            .shadow(
-                color: .black.opacity(parts.isSilhouette ? 0 : (shadow ?? 0)),
-                radius: 5 * unit,
-                y: 2 * unit)
             .offset(x: inset + x * unit, y: inset + y * unit)
     }
 }
@@ -324,29 +317,28 @@ private let slots: [Slot] = [16, 32, 128, 256, 512].flatMap { points in
 /// plus its layer images, so it stays in step with the constants above instead
 /// of drifting from them.
 ///
-/// Two groups, because Icon Composer attaches shadows *and* translucency per
-/// group, not per layer — and the two roles need different amounts of both.
+/// A solid plate carrying three glass columns of equal size, the middle one in
+/// front. The plate colour is the app's own: `#DCDEE0` is the window glass
+/// measured in the running board, and the dark value is the same surface in
+/// Dark Mode. Solid rather than a gradient, so the plate reads as one surface.
 ///
-/// Only the storage panes are translucent, and only slightly. Turning it on
-/// everywhere made the whole icon see-through, which is both unusual for a
-/// macOS icon and backwards for this app: `DesignSystem.swift` puts glass on
-/// the chrome and keeps content opaque, so the front pane is paper the way a
-/// card is, and the panes behind it are the recessed lanes.
+/// Two groups because the columns overlap: the middle one carries a deeper
+/// shadow so it reads as being in front, and Icon Composer attaches shadows
+/// per group, never per layer. That shadow is the only thing separating the
+/// three — an earlier attempt separated them by making the outer two darker
+/// and taller-vs-shorter instead, which turned them into a different kind of
+/// object and the board reading was gone.
 ///
-/// Those panes also carry their own darker fill. Left white like the front
-/// one, all three merged into a single blob by 32pt — the specular edges and
-/// the shadow that separate them at full size are gone by then. Darkening
-/// them is what the board does anyway (`Board.columnFill` is a black wash),
-/// just pushed further than the UI needs it, because an icon has to survive
-/// sizes the board never renders at.
+/// The plate is a good deal deeper than the app's own surfaces, and that is
+/// on purpose. An earlier version matched the window's measured tone
+/// (`#DCDEE0`) and vanished on a light Dock: the app's surfaces sit on the
+/// user's wallpaper and borrow contrast from it, while an icon has nothing
+/// behind it and has to carry its own. Checked against both a light and a
+/// dark backdrop at full size and at 32pt.
 ///
-/// The plate carries the same gradient as the painted variant. The dark and
-/// tinted appearances are deliberately left to macOS: a compiled catalog holds
-/// separate layer stacks for `NSAppearanceNameAqua`,
-/// `NSAppearanceNameDarkAqua` and `ISAppearanceTintable` even when the manifest
-/// says nothing about them. Letting the system derive them is the point of the
-/// format — every icon then goes through the same tuned pipeline — and it is
-/// exactly what a hand-painted asset catalog cannot do.
+/// Dark is specified rather than left to the system. The fill is a literal
+/// colour, so without an override the plate stays light in Dark Mode and the
+/// icon reads far too bright there.
 ///
 /// `display-p3` values equal the sRGB ones here because every colour is
 /// neutral: the two spaces share a transfer function and a neutral axis, so
@@ -354,50 +346,52 @@ private let slots: [Slot] = [16, 32, 128, 256, 512].flatMap { points in
 private let iconManifest = """
 {
   "fill" : {
-    "linear-gradient" : [
-      "display-p3:0.85490,0.85490,0.85490,1.00000",
-      "display-p3:0.58824,0.58824,0.58824,1.00000"
-    ]
+    "solid" : "display-p3:0.55294,0.56078,0.56863,1.00000"
   },
+  "fill-specializations" : [
+    {
+      "appearance" : "dark",
+      "value" : {
+        "solid" : "display-p3:0.24706,0.25098,0.25490,1.00000"
+      }
+    }
+  ],
   "groups" : [
     {
       "layers" : [
         {
-          "fill" : {
-            "solid" : "display-p3:0.40000,0.40000,0.40000,1.00000"
-          },
-          "image-name" : "storage-panes.png",
-          "name" : "Storage lanes"
+          "image-name" : "columns-outer.png",
+          "name" : "Backlog and Erledigt"
         }
       ],
       "lighting" : "individual",
-      "name" : "Storage",
+      "name" : "Outer columns",
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.35
+        "opacity" : 0.3
       },
       "specular" : true,
       "translucency" : {
         "enabled" : true,
-        "value" : 0.25
+        "value" : 0.5
       }
     },
     {
       "layers" : [
         {
-          "image-name" : "focus-pane.png",
-          "name" : "Work in progress"
+          "image-name" : "columns-center.png",
+          "name" : "In Bearbeitung"
         }
       ],
       "lighting" : "individual",
-      "name" : "Focus",
+      "name" : "Center column",
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.5
+        "opacity" : 0.55
       },
       "specular" : true,
       "translucency" : {
-        "enabled" : false,
+        "enabled" : true,
         "value" : 0.5
       }
     }
@@ -467,11 +461,11 @@ do {
             atomically: true,
             encoding: .utf8)
 
-        // Painted layers, back to front — reference material, and a starting
+        // The two layers on their own — reference material, and a starting
         // point if the .icon bundle is ever rebuilt by hand in Icon Composer.
-        for (name, parts) in [("1-background", Parts.backgroundOnly),
-                              ("2-storage-panes", .backPanes),
-                              ("3-focus-pane", .frontPane)] {
+        for (name, parts) in [("1-plate", Parts.backgroundOnly),
+                              ("2-columns-outer", .outerColumns),
+                              ("3-columns-center", .centerColumn)] {
             try renderPNG(
                 IconArtwork(canvas: 1024, palette: .light, parts: parts),
                 pixels: 1024,
@@ -484,8 +478,8 @@ do {
         // constants above instead of drifting from them.
         let iconBundleAssets = iconBundle.appendingPathComponent("Assets", isDirectory: true)
         try files.createDirectory(at: iconBundleAssets, withIntermediateDirectories: true)
-        for (name, parts) in [("storage-panes", Parts.silhouetteBackPanes),
-                              ("focus-pane", .silhouetteFrontPane)] {
+        for (name, parts) in [("columns-outer", Parts.outerColumns),
+                              ("columns-center", .centerColumn)] {
             try renderPNG(
                 IconArtwork(canvas: 1024, palette: .light, parts: parts),
                 pixels: 1024,
