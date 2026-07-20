@@ -130,6 +130,13 @@ struct ColumnView: View {
             alignment: .top)
         .background { columnSurface }
         .overlay { columnContour }
+        // Clicking the bare lane — not a card, not a control — is "outside"
+        // for any card mid-rename elsewhere on the board: the usual pattern
+        // is that an edit ends when you click away from it. Cards claim
+        // their own taps first, so this only ever fires on empty space.
+        .onTapGesture {
+            NSApp.keyWindow?.makeFirstResponder(nil)
+        }
         .animation(Board.dropTargetAnimation, value: showsDropFeedback)
         .dropDestination(for: String.self) { ids, _ in
             store.endDrag()
@@ -197,11 +204,17 @@ struct ColumnView: View {
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: isOverLimit)
-                .help(countHelp)
                 // The over-limit signal is otherwise colour alone.
                 .accessibilityValue(countHelp)
         }
         .padding(EdgeInsets(top: 12, leading: Board.laneMargin, bottom: 10, trailing: Board.laneMargin))
+        // The whole header band, not just the count capsule. On the capsule
+        // alone the tooltip was a 20pt target nobody found — including the
+        // person who asked for it — which makes "explicit" true only on
+        // paper. The header is the thing you point at when you wonder what
+        // this lane is holding.
+        .contentShape(Rectangle())
+        .boardTooltip(countHelp)
     }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
@@ -216,14 +229,50 @@ struct ColumnView: View {
         return "\(cards.count)"
     }
 
+    /// One shape for all four lanes: a lead line stating what the lane holds,
+    /// then at most a couple of short qualifiers, one per line.
+    ///
+    /// They used to be four different sentences in three different builds —
+    /// Erledigt opened with today's completions while the others opened with a
+    /// count, two lanes folded a second fact in behind a "·" and a third used
+    /// an em dash. The panel ranks lines, so a second fact belongs on a second
+    /// line rather than trailing the first behind a separator.
     private var countHelp: String {
-        if status == .done {
-            return "\(todayCount) heute erledigt · \(cards.count) sichtbar"
-        }
+        ([countSummary] + countDetails).joined(separator: "\n")
+    }
+
+    /// Every lane opens the same way, so the four read as one family.
+    private var countSummary: String {
         guard let wipLimit else { return "\(cards.count) Karten" }
-        return isOverLimit
-            ? "\(cards.count) von \(wipLimit) Karten — Limit überschritten"
-            : "\(cards.count) von \(wipLimit) Karten · lieber abschließen als stapeln"
+        return "\(cards.count) von \(wipLimit) Karten"
+    }
+
+    private var countDetails: [String] {
+        var details: [String] = []
+        if status == .done, todayCount > 0 {
+            details.append("\(todayCount) heute erledigt")
+        }
+        if isOverLimit {
+            details.append("Limit überschritten")
+        } else if wipLimit != nil {
+            details.append("Lieber abschließen als stapeln")
+        }
+        if let recurringHint {
+            details.append(recurringHint)
+        }
+        return details
+    }
+
+    /// What the count is leaving out. The capsule states what the lane shows,
+    /// so the one rule that shows less than the lane holds has to be readable
+    /// from the board — the same reason the WIP limit rides along in the
+    /// count. Only ever present when it has something to report, so it costs
+    /// nothing on a lane that is hiding nothing.
+    private var recurringHint: String? {
+        let hidden = store.recurringHiddenCount(for: status)
+        guard hidden > 0 else { return nil }
+        // "wiederkehrende" carries both numbers, so no singular branch needed.
+        return "\(hidden) wiederkehrende Karten"
     }
 
     // MARK: - Pieces
@@ -308,7 +357,7 @@ struct ColumnView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Neues Ticket anlegen")
-            .help("Neues Ticket anlegen")
+            .boardTooltip("Neues Ticket anlegen")
             Spacer()
         }
         .padding(.vertical, 4)

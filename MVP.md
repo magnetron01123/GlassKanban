@@ -116,8 +116,23 @@ als kleiner Farbpunkt/-akzent auf der Karte angezeigt.
 |---|---|
 | Dringlichkeit | `EKReminder.priority` (gruppiert: Hoch/Mittel/Niedrig/Keine) |
 | Fälligkeit | `EKReminder.dueDateComponents` (Überfällig/Heute/Diese Woche/Ohne Datum) |
+| Wiederkehrende | `EKReminder.hasRecurrenceRules` (Wenn fällig/Immer) |
 
 (Verantwortliche-Person-Filter → Backlog, siehe BACKLOG.md)
+
+**Wiederkehrende Aufgaben im Backlog:** Eine wiederkehrende Erinnerung hat immer schon ein
+*nächstes* Fälligkeitsdatum — eine monatliche Routine stünde sonst jeden Tag des Monats im
+Backlog, obwohl sie gerade keine Entscheidung ist. Standard ist deshalb **"Wenn fällig"**: die
+Karte erscheint erst, wenn sie **heute fällig oder überfällig** ist — nicht schon "irgendwann
+diese Woche". Betrifft **nur Backlog** — eine wiederkehrende Karte, die bereits in einer
+Arbeitsspalte liegt, ist eine getroffene Entscheidung, eine erledigte ist ein Nachweis. Ohne
+Fälligkeitsdatum bleibt sie immer sichtbar, sonst verschwände sie dauerhaft.
+
+Anders als die beiden anderen Filter ruht dieser also nicht auf "alles zeigen". Er bleibt
+trotzdem eine sichtbare Zeile statt einer stillen Regel — dasselbe Prinzip, nach dem das
+WIP-Limit in der Spaltenzahl mitläuft: Das Board soll sagen können, was es nicht zeigt. Der
+Standardwert zählt aber nicht als aktive Filterung (sonst leuchtete das Finden-Symbol dauerhaft);
+nur "Immer anzeigen" ist eine bewusste Abweichung und bringt den Zurücksetzen-Link.
 
 ## Motivation (leichtgewichtige Gamification)
 

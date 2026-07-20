@@ -10,6 +10,14 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   nicht als Dauer-Badge auf jeder Karte.
 - **Verantwortliche-Person-Avatar auf der Karte** — hängt am Verantwortliche-Person-Filter
   (s. u.), daher zusammen verschoben.
+- **Eigene Hashtags aus den Notizen als Tag auf der Karte anzeigen** — wer Erinnerungen schon
+  mit eigenen Hashtags kategorisiert (z. B. `#projektx`), sieht die aktuell nur als rohen Text
+  in der Notizen-Vorschau, sofern es nicht zufällig der Status-Hashtag ist (der schon
+  herausgefiltert wird, siehe MVP.md). Vorschlag: eigene Hashtags erkennen und als kleine
+  Tag-Chips auf der Karte anzeigen statt/zusätzlich zur reinen Notizen-Vorschau. Bewusst nicht
+  im MVP: Karte soll reduziert bleiben, und Hashtag-Erkennung im Notiztext ist bereits fürs
+  interne Status-Tag reserviert — Kollision/Abgrenzung zwischen Status-Hashtag und
+  Nutzer-Hashtag (und Darstellung bei mehreren Tags) müsste sauber gelöst werden.
 
 ## Filter
 
@@ -32,14 +40,53 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   Things' Today-Moment). Gehört inhaltlich mit dem WIP-Limit zusammen: beide machen
   *Menge* sichtbar, ohne zu bevormunden. Zurückgestellt, bis das Kartendesign final ist,
   weil beide Signale sonst mit der Dringlichkeitsfarbe konkurrieren könnten.
+- **Frei anlegbare Swimlanes** — horizontale Gruppen, die Nutzer:innen selbst benennen,
+  anlegen und Karten zuordnen können (z. B. nach Projekt oder eigener Kategorie), quer über
+  die Spalten. Deutlich größerer Scope als die "Heute-Absatz"-Trennung oben (die ist
+  automatisch und ungestaltbar, nur im Backlog) — hier braucht es Verwaltungs-UI (anlegen,
+  umbenennen, löschen) und eine Datenquelle für die Zuordnung. Offene Frage: gleicher
+  Hashtag-Mechanismus wie bei den Spalten, oder etwas anderes, das nicht mit dem
+  Status-Hashtag kollidiert.
 - **Mehrere Boards** — MVP ist bewusst ein einzelnes Board.
 - **Konfigurierbare Spaltenanzahl/-namen** — MVP hat vier feste Spalten.
 - **Manuelle Kartenreihenfolge innerhalb einer Spalte** — MVP sortiert automatisch nach
   Fälligkeitsdatum.
 
+## Wiederkehrende Aufgaben (Reminders-Wiederholung)
+
+- **Verhalten wiederkehrender Erinnerungen beim Abhaken klären** — Reminders erlaubt
+  Wiederholungsregeln (täglich/wöchentlich/…) pro Erinnerung; wie sich das mit dem
+  Status-Hashtag-Mechanismus und dem Erledigt-Zustand verträgt, ist ungeklärt. Offene Fragen:
+  (1) Setzt EventKit beim Abhaken einer wiederkehrenden Erinnerung `isCompleted` überhaupt
+  sichtbar/dauerhaft, oder springt sie sofort auf die nächste Fälligkeit, ohne dass die App den
+  "Erledigt"-Moment je beobachten kann? (2) Falls ja: bleibt der alte Status-Hashtag (z. B.
+  `#inbearbeitung`) in den Notizen stehen, bis die bestehende Hygiene-Pass beim nächsten Sync
+  greift, oder kann das mit dem Wiederholungs-Sprung kollidieren (Karte taucht kurz in der
+  falschen Spalte auf)? (3) Zählt eine wiederkehrende Erledigung überhaupt zum Streak-Zähler,
+  oder fehlt dafür schlicht ein beobachtbares `completionDate`? Muss erst gegen echtes
+  EventKit-Verhalten geprüft werden — kein Blocker fürs MVP, aber ein bekannter blinder Fleck.
+  (Das ↻-Icon auf der Karte, das eine Wiederholung überhaupt erst sichtbar macht, gibt es
+  bereits — `CardView.repeatIcon` — hier geht es nur noch um das Verhalten beim Abhaken.)
+- ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt, siehe
+  MVP.md (Filterleiste, Zeile "Wiederkehrende").
+
 ## Fensterverhalten
 
 - **Menüleisten-Modus / Always-on-Top** — MVP nutzt ein normales Fenster.
+
+## Bewegung / Animation
+
+- **Ausgebautere, aber weiterhin zurückhaltende Übergänge** — über die MVP-Basis (dezente
+  Animation bei Spaltenwechsel/Live-Update) hinaus ein eigenes Bewegungs-Vokabular, das den
+  Kanban-Fluss-Gedanken spürbar macht: Karten sollen beim Spaltenwechsel wirken, als würden
+  sie fließen, nicht springen (z. B. weiches Einrasten nach Drag & Drop, sanftes Nachrücken
+  beim automatischen Umsortieren nach Fälligkeit, dezenter Puls beim Streak-Wechsel). Bewusst
+  zurückgestellt: MVP-Animation reicht fürs Erst-Release, ein eigenes Timing-/Easing-System ist
+  ein eigener Gestaltungs-Durchgang und sollte erst nach final abgenommenem visuellem Design
+  (Farben, Kanten, Glas) kommen, damit Bewegung nicht gegen ein sich noch änderndes visuelles
+  System gebaut wird. Muss weiterhin "Bewegung reduzieren" respektieren (bereits
+  MVP-Anforderung) — mehr Fluss darf für die, die das abgeschaltet haben, nicht bedeuten, dass
+  gar keine Rückmeldung mehr da ist, sondern nur, dass sie sofort statt fließend passiert.
 
 ## Funktionen mit harter Apple-Plattform-Grenze (nicht nur "später", sondern aktuell technisch
 nicht möglich)

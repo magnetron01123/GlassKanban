@@ -7,6 +7,16 @@ struct BoardView: View {
     @State private var showFind = false
 
     var body: some View {
+        // Wraps the lanes, not the window: the tooltip has to escape the
+        // ScrollView that clips each lane's cards, but must still be drawn
+        // inside the board so it is positioned against the board's own bounds.
+        TooltipHost {
+            board
+        }
+        .environment(\.boardTooltipsSuppressed, store.draggingCardID != nil)
+    }
+
+    private var board: some View {
         HStack(alignment: .top, spacing: Board.columnSpacing) {
             ForEach(KanbanStatus.allCases) { status in
                 ColumnView(status: status)

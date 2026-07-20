@@ -30,6 +30,10 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var draggingCardID: String?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
+    /// Not persisted, like the two filters above: `hiddenUntilDue` is the
+    /// board's normal state, so every launch should start there rather than
+    /// resuming a wide-open Backlog the user opened once, weeks ago.
+    @Published var recurringFilter: RecurringFilter = .hiddenUntilDue
     @Published var searchText: String = ""
     /// Set when a move pushed a limited lane past its WIP limit. Lives here
     /// rather than in the lane view so every route into `move` — drag & drop,
@@ -279,7 +283,7 @@ final class RemindersStore: ObservableObject {
         }
     }
 
-    // MARK: - Writing (the app's only write: moving a card)
+    // MARK: - Writing
 
     /// Moves a card to another column. Returns the column it came from if
     /// anything actually changed, so the UI can give feedback (haptics) only
@@ -358,6 +362,40 @@ final class RemindersStore: ObservableObject {
         return reminderCalendars.first { $0.calendarIdentifier == targetID }
     }
 
+    /// Deletes a reminder outright, no confirmation — recoverable from
+    /// Reminders' own "Zuletzt gelöscht" for a while, same as deleting it
+    /// there directly.
+    func deleteTicket(cardID: String) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
+        do {
+            try eventStore.remove(reminder, commit: true)
+        } catch {
+            scheduleRefresh()
+            return
+        }
+        cards.removeAll { $0.id == cardID }
+        scheduleRefresh()
+    }
+
+    /// Renames a ticket in place. The one piece of content Glass Kanban
+    /// writes directly rather than handing off to Reminders — the title is
+    /// short, has no formatting, and the round trip via a deep link for a
+    /// single-line edit was worse than just doing it.
+    func renameTicket(cardID: String, title: String) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
+        reminder.title = title
+        do {
+            try eventStore.save(reminder, commit: true)
+        } catch {
+            scheduleRefresh()
+            return
+        }
+        if let index = cards.firstIndex(where: { $0.id == cardID }) {
+            cards[index].title = title
+        }
+        scheduleRefresh()
+    }
+
     /// Marks cards as just-completed for ~0.7 s so their views can play the
     /// settle animation, then clears the flags.
     private func flagRecentlyCompleted(_ ids: Set<String>) {
@@ -395,6 +433,7 @@ final class RemindersStore: ObservableObject {
             $0.status == status
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
+                && recurringFilter.matches($0)
                 && $0.matches(search: searchText)
         }
         if status == .done {
@@ -404,9 +443,28 @@ final class RemindersStore: ObservableObject {
         return filtered.sorted(by: KanbanCard.openLaneOrder())
     }
 
+    /// Cards this lane holds that only the recurring rule is keeping out of
+    /// sight. The lane count states what is visible, so without this the
+    /// number would quietly disagree with what the lane actually contains —
+    /// and the WIP limit already establishes that a rule affecting a lane
+    /// belongs on the board, not only in a popover ("make policies explicit").
+    /// Counted against the other filters so a hidden card is only reported
+    /// when relaxing *this* rule would really bring it back.
+    func recurringHiddenCount(for status: KanbanStatus) -> Int {
+        guard recurringFilter == .hiddenUntilDue else { return 0 }
+        return cards.filter {
+            $0.status == status
+                && priorityFilter.matches($0.priority)
+                && dueFilter.matches($0.dueDate)
+                && $0.matches(search: searchText)
+                && !recurringFilter.matches($0)
+        }.count
+    }
+
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all
+        recurringFilter = .hiddenUntilDue
         searchText = ""
     }
 
@@ -415,6 +473,12 @@ final class RemindersStore: ObservableObject {
     /// True while the board shows less than everything. The find control wears
     /// this: a board must never be filtered without saying so, or cards look
     /// lost rather than hidden.
+    ///
+    /// `recurringFilter` deliberately never counts here. Its default hides
+    /// cards, but as the board's normal state — badging that would leave the
+    /// find control permanently lit, which is precisely the standing
+    /// attention-grab this feature exists to avoid. Its other value shows
+    /// *more* than the default and is not a restriction either.
     var isFiltering: Bool {
         priorityFilter != .all || dueFilter != .all || !searchText.isEmpty
     }
@@ -424,6 +488,13 @@ final class RemindersStore: ObservableObject {
         (priorityFilter != .all ? 1 : 0)
             + (dueFilter != .all ? 1 : 0)
             + (searchText.isEmpty ? 0 : 1)
+    }
+
+    /// Whether anything in the find popover sits away from its default —
+    /// which is a wider question than `isFiltering`, because "Immer anzeigen"
+    /// is a departure worth being able to undo without being a restriction.
+    var canResetFindSettings: Bool {
+        isFiltering || recurringFilter != .hiddenUntilDue
     }
 
     // MARK: - Empty board
