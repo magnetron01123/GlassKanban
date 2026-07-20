@@ -197,11 +197,17 @@ struct ColumnView: View {
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: isOverLimit)
-                .help(countHelp)
                 // The over-limit signal is otherwise colour alone.
                 .accessibilityValue(countHelp)
         }
         .padding(EdgeInsets(top: 12, leading: Board.laneMargin, bottom: 10, trailing: Board.laneMargin))
+        // The whole header band, not just the count capsule. On the capsule
+        // alone the tooltip was a 20pt target nobody found — including the
+        // person who asked for it — which makes "explicit" true only on
+        // paper. The header is the thing you point at when you wonder what
+        // this lane is holding.
+        .contentShape(Rectangle())
+        .help(countHelp)
     }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
