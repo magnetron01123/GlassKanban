@@ -103,6 +103,10 @@ struct ColumnView: View {
                                 removal: .opacity))
                     }
 
+                    if status == .backlog {
+                        addTicketButton
+                    }
+
                     if showsDropFeedback {
                         insertionSlot
                     } else if showsPullSlot {
@@ -264,6 +268,50 @@ struct ColumnView: View {
     /// metrics while the lane is still empty.
     private var slotHeight: CGFloat {
         cardHeight ?? (singleLine ? Board.compactCardHeight : Board.fullCardMinHeight)
+    }
+
+    /// Quick-add for Backlog: creates a content-empty reminder and hands it
+    /// straight to Reminders for editing (see `RemindersStore.createBacklogTicket()`).
+    /// Sits right after the last card, like the "+" at the foot of a lane in
+    /// familiar Kanban tools — but scaled to this board's quiet chrome instead
+    /// of a standalone accent button.
+    private var addTicketButton: some View {
+        HStack {
+            Spacer()
+            Button {
+                store.createBacklogTicket()
+            } label: {
+                Image(systemName: "plus")
+                    // Sized to the toolbar's own controls (find, streak), not
+                    // to the board's chip scale: this is chrome, and every
+                    // control the user reaches for should read at one size.
+                    .font(.system(size: 14, weight: .semibold))
+                    // `.primary` is the one foreground guaranteed to read in
+                    // both appearances (same reasoning as `Board.columnBorder`).
+                    .foregroundStyle(.primary)
+                    .frame(width: 30, height: 30)
+                    .background {
+                        // Filled with the window's own glass — the same
+                        // material visible in the gaps beside the columns —
+                        // instead of a new surface, so the circle still reads
+                        // as a distinct, tappable button without competing
+                        // with the lane's own recessed fill.
+                        if reduceTransparency {
+                            Circle().fill(Color(nsColor: .windowBackgroundColor))
+                        } else {
+                            HUDGlassMaterial().clipShape(Circle())
+                        }
+                    }
+                    .overlay {
+                        Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1)
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Neues Ticket anlegen")
+            .help("Neues Ticket anlegen")
+            Spacer()
+        }
+        .padding(.vertical, 4)
     }
 
     private var moreButton: some View {
