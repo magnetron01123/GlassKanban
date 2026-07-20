@@ -297,12 +297,16 @@ enum RecurringFilter: String, CaseIterable, Identifiable {
         }
     }
 
-    /// The due window a recurring card has to reach before it appears.
-    /// Composed from `DueFilter` rather than restated, so "this week" cannot
-    /// come to mean two different things in one app. The calendar-week edge
-    /// is deliberate: the week's chores arrive together on Monday morning
-    /// instead of trickling in on a rolling seven-day clock.
-    private static let visibleWindow: [DueFilter] = [.overdue, .today, .thisWeek]
+    /// The due window a recurring card has to reach before it appears — due
+    /// today, or already overdue. Composed from `DueFilter` rather than
+    /// restated, so each of those words means one thing in this app.
+    ///
+    /// This first included the whole calendar week, on the idea that the
+    /// week's chores should arrive together on Monday morning. That made the
+    /// row lie: a card due Wednesday appeared on Monday, under a filter
+    /// labelled "Wenn fällig", and its lead time swung between nought and six
+    /// days depending on the weekday. Due means due.
+    private static let visibleWindow: [DueFilter] = [.overdue, .today]
 
     /// Only Backlog ever hides anything. A recurring card the user has
     /// already pulled into a working lane is a decision they made, and a

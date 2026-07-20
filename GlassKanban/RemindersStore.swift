@@ -409,6 +409,24 @@ final class RemindersStore: ObservableObject {
         return filtered.sorted(by: KanbanCard.openLaneOrder())
     }
 
+    /// Cards this lane holds that only the recurring rule is keeping out of
+    /// sight. The lane count states what is visible, so without this the
+    /// number would quietly disagree with what the lane actually contains —
+    /// and the WIP limit already establishes that a rule affecting a lane
+    /// belongs on the board, not only in a popover ("make policies explicit").
+    /// Counted against the other filters so a hidden card is only reported
+    /// when relaxing *this* rule would really bring it back.
+    func recurringHiddenCount(for status: KanbanStatus) -> Int {
+        guard recurringFilter == .hiddenUntilDue else { return 0 }
+        return cards.filter {
+            $0.status == status
+                && priorityFilter.matches($0.priority)
+                && dueFilter.matches($0.dueDate)
+                && $0.matches(search: searchText)
+                && !recurringFilter.matches($0)
+        }.count
+    }
+
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all

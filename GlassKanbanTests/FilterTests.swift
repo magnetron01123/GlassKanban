@@ -94,18 +94,26 @@ final class FilterTests: XCTestCase {
         XCTAssertTrue(isVisible(.hiddenUntilDue, farFuture, now: now))
     }
 
-    func testRecurringCardDueBeyondThisWeekIsHidden() {
-        let now = date(2026, 7, 17)
+    /// Not yet due is not yet due — including later the same calendar week,
+    /// which is the case that gave the rule away in practice: a card due
+    /// Wednesday sat in the Backlog from Monday under a filter that says
+    /// "Wenn fällig".
+    func testRecurringCardNotYetDueIsHidden() {
+        let now = date(2026, 7, 17) // Friday, week Mon 13 – Sun 19
+        XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 18)), now: now),
+                       "tomorrow is not due")
+        XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 19)), now: now),
+                       "later this same calendar week is not due either")
         XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 20)), now: now))
         XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 8, 17)), now: now))
     }
 
-    func testRecurringCardAppearsOnceItReachesTheDueWindow() {
+    func testRecurringCardAppearsOnceItIsDue() {
         let now = date(2026, 7, 17)
-        // Overdue, today and the rest of this calendar week all qualify.
-        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 10)), now: now))
-        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 17)), now: now))
-        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 19)), now: now))
+        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 10)), now: now),
+                      "overdue")
+        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 17, hour: 23)), now: now),
+                      "due today, whatever the time of day")
     }
 
     /// Without a date there is no way to tell when it comes round again, so

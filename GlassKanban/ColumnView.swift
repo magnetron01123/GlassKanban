@@ -217,6 +217,10 @@ struct ColumnView: View {
     }
 
     private var countHelp: String {
+        [countSummary, recurringHint].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    private var countSummary: String {
         if status == .done {
             return "\(todayCount) heute erledigt · \(cards.count) sichtbar"
         }
@@ -224,6 +228,19 @@ struct ColumnView: View {
         return isOverLimit
             ? "\(cards.count) von \(wipLimit) Karten — Limit überschritten"
             : "\(cards.count) von \(wipLimit) Karten · lieber abschließen als stapeln"
+    }
+
+    /// What the count is leaving out. The capsule states what the lane shows,
+    /// so the one rule that shows less than the lane holds has to be readable
+    /// from the board — the same reason the WIP limit rides along in the
+    /// count. Only ever present when it has something to report, so it costs
+    /// nothing on a lane that is hiding nothing.
+    private var recurringHint: String? {
+        let hidden = store.recurringHiddenCount(for: status)
+        guard hidden > 0 else { return nil }
+        return hidden == 1
+            ? "1 wiederkehrende Karte noch nicht fällig"
+            : "\(hidden) wiederkehrende Karten noch nicht fällig"
     }
 
     // MARK: - Pieces
