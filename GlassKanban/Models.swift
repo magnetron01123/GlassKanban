@@ -286,12 +286,13 @@ enum RecurringFilter: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// Short enough to sit beside its label in the 260pt popover: the first
-    /// wording ("Verborgen bis fällig") pushed the row past the width and
-    /// wrapped "Wiederkehrende" into a column one letter wide.
+    /// Kept short because this row carries the board's longest label:
+    /// "Wiederkehrende" plus a wordy value is what pushed the row past the
+    /// popover's width twice over (first wrapping the label into a column one
+    /// letter wide, then running the menu off the popover's edge).
     var displayName: String {
         switch self {
-        case .hiddenUntilDue: "Erst wenn fällig"
+        case .hiddenUntilDue: "Wenn fällig"
         case .alwaysVisible: "Immer"
         }
     }

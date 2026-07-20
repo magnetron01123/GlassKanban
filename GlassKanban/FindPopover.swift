@@ -45,7 +45,11 @@ struct FindPopover: View {
             }
         }
         .padding(14)
-        .frame(width: 260)
+        // Sized to the widest row rather than to the narrowest: "Wiederkehrende"
+        // beside its value needs more than the 260 the two short labels were
+        // happy with, and at 260 the third row's menu ran off the edge. Set
+        // once here so a future row does not have to rediscover this.
+        .frame(width: 300)
         // Typing is why the popover opened; asking for a click first would be
         // a wasted step.
         .onAppear { searchFocused = true }
