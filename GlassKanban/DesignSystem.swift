@@ -134,21 +134,24 @@ enum Board {
     static let backlogCollapsedLimit = 15
 
     // Tooltips. Chrome, not content — so glass is right here, unlike on a
-    // card. Radius steps below the card's, because a tooltip is the smallest
-    // surface the board draws and its corner must not look wider than the
-    // paper it floats over.
-    static let tooltipRadius: CGFloat = 8
+    // card. The radius is the card's own, less one: a tooltip rests directly
+    // on paper, and matching its curve family is what keeps it from reading
+    // as a foreign box dropped onto the board.
+    static let tooltipRadius: CGFloat = 10
     static let tooltipShape = RoundedRectangle(cornerRadius: tooltipRadius, style: .continuous)
-    /// Wide enough for the card tooltip's two lines, narrow enough that a
-    /// long note wraps instead of spanning the board.
-    static let tooltipMaxWidth: CGFloat = 260
+    /// A hard cap, not a width. The panel measures its own text and only
+    /// wraps once a line would pass this — so a three-word tooltip stays
+    /// three words wide instead of sitting in an oversized plate.
+    static let tooltipMaxWidth: CGFloat = 240
     /// Slower than a hover highlight, faster than the system's own tooltip:
     /// long enough not to fire while the cursor crosses the board, short
     /// enough that looking something up does not feel like waiting.
     static let tooltipDelay: Duration = .milliseconds(450)
-    /// Deeper than a card's: this floats above the board rather than resting
-    /// on it, and the shadow is what says so.
-    static let tooltipShadow = (color: Color.black.opacity(0.22), radius: CGFloat(12), y: CGFloat(4))
+    /// Two layers, like a card — but lifted. The contact shadow keeps its
+    /// edge readable on white paper, the ambient one says it is floating
+    /// rather than lying on the board.
+    static let tooltipShadowContact = (color: Color.black.opacity(0.10), radius: CGFloat(2), y: CGFloat(1))
+    static let tooltipShadowAmbient = (color: Color.black.opacity(0.14), radius: CGFloat(16), y: CGFloat(6))
 
     // Motion
     static let hoverAnimation: Animation = .easeOut(duration: 0.16)

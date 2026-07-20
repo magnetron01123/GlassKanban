@@ -249,12 +249,18 @@ struct CardView: View {
 
     /// Compact rows have no room for the notes preview, so the tooltip
     /// carries it — information without pixels.
+    ///
+    /// One fact per line, because the tooltip sets the first line as the
+    /// subject and the rest as its qualifiers. Joined with "·" they were one
+    /// run-on that wrapped mid-phrase and threw the note, the list and the
+    /// gesture hint into a single weight.
     private var helpText: String {
         var lines: [String] = []
         if density.isSingleLine && !card.notesPreview.isEmpty {
             lines.append(card.notesPreview)
         }
-        lines.append("\(card.listName) · Doppelklick öffnet Erinnerungen")
+        lines.append(card.listName)
+        lines.append("Doppelklick öffnet Erinnerungen")
         return lines.joined(separator: "\n")
     }
 

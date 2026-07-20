@@ -125,20 +125,33 @@ struct TooltipHost<Content: View>: View {
             .overlay {
                 GeometryReader { proxy in
                     if let value {
+                        // No `.fixedSize()`: the panel already measures its
+                        // own text and states an exact width. Wrapping it in
+                        // fixedSize is what made SwiftUI lay the text out
+                        // unbounded and then clip it.
                         BoardTooltipLabel(text: value.text)
-                            .fixedSize()
                             .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
                             .position(position(for: value.cursor, in: proxy.size))
                             // Until it has been measured its position is a
                             // guess; showing that frame would be a visible jump.
                             .opacity(size == .zero ? 0 : 1)
+                            // Moving to a different target replaces the panel
+                            // instead of animating one across the board — a
+                            // tooltip sliding between cards would be the most
+                            // distracting motion on a deliberately quiet board.
+                            .id(value.text)
+                            .transition(
+                                .opacity.combined(with: .scale(scale: 0.97, anchor: .topLeading)))
                     }
                 }
                 // A tooltip must never be the thing the cursor hits — that
                 // would make it flicker as it steals its own hover.
                 .allowsHitTesting(false)
             }
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: value)
+            // Keyed on the text, not the whole value: animating the value
+            // would animate the position too, sliding the panel whenever the
+            // pointer raised it somewhere new.
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: value?.text)
             .onPreferenceChange(BoardTooltipKey.self) { value = $0 }
     }
 
@@ -176,37 +189,99 @@ struct TooltipHost<Content: View>: View {
 
 // MARK: - Appearance
 
+/// The panel itself.
+///
+/// Tooltip text arrives as lines, and they are not equal: the first says what
+/// the thing is, the rest qualify it ("Gemeinsame Aufgaben" over "Doppelklick
+/// öffnet Erinnerungen"). Setting both in one weight was what made this read
+/// as dumped text rather than a composed surface, so the first line leads and
+/// the remainder steps back.
 private struct BoardTooltipLabel: View {
     let text: String
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
 
+    /// Measured with the very fonts used to draw, so wrapping can never
+    /// disagree with layout. Built from NSFont for exactly that reason:
+    /// `.frame(maxWidth:)` under an outer `.fixedSize()` lays the text out at
+    /// its ideal single-line width and *then* clips it to the cap — which is
+    /// what truncated these tooltips. Measuring first removes the guesswork.
+    private static let leadFont = NSFont.systemFont(ofSize: 11.5, weight: .medium)
+    private static let detailFont = NSFont.systemFont(ofSize: 11)
+
+    private var lines: [String] {
+        text.components(separatedBy: .newlines).filter { !$0.isEmpty }
+    }
+
+    private var width: CGFloat {
+        let widest = lines.enumerated().reduce(CGFloat.zero) { widest, entry in
+            let font = entry.offset == 0 ? Self.leadFont : Self.detailFont
+            let line = (entry.element as NSString).size(withAttributes: [.font: font]).width
+            return max(widest, line)
+        }
+        // Rounded up: a fractional shortfall costs a whole wrapped line.
+        return min(widest.rounded(.up) + 1, Board.tooltipMaxWidth)
+    }
+
     var body: some View {
-        Text(text)
-            .font(BoardText.meta)
-            .foregroundStyle(.primary)
-            .multilineTextAlignment(.leading)
-            .frame(maxWidth: Board.tooltipMaxWidth, alignment: .leading)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 6)
-            .background {
-                if reduceTransparency {
-                    Board.tooltipShape.fill(Color(nsColor: .controlBackgroundColor))
-                } else {
-                    // `.withinWindow`, unlike the lane's add button: this
-                    // floats *above* the board's own content, so it should
-                    // frost the cards behind it rather than punch through to
-                    // the desktop.
-                    HUDGlassMaterial(blending: .withinWindow)
-                        .clipShape(Board.tooltipShape)
-                }
+        VStack(alignment: .leading, spacing: 3) {
+            ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
+                Text(line)
+                    .font(Font(index == 0 ? Self.leadFont : Self.detailFont))
+                    .foregroundStyle(index == 0 ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .overlay { Board.tooltipShape.strokeBorder(Board.cardBorder(contrast)) }
-            .shadow(
-                color: Board.tooltipShadow.color,
-                radius: Board.tooltipShadow.radius,
-                y: Board.tooltipShadow.y)
+        }
+        .frame(width: width, alignment: .leading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background { surface }
+        .overlay { edge }
+        .overlay { topHighlight }
+        .shadow(
+            color: Board.tooltipShadowContact.color,
+            radius: Board.tooltipShadowContact.radius,
+            y: Board.tooltipShadowContact.y)
+        .shadow(
+            color: Board.tooltipShadowAmbient.color,
+            radius: Board.tooltipShadowAmbient.radius,
+            y: Board.tooltipShadowAmbient.y)
+    }
+
+    @ViewBuilder
+    private var surface: some View {
+        if reduceTransparency {
+            Board.tooltipShape.fill(Color(nsColor: .controlBackgroundColor))
+        } else {
+            // `.withinWindow`, unlike the lane's add button: this floats
+            // *above* the board's own content, so it should frost the cards
+            // behind it rather than punch through to the desktop.
+            HUDGlassMaterial(blending: .withinWindow)
+                .clipShape(Board.tooltipShape)
+        }
+    }
+
+    /// Half a point, not a full one. At this size a full hairline is what
+    /// makes a glass panel read as a bordered box.
+    private var edge: some View {
+        Board.tooltipShape
+            .strokeBorder(Board.cardBorder(contrast), lineWidth: 0.5)
+    }
+
+    /// The same lit top edge the cards carry, for the same reason and with
+    /// the same limit: on a light surface a white highlight is invisible, so
+    /// it would be pure render cost outside dark mode.
+    @ViewBuilder
+    private var topHighlight: some View {
+        if colorScheme == .dark {
+            Board.tooltipShape
+                .strokeBorder(
+                    LinearGradient(colors: [Board.cardTopHighlight, .clear], startPoint: .top, endPoint: .center),
+                    lineWidth: 1)
+                .blendMode(.plusLighter)
+                .allowsHitTesting(false)
+        }
     }
 }

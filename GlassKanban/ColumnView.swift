@@ -222,8 +222,11 @@ struct ColumnView: View {
         return "\(cards.count)"
     }
 
+    /// One line each: the tooltip ranks the first line above the rest, and
+    /// what the lane holds is the statement while what it is holding back is
+    /// the qualifier.
     private var countHelp: String {
-        [countSummary, recurringHint].compactMap { $0 }.joined(separator: " · ")
+        [countSummary, recurringHint].compactMap { $0 }.joined(separator: "\n")
     }
 
     private var countSummary: String {
