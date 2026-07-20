@@ -282,11 +282,14 @@ struct ColumnView: View {
                 store.createBacklogTicket()
             } label: {
                 Image(systemName: "plus")
-                    .font(BoardText.chip)
+                    // Sized to the toolbar's own controls (find, streak), not
+                    // to the board's chip scale: this is chrome, and every
+                    // control the user reaches for should read at one size.
+                    .font(.system(size: 14, weight: .semibold))
                     // `.primary` is the one foreground guaranteed to read in
                     // both appearances (same reasoning as `Board.columnBorder`).
                     .foregroundStyle(.primary)
-                    .frame(width: 26, height: 26)
+                    .frame(width: 30, height: 30)
                     .background {
                         // Filled with the window's own glass — the same
                         // material visible in the gaps beside the columns —
