@@ -106,8 +106,8 @@ private struct Palette {
     /// them to see through to. Its mid value lands on the glass tone the
     /// window shows over a neutral desktop.
     static let light = Palette(
-        backgroundTop: Color(hex: 0xDADADA),
-        backgroundBottom: Color(hex: 0x969696),
+        backgroundTop: Color(hex: 0x8E9194),
+        backgroundBottom: Color(hex: 0x5A5D60),
         back: Pane(fillTop: 0.26, fillBottom: 0.06,
                    rim: Rim(highlightTop: 1.0, highlightBottom: 0.16, contact: 0.26)),
         front: Pane(fillTop: 0.58, fillBottom: 0.28,

@@ -1,8 +1,9 @@
 # App-Icon — Konzept: „Drei Spalten, die mittlere betont"
 
-Status: umgesetzt. Ausgeliefert wird `GlassKanban/AppIcon.icon`, ein
-Icon-Composer-Dokument — macOS 26 rechnet Glas, Spiegelung und Schatten selbst
-und leitet daraus Hell-, Dunkel- und Getönt-Variante ab.
+Status: umgesetzt. Ausgeliefert wird der gemalte Asset-Katalog
+`GlassKanban/Assets.xcassets/AppIcon.appiconset` — Glas, Glanzkanten und
+Schatten sind gezeichnet, nicht vom System gerechnet. Warum nicht das
+Icon-Composer-Dokument: siehe „Der Zielkonflikt" unten.
 
 ## Leitidee
 
@@ -113,72 +114,53 @@ Pixel fressen, die die Silhouette braucht.
   mehr Eigenständigkeit — passte aber nicht zum eigenen Fenster, das
   nachweislich neutral ist. Im Zweifel führt die GUI.
 
-## Was ausgeliefert wird: das `.icon`-Dokument
+## Der Zielkonflikt: gemalt oder Icon Composer
 
-Ein Icon-Composer-Dokument ist kein Binärformat, sondern schlicht ein Ordner
-mit `icon.json` und den Ebenenbildern. Es wird deshalb hier **erzeugt** statt in
-der GUI zusammengeklickt — sonst driftet es von den Konstanten oben weg.
+Beide Wege wurden gebaut und verglichen.
 
-Aufbau von `GlassKanban/AppIcon.icon`:
-
-| | Hell | Dunkel (`fill-specializations`) |
+| | Gemalter Katalog | `.icon` (Icon Composer) |
 |---|---|---|
-| Platte (`solid`) | `#8D8F91` | `#3F4041` |
-| Spalten | Glas, Durchsicht 0,5 | Glas, Durchsicht 0,5 |
+| Aussehen | genau wie entworfen | macOS rendert neu, flacher |
+| Spalten gleich | garantiert, ein Renderer | nur bei identischen Gruppenwerten |
+| Helligkeit steuerbar | ja | ja |
+| Eigene Dunkelfassung | **nein** | ja, aber nicht prüfbar |
 
-Beide Plattenwerte tragen den Farbton des App-Fensterglases. Zwei Gruppen:
-äußere Spalten (Schatten 0,3), mittlere Spalte darüber (Schatten 0,55).
-`specular` an — den Rest macht macOS.
+**Klassische App-Icon-Kataloge tragen keine Hell/Dunkel-Varianten.** Ein
+Katalog mit `"appearances": [{"appearance": "luminosity", "value": "dark"}]`
+kompiliert ohne Fehler *und ohne Wirkung*: `actool` verwirft die Dunkel-
+Einträge stillschweigend, im Ergebnis steht keine einzige Erscheinungs-Kennung.
 
-**Die Ebenen sind flache Silhouetten, keine Bilder.** macOS leitet Glas,
-Glanzkante und Schatten selbst daraus ab. Hätte man eine gemalte Fassung
-übergeben, lägen zwei Glasbehandlungen übereinander.
+Beim `.icon` gibt es die drei Stapel — dafür rechnet macOS das Glas selbst und
+das Ergebnis sah anders aus als der abgestimmte Entwurf. Zwei Gruppen mit
+unterschiedlichen Schattenwerten (0,3 gegen 0,55) ließen die mittlere Spalte
+zudem wie eine andere Größe wirken, obwohl die Ebenen exakt gleich hoch waren
+(beide 275–748 px im 1024er Bild) — macOS beleuchtet jede Gruppe einzeln.
 
-Damit fällt die Hand-Arbeit an Rändern und Füllungen für das ausgelieferte
-Icon weg — sie bleibt im Generator als Referenz und als Notfall-Fallback
-(`AppIcon.appiconset`), ist aber **nicht** das, was gebaut wird.
+Entschieden wurde für den gemalten Katalog: drei von vier Anforderungen sind
+damit nachweisbar erfüllt, und ein Symbol für beide Erscheinungen ist auf macOS
+der Normalfall. Der Plattenton ist so gewählt, dass er auf hellem wie dunklem
+Dock-Grund trägt.
 
-### Hell, Dunkel und Getönt
+Das `.icon`-Dokument erzeugt das Skript weiterhin mit — falls die
+Dunkelfassung später wichtiger wird als die Kontrolle über das Aussehen.
+Ein `.icon` ist schlicht ein Ordner mit `icon.json` und Ebenenbildern, also
+erzeugbar statt in der GUI zusammenklickbar.
 
-Der kompilierte Katalog enthält drei getrennte Ebenenstapel — je einen für
-`NSAppearanceNameAqua`, `NSAppearanceNameDarkAqua` und `ISAppearanceTintable`
-— auch dann, wenn das Manifest nichts über sie sagt. **Eine Dunkelvariante ist
-also vorhanden; macOS leitet sie ab.** Dazu kommen sieben flach gerenderte
-Größen unter `NSAppearanceNameSystem`.
+### Grenzen der Prüfbarkeit beim `.icon`
 
-Die Dunkelfassung wird **explizit gesetzt**, nicht dem System überlassen. Eine
-Fassung ohne jede Dunkel-Angabe wirkte im Dunkelmodus deutlich zu hell — die
-Füllung ist ein fester Farbwert, und nichts deutet darauf hin, dass er von
-selbst nachdunkelt.
-
-**Prüfstand.** Die Dunkelfassung ließ sich nicht bestätigen — und der Weg
-dorthin gehört dokumentiert, damit ihn niemand zweimal geht:
+Dokumentiert, damit der Weg nicht zweimal gegangen wird:
 
 - Die App-Einstellung „Erscheinungsbild" hilft nicht: sie setzt
   `NSApp.appearance` und wirkt auf die Fenster. Das Dock zeichnet **alle**
-  Symbole im System-Erscheinungsbild; eine App kann ihr eigenes Dock-Symbol
-  nicht umschalten.
+  Symbole im System-Erscheinungsbild.
 - `assetutil` listet Renditions nur auf und extrahiert nicht.
-- Über CoreUI (`CUICatalog`) sind die drei Stapel erreichbar, aber es sind
-  `_CUILayerStackRendition` ohne Bildzugriff. Ihre Rohdaten (`srcData`) sind je
-  551 Bytes, unterscheiden sich zwischen Hell und Dunkel um **zwei Bytes** und
-  enthalten Kompositionswerte, **keine Farben**.
+- Über CoreUI sind die drei Stapel erreichbar, aber es sind
+  `_CUILayerStackRendition` ohne Bildzugriff; ihre Rohdaten enthalten
+  Kompositionswerte, **keine Farben**.
 - Offscreen rendern geht mit
-  `NSAppearance.performAsCurrentDrawingAppearance` — die Methode heißt so, ein
-  früherer Versuch scheiterte an einem erfundenen Namen. Gegenprobe bestanden
-  (`windowBackgroundColor` liefert `#FFFFFF` gegen `#1E1E1E`). Das Icon kommt
-  in beiden Erscheinungen als `#9DA0A2` heraus — **identisch**. Dieser Weg
-  liest allerdings die flach gerenderte Fassung, nicht den Ebenenstapel, den
-  das Dock zusammensetzt.
-
-Zusammen genommen: die Plattenfarbe ist sehr wahrscheinlich in beiden
-Erscheinungen dieselbe, und der Dunkel-Eintrag bewirkt vermutlich nichts. Er
-bleibt trotzdem stehen — er schadet nicht, und falls macOS ihn auswertet, ist
-der Ton dort richtig.
-
-**Deshalb ist der Plattenton so gewählt, dass er in beiden Fällen trägt.** Ob
-die Dunkelfassung greift oder nicht, ändert an der Lesbarkeit nichts; das war
-die Abtastung gegen hellen und dunklen Grund.
+  `NSAppearance.performAsCurrentDrawingAppearance` — Gegenprobe bestanden,
+  das Icon kommt in beiden Erscheinungen identisch heraus. Dieser Weg liest
+  allerdings die flach gerenderte Fassung, nicht den Ebenenstapel.
 
 ## Erzeugung
 
