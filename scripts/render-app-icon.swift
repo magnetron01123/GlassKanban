@@ -34,34 +34,38 @@ private enum Design {
 
     static let paneCorner: CGFloat = 9
 
-    /// Slight overlap, not a stack. What separates the columns is the middle
-    /// one's shadow falling on the two behind it — which is why it sits in its
-    /// own group (Icon Composer attaches shadows per group, never per layer).
-    static let overlap: CGFloat = 6
+    /// Columns overlap and are drawn left to right, each on top of the one
+    /// before it. Where two translucent panes cross, the glass darkens — that
+    /// doubling is the whole effect, and the reason it reads as glass rather
+    /// than as flat bars even at normal icon size.
+    static let overlap: CGFloat = 8
 
     /// Every pane carries a rim all the way round, not just a highlight on its
     /// top edge. An earlier draft lit only the top, and where the panes
-    /// overlapped there was no edge to see — the three fused into one
-    /// silhouette and the icon read as a light switch. The rim plus the front
-    /// pane's shadow is what makes overlap read as layered glass.
+    /// overlapped there was no edge to see — the panes fused into one
+    /// silhouette and the icon read as a light switch. The rim is what keeps
+    /// each pane's outline visible through the stack.
     static let rimWidth: CGFloat = 1.0
     static let contactRimWidth: CGFloat = 1.1
 
-    /// Three columns of equal size — one board, three of the same thing. The
-    /// middle one is emphasised by sitting in front, not by being larger or a
-    /// different colour: an earlier version made it taller and tinted the
-    /// outer two darker, which turned them into a different kind of object and
-    /// the board reading was gone.
-    static let columnWidth: CGFloat = 34
+    /// Four columns of equal size — the board's four lanes (Backlog, Als
+    /// Nächstes, In Bearbeitung, Erledigt). All identical: they are four of
+    /// the same thing, and giving one its own colour or size turned it into a
+    /// different kind of object and broke the board reading.
+    static let columnCount = 4
+    static let columnWidth: CGFloat = 30
     static let columnTop: CGFloat = 36
     static let columnHeight: CGFloat = 88
 
-    /// Centred row: three columns less the two overlaps.
+    /// Centred row: the columns' combined width less the shared overlaps.
     static var rowStart: CGFloat {
-        (grid - (columnWidth * 3 - overlap * 2)) / 2
+        (grid - (columnWidth * CGFloat(columnCount) - overlap * CGFloat(columnCount - 1))) / 2
     }
-    static var centerX: CGFloat { rowStart + columnWidth - overlap }
-    static var rightX: CGFloat { centerX + columnWidth - overlap }
+
+    /// Left edge of column `i`, counting from 0.
+    static func columnX(_ i: Int) -> CGFloat {
+        rowStart + CGFloat(i) * (columnWidth - overlap)
+    }
 
     /// Above this pixel size the icon carries its own outer drop shadow. Below
     /// it the shadow only eats pixels the silhouette needs.
@@ -121,10 +125,10 @@ private struct Palette {
         backgroundTop: Color(hex: 0xFEFEFF),
         backgroundBottom: Color(hex: 0xEBEBED),
         paneTint: .black,
-        column: Pane(fillTop: 0.06, fillBottom: 0.13,
-                     rim: Rim(highlightTop: 1.0, highlightBottom: 0.5, contact: 0.16),
-                     innerHighlight: 0.45),
-        columnShadow: 0.22,
+        column: Pane(fillTop: 0.04, fillBottom: 0.16,
+                     rim: Rim(highlightTop: 1.0, highlightBottom: 0.6, contact: 0.24),
+                     innerHighlight: 0.6),
+        columnShadow: 0.26,
         outerShadow: 0.22)
 
     /// Tuned against the light palette rather than derived from it: the same
@@ -158,23 +162,18 @@ private extension Color {
 private enum Parts {
     case full
     case backgroundOnly
-    /// The two outer columns, and the middle one, as flat white shapes. Icon
-    /// Composer layers are shapes, not pictures: macOS derives the glass, the
-    /// specular highlight and the shadow from them. Handing it a painted
-    /// version would stack two glass treatments on each other.
-    ///
-    /// Split in two because they overlap: the middle column needs its own
-    /// shadow to read as being in front, and shadows are per group.
-    case outerColumns
-    case centerColumn
+    /// The four columns as flat white shapes. Icon Composer layers are shapes,
+    /// not pictures: macOS derives the glass, the specular highlight and the
+    /// shadow from them. Handing it a painted version would stack two glass
+    /// treatments on each other.
+    case columns
 
     var drawsBackground: Bool { self == .full || self == .backgroundOnly }
-    var drawsOuter: Bool { self == .full || self == .outerColumns }
-    var drawsCenter: Bool { self == .full || self == .centerColumn }
+    var drawsColumns: Bool { self == .full || self == .columns }
     /// Only the finished icon carries the outer silhouette and its shadow —
     /// Icon Composer applies its own mask and lighting to bare layers.
     var isMasked: Bool { self == .full }
-    var isSilhouette: Bool { self == .outerColumns || self == .centerColumn }
+    var isSilhouette: Bool { self == .columns }
 }
 
 private struct IconArtwork: View {
@@ -206,17 +205,15 @@ private struct IconArtwork: View {
                     .offset(x: inset, y: inset)
             }
 
-            // All three identical — same tint, same translucency, same edge.
-            // Depth comes from the overlaps alone: two translucent layers on
-            // top of each other darken, which is what glass actually does and
-            // what makes the effect visible at normal icon size.
-            if parts.drawsOuter {
-                boardColumn(x: Design.rowStart)
-                boardColumn(x: Design.rightX)
-            }
-
-            if parts.drawsCenter {
-                boardColumn(x: Design.centerX)
+            // Four identical panes — same tint, translucency and edge — drawn
+            // left to right so each overlaps the one before it. Depth comes
+            // from those overlaps alone: two translucent layers on top of each
+            // other darken, which is what glass actually does and what makes
+            // the effect visible at normal icon size.
+            if parts.drawsColumns {
+                ForEach(0..<Design.columnCount, id: \.self) { i in
+                    boardColumn(x: Design.columnX(i))
+                }
             }
         }
         .frame(width: canvas, height: canvas)
@@ -392,34 +389,15 @@ private let iconManifest = """
     {
       "layers" : [
         {
-          "image-name" : "columns-outer.png",
-          "name" : "Backlog and Erledigt"
+          "image-name" : "columns.png",
+          "name" : "Board lanes"
         }
       ],
       "lighting" : "individual",
-      "name" : "Outer columns",
+      "name" : "Columns",
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.3
-      },
-      "specular" : true,
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
-        {
-          "image-name" : "columns-center.png",
-          "name" : "In Bearbeitung"
-        }
-      ],
-      "lighting" : "individual",
-      "name" : "Center column",
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.55
+        "opacity" : 0.4
       },
       "specular" : true,
       "translucency" : {
@@ -496,8 +474,7 @@ do {
         // The two layers on their own — reference material, and a starting
         // point if the .icon bundle is ever rebuilt by hand in Icon Composer.
         for (name, parts) in [("1-plate", Parts.backgroundOnly),
-                              ("2-columns-outer", .outerColumns),
-                              ("3-columns-center", .centerColumn)] {
+                              ("2-columns", .columns)] {
             try renderPNG(
                 IconArtwork(canvas: 1024, palette: .light, parts: parts),
                 pixels: 1024,
@@ -510,13 +487,10 @@ do {
         // constants above instead of drifting from them.
         let iconBundleAssets = iconBundle.appendingPathComponent("Assets", isDirectory: true)
         try files.createDirectory(at: iconBundleAssets, withIntermediateDirectories: true)
-        for (name, parts) in [("columns-outer", Parts.outerColumns),
-                              ("columns-center", .centerColumn)] {
-            try renderPNG(
-                IconArtwork(canvas: 1024, palette: .light, parts: parts),
-                pixels: 1024,
-                to: iconBundleAssets.appendingPathComponent("\(name).png"))
-        }
+        try renderPNG(
+            IconArtwork(canvas: 1024, palette: .light, parts: .columns),
+            pixels: 1024,
+            to: iconBundleAssets.appendingPathComponent("columns.png"))
         try iconManifest.write(
             to: iconBundle.appendingPathComponent("icon.json"),
             atomically: true,

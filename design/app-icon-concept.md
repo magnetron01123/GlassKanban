@@ -1,4 +1,4 @@
-# App-Icon — Konzept: „Drei Spalten, die mittlere betont"
+# App-Icon — Konzept: „Vier Glasspalten, ein Board"
 
 Status: umgesetzt. Ausgeliefert wird der gemalte Asset-Katalog
 `GlassKanban/Assets.xcassets/AppIcon.appiconset` — Glas, Glanzkanten und
@@ -7,16 +7,20 @@ Icon-Composer-Dokument: siehe „Der Zielkonflikt" unten.
 
 ## Leitidee
 
-Das Icon zeigt das **Board**, nicht ein Ticket: drei gleich große Glasspalten
-auf einer einfarbigen Platte, leicht überlappend, die mittlere vorn.
+Das Icon zeigt das **Board**, nicht ein Ticket: vier gleich große Glasspalten
+auf einer weißen Platte, leicht überlappend — die vier Bahnen des Boards
+(Backlog, Als Nächstes, In Bearbeitung, Erledigt).
 
 Kein Motiv aus einzelnen Karten, kein Symbol, keine Schrift — bei 16 pt in der
 Menüleiste überlebt genau eine Aussage, und die soll „Board" sein.
 
-**Alle drei Spalten sind gleich.** Sie sind drei Spalten eines Boards;
-unterschiedliche Größen oder Farben machen daraus verschiedene Arten von Objekt
-und die Board-Lesart ist weg (siehe „Bewusst verworfen"). Betont wird die
-mittlere allein dadurch, dass sie vorn liegt und Schatten wirft.
+**Alle vier Spalten sind gleich** — gleiche Farbe, Durchsicht, Kante und
+Schatten. Sie sind vier Bahnen eines Boards; unterschiedliche Größen oder
+Farben machen daraus verschiedene Arten von Objekt und die Board-Lesart ist
+weg (siehe „Bewusst verworfen"). Die Tiefe entsteht allein aus den
+Überlappungen: zwei durchscheinende Glaslagen übereinander werden dunkler.
+Das ist, was Glas tut, und macht den Effekt schon bei normaler Icon-Größe
+sichtbar — nicht erst in der 1024er-Vorschau.
 
 ## Wiedererkennung zwischen Icon und App
 
@@ -24,37 +28,14 @@ Vier Dinge tragen sie:
 
 1. **Formensprache** — dieselben `.continuous`-Squircles und Radienfamilie wie
    `Board.columnShape`.
-2. **Komposition** — drei Spalten, die mittlere hervorgehoben, so wie das Board
-   die Arbeitsspalte hervorhebt.
+2. **Komposition** — die vier Bahnen des Boards, nebeneinander.
 3. **Material** — Glas mit Spiegelung, das Material des Fensters.
-4. **Farbton** — exakt der des Fensterglases (`#DCDEE0`, im Board gemessen),
-   nur dunkler.
+4. **Verhältnis** — helle Platte, dunklere Bahnen: genau wie im Board, wo das
+   Fenster hell ist und die Bahnen es verdunkeln.
 
-**Warum nicht dieselbe Helligkeit:** Die Flächen der App sind durchscheinend
-und liegen auf dem Schreibtischbild — sie leihen sich Kontrast von dort. Ein
-Icon hat nichts hinter sich. Mit dem wörtlichen Fensterton als Platte
-verschwindet es auf hellem Dock-Grund, und die weißen Glasspalten haben keinen
-Kontrast mehr. Geprüft über eine Reihe von Plattenhelligkeiten: ab etwa 0,56
-lesen die Spalten auf hellem wie dunklem Grund.
-
-**Verworfen:** eine weiße Karte in der mittleren Spalte, als direktes Zitat der
+**Verworfen:** eine weiße Karte in einer Spalte, als direktes Zitat der
 Board-Karten. Sie verschmilzt mit der Glasspalte zu einem hellen Fleck und
 macht das Motiv unklarer statt klarer.
-
-## Warum die Mitte den Fokus trägt
-
-Kanbans Kern ist das WIP-Limit; die Maxime lautet „stop starting, start
-finishing". Der Engpass, auf den man schaut, ist die laufende Arbeit —
-„Erledigt" ist ein Archiv, dessen Wert bereits geliefert ist.
-
-Das Board macht es intern längst genauso: Laut `iteration-2-concept.md`
-gehört „die Bühne" den Arbeitsspalten, Backlog und Erledigt sind „Ablagen an
-den Rändern" (Punkt 8); auf breiten Displays wachsen nur die Arbeitsspalten auf
-440 pt, während die Ablagen bei 320 pt gedeckelt bleiben (Punkt 9); und
-erledigte Karten verlieren in `CardView.swift` bewusst ihren Ambient-Schatten.
-
-Im Icon übersetzt sich das nicht in Größe, sondern in Tiefe: die
-Arbeitsspalte liegt vorn.
 
 ## Geometrie
 
@@ -62,20 +43,12 @@ Entworfen auf einem **160 × 160**-Raster, beim Rendern skaliert. macOS zeichnet
 App-Icons als 824 × 824 großes abgerundetes Quadrat innerhalb der 1024er
 Fläche; der Rand ist Platz für den Schatten des Icons.
 
-| Spalte | x | Breite | y | Höhe |
-|---|---|---|---|---|
-| links (Backlog) | 35 | 34 | 36 | 88 |
-| Mitte (In Arbeit) | 63 | 34 | 36 | 88 |
-| rechts (Erledigt) | 91 | 34 | 36 | 88 |
+Vier Spalten, Breite 30, Höhe 88, ab y = 36, zentriert. Jede beginnt
+`Breite − Überlappung` weiter rechts als die vorige.
 
-Überlappung 6, Eckenradius 9, durchgehend `.continuous` — die gleiche
+Überlappung 8, Eckenradius 9, durchgehend `.continuous` — die gleiche
 Squircle-Familie, die `Board.columnShape` verwendet. Ein kreisrunder Radius
 wäre genau das „fast nativ", vor dem `DesignSystem.swift` warnt.
-
-Die mittlere Spalte liegt vorn, hat aber **dieselben Werte** wie die beiden
-anderen — Farbe, Durchsicht, Kante, Schatten. Die Tiefe entsteht allein daraus,
-dass zwei durchscheinende Lagen übereinander dunkler werden. Das ist, was Glas
-tut, und es macht den Effekt schon bei normaler Icon-Größe sichtbar.
 
 ## Farben
 
@@ -139,9 +112,6 @@ Pixel fressen, die die Silhouette braucht.
 - **Eine durchscheinende Platte.** Die Spalten sind Glas, der Grund nicht: ein
   Icon, durch das man hindurchsieht, ist auf dem Schreibtisch kein
   Bedienelement. Deshalb `solid` statt Verlauf oder Durchsicht.
-- **Vier Scheiben** entsprechend der vier echten Spalten. Bei 16 px unlesbar,
-  und die beiden äußeren sagen ohnehin dasselbe: Ablage. Drei ist die
-  kanonische Kanban-Abstraktion.
 - **Getöntes Teal.** Hübsch und im Dock unterscheidbar, kollidiert aber mit
   der reservierten Bedeutung von Teal im Code.
 - **Warmes Sandgrau.** Hätte die Papier-Metapher aufgegriffen und wäre im
