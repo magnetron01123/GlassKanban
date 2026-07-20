@@ -12,6 +12,7 @@
 		17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */; };
 		1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1A968F6964BFEE0832A01A /* ColumnView.swift */; };
 		1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */; };
+		1E7F6ED58D7DBA4FB4175DE6 /* AppAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885796666D14CA49747DB258 /* AppAppearance.swift */; };
 		262B9D2A64B3478DC0B7D42F /* BoardTooltip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */; };
 		2FA0675B56569C16EB972A13 /* StreakPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B365227CBE04B748E55FE /* StreakPopover.swift */; };
 		4DDD94D9BA542BA62B842C25 /* BacklogTicketCreationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */; };
@@ -19,6 +20,7 @@
 		6E3C54C9398748DCB39B3DB3 /* BacklogTicketTargeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */; };
 		73526449E43A7458F4BA2C81 /* BacklogTicketTargeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */; };
 		74BF0AB21BF4C7B800C413D1 /* StatusTaggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */; };
+		7D2F3F3BABC941DA38C52CC6 /* AppAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885796666D14CA49747DB258 /* AppAppearance.swift */; };
 		7D478069741C025AEBDC3C41 /* FindPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD0CD245EE900300AA1B6709 /* FindPopover.swift */; };
 		875104CDC32ECDEB5C2494F0 /* FilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F5178AE744F393F737442A5 /* FilterTests.swift */; };
 		877D22FD67BA79DE7C4C65F1 /* HUDGlassMaterial.swift in Sources */ = {isa = PBXBuildFile; fileRef = EABE4A8869EFB12034A075AB /* HUDGlassMaterial.swift */; };
@@ -26,7 +28,9 @@
 		9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD1B4A61352C1461953925D /* BoardView.swift */; };
 		9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
 		9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
+		A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */; };
 		A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CAB35E9902F258F00D82A7 /* SettingsView.swift */; };
+		A70E5A894D67BF2B9B9C0779 /* AppAppearanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48CB5158B3D021C846E9BDE /* AppAppearanceTests.swift */; };
 		B5100A228F130EF0A3292797 /* StreakCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */; };
 		BA331CEEE97A7000C960DB81 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE77523ACBD14B219E0031C5 /* ContentView.swift */; };
 		C3122530F3FD6606EBCD4E6C /* WIPLimitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C252FF02D5162B99A3F30F7 /* WIPLimitTests.swift */; };
@@ -44,6 +48,7 @@
 		0C252FF02D5162B99A3F30F7 /* WIPLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WIPLimitTests.swift; sourceTree = "<group>"; };
 		10ECC48E9096FEF7E8FFDCB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1C6B365227CBE04B748E55FE /* StreakPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakPopover.swift; sourceTree = "<group>"; };
+		2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculatorTests.swift; sourceTree = "<group>"; };
 		4F5178AE744F393F737442A5 /* FilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterTests.swift; sourceTree = "<group>"; };
 		616551F8C95C166758DC62DD /* TextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizer.swift; sourceTree = "<group>"; };
@@ -52,11 +57,13 @@
 		6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassKanban.entitlements; sourceTree = "<group>"; };
 		73CAB35E9902F258F00D82A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyBoardNotice.swift; sourceTree = "<group>"; };
+		885796666D14CA49747DB258 /* AppAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearance.swift; sourceTree = "<group>"; };
 		916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderDeepLink.swift; sourceTree = "<group>"; };
 		9AD1B4A61352C1461953925D /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklogTicketTargeting.swift; sourceTree = "<group>"; };
 		BD0CD245EE900300AA1B6709 /* FindPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindPopover.swift; sourceTree = "<group>"; };
 		C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKanbanApp.swift; sourceTree = "<group>"; };
+		C48CB5158B3D021C846E9BDE /* AppAppearanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearanceTests.swift; sourceTree = "<group>"; };
 		C611793427062C2E7A24FAFF /* GlassKanban.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassKanban.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C67BD228B20A88109D18DAA5 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		C8099603D0D48B34633EB69D /* StatusTagger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTagger.swift; sourceTree = "<group>"; };
@@ -86,6 +93,7 @@
 		7204D7B9E911C3DE365C3B14 /* GlassKanbanTests */ = {
 			isa = PBXGroup;
 			children = (
+				C48CB5158B3D021C846E9BDE /* AppAppearanceTests.swift */,
 				D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */,
 				DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */,
 				4F5178AE744F393F737442A5 /* FilterTests.swift */,
@@ -100,6 +108,8 @@
 		C258B197D26D22AB4AC8E407 /* GlassKanban */ = {
 			isa = PBXGroup;
 			children = (
+				885796666D14CA49747DB258 /* AppAppearance.swift */,
+				2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */,
 				B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */,
 				63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */,
 				9AD1B4A61352C1461953925D /* BoardView.swift */,
@@ -159,6 +169,7 @@
 			buildConfigurationList = B09AFE9375D830BC374573FB /* Build configuration list for PBXNativeTarget "GlassKanban" */;
 			buildPhases = (
 				A567494CDC0049B0AF77743C /* Sources */,
+				AF49A5C6088C655EB51FC0D2 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -205,11 +216,23 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		AF49A5C6088C655EB51FC0D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		A567494CDC0049B0AF77743C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D2F3F3BABC941DA38C52CC6 /* AppAppearance.swift in Sources */,
 				6E3C54C9398748DCB39B3DB3 /* BacklogTicketTargeting.swift in Sources */,
 				262B9D2A64B3478DC0B7D42F /* BoardTooltip.swift in Sources */,
 				9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */,
@@ -236,6 +259,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E7F6ED58D7DBA4FB4175DE6 /* AppAppearance.swift in Sources */,
+				A70E5A894D67BF2B9B9C0779 /* AppAppearanceTests.swift in Sources */,
 				4DDD94D9BA542BA62B842C25 /* BacklogTicketCreationTests.swift in Sources */,
 				73526449E43A7458F4BA2C81 /* BacklogTicketTargeting.swift in Sources */,
 				D5D9047BF7E12AD928F47F76 /* CardSortingTests.swift in Sources */,

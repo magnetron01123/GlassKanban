@@ -58,11 +58,21 @@ struct ListsSettingsView: View {
 struct GeneralSettingsView: View {
     @EnvironmentObject private var store: RemindersStore
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @ObservedObject private var appearance = AppearanceController.shared
 
     private static let maxWIPLimit = 20
 
     var body: some View {
         Form {
+            // No `onChange` here on purpose: the controller's setter persists
+            // and applies in one step, so the effect does not depend on this
+            // window being open.
+            Picker("Erscheinungsbild", selection: $appearance.selection) {
+                ForEach(AppAppearance.allCases) { option in
+                    Text(option.displayName).tag(option)
+                }
+            }
+
             Toggle("Beim Anmelden starten", isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { _, enabled in
                     do {
