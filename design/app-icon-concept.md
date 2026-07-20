@@ -99,8 +99,9 @@ Pixel fressen, die die Silhouette braucht.
   Einzelverbesserung (Kontrast, Kleingröße, Deckkraft) muss gegen die Frage
   geprüft werden, ob das Ganze noch ein Board zeigt. Mehrere lokal richtige
   Schritte ergaben zusammen ein unlesbares Icon.
-- **Durchscheinende Flächen.** Ein Icon, das man durchsieht, ist auf dem
-  Schreibtisch kein Bedienelement. Glas gehört in die App, nicht ins Icon.
+- **Eine durchscheinende Platte.** Die Spalten sind Glas, der Grund nicht: ein
+  Icon, durch das man hindurchsieht, ist auf dem Schreibtisch kein
+  Bedienelement. Deshalb `solid` statt Verlauf oder Durchsicht.
 - **Vier Scheiben** entsprechend der vier echten Spalten. Bei 16 px unlesbar,
   und die beiden äußeren sagen ohnehin dasselbe: Ablage. Drei ist die
   kanonische Kanban-Abstraktion.
@@ -150,30 +151,34 @@ Fassung ohne jede Dunkel-Angabe wirkte im Dunkelmodus deutlich zu hell — die
 Füllung ist ein fester Farbwert, und nichts deutet darauf hin, dass er von
 selbst nachdunkelt.
 
-**Grenze der Prüfbarkeit.** Wie die Dunkelfassung tatsächlich aussieht, ließ
-sich hier nicht zeigen. Der Weg dorthin, dokumentiert damit ihn niemand zweimal
-geht:
+**Prüfstand.** Die Dunkelfassung ließ sich nicht bestätigen — und der Weg
+dorthin gehört dokumentiert, damit ihn niemand zweimal geht:
 
+- Die App-Einstellung „Erscheinungsbild" hilft nicht: sie setzt
+  `NSApp.appearance` und wirkt auf die Fenster. Das Dock zeichnet **alle**
+  Symbole im System-Erscheinungsbild; eine App kann ihr eigenes Dock-Symbol
+  nicht umschalten.
 - `assetutil` listet Renditions nur auf und extrahiert nicht.
 - Über CoreUI (`CUICatalog`) sind die drei Stapel erreichbar, aber es sind
-  `_CUILayerStackRendition` ohne Bildzugriff — nur der System-Compositor
-  rechnet sie flach.
-- Ihre Rohdaten (`srcData`) sind je 551 Bytes und unterscheiden sich zwischen
-  Hell und Dunkel um **zwei Bytes**. Enthalten sind Kompositionswerte
-  (Durchsicht und Schattenwerte), **keine Farben**.
-- `NSImage` aus dem Bundle liefert unabhängig von der gesetzten
-  `NSAppearance` immer dieselbe Fassung.
+  `_CUILayerStackRendition` ohne Bildzugriff. Ihre Rohdaten (`srcData`) sind je
+  551 Bytes, unterscheiden sich zwischen Hell und Dunkel um **zwei Bytes** und
+  enthalten Kompositionswerte, **keine Farben**.
+- Offscreen rendern geht mit
+  `NSAppearance.performAsCurrentDrawingAppearance` — die Methode heißt so, ein
+  früherer Versuch scheiterte an einem erfundenen Namen. Gegenprobe bestanden
+  (`windowBackgroundColor` liefert `#FFFFFF` gegen `#1E1E1E`). Das Icon kommt
+  in beiden Erscheinungen als `#9DA0A2` heraus — **identisch**. Dieser Weg
+  liest allerdings die flach gerenderte Fassung, nicht den Ebenenstapel, den
+  das Dock zusammensetzt.
 
-Bleibt das Umschalten unter Systemeinstellungen → Erscheinungsbild.
+Zusammen genommen: die Plattenfarbe ist sehr wahrscheinlich in beiden
+Erscheinungen dieselbe, und der Dunkel-Eintrag bewirkt vermutlich nichts. Er
+bleibt trotzdem stehen — er schadet nicht, und falls macOS ihn auswertet, ist
+der Ton dort richtig.
 
-Belegt ist dagegen, dass Ebenenfarben überhaupt durchschlagen: zwei
-Kontrollbauten mit grauem und rotem Ebenen-`fill` ergaben, aus dem Katalog
-extrahiert, Scheiben in RGB 174/174/175 beziehungsweise 246/49/46.
-
-Eine frühere Fassung dieses Dokuments behauptete, ein Override auf oberster
-Ebene werde nachweislich ignoriert. Das war ein Fehlschluss: gemessen wurde die
-`SizeOnDisk` des Ebenenstapels, und die ist eine Beschreibungsgröße, die sich
-mit Farben gar nicht ändert.
+**Deshalb ist der Plattenton so gewählt, dass er in beiden Fällen trägt.** Ob
+die Dunkelfassung greift oder nicht, ändert an der Lesbarkeit nichts; das war
+die Abtastung gegen hellen und dunklen Grund.
 
 ## Erzeugung
 
