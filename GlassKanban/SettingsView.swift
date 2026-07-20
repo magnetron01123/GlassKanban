@@ -58,21 +58,20 @@ struct ListsSettingsView: View {
 struct GeneralSettingsView: View {
     @EnvironmentObject private var store: RemindersStore
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
-    @AppStorage(AppAppearance.storageKey) private var appearance: AppAppearance = .system
+    @ObservedObject private var appearance = AppearanceController.shared
 
     private static let maxWIPLimit = 20
 
     var body: some View {
         Form {
-            // Applied here as well as at launch: the board window may be
-            // closed while Settings is open, so the change cannot rely on
-            // anything in the main scene noticing it.
-            Picker("Erscheinungsbild", selection: $appearance) {
+            // No `onChange` here on purpose: the controller's setter persists
+            // and applies in one step, so the effect does not depend on this
+            // window being open.
+            Picker("Erscheinungsbild", selection: $appearance.selection) {
                 ForEach(AppAppearance.allCases) { option in
                     Text(option.displayName).tag(option)
                 }
             }
-            .onChange(of: appearance) { _, choice in choice.apply() }
 
             Toggle("Beim Anmelden starten", isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { _, enabled in

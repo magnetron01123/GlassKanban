@@ -45,12 +45,43 @@ enum AppAppearance: String, CaseIterable, Identifiable {
         NSApplication.shared.appearance = nsAppearance
     }
 
-    /// Shared with `@AppStorage` in the views, so the key exists once.
+    /// Shared with the controller below, so the key exists once.
     static let storageKey = "appAppearance"
 
     /// The stored choice, for applying at launch before any view exists.
     static var stored: AppAppearance {
         UserDefaults.standard.string(forKey: storageKey)
             .flatMap(AppAppearance.init(rawValue:)) ?? .system
+    }
+}
+
+/// Owns the setting, so that storing it and applying it are one step.
+///
+/// The first version bound the picker straight to `@AppStorage` and applied
+/// the change in the view's `onChange`. That ties the effect to the Settings
+/// window being on screen: change the value while Settings is closed — as a
+/// synced preference or another window can — and the board keeps rendering the
+/// old appearance until the next launch, with the stored preference quietly
+/// disagreeing with what is visible. Writing through one setter removes the
+/// failure mode instead of documenting it.
+final class AppearanceController: ObservableObject {
+    static let shared = AppearanceController()
+
+    @Published var selection: AppAppearance {
+        didSet {
+            UserDefaults.standard.set(selection.rawValue, forKey: AppAppearance.storageKey)
+            selection.apply()
+        }
+    }
+
+    private init() {
+        // Assigning in init deliberately does not run `didSet`: there is
+        // nothing to persist yet, and launch applies the value separately.
+        selection = AppAppearance.stored
+    }
+
+    /// Called once from the app delegate, before the first window exists.
+    func applyStored() {
+        selection.apply()
     }
 }

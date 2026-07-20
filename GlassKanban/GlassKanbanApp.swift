@@ -10,7 +10,7 @@ import ServiceManagement
 /// pass straight through, because it only exists at runtime.
 final class AppearanceDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
-        AppAppearance.stored.apply()
+        AppearanceController.shared.applyStored()
     }
 }
 

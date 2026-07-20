@@ -64,4 +64,20 @@ final class AppAppearanceTests: XCTestCase {
             XCTAssertFalse(option.displayName.isEmpty, "\(option) hat kein Label")
         }
     }
+
+    /// The controller persists on assignment rather than leaving it to the
+    /// view. Applying used to live in the Settings window's `onChange`, which
+    /// meant a value changed while that window was closed never reached the
+    /// board — the preference and what was on screen could disagree.
+    func testSettingTheSelectionPersistsImmediately() {
+        UserDefaults.standard.removeObject(forKey: AppAppearance.storageKey)
+
+        AppearanceController.shared.selection = .dark
+        XCTAssertEqual(
+            UserDefaults.standard.string(forKey: AppAppearance.storageKey), "dark")
+        XCTAssertEqual(AppAppearance.stored, .dark)
+
+        AppearanceController.shared.selection = .system
+        XCTAssertEqual(AppAppearance.stored, .system)
+    }
 }
