@@ -24,10 +24,18 @@ struct FindPopover: View {
                 systemImage: "calendar",
                 selection: $store.dueFilter,
                 options: DueFilter.allCases)
+            // Same row shape as the two filters above, because it answers the
+            // same kind of question — only its resting value differs (see
+            // `RecurringFilter`). The glyph is the one already on the cards.
+            filterRow(
+                "Wiederkehrende",
+                systemImage: "repeat",
+                selection: $store.recurringFilter,
+                options: RecurringFilter.allCases)
 
             // Only offered when there is something to undo — an always-visible
             // reset would be a permanently greyed-out control.
-            if store.isFiltering {
+            if store.canResetFindSettings {
                 Divider()
                 Button("Alles zurücksetzen") {
                     store.resetFilters()
@@ -37,7 +45,11 @@ struct FindPopover: View {
             }
         }
         .padding(14)
-        .frame(width: 260)
+        // Sized to the widest row rather than to the narrowest: "Wiederkehrende"
+        // beside its value needs more than the 260 the two short labels were
+        // happy with, and at 260 the third row's menu ran off the edge. Set
+        // once here so a future row does not have to rediscover this.
+        .frame(width: 300)
         // Typing is why the popover opened; asking for a click first would be
         // a wasted step.
         .onAppear { searchFocused = true }
@@ -82,6 +94,11 @@ struct FindPopover: View {
         HStack(spacing: 8) {
             Label(title, systemImage: systemImage)
                 .foregroundStyle(.secondary)
+                // A label is one word and must stay one line. Without this,
+                // a value wide enough to crowd the row makes SwiftUI wrap the
+                // label instead of the value — "Wiederkehrende" came out as a
+                // column one letter wide rather than simply being cramped.
+                .fixedSize()
             Spacer()
             Picker(title, selection: selection) {
                 ForEach(options) { option in
@@ -106,3 +123,4 @@ protocol FilterDisplayable {
 
 extension PriorityFilter: FilterDisplayable {}
 extension DueFilter: FilterDisplayable {}
+extension RecurringFilter: FilterDisplayable {}

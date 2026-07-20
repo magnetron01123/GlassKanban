@@ -22,7 +22,10 @@ struct CardView: View {
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
     @State private var settleFlash = false
+    @State private var isRenaming = false
+    @State private var renameText = ""
     @FocusState private var isFocused: Bool
+    @FocusState private var isRenameFieldFocused: Bool
 
     /// Lanes this card can be sent to — everything except where it already is.
     private var moveTargets: [KanbanStatus] {
@@ -58,18 +61,33 @@ struct CardView: View {
         .animation(reduceMotion ? nil : Board.hoverAnimation, value: store.draggingCardID)
         .contentShape(Board.cardShape)
         .focusable()
+        // The default system ring is what we just removed our own overlay
+        // for — .focusable() draws its own underneath regardless. Keyboard
+        // focus (Tab, then Return to open) still works without it.
+        .focusEffectDisabled()
         .focused($isFocused)
-        .overlay { focusRing }
-        // Return matches what double-click does, so the keyboard path is not a
-        // lesser version of the pointer one.
+        // Return matches what a single click does, so the keyboard path is
+        // not a lesser version of the pointer one. Renaming already owns
+        // Return — the TextField's own `onSubmit` — so this steps aside.
         .onKeyPress(.return) {
+            guard !isRenaming else { return .ignored }
             openInReminders()
             return .handled
         }
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
-        .onTapGesture(count: 2) { openInReminders() }
+        // One click for the common action (open), two for the rare one
+        // (rename) — SwiftUI holds the single-tap just long enough to rule
+        // out a second one, same as Finder's icon-name click-to-rename.
+        .onTapGesture(count: 1) {
+            guard !isRenaming else { return }
+            openInReminders()
+        }
+        .onTapGesture(count: 2) {
+            guard !isRenaming else { return }
+            beginRename()
+        }
         .contextMenu {
             Button("In Erinnerungen öffnen") { openInReminders() }
             Divider()
@@ -81,11 +99,18 @@ struct CardView: View {
                     Button(target.displayName) { store.move(cardID: card.id, to: target) }
                 }
             }
+            Divider()
+            Button("Umbenennen") { beginRename() }
+            Button("Löschen", role: .destructive) { store.deleteTicket(cardID: card.id) }
         }
-        .help(helpText)
+        .boardTooltip(helpText)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(accessibilityLabel)
+        // `.help` used to carry this to VoiceOver as well. The notes preview
+        // is only on the tooltip for compact rows, so without it here that
+        // text would exist for sighted users alone.
+        .accessibilityHint(helpText)
         .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
         .accessibilityActions {
             ForEach(moveTargets) { target in
@@ -93,6 +118,14 @@ struct CardView: View {
                     store.move(cardID: card.id, to: target)
                 }
             }
+            Button("Umbenennen") { beginRename() }
+            Button("Löschen") { store.deleteTicket(cardID: card.id) }
+        }
+        // Losing focus commits, same as clicking away from a Finder rename —
+        // Escape (`onExitCommand` on the field itself) is the only way out
+        // that discards instead.
+        .onChange(of: isRenameFieldFocused) { _, focused in
+            if !focused { commitRename() }
         }
         .onAppear {
             // The completed card appears fresh in Erledigt with the flag
@@ -111,8 +144,7 @@ struct CardView: View {
     private var fullBody: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                titleText
-                    .font(BoardText.title)
+                titleOrField(font: BoardText.title)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -186,15 +218,17 @@ struct CardView: View {
                     .monospacedDigit()
             }
             .foregroundStyle(.secondary)
-            .help("Seit \(days) Tagen in dieser Spalte")
+            // The card as a whole already announces its dwell time in
+            // `accessibilityLabel`, and the row is combined into one element —
+            // so this is the tooltip only, with no accessibility to restore.
+            .boardTooltip("Seit \(days) Tagen in dieser Spalte")
         }
     }
 
     /// Backlog: everything needed to decide what to pull next.
     private var compactBody: some View {
         HStack(spacing: 8) {
-            titleText
-                .font(BoardText.titleCompact)
+            titleOrField(font: BoardText.titleCompact)
                 .lineLimit(1)
             Spacer(minLength: 0)
             if card.isRecurring {
@@ -210,8 +244,7 @@ struct CardView: View {
 
     /// Erledigt: the work is done — the name is the only thing left to say.
     private var minimalBody: some View {
-        titleText
-            .font(BoardText.titleCompact)
+        titleOrField(font: BoardText.titleCompact)
             .lineLimit(1)
             .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -232,21 +265,47 @@ struct CardView: View {
         return Text("\(marksText) \(base)")
     }
 
+    /// Swaps in for `titleText` while renaming — a plain field over the same
+    /// spot the title already sits in, not a separate window. Priority marks
+    /// drop out during the edit: they describe `priority`, not `title`, and
+    /// were never something to type.
+    @ViewBuilder
+    private func titleOrField(font: Font) -> some View {
+        if isRenaming {
+            TextField("Titel", text: $renameText)
+                .font(font)
+                .textFieldStyle(.plain)
+                .focused($isRenameFieldFocused)
+                .onAppear { isRenameFieldFocused = true }
+                .onSubmit { commitRename() }
+                .onExitCommand { isRenaming = false }
+        } else {
+            titleText.font(font)
+        }
+    }
+
     private var repeatIcon: some View {
         Image(systemName: "repeat")
             .font(BoardText.glyph)
             .foregroundStyle(.secondary)
-            .help("Wiederholende Erinnerung")
+            // Likewise announced by the card's own label ("Wiederholend").
+            .boardTooltip("Wiederholende Erinnerung")
     }
 
     /// Compact rows have no room for the notes preview, so the tooltip
     /// carries it — information without pixels.
+    ///
+    /// One fact per line, because the tooltip sets the first line as the
+    /// subject and the rest as its qualifiers. Joined with "·" they were one
+    /// run-on that wrapped mid-phrase and threw the note, the list and the
+    /// gesture hint into a single weight.
     private var helpText: String {
         var lines: [String] = []
         if density.isSingleLine && !card.notesPreview.isEmpty {
             lines.append(card.notesPreview)
         }
-        lines.append("\(card.listName) · Doppelklick öffnet Erinnerungen")
+        lines.append(card.listName)
+        lines.append("Klick öffnet Erinnerungen")
         return lines.joined(separator: "\n")
     }
 
@@ -295,18 +354,6 @@ struct CardView: View {
 
     private var surface: some View {
         Board.cardShape.fill(cardFill)
-    }
-
-    /// Keyboard focus. Drawn outside the card's own contour so it reads as the
-    /// system focus ring rather than a change to the card itself.
-    @ViewBuilder
-    private var focusRing: some View {
-        if isFocused {
-            Board.cardShape
-                .strokeBorder(Color.accentColor, lineWidth: 2)
-                .padding(-2)
-                .allowsHitTesting(false)
-        }
     }
 
     /// Slim list-color marker along the leading edge — the ticket's color
@@ -462,5 +509,20 @@ struct CardView: View {
             return
         }
         store.openRemindersApp()
+    }
+
+    /// Pre-fills with the real title, not `displayTitle` — "Ohne Titel" is a
+    /// placeholder for display, never something to actually type as a title.
+    private func beginRename() {
+        renameText = card.title
+        isRenaming = true
+    }
+
+    /// Guarded so the focus-loss path (`onChange` above) and a manual Return
+    /// can't both fire for the same edit.
+    private func commitRename() {
+        guard isRenaming else { return }
+        isRenaming = false
+        store.renameTicket(cardID: card.id, title: renameText)
     }
 }

@@ -133,6 +133,26 @@ enum Board {
     /// Backlog shows this many cards before offering "N weitere anzeigen".
     static let backlogCollapsedLimit = 15
 
+    // Tooltips. Chrome, not content — so glass is right here, unlike on a
+    // card. The radius is the card's own, less one: a tooltip rests directly
+    // on paper, and matching its curve family is what keeps it from reading
+    // as a foreign box dropped onto the board.
+    static let tooltipRadius: CGFloat = 10
+    static let tooltipShape = RoundedRectangle(cornerRadius: tooltipRadius, style: .continuous)
+    /// A hard cap, not a width. The panel measures its own text and only
+    /// wraps once a line would pass this — so a three-word tooltip stays
+    /// three words wide instead of sitting in an oversized plate.
+    static let tooltipMaxWidth: CGFloat = 240
+    /// Slower than a hover highlight, faster than the system's own tooltip:
+    /// long enough not to fire while the cursor crosses the board, short
+    /// enough that looking something up does not feel like waiting.
+    static let tooltipDelay: Duration = .milliseconds(450)
+    /// Two layers, like a card — but lifted. The contact shadow keeps its
+    /// edge readable on white paper, the ambient one says it is floating
+    /// rather than lying on the board.
+    static let tooltipShadowContact = (color: Color.black.opacity(0.10), radius: CGFloat(2), y: CGFloat(1))
+    static let tooltipShadowAmbient = (color: Color.black.opacity(0.14), radius: CGFloat(16), y: CGFloat(6))
+
     // Motion
     static let hoverAnimation: Animation = .easeOut(duration: 0.16)
     static let dropTargetAnimation: Animation = .easeOut(duration: 0.15)
@@ -173,6 +193,20 @@ enum BoardText {
     static let glyph = Font.system(size: 9, weight: .semibold)
     /// A single emphasised number — the streak counter.
     static let value = Font.system(size: 12, weight: .semibold)
+
+    // Tooltip lines. Both 11pt — the rank comes from weight and colour, as
+    // everywhere else on this board. The first draft set the lead at 11.5
+    // against 11, which is both off the macOS grid (11/12/13) and exactly the
+    // half-point distinction this scale exists to prevent.
+    //
+    // Declared as NSFont because the tooltip measures its own text before
+    // drawing it, and a measurement taken in a different font than the one
+    // drawn is how text ends up clipped. The SwiftUI faces are derived from
+    // these, so the two cannot drift apart.
+    static let tooltipLeadFont = NSFont.systemFont(ofSize: 11, weight: .medium)
+    static let tooltipDetailFont = NSFont.systemFont(ofSize: 11)
+    static let tooltipLead = Font(tooltipLeadFont)
+    static let tooltipDetail = Font(tooltipDetailFont)
 }
 
 /// Subtle trackpad haptics — a sensory reward for moving and completing work.
