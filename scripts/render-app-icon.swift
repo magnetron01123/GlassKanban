@@ -32,12 +32,12 @@ private enum Design {
     static let artworkRatio: CGFloat = 824.0 / 1024.0
     static let artworkCornerRatio: CGFloat = 185.4 / 824.0
 
-    static let paneCorner: CGFloat = 10
+    static let paneCorner: CGFloat = 9
 
     /// Slight overlap, not a stack. What separates the columns is the middle
     /// one's shadow falling on the two behind it — which is why it sits in its
     /// own group (Icon Composer attaches shadows per group, never per layer).
-    static let overlap: CGFloat = 7
+    static let overlap: CGFloat = 6
 
     /// Every pane carries a rim all the way round, not just a highlight on its
     /// top edge. An earlier draft lit only the top, and where the panes
@@ -52,9 +52,9 @@ private enum Design {
     /// different colour: an earlier version made it taller and tinted the
     /// outer two darker, which turned them into a different kind of object and
     /// the board reading was gone.
-    static let columnWidth: CGFloat = 38
-    static let columnTop: CGFloat = 41
-    static let columnHeight: CGFloat = 78
+    static let columnWidth: CGFloat = 34
+    static let columnTop: CGFloat = 36
+    static let columnHeight: CGFloat = 88
 
     /// Centred row: three columns less the two overlaps.
     static var rowStart: CGFloat {
@@ -80,11 +80,13 @@ private struct Rim {
     let contact: Double
 }
 
-/// A translucent pane: fill fades top to bottom, edge from `Rim`.
+/// A translucent pane: fill fades top to bottom, edge from `Rim`, plus light
+/// caught inside the pane below its top edge.
 private struct Pane {
     let fillTop: Double
     let fillBottom: Double
     let rim: Rim
+    let innerHighlight: Double
 }
 
 private struct Palette {
@@ -94,9 +96,11 @@ private struct Palette {
     /// columns have to darken it, the way the board's lanes are a black wash
     /// on light window glass; on a dark plate they lighten it instead.
     let paneTint: Color
-    let back: Pane
-    let front: Pane
-    let frontShadow: Double
+    /// One description for all three columns — they are three of the same
+    /// thing. An earlier version gave the middle one its own values and it
+    /// read as a different object.
+    let column: Pane
+    let columnShadow: Double
     let outerShadow: Double
 
     /// Neutral grey, no hue at all — the GUI leads here. The window's own
@@ -117,11 +121,10 @@ private struct Palette {
         backgroundTop: Color(hex: 0xFEFEFF),
         backgroundBottom: Color(hex: 0xEBEBED),
         paneTint: .black,
-        back: Pane(fillTop: 0.16, fillBottom: 0.26,
-                   rim: Rim(highlightTop: 0.85, highlightBottom: 0.0, contact: 0.16)),
-        front: Pane(fillTop: 0.11, fillBottom: 0.21,
-                    rim: Rim(highlightTop: 1.0, highlightBottom: 0.0, contact: 0.22)),
-        frontShadow: 0.30,
+        column: Pane(fillTop: 0.06, fillBottom: 0.13,
+                     rim: Rim(highlightTop: 1.0, highlightBottom: 0.5, contact: 0.16),
+                     innerHighlight: 0.45),
+        columnShadow: 0.22,
         outerShadow: 0.22)
 
     /// Tuned against the light palette rather than derived from it: the same
@@ -131,11 +134,10 @@ private struct Palette {
         backgroundTop: Color(hex: 0x434343),
         backgroundBottom: Color(hex: 0x121212),
         paneTint: .white,
-        back: Pane(fillTop: 0.12, fillBottom: 0.05,
-                   rim: Rim(highlightTop: 0.65, highlightBottom: 0.18, contact: 0.35)),
-        front: Pane(fillTop: 0.34, fillBottom: 0.16,
-                    rim: Rim(highlightTop: 1.0, highlightBottom: 0.30, contact: 0.45)),
-        frontShadow: 0.70,
+        column: Pane(fillTop: 0.16, fillBottom: 0.08,
+                     rim: Rim(highlightTop: 0.8, highlightBottom: 0.3, contact: 0.40),
+                     innerHighlight: 0.25),
+        columnShadow: 0.55,
         outerShadow: 0.30)
 }
 
@@ -204,13 +206,17 @@ private struct IconArtwork: View {
                     .offset(x: inset, y: inset)
             }
 
+            // All three identical — same tint, same translucency, same edge.
+            // Depth comes from the overlaps alone: two translucent layers on
+            // top of each other darken, which is what glass actually does and
+            // what makes the effect visible at normal icon size.
             if parts.drawsOuter {
-                boardColumn(x: Design.rowStart, style: palette.back)
-                boardColumn(x: Design.rightX, style: palette.back)
+                boardColumn(x: Design.rowStart)
+                boardColumn(x: Design.rightX)
             }
 
             if parts.drawsCenter {
-                boardColumn(x: Design.centerX, style: palette.front)
+                boardColumn(x: Design.centerX)
             }
         }
         .frame(width: canvas, height: canvas)
@@ -230,8 +236,9 @@ private struct IconArtwork: View {
     /// One column. In the shipped `.icon` this is a flat white shape and macOS
     /// lights it; the painted fill and edges below only feed the fallback
     /// asset catalog and the previews.
-    private func boardColumn(x: CGFloat, style: Pane) -> some View {
-        column(x, Design.columnTop, Design.columnWidth, Design.columnHeight, style: style)
+    private func boardColumn(x: CGFloat) -> some View {
+        column(x, Design.columnTop, Design.columnWidth, Design.columnHeight,
+               style: palette.column)
     }
 
     private func column(
@@ -252,10 +259,14 @@ private struct IconArtwork: View {
                     endPoint: .bottom)))
             .overlay {
                 if !parts.isSilhouette {
+                    // Refraction: where light leaves the pane, along the lower
+                    // half only. Running it from the top instead put a dark
+                    // line under the specular and the pane read as brushed
+                    // metal rather than glass.
                     shape.strokeBorder(
                         LinearGradient(
                             colors: [.clear, Color.black.opacity(style.rim.contact)],
-                            startPoint: .top,
+                            startPoint: .center,
                             endPoint: .bottom),
                         lineWidth: max(0.75, Design.contactRimWidth * unit))
                 }
@@ -269,6 +280,17 @@ private struct IconArtwork: View {
                             startPoint: .top,
                             endPoint: .bottom),
                         lineWidth: max(0.75, Design.rimWidth * unit))
+                }
+            }
+            .overlay(alignment: .top) {
+                // Light caught inside the pane just under its top edge. This
+                // is what separates glass from a flat slab: the brightness
+                // sits *within* the shape, not only on its outline.
+                if !parts.isSilhouette {
+                    shape.fill(LinearGradient(
+                        colors: [Color.white.opacity(style.innerHighlight), .clear],
+                        startPoint: .top,
+                        endPoint: .center))
                 }
             }
             .frame(width: width * unit, height: height * unit)

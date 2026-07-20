@@ -95,6 +95,29 @@ Die Spalten lassen bewusst Rand: eine erste weiße Fassung füllte die Platte
 fast aus und wirkte schwer neben Erinnerungen, dessen Inhalt viel Weiß stehen
 lässt.
 
+## Warum die Spalten Glas sein müssen
+
+Die App heißt Glass Kanban. Eine Zwischenfassung zeichnete die Spalten als
+dunkelgraue Flächen mit heller Oberkante — das ist gebürstetes Metall, nicht
+Glas, und damit war das Icon unbrauchbar.
+
+Glas entsteht aus vier Dingen zusammen, keines reicht allein:
+
+1. **Durchsicht.** Die Füllung ist ein sehr schwacher Wash (Schwarz 6 % oben
+   nach 13 % unten), nicht eine Fläche. Man sieht die Platte hindurch.
+2. **Lichtkante oben.** Ein kräftiger weißer Rand, wo Licht eintritt.
+3. **Brechungslinie unten.** Eine dunkle Kante, aber **nur in der unteren
+   Hälfte**. Lief sie von oben, saß sie direkt unter der Lichtkante und die
+   Scheibe kippte wieder ins Metallische.
+4. **Innenlicht.** Ein Verlauf *innerhalb* der Scheibe, von der Oberkante zur
+   Mitte auslaufend. Das ist der eigentliche Unterschied zu einer flachen
+   Platte: die Helligkeit sitzt im Körper, nicht nur auf dem Umriss.
+
+Dazu ein weicher Schatten unter jeder Scheibe, damit sie über der Platte steht.
+
+Die Spalten sind außerdem schmaler und höher als zuvor (34 × 88 statt 38 × 78),
+damit sie als Spalten lesen und nicht als Blöcke.
+
 Unterhalb von 32 px entfällt der äußere Schatten des Icons — er würde nur
 Pixel fressen, die die Silhouette braucht.
 
