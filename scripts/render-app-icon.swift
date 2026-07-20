@@ -125,10 +125,10 @@ private struct Palette {
         backgroundTop: Color(hex: 0xFEFEFF),
         backgroundBottom: Color(hex: 0xEBEBED),
         paneTint: .black,
-        column: Pane(fillTop: 0.04, fillBottom: 0.16,
+        column: Pane(fillTop: 0.05, fillBottom: 0.15,
                      rim: Rim(highlightTop: 1.0, highlightBottom: 0.6, contact: 0.24),
                      innerHighlight: 0.6),
-        columnShadow: 0.26,
+        columnShadow: 0.20,
         outerShadow: 0.22)
 
     /// Tuned against the light palette rather than derived from it: the same
@@ -141,7 +141,7 @@ private struct Palette {
         column: Pane(fillTop: 0.16, fillBottom: 0.08,
                      rim: Rim(highlightTop: 0.8, highlightBottom: 0.3, contact: 0.40),
                      innerHighlight: 0.25),
-        columnShadow: 0.55,
+        columnShadow: 0.45,
         outerShadow: 0.30)
 }
 
@@ -291,6 +291,16 @@ private struct IconArtwork: View {
                 }
             }
             .frame(width: width * unit, height: height * unit)
+            // A soft shadow to the lower-left, so each pane visibly floats
+            // above the one drawn before it (behind it, to its left). This is
+            // what makes the overlap read as layered glass rather than one
+            // striped surface — without it the panes only meet at their edges.
+            // Left off the bare silhouettes: Icon Composer lights those itself.
+            .shadow(
+                color: .black.opacity(parts.isSilhouette ? 0 : palette.columnShadow),
+                radius: 4 * unit,
+                x: -1 * unit,
+                y: 1 * unit)
             .offset(x: inset + x * unit, y: inset + y * unit)
     }
 }
