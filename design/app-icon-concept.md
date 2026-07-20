@@ -1,9 +1,11 @@
 # App-Icon — Konzept: „Vier Glasspalten, ein Board"
 
-Status: umgesetzt. Ausgeliefert wird der gemalte Asset-Katalog
-`GlassKanban/Assets.xcassets/AppIcon.appiconset` — Glas, Glanzkanten und
-Schatten sind gezeichnet, nicht vom System gerechnet. Warum nicht das
-Icon-Composer-Dokument: siehe „Der Zielkonflikt" unten.
+Status: umgesetzt. Ausgeliefert wird `GlassKanban/AppIcon.icon`, ein
+Icon-Composer-Dokument mit **zwei fertig gemalten Ebenenbildern** — eines hell,
+eines dunkel. Glas, Glanzkanten und Schatten sind gezeichnet, nicht vom System
+gerechnet; das `.icon` dient hier nur dazu, je nach System-Erscheinung das
+richtige Bild zu zeigen. Wie das geht und warum kein klassischer Katalog:
+siehe „Hell und Dunkel" unten.
 
 ## Leitidee
 
@@ -120,62 +122,54 @@ Pixel fressen, die die Silhouette braucht.
   mehr Eigenständigkeit — passte aber nicht zum eigenen Fenster, das
   nachweislich neutral ist. Im Zweifel führt die GUI.
 
-## Der Zielkonflikt: gemalt oder Icon Composer
+## Hell und Dunkel
 
-Beide Wege wurden gebaut und verglichen.
+Das Icon zeigt in hellem System die helle, in dunklem die dunkle Fassung. Der
+Weg dahin war der Kern der Sache, weil **zwei naheliegende Ansätze nicht
+funktionieren:**
 
-| | Gemalter Katalog | `.icon` (Icon Composer) |
-|---|---|---|
-| Aussehen | genau wie entworfen | macOS rendert neu, flacher |
-| Spalten gleich | garantiert, ein Renderer | nur bei identischen Gruppenwerten |
-| Helligkeit steuerbar | ja | ja |
-| Eigene Dunkelfassung | **nein** | ja, aber nicht prüfbar |
+1. **Klassischer Katalog mit Dunkel-Eintrag.** Ein `AppIcon.appiconset` mit
+   `"appearances": [{"appearance": "luminosity", "value": "dark"}]` kompiliert
+   ohne Fehler *und ohne Wirkung*: `actool` verwirft die Dunkel-Einträge
+   stillschweigend, im Ergebnis steht keine einzige Erscheinungs-Kennung.
+   macOS-App-Icon-Kataloge tragen schlicht keine Hell/Dunkel-Variante.
+2. **`.icon` das Glas selbst rechnen lassen.** Dann leitet macOS zwar eine
+   Dunkelfassung ab, aber es rendert das Glas neu und das Ergebnis wich vom
+   abgestimmten Entwurf ab.
 
-**Klassische App-Icon-Kataloge tragen keine Hell/Dunkel-Varianten.** Ein
-Katalog mit `"appearances": [{"appearance": "luminosity", "value": "dark"}]`
-kompiliert ohne Fehler *und ohne Wirkung*: `actool` verwirft die Dunkel-
-Einträge stillschweigend, im Ergebnis steht keine einzige Erscheinungs-Kennung.
+**Der Ansatz, der beides löst:** ein `.icon` mit *einer* Ebene, deren Bild die
+komplette, fertig gemalte Grafik ist — vollflächig, einmal hell, einmal dunkel,
+verknüpft über `image-name-specializations` (`appearance: dark`). Im Manifest
+ist Glas ausgeschaltet (`specular: false`, `translucency: enabled: false`,
+`glass-specializations: [{ value: false }]`, Schatten 0). Damit **rechnet macOS
+nichts neu** — es maskiert das Vollbild zur Squircle-Form und setzt es
+unverändert ein — und schaltet allein das Bild um. Der äußere Schatten des
+Icons kommt vom System, deshalb sind die gemalten Bilder ohne eigenen
+Außenschatten und vollflächig (die Platte füllt die ganze 1024er Fläche, nicht
+nur die 824er Kunstfläche).
 
-Beim `.icon` gibt es die drei Stapel — dafür rechnet macOS das Glas selbst und
-das Ergebnis sah anders aus als der abgestimmte Entwurf. Zwei Gruppen mit
-unterschiedlichen Schattenwerten (0,3 gegen 0,55) ließen die mittlere Spalte
-zudem wie eine andere Größe wirken, obwohl die Ebenen exakt gleich hoch waren
-(beide 275–748 px im 1024er Bild) — macOS beleuchtet jede Gruppe einzeln.
+**Belegt** ist die Umschaltung nicht am Aussehen (das ließ sich offscreen nie
+zuverlässig rendern — `NSImageView` mit gesetzter `NSAppearance` liefert für
+appearance-spezifische Named Images irreführende Ergebnisse, ein früherer
+Fehlschluss). Sondern an den Verweisen: der kompilierte Katalog enthält je
+einen Ebenenstapel für Aqua, DarkAqua und Tintable, und der **Dunkel-Stapel
+verweist auf ein anderes Bild-Rendition** (Identifier 59377) als der Hell-Stapel
+(63909) — ausgelesen über CoreUI (`CUIRenditionLayerReference.referenceKey`).
+Zwei verschiedene Bilder, also greift die Spezialisierung.
 
-Entschieden wurde für den gemalten Katalog: drei von vier Anforderungen sind
-damit nachweisbar erfüllt, und ein Symbol für beide Erscheinungen ist auf macOS
-der Normalfall. Der Plattenton ist so gewählt, dass er auf hellem wie dunklem
-Dock-Grund trägt.
-
-Das `.icon`-Dokument erzeugt das Skript weiterhin mit — falls die
-Dunkelfassung später wichtiger wird als die Kontrolle über das Aussehen.
-Ein `.icon` ist schlicht ein Ordner mit `icon.json` und Ebenenbildern, also
-erzeugbar statt in der GUI zusammenklickbar.
-
-### Grenzen der Prüfbarkeit beim `.icon`
-
-Dokumentiert, damit der Weg nicht zweimal gegangen wird:
-
-- Die App-Einstellung „Erscheinungsbild" hilft nicht: sie setzt
-  `NSApp.appearance` und wirkt auf die Fenster. Das Dock zeichnet **alle**
-  Symbole im System-Erscheinungsbild.
-- `assetutil` listet Renditions nur auf und extrahiert nicht.
-- Über CoreUI sind die drei Stapel erreichbar, aber es sind
-  `_CUILayerStackRendition` ohne Bildzugriff; ihre Rohdaten enthalten
-  Kompositionswerte, **keine Farben**.
-- Offscreen rendern geht mit
-  `NSAppearance.performAsCurrentDrawingAppearance` — Gegenprobe bestanden,
-  das Icon kommt in beiden Erscheinungen identisch heraus. Dieser Weg liest
-  allerdings die flach gerenderte Fassung, nicht den Ebenenstapel.
+Sichtbar prüfen lässt es sich nur am Dock nach Umschalten von
+Systemeinstellungen → Erscheinungsbild; die App-eigene Einstellung „Erscheinung"
+reicht nicht, weil das Dock jedes Symbol im **System**-Erscheinungsbild zeichnet.
 
 ## Erzeugung
 
     swift scripts/render-app-icon.swift <zielordner>
 
 Schreibt `AppIcon.icon` (nach `GlassKanban/` kopieren — das ist der
-ausgelieferte Stand), dazu den Fallback-`AppIcon.appiconset`, die gemalten
-Ebenen und Vorschauen in Hell und Dunkel. Nach jeder Änderung an den Konstanten
-im Skript neu laufen lassen.
+ausgelieferte Stand) mit den beiden Vollbildern `icon-light.png` /
+`icon-dark.png`, dazu einen `AppIcon.appiconset` (nur hell, als Referenz), die
+Einzelebenen und Vorschauen. Nach jeder Änderung an den Konstanten im Skript
+neu laufen lassen.
 
 XcodeGen braucht dafür keine Sonderregel: es erkennt `.icon` als
 `wrapper.icon` und legt es als eine Einheit in die Resources-Phase.

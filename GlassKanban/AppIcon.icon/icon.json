@@ -1,0 +1,42 @@
+{
+  "fill" : {
+    "solid" : "display-p3:1.00000,1.00000,1.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass-specializations" : [
+            {
+              "value" : false
+            }
+          ],
+          "image-name" : "icon-light.png",
+          "image-name-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : "icon-dark.png"
+            }
+          ],
+          "name" : "Icon"
+        }
+      ],
+      "lighting" : "individual",
+      "name" : "Icon",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.0
+      },
+      "specular" : false,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}

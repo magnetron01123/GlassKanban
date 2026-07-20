@@ -167,13 +167,23 @@ private enum Parts {
     /// shadow from them. Handing it a painted version would stack two glass
     /// treatments on each other.
     case columns
+    /// The whole painted icon, plate and panes, full-bleed and unclipped. This
+    /// is the shipped `.icon`'s single layer: macOS masks it to the icon shape
+    /// but — with glass turned off in the manifest — composites it as painted
+    /// rather than re-lighting it. Rendered once per appearance, which is the
+    /// only reason the icon can switch light/dark at all (a classic
+    /// appiconset silently drops its dark entries on macOS).
+    case flatFull
 
-    var drawsBackground: Bool { self == .full || self == .backgroundOnly }
-    var drawsColumns: Bool { self == .full || self == .columns }
+    var drawsBackground: Bool { self == .full || self == .backgroundOnly || self == .flatFull }
+    var drawsColumns: Bool { self == .full || self == .columns || self == .flatFull }
     /// Only the finished icon carries the outer silhouette and its shadow —
     /// Icon Composer applies its own mask and lighting to bare layers.
     var isMasked: Bool { self == .full }
     var isSilhouette: Bool { self == .columns }
+    /// Full-bleed: the plate fills the whole canvas so macOS's own mask rounds
+    /// it, instead of the 824-inside-1024 artwork the appiconset needs.
+    var isFullBleed: Bool { self == .flatFull }
 }
 
 private struct IconArtwork: View {
@@ -182,7 +192,9 @@ private struct IconArtwork: View {
     let parts: Parts
 
     /// Side of the rounded square, and the length one grid step maps to.
-    private var side: CGFloat { canvas * Design.artworkRatio }
+    /// Full-bleed layers fill the canvas; everything else keeps the 824/1024
+    /// margin that holds the hand-drawn outer shadow.
+    private var side: CGFloat { parts.isFullBleed ? canvas : canvas * Design.artworkRatio }
     private var unit: CGFloat { side / Design.grid }
     private var inset: CGFloat { (canvas - side) / 2 }
     private var detailed: Bool { canvas > Design.detailThreshold }
@@ -196,13 +208,24 @@ private struct IconArtwork: View {
             Color.clear
 
             if parts.drawsBackground {
-                outerShape
-                    .fill(LinearGradient(
-                        colors: [palette.backgroundTop, palette.backgroundBottom],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing))
-                    .frame(width: side, height: side)
-                    .offset(x: inset, y: inset)
+                // Full-bleed plate is a plain rectangle — macOS rounds the
+                // corners with its own mask. The appiconset path keeps drawing
+                // the squircle itself.
+                Group {
+                    if parts.isFullBleed {
+                        Rectangle().fill(LinearGradient(
+                            colors: [palette.backgroundTop, palette.backgroundBottom],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing))
+                    } else {
+                        outerShape.fill(LinearGradient(
+                            colors: [palette.backgroundTop, palette.backgroundBottom],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing))
+                    }
+                }
+                .frame(width: side, height: side)
+                .offset(x: inset, y: inset)
             }
 
             // Four identical panes — same tint, translucency and edge — drawn
@@ -385,33 +408,36 @@ private let slots: [Slot] = [16, 32, 128, 256, 512].flatMap { points in
 private let iconManifest = """
 {
   "fill" : {
-    "solid" : "display-p3:0.55294,0.56078,0.56863,1.00000"
+    "solid" : "display-p3:1.00000,1.00000,1.00000,1.00000"
   },
-  "fill-specializations" : [
-    {
-      "appearance" : "dark",
-      "value" : {
-        "solid" : "display-p3:0.24706,0.25098,0.25490,1.00000"
-      }
-    }
-  ],
   "groups" : [
     {
       "layers" : [
         {
-          "image-name" : "columns.png",
-          "name" : "Board lanes"
+          "glass-specializations" : [
+            {
+              "value" : false
+            }
+          ],
+          "image-name" : "icon-light.png",
+          "image-name-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : "icon-dark.png"
+            }
+          ],
+          "name" : "Icon"
         }
       ],
       "lighting" : "individual",
-      "name" : "Columns",
+      "name" : "Icon",
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.4
+        "opacity" : 0.0
       },
-      "specular" : true,
+      "specular" : false,
       "translucency" : {
-        "enabled" : true,
+        "enabled" : false,
         "value" : 0.5
       }
     }
@@ -491,16 +517,26 @@ do {
                 to: layers.appendingPathComponent("layer-\(name).png"))
         }
 
-        // The Icon Composer document itself. A `.icon` is just a folder with a
-        // manifest and its layer images, so it can be written here rather than
-        // clicked together in the app — which keeps it in step with the
-        // constants above instead of drifting from them.
+        // The Icon Composer document itself — this is what ships. A `.icon` is
+        // just a folder with a manifest and its layer images, so it is written
+        // here rather than clicked together in the app, which keeps it in step
+        // with the constants above.
+        //
+        // Its whole reason for existing over the simpler appiconset is
+        // light/dark: a macOS appiconset silently drops its dark entries, an
+        // `.icon` does not. The trick is that each layer image is the *fully
+        // painted* icon, one per appearance, and the manifest turns glass off —
+        // so macOS masks and composites the art as painted instead of
+        // re-lighting it, and the appearance switch just swaps which painting
+        // it shows.
         let iconBundleAssets = iconBundle.appendingPathComponent("Assets", isDirectory: true)
         try files.createDirectory(at: iconBundleAssets, withIntermediateDirectories: true)
-        try renderPNG(
-            IconArtwork(canvas: 1024, palette: .light, parts: .columns),
-            pixels: 1024,
-            to: iconBundleAssets.appendingPathComponent("columns.png"))
+        for (name, palette) in [("icon-light", Palette.light), ("icon-dark", Palette.dark)] {
+            try renderPNG(
+                IconArtwork(canvas: 1024, palette: palette, parts: .flatFull),
+                pixels: 1024,
+                to: iconBundleAssets.appendingPathComponent("\(name).png"))
+        }
         try iconManifest.write(
             to: iconBundle.appendingPathComponent("icon.json"),
             atomically: true,
