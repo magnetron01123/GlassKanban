@@ -54,6 +54,7 @@ targets:
     # into the test bundle, so no app host is needed to run them.
     sources:
       - path: GlassKanbanTests
+      - path: GlassKanban/AppAppearance.swift
       - path: GlassKanban/Models.swift
       - path: GlassKanban/StatusTagger.swift
       - path: GlassKanban/TextSanitizer.swift

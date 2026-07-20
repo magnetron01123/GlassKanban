@@ -1,9 +1,23 @@
 import SwiftUI
 import ServiceManagement
 
+/// Applies the stored appearance before the first window is on screen, so the
+/// board never flashes in the system appearance on the way to the chosen one.
+///
+/// This cannot live in `GlassKanbanApp.init()`. SwiftUI runs that before
+/// `NSApp` exists, and an early attempt to set the appearance there crashed
+/// the app on every launch — a failure the build and the unit tests both
+/// pass straight through, because it only exists at runtime.
+final class AppearanceDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        AppAppearance.stored.apply()
+    }
+}
+
 @main
 struct GlassKanbanApp: App {
     @StateObject private var store = RemindersStore()
+    @NSApplicationDelegateAdaptor(AppearanceDelegate.self) private var appearanceDelegate
 
     init() {
         Self.registerLoginItemOnFirstLaunch()
