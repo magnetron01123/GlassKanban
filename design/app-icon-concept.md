@@ -78,10 +78,22 @@ Icon Composer vergibt Schatten pro Gruppe, nie pro Ebene.
 
 ## Farben
 
-Der Ton stammt aus der App: `#DCDEE0`, das Fensterglas im laufenden Board
-gemessen. Keine Akzentfarbe — die App beansprucht keine Markenfarbe, und Teal
-ist in `Board.wipLimitTint` als Kapazitätssignal belegt. Zur Helligkeit siehe
-„Wiedererkennung" oben.
+**Weiße Platte, graue Spalten** — `#FEFEFF` oben nach `#EBEBED` unten, gemessen
+am Icon von Erinnerungen (`#FEFEFF` / `#EFEFEF`). Eine graue Platte stand in der
+Leiste neben den Systemsymbolen fremd da; Weiß stellt das Icon in dieselbe
+Familie.
+
+Das trifft nebenbei das Board besser als jede frühere Fassung: dort ist das
+Fenster hell und die Bahnen **verdunkeln** es (`Board.columnFill` ist ein
+schwarzer Wash). Genau dieses Verhältnis hat das Icon jetzt — deshalb liegen
+die Spalten als schwarze Lagen auf der Platte, nicht als weiße.
+
+Keine Akzentfarbe — die App beansprucht keine Markenfarbe, und Teal ist in
+`Board.wipLimitTint` als Kapazitätssignal belegt.
+
+Die Spalten lassen bewusst Rand: eine erste weiße Fassung füllte die Platte
+fast aus und wirkte schwer neben Erinnerungen, dessen Inhalt viel Weiß stehen
+lässt.
 
 Unterhalb von 32 px entfällt der äußere Schatten des Icons — er würde nur
 Pixel fressen, die die Silhouette braucht.

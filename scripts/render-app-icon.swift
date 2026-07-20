@@ -37,7 +37,7 @@ private enum Design {
     /// Slight overlap, not a stack. What separates the columns is the middle
     /// one's shadow falling on the two behind it — which is why it sits in its
     /// own group (Icon Composer attaches shadows per group, never per layer).
-    static let overlap: CGFloat = 8
+    static let overlap: CGFloat = 7
 
     /// Every pane carries a rim all the way round, not just a highlight on its
     /// top edge. An earlier draft lit only the top, and where the panes
@@ -52,9 +52,9 @@ private enum Design {
     /// different colour: an earlier version made it taller and tinted the
     /// outer two darker, which turned them into a different kind of object and
     /// the board reading was gone.
-    static let columnWidth: CGFloat = 44
-    static let columnTop: CGFloat = 34
-    static let columnHeight: CGFloat = 92
+    static let columnWidth: CGFloat = 38
+    static let columnTop: CGFloat = 41
+    static let columnHeight: CGFloat = 78
 
     /// Centred row: three columns less the two overlaps.
     static var rowStart: CGFloat {
@@ -90,6 +90,10 @@ private struct Pane {
 private struct Palette {
     let backgroundTop: Color
     let backgroundBottom: Color
+    /// What the pane opacities below are laid on. On a white plate the
+    /// columns have to darken it, the way the board's lanes are a black wash
+    /// on light window glass; on a dark plate they lighten it instead.
+    let paneTint: Color
     let back: Pane
     let front: Pane
     let frontShadow: Double
@@ -105,15 +109,20 @@ private struct Palette {
     /// translucent panes only read as translucent if there is something behind
     /// them to see through to. Its mid value lands on the glass tone the
     /// window shows over a neutral desktop.
+    /// White, like Reminders — its plate measures #FEFEFF at the top and
+    /// #EFEFEF at the bottom. A grey icon sat oddly among the system apps in
+    /// the Dock; white puts it in the same family, and it happens to mirror
+    /// the board better: there the window is light and the lanes darken it.
     static let light = Palette(
-        backgroundTop: Color(hex: 0xA4A7AA),
-        backgroundBottom: Color(hex: 0x707376),
-        back: Pane(fillTop: 0.26, fillBottom: 0.06,
-                   rim: Rim(highlightTop: 1.0, highlightBottom: 0.16, contact: 0.26)),
-        front: Pane(fillTop: 0.58, fillBottom: 0.28,
-                    rim: Rim(highlightTop: 1.0, highlightBottom: 0.24, contact: 0.34)),
-        frontShadow: 0.42,
-        outerShadow: 0.25)
+        backgroundTop: Color(hex: 0xFEFEFF),
+        backgroundBottom: Color(hex: 0xEBEBED),
+        paneTint: .black,
+        back: Pane(fillTop: 0.16, fillBottom: 0.26,
+                   rim: Rim(highlightTop: 0.85, highlightBottom: 0.0, contact: 0.16)),
+        front: Pane(fillTop: 0.11, fillBottom: 0.21,
+                    rim: Rim(highlightTop: 1.0, highlightBottom: 0.0, contact: 0.22)),
+        frontShadow: 0.30,
+        outerShadow: 0.22)
 
     /// Tuned against the light palette rather than derived from it: the same
     /// opacities look far weaker on a dark ground, so every value here was
@@ -121,6 +130,7 @@ private struct Palette {
     static let dark = Palette(
         backgroundTop: Color(hex: 0x434343),
         backgroundBottom: Color(hex: 0x121212),
+        paneTint: .white,
         back: Pane(fillTop: 0.12, fillBottom: 0.05,
                    rim: Rim(highlightTop: 0.65, highlightBottom: 0.18, contact: 0.35)),
         front: Pane(fillTop: 0.34, fillBottom: 0.16,
@@ -236,8 +246,8 @@ private struct IconArtwork: View {
             .fill(parts.isSilhouette
                 ? AnyShapeStyle(Color.white)
                 : AnyShapeStyle(LinearGradient(
-                    colors: [Color.white.opacity(style.fillTop),
-                             Color.white.opacity(style.fillBottom)],
+                    colors: [palette.paneTint.opacity(style.fillTop),
+                             palette.paneTint.opacity(style.fillBottom)],
                     startPoint: .top,
                     endPoint: .bottom)))
             .overlay {
