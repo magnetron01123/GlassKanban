@@ -64,17 +64,18 @@ Fläche; der Rand ist Platz für den Schatten des Icons.
 
 | Spalte | x | Breite | y | Höhe |
 |---|---|---|---|---|
-| links (Backlog) | 22 | 44 | 34 | 92 |
-| Mitte (In Arbeit) | 58 | 44 | 34 | 92 |
-| rechts (Erledigt) | 94 | 44 | 34 | 92 |
+| links (Backlog) | 35 | 34 | 36 | 88 |
+| Mitte (In Arbeit) | 63 | 34 | 36 | 88 |
+| rechts (Erledigt) | 91 | 34 | 36 | 88 |
 
-Überlappung 8, Eckenradius 10, durchgehend `.continuous` — die gleiche
+Überlappung 6, Eckenradius 9, durchgehend `.continuous` — die gleiche
 Squircle-Familie, die `Board.columnShape` verwendet. Ein kreisrunder Radius
 wäre genau das „fast nativ", vor dem `DesignSystem.swift` warnt.
 
-Die mittlere Spalte liegt vorn und trägt den tieferen Schatten. Der ist das
-Einzige, was die drei trennt — deshalb sitzt sie in einer eigenen Gruppe:
-Icon Composer vergibt Schatten pro Gruppe, nie pro Ebene.
+Die mittlere Spalte liegt vorn, hat aber **dieselben Werte** wie die beiden
+anderen — Farbe, Durchsicht, Kante, Schatten. Die Tiefe entsteht allein daraus,
+dass zwei durchscheinende Lagen übereinander dunkler werden. Das ist, was Glas
+tut, und es macht den Effekt schon bei normaler Icon-Größe sichtbar.
 
 ## Farben
 
