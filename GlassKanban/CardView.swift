@@ -22,9 +22,10 @@ struct CardView: View {
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
     @State private var settleFlash = false
-    @State private var showRenameField = false
+    @State private var isRenaming = false
     @State private var renameText = ""
     @FocusState private var isFocused: Bool
+    @FocusState private var isRenameFieldFocused: Bool
 
     /// Lanes this card can be sent to — everything except where it already is.
     private var moveTargets: [KanbanStatus] {
@@ -65,16 +66,28 @@ struct CardView: View {
         // focus (Tab, then Return to open) still works without it.
         .focusEffectDisabled()
         .focused($isFocused)
-        // Return matches what double-click does, so the keyboard path is not a
-        // lesser version of the pointer one.
+        // Return matches what a single click does, so the keyboard path is
+        // not a lesser version of the pointer one. Renaming already owns
+        // Return — the TextField's own `onSubmit` — so this steps aside.
         .onKeyPress(.return) {
+            guard !isRenaming else { return .ignored }
             openInReminders()
             return .handled
         }
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
-        .onTapGesture(count: 2) { openInReminders() }
+        // One click for the common action (open), two for the rare one
+        // (rename) — SwiftUI holds the single-tap just long enough to rule
+        // out a second one, same as Finder's icon-name click-to-rename.
+        .onTapGesture(count: 1) {
+            guard !isRenaming else { return }
+            openInReminders()
+        }
+        .onTapGesture(count: 2) {
+            guard !isRenaming else { return }
+            beginRename()
+        }
         .contextMenu {
             Button("In Erinnerungen öffnen") { openInReminders() }
             Divider()
@@ -108,10 +121,11 @@ struct CardView: View {
             Button("Umbenennen") { beginRename() }
             Button("Löschen") { store.deleteTicket(cardID: card.id) }
         }
-        .alert("Umbenennen", isPresented: $showRenameField) {
-            TextField("Titel", text: $renameText)
-            Button("Fertig") { store.renameTicket(cardID: card.id, title: renameText) }
-            Button("Abbrechen", role: .cancel) {}
+        // Losing focus commits, same as clicking away from a Finder rename —
+        // Escape (`onExitCommand` on the field itself) is the only way out
+        // that discards instead.
+        .onChange(of: isRenameFieldFocused) { _, focused in
+            if !focused { commitRename() }
         }
         .onAppear {
             // The completed card appears fresh in Erledigt with the flag
@@ -130,8 +144,7 @@ struct CardView: View {
     private var fullBody: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                titleText
-                    .font(BoardText.title)
+                titleOrField(font: BoardText.title)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -215,8 +228,7 @@ struct CardView: View {
     /// Backlog: everything needed to decide what to pull next.
     private var compactBody: some View {
         HStack(spacing: 8) {
-            titleText
-                .font(BoardText.titleCompact)
+            titleOrField(font: BoardText.titleCompact)
                 .lineLimit(1)
             Spacer(minLength: 0)
             if card.isRecurring {
@@ -232,8 +244,7 @@ struct CardView: View {
 
     /// Erledigt: the work is done — the name is the only thing left to say.
     private var minimalBody: some View {
-        titleText
-            .font(BoardText.titleCompact)
+        titleOrField(font: BoardText.titleCompact)
             .lineLimit(1)
             .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -252,6 +263,25 @@ struct CardView: View {
         // of macOS 26 and each run keeps its own styling this way.
         let marksText = Text(marks).foregroundStyle(.secondary).bold()
         return Text("\(marksText) \(base)")
+    }
+
+    /// Swaps in for `titleText` while renaming — a plain field over the same
+    /// spot the title already sits in, not a separate window. Priority marks
+    /// drop out during the edit: they describe `priority`, not `title`, and
+    /// were never something to type.
+    @ViewBuilder
+    private func titleOrField(font: Font) -> some View {
+        if isRenaming {
+            TextField("Titel", text: $renameText)
+                .font(font)
+                .textFieldStyle(.plain)
+                .focused($isRenameFieldFocused)
+                .onAppear { isRenameFieldFocused = true }
+                .onSubmit { commitRename() }
+                .onExitCommand { isRenaming = false }
+        } else {
+            titleText.font(font)
+        }
     }
 
     private var repeatIcon: some View {
@@ -275,7 +305,7 @@ struct CardView: View {
             lines.append(card.notesPreview)
         }
         lines.append(card.listName)
-        lines.append("Doppelklick öffnet Erinnerungen")
+        lines.append("Klick öffnet Erinnerungen")
         return lines.joined(separator: "\n")
     }
 
@@ -485,6 +515,14 @@ struct CardView: View {
     /// placeholder for display, never something to actually type as a title.
     private func beginRename() {
         renameText = card.title
-        showRenameField = true
+        isRenaming = true
+    }
+
+    /// Guarded so the focus-loss path (`onChange` above) and a manual Return
+    /// can't both fire for the same edit.
+    private func commitRename() {
+        guard isRenaming else { return }
+        isRenaming = false
+        store.renameTicket(cardID: card.id, title: renameText)
     }
 }

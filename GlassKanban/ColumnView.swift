@@ -130,6 +130,13 @@ struct ColumnView: View {
             alignment: .top)
         .background { columnSurface }
         .overlay { columnContour }
+        // Clicking the bare lane — not a card, not a control — is "outside"
+        // for any card mid-rename elsewhere on the board: the usual pattern
+        // is that an edit ends when you click away from it. Cards claim
+        // their own taps first, so this only ever fires on empty space.
+        .onTapGesture {
+            NSApp.keyWindow?.makeFirstResponder(nil)
+        }
         .animation(Board.dropTargetAnimation, value: showsDropFeedback)
         .dropDestination(for: String.self) { ids, _ in
             store.endDrag()
@@ -264,10 +271,8 @@ struct ColumnView: View {
     private var recurringHint: String? {
         let hidden = store.recurringHiddenCount(for: status)
         guard hidden > 0 else { return nil }
-        // "wiederkehrende" carries both numbers, so no singular branch — and
-        // dropping "Karten" keeps the qualifier shorter than the line it
-        // qualifies, which is what a qualifier should be.
-        return "\(hidden) wiederkehrende noch nicht fällig"
+        // "wiederkehrende" carries both numbers, so no singular branch needed.
+        return "\(hidden) wiederkehrende Karten"
     }
 
     // MARK: - Pieces
