@@ -12,6 +12,7 @@
 		17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */; };
 		1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1A968F6964BFEE0832A01A /* ColumnView.swift */; };
 		1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */; };
+		262B9D2A64B3478DC0B7D42F /* BoardTooltip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */; };
 		2FA0675B56569C16EB972A13 /* StreakPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B365227CBE04B748E55FE /* StreakPopover.swift */; };
 		4DDD94D9BA542BA62B842C25 /* BacklogTicketCreationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */; };
 		5C60750477A63990C6B97E35 /* EmptyBoardNotice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */; };
@@ -47,6 +48,7 @@
 		4F5178AE744F393F737442A5 /* FilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterTests.swift; sourceTree = "<group>"; };
 		616551F8C95C166758DC62DD /* TextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizer.swift; sourceTree = "<group>"; };
 		61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculator.swift; sourceTree = "<group>"; };
+		63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardTooltip.swift; sourceTree = "<group>"; };
 		6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassKanban.entitlements; sourceTree = "<group>"; };
 		73CAB35E9902F258F00D82A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyBoardNotice.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 			isa = PBXGroup;
 			children = (
 				B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */,
+				63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */,
 				9AD1B4A61352C1461953925D /* BoardView.swift */,
 				E363E5F11832E63EE2539D70 /* CardView.swift */,
 				EC1A968F6964BFEE0832A01A /* ColumnView.swift */,
@@ -208,6 +211,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E3C54C9398748DCB39B3DB3 /* BacklogTicketTargeting.swift in Sources */,
+				262B9D2A64B3478DC0B7D42F /* BoardTooltip.swift in Sources */,
 				9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */,
 				17AAD6984070753493382FA9 /* CardView.swift in Sources */,
 				1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */,

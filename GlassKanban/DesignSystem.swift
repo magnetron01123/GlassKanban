@@ -133,6 +133,23 @@ enum Board {
     /// Backlog shows this many cards before offering "N weitere anzeigen".
     static let backlogCollapsedLimit = 15
 
+    // Tooltips. Chrome, not content — so glass is right here, unlike on a
+    // card. Radius steps below the card's, because a tooltip is the smallest
+    // surface the board draws and its corner must not look wider than the
+    // paper it floats over.
+    static let tooltipRadius: CGFloat = 8
+    static let tooltipShape = RoundedRectangle(cornerRadius: tooltipRadius, style: .continuous)
+    /// Wide enough for the card tooltip's two lines, narrow enough that a
+    /// long note wraps instead of spanning the board.
+    static let tooltipMaxWidth: CGFloat = 260
+    /// Slower than a hover highlight, faster than the system's own tooltip:
+    /// long enough not to fire while the cursor crosses the board, short
+    /// enough that looking something up does not feel like waiting.
+    static let tooltipDelay: Duration = .milliseconds(450)
+    /// Deeper than a card's: this floats above the board rather than resting
+    /// on it, and the shadow is what says so.
+    static let tooltipShadow = (color: Color.black.opacity(0.22), radius: CGFloat(12), y: CGFloat(4))
+
     // Motion
     static let hoverAnimation: Animation = .easeOut(duration: 0.16)
     static let dropTargetAnimation: Animation = .easeOut(duration: 0.15)

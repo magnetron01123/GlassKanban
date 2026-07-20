@@ -207,7 +207,7 @@ struct ColumnView: View {
         // paper. The header is the thing you point at when you wonder what
         // this lane is holding.
         .contentShape(Rectangle())
-        .help(countHelp)
+        .boardTooltip(countHelp)
     }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
@@ -331,7 +331,7 @@ struct ColumnView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Neues Ticket anlegen")
-            .help("Neues Ticket anlegen")
+            .boardTooltip("Neues Ticket anlegen")
             Spacer()
         }
         .padding(.vertical, 4)

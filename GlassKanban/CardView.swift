@@ -82,10 +82,14 @@ struct CardView: View {
                 }
             }
         }
-        .help(helpText)
+        .boardTooltip(helpText)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(accessibilityLabel)
+        // `.help` used to carry this to VoiceOver as well. The notes preview
+        // is only on the tooltip for compact rows, so without it here that
+        // text would exist for sighted users alone.
+        .accessibilityHint(helpText)
         .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
         .accessibilityActions {
             ForEach(moveTargets) { target in
@@ -186,7 +190,10 @@ struct CardView: View {
                     .monospacedDigit()
             }
             .foregroundStyle(.secondary)
-            .help("Seit \(days) Tagen in dieser Spalte")
+            // The card as a whole already announces its dwell time in
+            // `accessibilityLabel`, and the row is combined into one element —
+            // so this is the tooltip only, with no accessibility to restore.
+            .boardTooltip("Seit \(days) Tagen in dieser Spalte")
         }
     }
 
@@ -236,7 +243,8 @@ struct CardView: View {
         Image(systemName: "repeat")
             .font(BoardText.glyph)
             .foregroundStyle(.secondary)
-            .help("Wiederholende Erinnerung")
+            // Likewise announced by the card's own label ("Wiederholend").
+            .boardTooltip("Wiederholende Erinnerung")
     }
 
     /// Compact rows have no room for the notes preview, so the tooltip
