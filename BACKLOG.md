@@ -54,7 +54,7 @@ Begründung, warum später (oder warum grundsätzlich nicht).
 
 ## Wiederkehrende Aufgaben (Reminders-Wiederholung)
 
-- **Verhalten wiederkehrender Erinnerungen im Board klären** — Reminders erlaubt
+- **Verhalten wiederkehrender Erinnerungen beim Abhaken klären** — Reminders erlaubt
   Wiederholungsregeln (täglich/wöchentlich/…) pro Erinnerung; wie sich das mit dem
   Status-Hashtag-Mechanismus und dem Erledigt-Zustand verträgt, ist ungeklärt. Offene Fragen:
   (1) Setzt EventKit beim Abhaken einer wiederkehrenden Erinnerung `isCompleted` überhaupt
@@ -63,11 +63,24 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   `#inbearbeitung`) in den Notizen stehen, bis die bestehende Hygiene-Pass beim nächsten Sync
   greift, oder kann das mit dem Wiederholungs-Sprung kollidieren (Karte taucht kurz in der
   falschen Spalte auf)? (3) Zählt eine wiederkehrende Erledigung überhaupt zum Streak-Zähler,
-  oder fehlt dafür schlicht ein beobachtbares `completionDate`? (4) Sollte eine Wiederholung auf
-  der Karte sichtbar sein (kleines ↻-Icon), damit es nicht überrascht, wenn eine "erledigte"
-  Karte wieder im Backlog auftaucht? Muss erst gegen echtes EventKit-Verhalten geprüft werden,
-  bevor sich daraus ein Design ableiten lässt — kein Blocker fürs MVP, aber ein bekannter
-  blinder Fleck.
+  oder fehlt dafür schlicht ein beobachtbares `completionDate`? Muss erst gegen echtes
+  EventKit-Verhalten geprüft werden — kein Blocker fürs MVP, aber ein bekannter blinder Fleck.
+  (Das ↻-Icon auf der Karte, das eine Wiederholung überhaupt erst sichtbar macht, gibt es
+  bereits — `CardView.repeatIcon` — hier geht es nur noch um das Verhalten beim Abhaken.)
+- **Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten** — heute zeigt Backlog
+  jede Erinnerung mit Datum, auch eine, die monatlich wiederkehrt und erst in drei Wochen wieder
+  dran ist. Das verwässert das Backlog mit Karten, die gerade keine echte Entscheidungsoption
+  sind (Personal-Kanban-Gedanke: eine Karte im Backlog soll etwas sein, das man als Nächstes
+  anfassen könnte — nicht Hintergrundrauschen). Entschieden: **Standard = ausgeblendet**, bis
+  die Karte in dasselbe Fälligkeitsfenster fällt, das Badges schon heute nutzen (Überfällig/
+  Heute/Diese Woche) — keine neue Fläche, keine Markierung, die Karte erscheint dann einfach mit
+  der ohnehin vorhandenen Ankunfts-Animation. Sichtbar/umschaltbar gemacht über eine **dritte
+  Zeile im bestehenden Find-Popover** ("Wiederkehrende", gleiche Bauart wie "Dringlichkeit" und
+  "Fälligkeit"): Standardwert "Verborgen bis fällig", umschaltbar auf "Immer anzeigen" — dann
+  erscheint (wie bei den anderen beiden Filtern beim Abweichen vom Standard) auch der
+  "Alles zurücksetzen"-Link. Der Standardwert selbst zählt nicht als aktive Filterung, genau wie
+  "Alle" bei den anderen beiden Zeilen nicht zählt — nur "Immer anzeigen" ist eine bewusste
+  Nutzerentscheidung. Abhängig davon, wie die Fragen oben zum Abhak-Verhalten ausgehen.
 
 ## Fensterverhalten
 
