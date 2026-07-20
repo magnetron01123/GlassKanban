@@ -143,15 +143,29 @@ Aufbau von `GlassKanban/AppIcon.icon`:
 
 - `fill`: der Plattenverlauf als `linear-gradient` (die Hell-Werte aus der
   Tabelle oben)
-- Gruppe „Storage": `storage-panes.png`
-- Gruppe „Focus": `focus-pane.png`, mit tieferem Schatten
+- Gruppe „Storage": `storage-panes.png`, Ebenenfarbe Grau 40 %,
+  Durchsicht 0,25
+- Gruppe „Focus": `focus-pane.png`, deckend weiß, tieferer Schatten
 
-Zwei Gruppen, weil Icon Composer Schatten pro Gruppe vergibt und nicht pro
-Ebene — und die Tiefenstaffelung ist die ganze Komposition.
+Zwei Gruppen, weil Icon Composer Schatten **und** Durchsicht pro Gruppe
+vergibt und nicht pro Ebene — und die beiden Rollen brauchen von beidem
+unterschiedlich viel.
 
 **Die Ebenen sind flache Silhouetten, keine Bilder.** macOS leitet Glas,
 Glanzkante und Schatten selbst daraus ab. Hätte man die gemalte Fassung
 übergeben, lägen zwei Glasbehandlungen übereinander.
+
+**Nicht alles ist Glas.** Eine Zwischenfassung hatte die Durchsicht auf beiden
+Gruppen — damit wurde das ganze Icon durchscheinend, was für ein macOS-Icon
+unüblich ist und der Doktrin der App widerspricht: `DesignSystem.swift` gibt
+Glas dem Rahmen und lässt Inhalt deckend. Die vordere Scheibe ist deshalb
+Papier wie eine Karte, die beiden dahinter sind die vertieften Bahnen.
+
+**Die Bahnen sind dunkler eingefärbt.** Blieben sie weiß wie die Vorderscheibe,
+verschmolzen alle drei bis 32 pt zu einem Klotz — die Glanzkanten und der
+Schatten, die sie bei voller Größe trennen, sind dort längst weg. Das Board
+macht dasselbe (`Board.columnFill` ist ein schwarzer Wash), nur schwächer;
+das Icon muss Größen überstehen, in denen das Board nie gezeichnet wird.
 
 Damit fällt die Hand-Arbeit an Rändern und Füllungen für das ausgelieferte
 Icon weg — sie bleibt im Generator als Referenz und als Notfall-Fallback

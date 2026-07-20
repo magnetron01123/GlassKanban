@@ -9,6 +9,9 @@
     {
       "layers" : [
         {
+          "fill" : {
+            "solid" : "display-p3:0.40000,0.40000,0.40000,1.00000"
+          },
           "image-name" : "storage-panes.png",
           "name" : "Storage lanes"
         }
@@ -22,7 +25,7 @@
       "specular" : true,
       "translucency" : {
         "enabled" : true,
-        "value" : 0.8
+        "value" : 0.25
       }
     },
     {
@@ -40,8 +43,8 @@
       },
       "specular" : true,
       "translucency" : {
-        "enabled" : true,
-        "value" : 0.8
+        "enabled" : false,
+        "value" : 0.5
       }
     }
   ],

@@ -324,9 +324,21 @@ private let slots: [Slot] = [16, 32, 128, 256, 512].flatMap { points in
 /// plus its layer images, so it stays in step with the constants above instead
 /// of drifting from them.
 ///
-/// Two groups, because Icon Composer attaches shadows per group, not per
-/// layer, and the front pane has to sit deeper than the two behind it — that
-/// depth order is the whole composition.
+/// Two groups, because Icon Composer attaches shadows *and* translucency per
+/// group, not per layer — and the two roles need different amounts of both.
+///
+/// Only the storage panes are translucent, and only slightly. Turning it on
+/// everywhere made the whole icon see-through, which is both unusual for a
+/// macOS icon and backwards for this app: `DesignSystem.swift` puts glass on
+/// the chrome and keeps content opaque, so the front pane is paper the way a
+/// card is, and the panes behind it are the recessed lanes.
+///
+/// Those panes also carry their own darker fill. Left white like the front
+/// one, all three merged into a single blob by 32pt — the specular edges and
+/// the shadow that separate them at full size are gone by then. Darkening
+/// them is what the board does anyway (`Board.columnFill` is a black wash),
+/// just pushed further than the UI needs it, because an icon has to survive
+/// sizes the board never renders at.
 ///
 /// The plate carries the same gradient as the painted variant. The dark and
 /// tinted appearances are deliberately left to macOS: a compiled catalog holds
@@ -351,6 +363,9 @@ private let iconManifest = """
     {
       "layers" : [
         {
+          "fill" : {
+            "solid" : "display-p3:0.40000,0.40000,0.40000,1.00000"
+          },
           "image-name" : "storage-panes.png",
           "name" : "Storage lanes"
         }
@@ -364,7 +379,7 @@ private let iconManifest = """
       "specular" : true,
       "translucency" : {
         "enabled" : true,
-        "value" : 0.8
+        "value" : 0.25
       }
     },
     {
@@ -382,8 +397,8 @@ private let iconManifest = """
       },
       "specular" : true,
       "translucency" : {
-        "enabled" : true,
-        "value" : 0.8
+        "enabled" : false,
+        "value" : 0.5
       }
     }
   ],
