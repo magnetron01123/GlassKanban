@@ -329,16 +329,12 @@ private let slots: [Slot] = [16, 32, 128, 256, 512].flatMap { points in
 /// depth order is the whole composition.
 ///
 /// The plate carries the same gradient as the painted variant. The dark and
-/// tinted appearances are left to macOS: a compiled catalog contains distinct
-/// `NSAppearanceNameDarkAqua` and `ISAppearanceTintable` renditions even when
-/// the manifest says nothing about them, which is exactly what a hand-painted
-/// asset catalog cannot do.
-///
-/// A root-level `fill-specializations` override was tried and dropped again.
-/// actool accepts the key without complaint, but a control build with a
-/// deliberately red dark fill produced a byte-identical dark rendition — so it
-/// is being ignored, and shipping it would only suggest a control that is not
-/// actually there.
+/// tinted appearances are deliberately left to macOS: a compiled catalog holds
+/// separate layer stacks for `NSAppearanceNameAqua`,
+/// `NSAppearanceNameDarkAqua` and `ISAppearanceTintable` even when the manifest
+/// says nothing about them. Letting the system derive them is the point of the
+/// format — every icon then goes through the same tuned pipeline — and it is
+/// exactly what a hand-painted asset catalog cannot do.
 ///
 /// `display-p3` values equal the sRGB ones here because every colour is
 /// neutral: the two spaces share a transfer function and a neutral axis, so

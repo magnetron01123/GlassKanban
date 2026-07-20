@@ -159,19 +159,36 @@ Icon weg — sie bleibt im Generator als Referenz und als Notfall-Fallback
 
 ### Hell, Dunkel und Getönt
 
-Der kompilierte Katalog enthält je neun Renditions für
+Der kompilierte Katalog enthält drei getrennte Ebenenstapel — je einen für
 `NSAppearanceNameAqua`, `NSAppearanceNameDarkAqua` und `ISAppearanceTintable`
-— auch dann, wenn das Manifest nichts über sie sagt. Das System leitet sie ab.
+— auch dann, wenn das Manifest nichts über sie sagt. **Eine Dunkelvariante ist
+also vorhanden; macOS leitet sie ab.** Dazu kommen sieben flach gerenderte
+Größen unter `NSAppearanceNameSystem`.
 
-Ein Versuch, die Dunkelvariante über `fill-specializations` auf oberster Ebene
-selbst zu setzen, wurde wieder verworfen: `actool` nimmt den Schlüssel
-kommentarlos an, aber ein Kontrollbau mit absichtlich **rotem** Dunkel-Fill
-erzeugte eine byte-identische Dunkel-Rendition. Der Schlüssel wirkt dort also
-nicht, und ihn auszuliefern würde eine Kontrolle vortäuschen, die es nicht gibt.
+Das ist bewusst so gelassen und nicht überschrieben. Der Sinn von Liquid Glass
+ist, dass alle Icons dieselbe, vom System abgestimmte Ableitung durchlaufen;
+eine neutrale Platte mit neutralen Silhouetten ist genau die Eingabe, für die
+diese Ableitung gedacht ist. Ein eigener Dunkel-Entwurf würde das Icon weniger
+nativ machen, nicht mehr.
 
-Die Dunkelvariante lässt sich mit den vorhandenen Werkzeugen nicht offscreen
-rendern (`assetutil` kann Renditions nur auflisten, nicht extrahieren). Ein
-Blick über Systemeinstellungen → Erscheinungsbild ist die verbleibende Prüfung.
+**Grenze der Prüfbarkeit.** Wie die Dunkelvariante aussieht, lässt sich mit den
+vorhandenen Werkzeugen nicht offscreen zeigen: die Stapel sind
+`_CUILayerStackRendition`, die nur der System-Compositor flachrechnet, und
+`assetutil` kann Renditions ohnehin nur auflisten. Ein Umschalten unter
+Systemeinstellungen → Erscheinungsbild ist die verbleibende Prüfung.
+
+Was dagegen belegt ist: Ebenenfarben schlagen durch. Zwei Kontrollbauten mit
+grauem und rotem Ebenen-`fill` ergaben, aus dem Katalog extrahiert, Scheiben in
+RGB 174/174/175 beziehungsweise 246/49/46. Falls die Dunkelvariante je bewusst
+gestaltet werden soll, ist `fill-specializations` auf **Ebenen**-Ebene der Weg
+(so macht es auch das einzige `.icon`-Beispiel, das sich auf dem System finden
+ließ) — die Wirkung wäre dann aber nur durch Umschalten der Erscheinung zu
+kontrollieren.
+
+Eine frühere Fassung dieses Dokuments behauptete, ein Override auf oberster
+Ebene werde nachweislich ignoriert. Das war ein Fehlschluss: gemessen wurde die
+`SizeOnDisk` des Ebenenstapels, und die ist eine Beschreibungsgröße, die sich
+mit Farben gar nicht ändert. Ob der Schlüssel dort wirkt, ist schlicht ungeklärt.
 
 ## Erzeugung
 
