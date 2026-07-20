@@ -222,21 +222,38 @@ struct ColumnView: View {
         return "\(cards.count)"
     }
 
-    /// One line each: the tooltip ranks the first line above the rest, and
-    /// what the lane holds is the statement while what it is holding back is
-    /// the qualifier.
+    /// One shape for all four lanes: a lead line stating what the lane holds,
+    /// then at most a couple of short qualifiers, one per line.
+    ///
+    /// They used to be four different sentences in three different builds —
+    /// Erledigt opened with today's completions while the others opened with a
+    /// count, two lanes folded a second fact in behind a "·" and a third used
+    /// an em dash. The panel ranks lines, so a second fact belongs on a second
+    /// line rather than trailing the first behind a separator.
     private var countHelp: String {
-        [countSummary, recurringHint].compactMap { $0 }.joined(separator: "\n")
+        ([countSummary] + countDetails).joined(separator: "\n")
     }
 
+    /// Every lane opens the same way, so the four read as one family.
     private var countSummary: String {
-        if status == .done {
-            return "\(todayCount) heute erledigt · \(cards.count) sichtbar"
-        }
         guard let wipLimit else { return "\(cards.count) Karten" }
-        return isOverLimit
-            ? "\(cards.count) von \(wipLimit) Karten — Limit überschritten"
-            : "\(cards.count) von \(wipLimit) Karten · lieber abschließen als stapeln"
+        return "\(cards.count) von \(wipLimit) Karten"
+    }
+
+    private var countDetails: [String] {
+        var details: [String] = []
+        if status == .done, todayCount > 0 {
+            details.append("\(todayCount) heute erledigt")
+        }
+        if isOverLimit {
+            details.append("Limit überschritten")
+        } else if wipLimit != nil {
+            details.append("Lieber abschließen als stapeln")
+        }
+        if let recurringHint {
+            details.append(recurringHint)
+        }
+        return details
     }
 
     /// What the count is leaving out. The capsule states what the lane shows,
@@ -247,9 +264,10 @@ struct ColumnView: View {
     private var recurringHint: String? {
         let hidden = store.recurringHiddenCount(for: status)
         guard hidden > 0 else { return nil }
-        return hidden == 1
-            ? "1 wiederkehrende Karte noch nicht fällig"
-            : "\(hidden) wiederkehrende Karten noch nicht fällig"
+        // "wiederkehrende" carries both numbers, so no singular branch — and
+        // dropping "Karten" keeps the qualifier shorter than the line it
+        // qualifies, which is what a qualifier should be.
+        return "\(hidden) wiederkehrende noch nicht fällig"
     }
 
     // MARK: - Pieces

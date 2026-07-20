@@ -203,21 +203,16 @@ private struct BoardTooltipLabel: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
 
-    /// Measured with the very fonts used to draw, so wrapping can never
-    /// disagree with layout. Built from NSFont for exactly that reason:
-    /// `.frame(maxWidth:)` under an outer `.fixedSize()` lays the text out at
-    /// its ideal single-line width and *then* clips it to the cap — which is
-    /// what truncated these tooltips. Measuring first removes the guesswork.
-    private static let leadFont = NSFont.systemFont(ofSize: 11.5, weight: .medium)
-    private static let detailFont = NSFont.systemFont(ofSize: 11)
-
     private var lines: [String] {
         text.components(separatedBy: .newlines).filter { !$0.isEmpty }
     }
 
+    /// Measured in the same faces it draws with — `.frame(maxWidth:)` under an
+    /// outer `.fixedSize()` lays text out at its ideal single-line width and
+    /// *then* clips it to the cap, which is what truncated these tooltips.
     private var width: CGFloat {
         let widest = lines.enumerated().reduce(CGFloat.zero) { widest, entry in
-            let font = entry.offset == 0 ? Self.leadFont : Self.detailFont
+            let font = entry.offset == 0 ? BoardText.tooltipLeadFont : BoardText.tooltipDetailFont
             let line = (entry.element as NSString).size(withAttributes: [.font: font]).width
             return max(widest, line)
         }
@@ -226,10 +221,10 @@ private struct BoardTooltipLabel: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
                 Text(line)
-                    .font(Font(index == 0 ? Self.leadFont : Self.detailFont))
+                    .font(index == 0 ? BoardText.tooltipLead : BoardText.tooltipDetail)
                     .foregroundStyle(index == 0 ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                     .fixedSize(horizontal: false, vertical: true)
             }

@@ -193,6 +193,20 @@ enum BoardText {
     static let glyph = Font.system(size: 9, weight: .semibold)
     /// A single emphasised number — the streak counter.
     static let value = Font.system(size: 12, weight: .semibold)
+
+    // Tooltip lines. Both 11pt — the rank comes from weight and colour, as
+    // everywhere else on this board. The first draft set the lead at 11.5
+    // against 11, which is both off the macOS grid (11/12/13) and exactly the
+    // half-point distinction this scale exists to prevent.
+    //
+    // Declared as NSFont because the tooltip measures its own text before
+    // drawing it, and a measurement taken in a different font than the one
+    // drawn is how text ends up clipped. The SwiftUI faces are derived from
+    // these, so the two cannot drift apart.
+    static let tooltipLeadFont = NSFont.systemFont(ofSize: 11, weight: .medium)
+    static let tooltipDetailFont = NSFont.systemFont(ofSize: 11)
+    static let tooltipLead = Font(tooltipLeadFont)
+    static let tooltipDetail = Font(tooltipDetailFont)
 }
 
 /// Subtle trackpad haptics — a sensory reward for moving and completing work.
