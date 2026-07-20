@@ -283,7 +283,7 @@ final class RemindersStore: ObservableObject {
         }
     }
 
-    // MARK: - Writing (the app's only write: moving a card)
+    // MARK: - Writing
 
     /// Moves a card to another column. Returns the column it came from if
     /// anything actually changed, so the UI can give feedback (haptics) only
@@ -360,6 +360,40 @@ final class RemindersStore: ObservableObject {
             includedCalendarIDsInDisplayOrder: includedIDs
         ) else { return nil }
         return reminderCalendars.first { $0.calendarIdentifier == targetID }
+    }
+
+    /// Deletes a reminder outright, no confirmation — recoverable from
+    /// Reminders' own "Zuletzt gelöscht" for a while, same as deleting it
+    /// there directly.
+    func deleteTicket(cardID: String) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
+        do {
+            try eventStore.remove(reminder, commit: true)
+        } catch {
+            scheduleRefresh()
+            return
+        }
+        cards.removeAll { $0.id == cardID }
+        scheduleRefresh()
+    }
+
+    /// Renames a ticket in place. The one piece of content Glass Kanban
+    /// writes directly rather than handing off to Reminders — the title is
+    /// short, has no formatting, and the round trip via a deep link for a
+    /// single-line edit was worse than just doing it.
+    func renameTicket(cardID: String, title: String) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
+        reminder.title = title
+        do {
+            try eventStore.save(reminder, commit: true)
+        } catch {
+            scheduleRefresh()
+            return
+        }
+        if let index = cards.firstIndex(where: { $0.id == cardID }) {
+            cards[index].title = title
+        }
+        scheduleRefresh()
     }
 
     /// Marks cards as just-completed for ~0.7 s so their views can play the

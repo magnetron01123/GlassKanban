@@ -85,11 +85,11 @@ enum CardDensity {
 }
 
 /// Immutable display model for one card, derived from an `EKReminder`.
-/// The board never edits content — only `status`/`completionDate` change
-/// locally (optimistic update) until the next EventKit refresh.
+/// `status`/`completionDate`/`title` change locally (optimistic update)
+/// until the next EventKit refresh confirms them.
 struct KanbanCard: Identifiable, Equatable {
     let id: String
-    let title: String
+    var title: String
     /// One line, for compact rows and tooltips.
     let notesPreview: String
     /// Several lines, for the roomier cards in the working lanes.
