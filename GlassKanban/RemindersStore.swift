@@ -3,9 +3,10 @@ import SwiftUI
 import AppKit
 
 /// The single data layer of the app. Reads reminders via EventKit, derives
-/// `KanbanCard`s, and performs the only write operations the app has:
-/// moving a card between columns (rewriting the status hashtag and/or
-/// `isCompleted`) plus tag hygiene. All app data lives in Reminders.
+/// `KanbanCard`s, and performs every write the app has: moving a card
+/// between columns (rewriting the status hashtag and/or `isCompleted`),
+/// editing a ticket's title/notes/due date/priority, tag hygiene, and
+/// ticket creation/deletion. All app data lives in Reminders.
 @MainActor
 final class RemindersStore: ObservableObject {
 
@@ -396,6 +397,79 @@ final class RemindersStore: ObservableObject {
         scheduleRefresh()
     }
 
+    /// Working copy for `TicketEditSheet`, read fresh from EventKit rather
+    /// than carried on `KanbanCard` — the full notes text is only ever
+    /// needed while a sheet is open, not for every card on the board.
+    func loadEditableTicket(cardID: String) -> EditableTicket? {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
+        let components = reminder.dueDateComponents
+        return EditableTicket(
+            title: reminder.title ?? "",
+            notes: StatusTagger.removingTags(reminder.notes ?? ""),
+            dueDate: components.flatMap { Foundation.Calendar.current.date(from: $0) },
+            hasDueTime: components?.hour != nil,
+            priority: reminder.priority,
+            calendarID: reminder.calendar?.calendarIdentifier ?? "")
+    }
+
+    /// Lists a card can be moved to from the edit sheet: writable, and not
+    /// hidden from the board — moving a card into an excluded list would
+    /// make it vanish, which is not what picking a list should mean.
+    var selectableCalendars: [EKCalendar] {
+        reminderCalendars.filter {
+            $0.allowsContentModifications && !excludedCalendarIDs.contains($0.calendarIdentifier)
+        }
+    }
+
+    /// Writes back the fields `TicketEditSheet` lets the user touch. The
+    /// status hashtag is reapplied for the card's current column — this
+    /// method never changes status, `move` does that — so a content edit
+    /// can never accidentally relocate the card.
+    func updateTicket(
+        cardID: String,
+        title: String,
+        notes: String,
+        dueDate: Date?,
+        hasDueTime: Bool,
+        priority: Int,
+        calendarID: String
+    ) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder,
+              let index = cards.firstIndex(where: { $0.id == cardID }) else { return }
+        let status = cards[index].status
+        let rewrittenNotes = StatusTagger.rewrittenNotes(notes, for: status)
+        // Without a time of day the reminder stays all-day, the way Reminders
+        // itself models it (see `EditableTicket.hasDueTime`).
+        let dueFields: Set<Foundation.Calendar.Component> =
+            hasDueTime ? [.year, .month, .day, .hour, .minute] : [.year, .month, .day]
+        let newCalendar = eventStore.calendar(withIdentifier: calendarID)
+        reminder.title = title
+        reminder.notes = rewrittenNotes
+        reminder.dueDateComponents = dueDate.map {
+            Foundation.Calendar.current.dateComponents(dueFields, from: $0)
+        }
+        reminder.priority = priority
+        if let newCalendar, newCalendar.calendarIdentifier != reminder.calendar?.calendarIdentifier {
+            reminder.calendar = newCalendar
+        }
+        do {
+            try eventStore.save(reminder, commit: true)
+        } catch {
+            scheduleRefresh()
+            return
+        }
+        cards[index].title = title
+        cards[index].notesPreview = TextSanitizer.notesPreview(rewrittenNotes)
+        cards[index].notesExcerpt = TextSanitizer.notesExcerpt(rewrittenNotes)
+        cards[index].dueDate = dueDate
+        cards[index].priority = priority
+        if let newCalendar {
+            cards[index].listName = newCalendar.title
+            cards[index].listColor = Color(nsColor: newCalendar.color ?? .controlAccentColor)
+        }
+        scheduleRefresh()
+    }
+
     /// Marks cards as just-completed for ~0.7 s so their views can play the
     /// settle animation, then clears the flags.
     private func flagRecentlyCompleted(_ ids: Set<String>) {
@@ -419,8 +493,10 @@ final class RemindersStore: ObservableObject {
         draggingCardID = nil
     }
 
-    /// Opens the Reminders app (where all tasks are created and edited — the
-    /// board itself is read-only apart from drag & drop).
+    /// Opens the Reminders app — the fallback when a deep link can't resolve
+    /// a specific reminder (e.g. local, non-synced lists), and still the
+    /// place list/calendar assignment is managed since the board doesn't
+    /// offer that.
     func openRemindersApp() {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.reminders") else { return }
         NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())

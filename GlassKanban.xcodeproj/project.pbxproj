@@ -42,6 +42,7 @@
 		D5D9047BF7E12AD928F47F76 /* CardSortingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */; };
 		F02B830CE81DFD65A6C33E55 /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
 		F497DB173B495A88ADCD4821 /* RemindersStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DFB23226AD6A320E58F33 /* RemindersStore.swift */; };
+		69E9DDBAE82E7D47C573E42A /* TicketEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 653BA1AE1FF06F52B61EEDBF /* TicketEditSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +69,7 @@
 		C67BD228B20A88109D18DAA5 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		C8099603D0D48B34633EB69D /* StatusTagger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTagger.swift; sourceTree = "<group>"; };
 		D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklogTicketCreationTests.swift; sourceTree = "<group>"; };
+		653BA1AE1FF06F52B61EEDBF /* TicketEditSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketEditSheet.swift; sourceTree = "<group>"; };
 		DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSortingTests.swift; sourceTree = "<group>"; };
 		E363E5F11832E63EE2539D70 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		E38DFB23226AD6A320E58F33 /* RemindersStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersStore.swift; sourceTree = "<group>"; };
@@ -131,6 +133,7 @@
 				61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */,
 				1C6B365227CBE04B748E55FE /* StreakPopover.swift */,
 				616551F8C95C166758DC62DD /* TextSanitizer.swift */,
+				653BA1AE1FF06F52B61EEDBF /* TicketEditSheet.swift */,
 			);
 			path = GlassKanban;
 			sourceTree = "<group>";
@@ -252,6 +255,7 @@
 				17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */,
 				2FA0675B56569C16EB972A13 /* StreakPopover.swift in Sources */,
 				9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */,
+				69E9DDBAE82E7D47C573E42A /* TicketEditSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -27,6 +27,6 @@
 	<key>NSHumanReadableCopyright</key>
 	<string></string>
 	<key>NSRemindersFullAccessUsageDescription</key>
-	<string>Glass Kanban zeigt deine Erinnerungen als Kanban-Board an und benötigt dafür Lesezugriff auf deine Erinnerungen.</string>
+	<string>Glass Kanban zeigt deine Erinnerungen als Kanban-Board an und liest sowie bearbeitet dafür deine Erinnerungen.</string>
 </dict>
 </plist>

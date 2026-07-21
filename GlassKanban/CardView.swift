@@ -24,6 +24,7 @@ struct CardView: View {
     @State private var settleFlash = false
     @State private var isRenaming = false
     @State private var renameText = ""
+    @State private var isEditing = false
     @FocusState private var isFocused: Bool
     @FocusState private var isRenameFieldFocused: Bool
 
@@ -71,24 +72,28 @@ struct CardView: View {
         // Return — the TextField's own `onSubmit` — so this steps aside.
         .onKeyPress(.return) {
             guard !isRenaming else { return .ignored }
-            openInReminders()
+            beginEdit()
             return .handled
         }
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
-        // One click for the common action (open), two for the rare one
+        // One click for the common action (edit), two for the rare one
         // (rename) — SwiftUI holds the single-tap just long enough to rule
         // out a second one, same as Finder's icon-name click-to-rename.
         .onTapGesture(count: 1) {
             guard !isRenaming else { return }
-            openInReminders()
+            beginEdit()
         }
         .onTapGesture(count: 2) {
             guard !isRenaming else { return }
             beginRename()
         }
+        .sheet(isPresented: $isEditing) {
+            TicketEditSheet(card: card).environmentObject(store)
+        }
         .contextMenu {
+            Button("Bearbeiten") { beginEdit() }
             Button("In Erinnerungen öffnen") { openInReminders() }
             Divider()
             // Drag & drop is the accelerator; this is the route that works
@@ -111,6 +116,7 @@ struct CardView: View {
         // is only on the tooltip for compact rows, so without it here that
         // text would exist for sighted users alone.
         .accessibilityHint(helpText)
+        .accessibilityAction(named: "Bearbeiten") { beginEdit() }
         .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
         .accessibilityActions {
             ForEach(moveTargets) { target in
@@ -305,7 +311,7 @@ struct CardView: View {
             lines.append(card.notesPreview)
         }
         lines.append(card.listName)
-        lines.append("Klick öffnet Erinnerungen")
+        lines.append("Klick öffnet Bearbeiten")
         return lines.joined(separator: "\n")
     }
 
@@ -500,9 +506,17 @@ struct CardView: View {
 
     // MARK: - Actions
 
-    /// Editing happens in the Reminders app (the board is read-only apart from
-    /// drag & drop). Deep link to this reminder; if none resolves, at least
-    /// bring Reminders to the front.
+    /// A click opens the in-app editor now — title, notes, due date and
+    /// priority all live in GlassKanban itself.
+    private func beginEdit() {
+        isEditing = true
+    }
+
+    /// Escape hatch to the native app, still needed for anything the sheet
+    /// doesn't cover (e.g. moving a ticket to a different list). Deep-links
+    /// to this reminder when possible; local (non-synced) reminders have no
+    /// public identifier to link to, so this falls back to simply bringing
+    /// Reminders to the front.
     private func openInReminders() {
         if let url = store.deepLinkURL(forCardID: card.id),
            NSWorkspace.shared.open(url) {
