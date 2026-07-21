@@ -90,7 +90,6 @@ struct BoardView: View {
             // an offer, not an instruction.
             Text("Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?")
         }
-        .overlay { editorOverlay }
         // Board-level for the same reason as the alert above: the failure
         // surfaces from `TicketEditSheet`'s own close, after that sheet is
         // already gone, so nowhere on the sheet itself could show it.
@@ -99,46 +98,6 @@ struct BoardView: View {
         } message: { failure in
             Text(failure.message)
         }
-    }
-
-    // MARK: - Ticket editor
-
-    /// The editor, centred over a dimmed board — presented here rather than by
-    /// the card, so it opens in the same place every time (see
-    /// `RemindersStore.editingCardID`).
-    ///
-    /// The scrim is what makes a click beside the panel close it, and it is
-    /// deliberately faint: enough to sink the board a step and catch the
-    /// click, not so much that the card being edited stops being visible in
-    /// its lane. It also blocks drags underneath, which a board that is
-    /// mid-edit should not accept anyway.
-    @ViewBuilder
-    private var editorOverlay: some View {
-        if let card = editingCard {
-            ZStack {
-                Rectangle()
-                    .fill(.black.opacity(0.18))
-                    .ignoresSafeArea()
-                    .contentShape(Rectangle())
-                    .onTapGesture { store.editingCardID = nil }
-                    .accessibilityLabel("Editor schließen")
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityAction { store.editingCardID = nil }
-
-                TicketEditSheet(card: card) { store.editingCardID = nil }
-                    .environmentObject(store)
-            }
-            .transition(.opacity)
-        }
-    }
-
-    /// Resolved from the store on every change, so an edit that lands from
-    /// Reminders while the panel is open is reflected rather than frozen —
-    /// and so a card deleted elsewhere closes the editor instead of leaving
-    /// it editing something that no longer exists.
-    private var editingCard: KanbanCard? {
-        guard let id = store.editingCardID else { return nil }
-        return store.cards.first { $0.id == id }
     }
 
     private var overflowBinding: Binding<Bool> {

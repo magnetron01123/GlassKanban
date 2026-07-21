@@ -49,13 +49,9 @@ final class RemindersStore: ObservableObject {
 
     /// The card currently open in the editor, if any.
     ///
-    /// Board-level for the same reason as `pendingOverflow`: the editor is
-    /// presented once, centred over the whole board, rather than by the card
-    /// that opened it. Anchoring it to the card made its position a function
-    /// of where that card happened to sit — a ticket near the top pushed the
-    /// panel over the title bar, one in the last lane pushed it off to the
-    /// side — and an editor that lands somewhere different every time is one
-    /// the eye has to hunt for.
+    /// Here rather than in `CardView`'s own state so exactly one editor can
+    /// be open at a time: opening a second card closes the first, instead of
+    /// two popovers arguing over the same reminder.
     @Published var editingCardID: String?
 
     /// A card that just pushed its lane past the limit, awaiting an answer.
