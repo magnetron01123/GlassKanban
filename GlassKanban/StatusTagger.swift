@@ -87,8 +87,10 @@ enum StatusTagger {
 
     /// Removes all status tags. Only lines that actually contained a tag are
     /// re-tidied (collapsed double spaces, trimmed) — untouched user lines
-    /// are preserved character-for-character.
-    private static func removingTags(_ text: String) -> String {
+    /// are preserved character-for-character. Also used by `TicketEditSheet`
+    /// to show notes without the hidden hashtag; unlike `TextSanitizer`,
+    /// URLs are left alone since here they're real, editable content.
+    static func removingTags(_ text: String) -> String {
         text.components(separatedBy: "\n")
             .map { line in
                 var cleaned = line
