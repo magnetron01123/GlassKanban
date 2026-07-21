@@ -2,46 +2,37 @@ import SwiftUI
 import EventKit
 import AppKit
 
-/// The ticket inspector: click a card, and its fields grow out of it.
-///
-/// **Concept.** This is the shape every Apple app gives "click an item, see
-/// and change its details" — Reminders' ⓘ popover, Calendar's event popover.
-/// A popover anchored to the item, its fields on the popover's own material,
-/// and no OK button: edits are live and clicking away commits them.
-///
-/// Three things follow from that, each of which this view got wrong before:
-///
-/// - **No card inside.** It used to draw a paper card within the popover,
-///   which put two surfaces on screen behind one piece of content and left
-///   the board glinting through the ring between them. The fields now sit
-///   directly on the popover, so there is one surface — and separating that
-///   surface from the board is the popover's own shadow, which the system
-///   calibrates for exactly this.
-/// - **No "Fertig".** A dismissal button is what made this read as a dialog
-///   wearing a card's clothes. Reminders has none; neither does this. What
-///   remains at the foot is a quiet link out to the native app, which is
-///   chrome in a popover and was nonsense on a card.
-/// - **Anchored, not centred.** A centred panel severed the one thing the
-///   user needs to know — *which* ticket is open. The popover's arrow says it
-///   without a word. It is also why this stays compact: a short popover is
-///   rarely forced away from the card it belongs to.
+/// Edits a reminder directly in GlassKanban, styled as the very card it
+/// opened from — same shape, fill, border, zone dividers and list stripe as
+/// `CardView.fullBody`. What you see is what you get: this is not a form
+/// about the card, it *is* the card, made editable.
 ///
 /// Every field carries a visible caption. Placeholders vanish the moment
 /// something is typed, which left the user guessing what a filled field
 /// actually meant; a caption stays.
 ///
-/// `save()` runs in `.onDisappear`, so every route out — clicking away, the
-/// link to Reminders — persists the edit.
+/// No Sichern/Abbrechen — like Reminders.app's own quick-look popover, every
+/// change is live and closing is what persists it (`save()` runs in
+/// `.onDisappear`, regardless of how it closes).
+///
+/// Presented by the board, centred, over a dimmed backdrop (see
+/// `BoardView.editorOverlay`) — not anchored to the card that opened it. An
+/// anchored panel put its own position at the mercy of where that card
+/// happened to sit: a ticket near the top pushed it over the title bar, one
+/// in the last lane pushed it off to the side. Centred, it is in the same
+/// place every time. A click on the backdrop closes it, as do "Fertig" and
+/// Return.
 ///
 /// **Escape does not close it, and that is a known defect.** AppKit gives the
-/// title field first responder as the popover opens, and a focused
+/// title field first responder as the editor opens, and a focused
 /// NSTextField consumes the key for its own "abort editing" instead of
-/// letting it travel up. Measured, not assumed: Return dismisses from the
-/// same focused field, so key equivalents do arrive — Escape specifically is
-/// eaten. `.onExitCommand`, a local `NSEvent` monitor, a hidden button
+/// letting it travel up. Measured, not assumed: Return reaches "Fertig" from
+/// the same focused field, so key equivalents do arrive — Escape specifically
+/// is eaten. `.onExitCommand`, a local `NSEvent` monitor, a hidden button
 /// carrying `.keyboardShortcut(.cancelAction)`, and removing
-/// `FirstResponderNeutralizer` altogether were all tried and all failed; the
-/// last of those rules the neutralizer out as the cause.
+/// `FirstResponderNeutralizer` altogether were all tried against the previous
+/// popover presentation and all failed; the last of those rules the
+/// neutralizer out as the cause.
 struct TicketEditSheet: View {
     let card: KanbanCard
 
@@ -72,20 +63,33 @@ struct TicketEditSheet: View {
     /// with blank fields.
     @State private var isLoaded = false
 
+    /// One surface, edge to edge.
+    ///
+    /// The card used to be inset by 20pt inside a popover, which put two
+    /// backgrounds on screen behind one piece of content: an opaque rectangle
+    /// floating in a ring of glass, with the board showing through the ring.
+    /// That doubling is exactly what this board's depth model exists to
+    /// prevent. The paper now fills the panel, and the panel is the card.
+    ///
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
             header
+            zoneDivider
             notesZone
-            Divider()
+            zoneDivider
             factsZone
-            Divider()
-            openInRemindersLink
         }
-        // The popover's own inset and material carry this — no fill, no
-        // border, no shadow of its own. Whatever this view draws behind
-        // itself becomes a second surface inside the first.
-        .padding(14)
-        .frame(width: 320)
+        .frame(width: 420)
+        .background(cardFill)
+        .overlay(alignment: .leading) { listStripe }
+        // The card's own contour, back now that nothing else supplies one:
+        // a popover brought its shape, border and shadow with it, and this
+        // is presented on the bare board. Same shape as every card on it,
+        // because that is what this is.
+        .clipShape(Board.cardShape)
+        .overlay { Board.cardShape.strokeBorder(Board.cardBorder(contrast)) }
+        .shadow(color: Board.cardShadowResting.color, radius: Board.cardShadowResting.radius, y: Board.cardShadowResting.y)
+        .shadow(color: .black.opacity(0.22), radius: 30, y: 12)
         // macOS assigns a freshly presented popover's first eligible text
         // field as first responder on its own — before anything SwiftUI's own
         // focus system can do about it. Both `@FocusState` (however it was
@@ -106,28 +110,46 @@ struct TicketEditSheet: View {
         }
     }
 
-    /// The one action here, and it is a way *out* — so it is a link, the
-    /// quietest control the platform has. There is deliberately nothing
-    /// beside it: a button that only closes the popover would be the dialog
-    /// framing this design dropped.
-    private var openInRemindersLink: some View {
-        Button("In Erinnerungen öffnen") {
-            opensRemindersOnClose = true
-            onClose()
+    /// The card carries no buttons.
+    ///
+    /// It had two — "Fertig" and a link out to Reminders — and they were what
+    /// made a card read as a dialog wearing a card's clothes. Nothing you pin
+    /// to a wall has an OK button. Closing is done by putting the card back
+    /// (a click on the board behind it), and the one remaining action is the
+    /// hand-off to the native app, which is a *link* and therefore belongs
+    /// where links live on a card: a small mark in the corner, the same place
+    /// a real ticket carries its reference number.
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            VStack(alignment: .leading, spacing: 3) {
+                fieldCaption("Titel")
+                // Empty placeholder: the caption above already names the
+                // field, and a second "Titel" inside it just said the same
+                // thing twice.
+                TextField("", text: $title)
+                    .textFieldStyle(.plain)
+                    .font(BoardText.title)
+            }
+            openInRemindersMark
         }
-        .buttonStyle(.link)
-        .font(BoardText.body)
+        .padding(EdgeInsets(top: 11, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            fieldCaption("Titel")
-            // Empty placeholder: the caption above already names the field,
-            // and a second "Titel" inside it just said the same thing twice.
-            TextField("", text: $title)
-                .textFieldStyle(.plain)
-                .font(BoardText.title)
+    /// Sits where `CardView.fullBody` puts its dwell-time label — the corner
+    /// a card keeps for the things that are *about* the ticket rather than
+    /// part of it.
+    private var openInRemindersMark: some View {
+        Button {
+            opensRemindersOnClose = true
+            onClose()
+        } label: {
+            Image(systemName: "arrow.up.forward.app")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
         }
+        .buttonStyle(.plain)
+        .help("In Erinnerungen öffnen")
+        .accessibilityLabel("In Erinnerungen öffnen")
     }
 
     private var notesZone: some View {
@@ -138,15 +160,12 @@ struct TicketEditSheet: View {
             // A field that grows with its content sidesteps the scroll view
             // entirely for the common case (short notes), matching how
             // Reminders.app's own notes field behaves.
-            //
-            // Two lines at rest rather than three: every line reserved here is
-            // a line of height the popover has to find beside the card, and
-            // height is what pushed the old panel off its anchor.
             TextField("", text: $notes, axis: .vertical)
                 .font(BoardText.body)
                 .textFieldStyle(.plain)
-                .lineLimit(2...5)
+                .lineLimit(3...8)
         }
+        .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 8, trailing: Board.cardInsetTrailing))
     }
 
     /// The card's facts, one labelled row each — from the most stable
@@ -160,6 +179,7 @@ struct TicketEditSheet: View {
             factRow("Dringlichkeit") { priorityControl }
             factRow("Fälligkeit") { dueDateControl }
         }
+        .padding(EdgeInsets(top: 10, leading: Board.cardInsetLeading, bottom: 11, trailing: Board.cardInsetTrailing))
     }
 
     private func factRow<Control: View>(
@@ -194,10 +214,50 @@ struct TicketEditSheet: View {
             .foregroundStyle(.secondary)
     }
 
+    private var zoneDivider: some View {
+        Rectangle()
+            .fill(Board.cardBorder(contrast))
+            .frame(height: 1)
+            .padding(.leading, Board.cardInsetLeading)
+            .padding(.trailing, Board.cardInsetTrailing)
+    }
 
+    private var cardFill: Color {
+        reduceTransparency
+            ? Color(nsColor: .controlBackgroundColor)
+            : Board.cardFill(colorScheme)
+    }
 
+    private var listStripe: some View {
+        Capsule()
+            .fill(stripeColor.opacity(0.9))
+            .frame(width: Board.cardStripeWidth)
+            .padding(.vertical, 9)
+            .padding(.leading, 5)
+            .allowsHitTesting(false)
+    }
 
+    /// Follows the list picker live, so switching lists re-colours the stripe
+    /// immediately — the card's own colour code, same mix as `CardView`.
+    private var stripeColor: Color {
+        let color = store.selectableCalendars
+            .first { $0.calendarIdentifier == calendarID }
+            .map { Color(nsColor: $0.color ?? .controlAccentColor) }
+            ?? card.listColor
+        return color.mix(with: Color(nsColor: .labelColor), by: 0.18)
+    }
 
+    @ViewBuilder
+    private var topHighlight: some View {
+        if colorScheme == .dark {
+            Board.cardShape
+                .strokeBorder(
+                    LinearGradient(colors: [Board.cardTopHighlight, .clear], startPoint: .top, endPoint: .center),
+                    lineWidth: 1)
+                .blendMode(.plusLighter)
+                .allowsHitTesting(false)
+        }
+    }
 
     // MARK: - Fact controls
 

@@ -88,15 +88,6 @@ struct CardView: View {
             guard !isRenaming else { return }
             beginRename()
         }
-        // Anchored to this card, because the arrow is the whole answer to
-        // "which ticket am I editing" — a centred panel had to be guessed at.
-        // The binding reads through the store so only one card can be open at
-        // a time, and a click anywhere outside closes it (AppKit's own
-        // behaviour, and what commits the edit — see `TicketEditSheet`).
-        .popover(isPresented: editorBinding, arrowEdge: editorArrowEdge) {
-            TicketEditSheet(card: card) { store.editingCardID = nil }
-                .environmentObject(store)
-        }
         .contextMenu {
             Button("Bearbeiten") { beginEdit() }
             Button("In Erinnerungen öffnen") { openInReminders() }
@@ -514,31 +505,10 @@ struct CardView: View {
     /// A click opens the in-app editor now — title, notes, due date and
     /// priority all live in GlassKanban itself.
     private func beginEdit() {
+        // The board presents the editor, not the card — see
+        // `RemindersStore.editingCardID` for why its position must not depend
+        // on where the card that opened it happens to sit.
         store.editingCardID = card.id
-    }
-
-    /// Which side the editor opens on — always toward the middle of the
-    /// board.
-    ///
-    /// A popover is its own window and may legally hang past the app's, so
-    /// AppKit sees room to the right of the last lane and takes it: opening a
-    /// ticket in Erledigt threw the editor out over the desktop, beside the
-    /// board rather than on it. The board's own geometry answers this without
-    /// measuring anything — the two left lanes open right, the two right
-    /// lanes open left, and the panel stays over the board it belongs to.
-    private var editorArrowEdge: Edge {
-        switch card.status {
-        case .backlog, .next: .trailing
-        case .inProgress, .done: .leading
-        }
-    }
-
-    /// True only while *this* card is the one being edited. Held in the store
-    /// rather than in local state so opening one editor closes any other.
-    private var editorBinding: Binding<Bool> {
-        Binding(
-            get: { store.editingCardID == card.id },
-            set: { if !$0 { store.editingCardID = nil } })
     }
 
     /// Escape hatch to the native app, for anything the edit sheet

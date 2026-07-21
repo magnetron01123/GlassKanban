@@ -3,6 +3,9 @@ import SwiftUI
 struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Blur is the depth cue here; when it is switched off, the scrim has to
+    /// carry the separation on its own and darkens to compensate.
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var showStreak = false
     @State private var showFind = false
 
@@ -37,6 +40,11 @@ struct BoardView: View {
         .frame(maxWidth: .infinity)
         .padding(Board.boardPadding)
         .frame(minWidth: Board.boardMinWidth, minHeight: 560)
+        // The lanes go out of focus while a card is held up in front of them.
+        // Applied to the board and not the window, so the toolbar — which is
+        // chrome, not content — stays sharp and reachable.
+        .blur(radius: store.editingCardID == nil ? 0 : (reduceTransparency ? 0 : 7))
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: store.editingCardID)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
             // Shown as soon as there is any history at all — not just during
@@ -90,6 +98,7 @@ struct BoardView: View {
             // an offer, not an instruction.
             Text("Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?")
         }
+        .overlay { editorOverlay }
         // Board-level for the same reason as the alert above: the failure
         // surfaces from `TicketEditSheet`'s own close, after that sheet is
         // already gone, so nowhere on the sheet itself could show it.
@@ -98,6 +107,58 @@ struct BoardView: View {
         } message: { failure in
             Text(failure.message)
         }
+    }
+
+    // MARK: - Ticket editor
+
+    /// Taking the note off the wall.
+    ///
+    /// The staging is the whole point here, and it was what failed before: a
+    /// card laid over an undimmed board is just a bigger card among cards,
+    /// with nothing saying it has been picked up. So the board goes back a
+    /// step — blurred and dimmed together — and the card comes forward. Two
+    /// planes, unmistakably.
+    ///
+    /// Blur rather than dimming alone, because dimming only darkens: the
+    /// lanes stay just as sharp, and sharp detail behind a sharp card reads
+    /// as clutter rather than distance. Out-of-focus is how the eye actually
+    /// tells "that is behind this".
+    ///
+    /// It grows in from just under full size, so the card arrives rather than
+    /// appearing — the visual echo of a ticket being lifted. Under Reduce
+    /// Motion it simply fades.
+    @ViewBuilder
+    private var editorOverlay: some View {
+        if let card = editingCard {
+            ZStack {
+                Rectangle()
+                    .fill(.black.opacity(reduceTransparency ? 0.45 : 0.32))
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    // The board is the way out: put the card back by clicking
+                    // where it came from. Nothing on the card itself closes it.
+                    .onTapGesture { store.editingCardID = nil }
+                    .accessibilityLabel("Karte schließen")
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction { store.editingCardID = nil }
+
+                TicketEditSheet(card: card) { store.editingCardID = nil }
+                    .environmentObject(store)
+                    .transition(
+                        reduceMotion
+                            ? .opacity
+                            : .scale(scale: 0.94).combined(with: .opacity))
+            }
+        }
+    }
+
+    /// Resolved from the store on every change, so an edit that lands from
+    /// Reminders while the panel is open is reflected rather than frozen —
+    /// and so a card deleted elsewhere closes the editor instead of leaving
+    /// it editing something that no longer exists.
+    private var editingCard: KanbanCard? {
+        guard let id = store.editingCardID else { return nil }
+        return store.cards.first { $0.id == id }
     }
 
     private var overflowBinding: Binding<Bool> {
