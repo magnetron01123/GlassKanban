@@ -200,18 +200,37 @@ struct TicketEditSheet: View {
     private var notesZone: some View {
         VStack(alignment: .leading, spacing: 3) {
             fieldCaption("Notizen")
-            // A `TextEditor` here always wrapped its content in a scrollable
-            // NSScrollView, which drew scroller chrome even on empty notes.
-            // A field that grows with its content sidesteps the scroll view
-            // entirely for the common case (short notes), matching how
-            // Reminders.app's own notes field behaves.
-            TextField("", text: $notes, axis: .vertical)
+            // A `TextEditor`, not a vertical-axis `TextField`.
+            //
+            // The field was chosen to dodge the scroll view a TextEditor
+            // brings with it, and it cost the one thing notes are for:
+            // Return in a TextField submits and re-selects rather than
+            // breaking the line, so a list could be read but never written
+            // here. Notes on a ticket are lists more often than they are
+            // prose.
+            //
+            // The chrome that drove the original choice is switched off
+            // rather than avoided — `scrollContentBackground(.hidden)` takes
+            // away the inset box, and macOS's overlay scrollers stay out of
+            // sight until there is something to scroll. TextEditor also insets
+            // its text by a few points of its own, which the negative padding
+            // cancels so the first character sits on the same left edge as
+            // every caption and field above it.
+            TextEditor(text: $notes)
                 .font(BoardText.editorBody)
-                .textFieldStyle(.plain)
-                // Four lines at rest, like the lanes' own cards keep a body
+                .scrollContentBackground(.hidden)
+                // The scroller track is the rest of that chrome, and it shows
+                // on this field the moment the text reaches four lines. A
+                // four-line box does not need one: text cut mid-line at the
+                // bottom edge already says there is more, which is the cue
+                // every compact field on the platform relies on.
+                .scrollIndicators(.never)
+                .padding(.leading, -5)
+                // Room for four lines, like the lanes' own cards keep a body
                 // even when the notes are empty — a card with no room for
-                // text is a label.
-                .lineLimit(4...12)
+                // text is a label. Longer notes scroll rather than stretching
+                // the card, which is what keeps its proportion steady.
+                .frame(height: Self.notesHeight)
                 .editableHint(hoveredField == .notes, scheme: colorScheme)
                 .onHover { hovering in
                     withAnimation(Board.hoverAnimation) {
@@ -284,6 +303,9 @@ struct TicketEditSheet: View {
         // card never grows or shrinks as values are set and cleared.
         .frame(minHeight: Self.factRowHeight)
     }
+
+    /// Four lines of `editorBody` plus its leading.
+    private static let notesHeight: CGFloat = 72
 
     /// Height of a menu picker at this text size — the tallest of the three
     /// controls, and therefore what the other rows have to reserve.
