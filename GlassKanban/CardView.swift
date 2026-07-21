@@ -104,13 +104,23 @@ struct CardView: View {
             Button("Umbenennen") { beginRename() }
             Button("Löschen", role: .destructive) { store.deleteTicket(cardID: card.id) }
         }
-        .boardTooltip(helpText)
+        // No tooltip on the card body. It fired wherever the pointer came to
+        // rest on a lane, which on a board you keep open all day is a panel
+        // that follows you around rather than one you asked for — and the
+        // lanes are mostly cards, so "hovering a card" is close to "using the
+        // app". The lane header and the small glyphs keep theirs: those are
+        // deliberate targets you have to aim at, and each explains one thing
+        // that has no room to say itself.
+        //
+        // Nothing is lost that is not now one click away. Its three lines
+        // were the notes preview, the list name and "Klick öffnet Bearbeiten"
+        // — and the click it advertised opens a card showing all of it at
+        // reading size.
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(accessibilityLabel)
-        // `.help` used to carry this to VoiceOver as well. The notes preview
-        // is only on the tooltip for compact rows, so without it here that
-        // text would exist for sighted users alone.
+        // Still spoken, though no longer drawn: VoiceOver has no other route
+        // to a compact row's notes preview.
         .accessibilityHint(helpText)
         .accessibilityAction(named: "Bearbeiten") { beginEdit() }
         .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
