@@ -221,8 +221,17 @@ final class RemindersStore: ObservableObject {
         guard accessState == .granted else { return }
         let calendar = Calendar.current
 
-        reminderCalendars = eventStore.calendars(for: .reminder)
+        let calendars = eventStore.calendars(for: .reminder)
             .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        // Only publish a genuinely different list. EventKit hands back fresh
+        // EKCalendar instances on every call, so assigning unconditionally
+        // republished identical data on every refresh — and refresh runs after
+        // every write, every EventKit notification, every wake. Each of those
+        // relaid out every view observing the store, which is what made the
+        // Settings window flicker while it was open.
+        if Self.identity(of: calendars) != Self.identity(of: reminderCalendars) {
+            reminderCalendars = calendars
+        }
         let included = reminderCalendars.filter { !excludedCalendarIDs.contains($0.calendarIdentifier) }
         guard !included.isEmpty else {
             cards = []
@@ -266,6 +275,19 @@ final class RemindersStore: ObservableObject {
             eventStore.fetchReminders(matching: predicate) { reminders in
                 continuation.resume(returning: reminders ?? [])
             }
+        }
+    }
+
+    /// Everything the UI actually renders from a calendar list: which lists
+    /// exist, in which order, under which name and colour. Comparing this
+    /// rather than the `EKCalendar` objects themselves is what makes the
+    /// equality check above meaningful — the objects are never equal across
+    /// two EventKit calls, but a renamed or recoloured list must still reach
+    /// the board.
+    private static func identity(of calendars: [EKCalendar]) -> [String] {
+        calendars.map { calendar in
+            let color = calendar.color.map { "\($0.redComponent),\($0.greenComponent),\($0.blueComponent)" } ?? "-"
+            return "\(calendar.calendarIdentifier)|\(calendar.title)|\(color)"
         }
     }
 

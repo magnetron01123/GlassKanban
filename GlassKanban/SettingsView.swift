@@ -2,6 +2,26 @@ import SwiftUI
 import EventKit
 import ServiceManagement
 
+/// Each pane states its own height as a constant, rather than letting the
+/// panes measure themselves with `fixedSize`.
+///
+/// That measuring was a visible bug: the window opened at a default size and
+/// only then resized to fit its content, and the correction showed as a
+/// stutter with the tab bar redrawing mid-flight. A height that is known
+/// before the window appears has nothing to correct — the window opens right
+/// the first time, and switching tabs is one deterministic resize rather
+/// than a measure-then-adjust.
+///
+/// The two panes differ enough that a shared height would leave Listen half
+/// empty, so they are sized individually. Listen fits a typical set of
+/// reminder lists and scrolls internally beyond that; Allgemein is fixed
+/// content, so its number only changes when a setting is added.
+enum SettingsMetrics {
+    static let width: CGFloat = 420
+    static let listsHeight: CGFloat = 260
+    static let generalHeight: CGFloat = 415
+}
+
 struct SettingsView: View {
     var body: some View {
         TabView {
@@ -10,7 +30,7 @@ struct SettingsView: View {
             GeneralSettingsView()
                 .tabItem { Label("Allgemein", systemImage: "gearshape") }
         }
-        .frame(width: 420)
+        .frame(width: SettingsMetrics.width)
     }
 }
 
@@ -40,12 +60,7 @@ struct ListsSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        // Matches `GeneralSettingsView`: without this the window keeps
-        // whichever height the other tab last reported, leaving blank space
-        // under a short list. A very long one still scrolls within the
-        // window instead of growing past the screen — `Form` stays
-        // internally scrollable regardless of this modifier.
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(height: SettingsMetrics.listsHeight)
     }
 
     private func inclusionBinding(for calendar: EKCalendar) -> Binding<Bool> {
@@ -63,8 +78,18 @@ struct ListsSettingsView: View {
 
 struct GeneralSettingsView: View {
     @EnvironmentObject private var store: RemindersStore
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @ObservedObject private var appearance = AppearanceController.shared
+
+    /// Mirrors `SMAppService.mainApp.status`, which is an IPC round trip to
+    /// the service-management daemon — cheap, but not something to do while
+    /// building a view. Read once when the pane appears and again whenever
+    /// the window regains focus, so a change made in System Settings while
+    /// this window sat open is picked up instead of being silently reverted
+    /// by the next toggle.
+    @State private var launchAtLogin = false
+    /// Distinguishes the user flipping the switch from us loading its state,
+    /// so syncing never re-registers the login item as a side effect.
+    @State private var isSyncingLaunchAtLogin = false
 
     private static let maxWIPLimit = 20
 
@@ -81,6 +106,7 @@ struct GeneralSettingsView: View {
 
             Toggle("Beim Anmelden starten", isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { _, enabled in
+                    guard !isSyncingLaunchAtLogin else { return }
                     do {
                         if enabled {
                             try SMAppService.mainApp.register()
@@ -89,7 +115,7 @@ struct GeneralSettingsView: View {
                         }
                     } catch {
                         // Revert the toggle if the system rejected the change.
-                        launchAtLogin = SMAppService.mainApp.status == .enabled
+                        syncLaunchAtLogin()
                     }
                 }
 
@@ -132,13 +158,20 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        // `Form` reports a flexible, not an intrinsic, height — without this
-        // the Settings window sizes itself from some default rather than
-        // this tab's actual content, and clips the last row behind a
-        // scrollbar. Only this tab: `ListsSettingsView` grows with however
-        // many reminder lists exist, which should scroll rather than push
-        // the window past the screen.
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(height: SettingsMetrics.generalHeight)
+        .onAppear { syncLaunchAtLogin() }
+        .onReceive(NotificationCenter.default.publisher(
+            for: NSApplication.didBecomeActiveNotification)) { _ in
+            syncLaunchAtLogin()
+        }
+    }
+
+    /// Pulls the real login-item state into the toggle without that write
+    /// being mistaken for a user action (see `isSyncingLaunchAtLogin`).
+    private func syncLaunchAtLogin() {
+        isSyncingLaunchAtLogin = true
+        launchAtLogin = SMAppService.mainApp.status == .enabled
+        isSyncingLaunchAtLogin = false
     }
 
     private func limitBinding(for status: KanbanStatus) -> Binding<Int> {
