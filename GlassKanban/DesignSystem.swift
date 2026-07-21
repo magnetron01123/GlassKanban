@@ -254,14 +254,15 @@ enum BoardText {
     /// for the same reason `chip` is: small text that has to stay legible.
     static let editorCaption = Font.system(size: 12, weight: .semibold)
 
-    /// The unit beside the streak count — "Tage in Folge".
+    /// The words beside the streak count — "Tage in Folge".
     ///
-    /// Big enough to read as part of the number it follows rather than as a
-    /// caption under it. That distinction is the whole reason it exists: set
-    /// on its own line at body size it sat level with the message below it,
-    /// and the two became one paragraph in which nobody could tell which line
-    /// belonged to the count.
-    static let heroUnit = Font.system(size: 17, weight: .medium)
+    /// Sized against the count deliberately: the two have to read as one
+    /// line. "Tage in Folge" is not a unit like CAL or KM, which a numeral
+    /// can dwarf and still carry — it is a phrase, and a phrase set at a
+    /// third of the number's size hangs off it like a caption stuck to a
+    /// poster. Just under half reads as one thought with an emphasised
+    /// number in it.
+    static let heroUnit = Font.system(size: 20, weight: .medium)
 
     /// The streak count at the top of the stats popover — the one number in
     /// the app set large, and the only place SF Pro is departed from.
@@ -271,7 +272,11 @@ enum BoardText {
     /// At this size SF Pro's flat terminals read as a spreadsheet cell.
     /// Everything else in the popover stays at reading size, so this carries
     /// the hierarchy on its own and nothing has to compete with it.
-    static let heroValue = Font.system(size: 52, weight: .bold, design: .rounded)
+    /// 40, not 52. Against a 400pt panel whose every other line is 11 to
+    /// 13pt, forty is already an emphatic number — and it leaves the words
+    /// beside it near enough in size to belong to the same line. See
+    /// `heroUnit`.
+    static let heroValue = Font.system(size: 40, weight: .bold, design: .rounded)
 
     // Tooltip lines. Both 11pt — the rank comes from weight and colour, as
     // everywhere else on this board. The first draft set the lead at 11.5

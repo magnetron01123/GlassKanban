@@ -230,7 +230,7 @@ struct StatsPopover: View {
                 // Baseline-aligned so the glyph stands on the same line as
                 // the number, the way a currency symbol does — centring left
                 // it level with the numeral's lower half.
-                FlameIcon(level: streak.flameLevel, size: 34)
+                FlameIcon(level: streak.flameLevel, size: 26)
                 // The number takes the ordinary label colour, and the flame
                 // beside it is the only thing here wearing orange.
                 //
