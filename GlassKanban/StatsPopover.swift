@@ -130,10 +130,12 @@ struct StatsPopover: View {
         }
         .pickerStyle(.segmented)
         .labelsHidden()
-        // Full width, like every segmented switcher the system puts at the
-        // top of a panel. Hugging its labels left it floating in the corner
-        // as one more loose element on the pile.
-        .frame(maxWidth: .infinity)
+        // Sized to its labels, not to the window. Stretched across the full
+        // width it became the largest shape here and wore the system accent,
+        // so the eye landed on a blue bar before it found the flame this
+        // window is about. A switcher is navigation; it does not get to
+        // out-rank the thing it navigates.
+        .fixedSize()
         .padding(.bottom, 16)
     }
 

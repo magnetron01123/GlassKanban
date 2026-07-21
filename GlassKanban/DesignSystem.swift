@@ -132,6 +132,21 @@ enum Board {
 
     static let columnInnerShadow = Color.black.opacity(0.10)
 
+    /// The wash under an editable field while the pointer is over it.
+    ///
+    /// Much fainter than `columnFill`: a lane is a place, this is only a hint
+    /// that you may type here. It exists because the opened card sets its
+    /// title and notes as plain text — right for a card, but it leaves
+    /// nothing to say the text can be changed until you have already clicked
+    /// it. Shown on approach and gone again, so the card at rest stays paper.
+    static func editableHoverFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.045)
+    }
+
+    /// Corner of that wash. One step under the card's own, per the nesting
+    /// rule: what sits inside a shape never curves wider than it.
+    static let editableHoverShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+
     // Card shadows: tight contact shadow + soft ambient = physical elevation
     static let cardShadowResting = (color: Color.black.opacity(0.10), radius: CGFloat(1.5), y: CGFloat(1))
     static let cardShadowAmbient = (color: Color.black.opacity(0.05), radius: CGFloat(5), y: CGFloat(3))

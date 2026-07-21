@@ -62,6 +62,7 @@ struct TicketEditSheet: View {
     /// without it, an instant close-before-load would overwrite the reminder
     /// with blank fields.
     @State private var isLoaded = false
+    @State private var hoveredField: EditableField?
 
     /// One surface, edge to edge.
     ///
@@ -133,10 +134,47 @@ struct TicketEditSheet: View {
                 TextField("", text: $title)
                     .textFieldStyle(.plain)
                     .font(BoardText.editorTitle)
+                    .editableHint(hoveredField == .title, scheme: colorScheme)
+                    // The chip beside it is a sibling view, not part of this
+                    // field, so the state has to be said here too.
+                    .accessibilityLabel(isDone ? "Titel, erledigt" : "Titel")
+            }
+            .onHover { hovering in
+                withAnimation(Board.hoverAnimation) {
+                    hoveredField = hovering ? .title : (hoveredField == .title ? nil : hoveredField)
+                }
+            }
+            if isDone {
+                doneMark
             }
             openInRemindersMark
         }
         .padding(EdgeInsets(top: 16, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
+    }
+
+    private var isDone: Bool { card.status == .done }
+
+    /// Says a ticket is finished.
+    ///
+    /// The lanes strike the title through, and that was tried here first —
+    /// but `.strikethrough()` does not render on a `TextField`, nor does a
+    /// `foregroundStyle` meant to grey it: both modifiers apply to `Text`,
+    /// and an editable field ignores them. Verified on screen, not assumed.
+    ///
+    /// So the state moves to a chip, in the badge treatment the board already
+    /// uses for lane counts — quaternary fill, system text colour, never
+    /// coloured text on a coloured wash. Deliberately neutral rather than
+    /// green: in this app finished work *recedes*, and a celebratory badge on
+    /// a card whose paper and stripe have both just dimmed would pull in the
+    /// opposite direction.
+    private var doneMark: some View {
+        Text("Erledigt")
+            .font(BoardText.chip)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Board.chipShape.fill(.quaternary.opacity(Board.chipFill)))
+            .accessibilityHidden(true)
     }
 
     /// Sits where `CardView.fullBody` puts its dwell-time label — the corner
@@ -171,9 +209,19 @@ struct TicketEditSheet: View {
                 // even when the notes are empty — a card with no room for
                 // text is a label.
                 .lineLimit(4...12)
+                .editableHint(hoveredField == .notes, scheme: colorScheme)
         }
         .padding(EdgeInsets(top: 12, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
+        .onHover { hovering in
+            withAnimation(Board.hoverAnimation) {
+                hoveredField = hovering ? .notes : (hoveredField == .notes ? nil : hoveredField)
+            }
+        }
     }
+
+    /// Which field the pointer is over, so each lights up on its own rather
+    /// than the whole card reacting as one block.
+    private enum EditableField { case title, notes }
 
     /// The card's facts, one labelled row each — from the most stable
     /// property to the most volatile: which list a card belongs to rarely
@@ -232,12 +280,16 @@ struct TicketEditSheet: View {
     private var cardFill: Color {
         reduceTransparency
             ? Color(nsColor: .controlBackgroundColor)
-            : Board.cardFill(colorScheme)
+            // The dimmer paper a finished ticket already has in its lane —
+            // the parameter was there, this view just never passed it.
+            : Board.cardFill(colorScheme, isDone: isDone)
     }
 
     private var listStripe: some View {
         Capsule()
-            .fill(stripeColor.opacity(0.9))
+            // Finished work's colour code fades, exactly as it does in the
+            // lane (`CardView.listStripe`).
+            .fill(stripeColor.opacity(isDone ? 0.45 : 0.9))
             .frame(width: Board.cardStripeWidth + 1)
             .padding(.vertical, 12)
             .padding(.leading, 7)
@@ -476,6 +528,26 @@ private enum PriorityOption: Int, CaseIterable, Identifiable {
         case 6...9: .low
         default: .none
         }
+    }
+}
+
+/// The wash that appears behind an editable field on hover.
+///
+/// Inset with negative padding rather than by growing the field: the field
+/// keeps the exact frame the card's layout gave it, and the hint reaches a
+/// little past the text on every side so it reads as a place to write rather
+/// than a box drawn tight around the glyphs.
+private extension View {
+    func editableHint(_ isShowing: Bool, scheme: ColorScheme) -> some View {
+        padding(.horizontal, 6)
+            .padding(.vertical, 4)
+            .background {
+                Board.editableHoverShape
+                    .fill(Board.editableHoverFill(scheme))
+                    .opacity(isShowing ? 1 : 0)
+            }
+            .padding(.horizontal, -6)
+            .padding(.vertical, -4)
     }
 }
 
