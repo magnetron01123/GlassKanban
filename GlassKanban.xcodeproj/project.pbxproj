@@ -35,6 +35,7 @@
 		BA331CEEE97A7000C960DB81 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE77523ACBD14B219E0031C5 /* ContentView.swift */; };
 		C3122530F3FD6606EBCD4E6C /* WIPLimitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C252FF02D5162B99A3F30F7 /* WIPLimitTests.swift */; };
 		C633F382DEFE9FD32C03C6A7 /* ReminderDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */; };
+		C7D82269F67091F5AE0E8870 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 10C56C38B8A1956F2F2974FE /* PrivacyInfo.xcprivacy */; };
 		C831C7F9A270718B155C00E3 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
 		CF6FC09044300C4AEE056EF2 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BD228B20A88109D18DAA5 /* Models.swift */; };
 		D10E1E7C10AD77A2A5815F45 /* TextSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF53DB3FE2E8D54F03CE48E9 /* TextSanitizerTests.swift */; };
@@ -42,16 +43,18 @@
 		D5D9047BF7E12AD928F47F76 /* CardSortingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */; };
 		F02B830CE81DFD65A6C33E55 /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
 		F497DB173B495A88ADCD4821 /* RemindersStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38DFB23226AD6A320E58F33 /* RemindersStore.swift */; };
-		69E9DDBAE82E7D47C573E42A /* TicketEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 653BA1AE1FF06F52B61EEDBF /* TicketEditSheet.swift */; };
+		F7ACE669E1BBF9DF40046C3C /* TicketEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5363A88A1AA13D97EEF4C674 /* TicketEditSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0C252FF02D5162B99A3F30F7 /* WIPLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WIPLimitTests.swift; sourceTree = "<group>"; };
+		10C56C38B8A1956F2F2974FE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		10ECC48E9096FEF7E8FFDCB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1C6B365227CBE04B748E55FE /* StreakPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakPopover.swift; sourceTree = "<group>"; };
 		2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculatorTests.swift; sourceTree = "<group>"; };
 		4F5178AE744F393F737442A5 /* FilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterTests.swift; sourceTree = "<group>"; };
+		5363A88A1AA13D97EEF4C674 /* TicketEditSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketEditSheet.swift; sourceTree = "<group>"; };
 		616551F8C95C166758DC62DD /* TextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizer.swift; sourceTree = "<group>"; };
 		61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculator.swift; sourceTree = "<group>"; };
 		63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardTooltip.swift; sourceTree = "<group>"; };
@@ -69,7 +72,6 @@
 		C67BD228B20A88109D18DAA5 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		C8099603D0D48B34633EB69D /* StatusTagger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTagger.swift; sourceTree = "<group>"; };
 		D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklogTicketCreationTests.swift; sourceTree = "<group>"; };
-		653BA1AE1FF06F52B61EEDBF /* TicketEditSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketEditSheet.swift; sourceTree = "<group>"; };
 		DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSortingTests.swift; sourceTree = "<group>"; };
 		E363E5F11832E63EE2539D70 /* CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardView.swift; sourceTree = "<group>"; };
 		E38DFB23226AD6A320E58F33 /* RemindersStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersStore.swift; sourceTree = "<group>"; };
@@ -126,6 +128,7 @@
 				EABE4A8869EFB12034A075AB /* HUDGlassMaterial.swift */,
 				10ECC48E9096FEF7E8FFDCB5 /* Info.plist */,
 				C67BD228B20A88109D18DAA5 /* Models.swift */,
+				10C56C38B8A1956F2F2974FE /* PrivacyInfo.xcprivacy */,
 				916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */,
 				E38DFB23226AD6A320E58F33 /* RemindersStore.swift */,
 				73CAB35E9902F258F00D82A7 /* SettingsView.swift */,
@@ -133,7 +136,7 @@
 				61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */,
 				1C6B365227CBE04B748E55FE /* StreakPopover.swift */,
 				616551F8C95C166758DC62DD /* TextSanitizer.swift */,
-				653BA1AE1FF06F52B61EEDBF /* TicketEditSheet.swift */,
+				5363A88A1AA13D97EEF4C674 /* TicketEditSheet.swift */,
 			);
 			path = GlassKanban;
 			sourceTree = "<group>";
@@ -225,6 +228,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */,
+				C7D82269F67091F5AE0E8870 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,7 +259,7 @@
 				17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */,
 				2FA0675B56569C16EB972A13 /* StreakPopover.swift in Sources */,
 				9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */,
-				69E9DDBAE82E7D47C573E42A /* TicketEditSheet.swift in Sources */,
+				F7ACE669E1BBF9DF40046C3C /* TicketEditSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -366,7 +370,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -430,7 +434,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

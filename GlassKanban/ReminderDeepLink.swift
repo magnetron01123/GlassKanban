@@ -27,7 +27,7 @@ enum ReminderDeepLink {
 
     static func url(for reminder: EKReminder) -> URL? {
         guard let uuid = internalUUIDString(of: reminder) else {
-            log.notice("no internal UUID resolved for \(reminder.calendarItemIdentifier, privacy: .public)")
+            log.notice("no internal UUID resolved for \(reminder.calendarItemIdentifier, privacy: .private)")
             return nil
         }
         // "/details" opens the reminder's edit popover instead of merely
@@ -45,7 +45,9 @@ enum ReminderDeepLink {
                 log.notice("resolved via external identifier (bare UUID)")
                 return external
             }
-            log.notice("external identifier has unexpected format: \(external, privacy: .public)")
+            // `.private`: this identifies one of the user's reminders, and the
+            // unified log is readable well beyond this app.
+            log.notice("external identifier has unexpected format: \(external, privacy: .private)")
         }
         return nil
     }
