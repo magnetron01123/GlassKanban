@@ -493,6 +493,16 @@ final class RemindersStore: ObservableObject {
         draggingCardID = nil
     }
 
+    /// Opens one reminder in the Reminders app, for everything the board's
+    /// own editor deliberately leaves out — recurrence, subtasks,
+    /// attachments, location alerts. Deep-links straight to it where that
+    /// resolves; local lists have no public identifier to link to (see
+    /// `ReminderDeepLink`), so those simply bring the app forward.
+    func openInReminders(cardID: String) {
+        if let url = deepLinkURL(forCardID: cardID), NSWorkspace.shared.open(url) { return }
+        openRemindersApp()
+    }
+
     /// Opens the Reminders app — the fallback when a deep link can't resolve
     /// a specific reminder (e.g. local, non-synced lists), and still the
     /// place list/calendar assignment is managed since the board doesn't

@@ -29,6 +29,11 @@ struct TicketEditSheet: View {
     @State private var priority = 0
     @State private var calendarID = ""
     @State private var isDuePopoverPresented = false
+    /// Set by the "In Erinnerungen öffnen" button, acted on after `save()` —
+    /// handing over to the native app before writing would show it a stale
+    /// reminder, and leaving this sheet open beside it would let its own
+    /// save on close overwrite whatever was edited there.
+    @State private var opensRemindersOnClose = false
     /// Guards `save()` against a sheet dismissed before `load()` finishes —
     /// without it, an instant close-before-load would overwrite the reminder
     /// with blank fields.
@@ -38,8 +43,22 @@ struct TicketEditSheet: View {
     var body: some View {
         VStack(spacing: 14) {
             cardSurface
-            Button("Fertig") { dismiss() }
-                .keyboardShortcut(.defaultAction)
+            HStack {
+                // A link, not a second filled button: this is the rarely
+                // needed way out to the native app, and giving it equal
+                // weight beside "Fertig" would suggest the sheet needs it.
+                // It lives here because the card's context menu — the other
+                // route to it — is unreachable while this sheet is open.
+                Button("In Erinnerungen öffnen") {
+                    opensRemindersOnClose = true
+                    dismiss()
+                }
+                .buttonStyle(.link)
+                .font(BoardText.body)
+                Spacer(minLength: 12)
+                Button("Fertig") { dismiss() }
+                    .keyboardShortcut(.defaultAction)
+            }
         }
         .padding(20)
         .frame(width: 420)
@@ -57,7 +76,12 @@ struct TicketEditSheet: View {
             }
         }
         .task { load() }
-        .onDisappear { save() }
+        .onDisappear {
+            save()
+            if opensRemindersOnClose {
+                store.openInReminders(cardID: card.id)
+            }
+        }
     }
 
     // MARK: - Card surface (mirrors CardView.fullBody)

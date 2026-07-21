@@ -512,17 +512,11 @@ struct CardView: View {
         isEditing = true
     }
 
-    /// Escape hatch to the native app, still needed for anything the sheet
-    /// doesn't cover (e.g. moving a ticket to a different list). Deep-links
-    /// to this reminder when possible; local (non-synced) reminders have no
-    /// public identifier to link to, so this falls back to simply bringing
-    /// Reminders to the front.
+    /// Escape hatch to the native app, for anything the edit sheet
+    /// deliberately leaves out. The sheet offers the same route, so both go
+    /// through one implementation.
     private func openInReminders() {
-        if let url = store.deepLinkURL(forCardID: card.id),
-           NSWorkspace.shared.open(url) {
-            return
-        }
-        store.openRemindersApp()
+        store.openInReminders(cardID: card.id)
     }
 
     /// Pre-fills with the real title, not `displayTitle` — "Ohne Titel" is a
