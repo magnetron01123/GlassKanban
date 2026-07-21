@@ -179,18 +179,16 @@ struct StatsPopover: View {
 
                     row("In Bearbeitung", wipValue, help: wipHelp)
 
+                    // "Dieses Jahr" used to close this list and does not
+                    // belong here: every other figure in it is about the state
+                    // of things right now — what is done today, what is open,
+                    // how long that will take. A year's total is a look back,
+                    // and the tab next door is called exactly that.
                     if let days = forecastDays {
                         row("Bis fertig",
                             "\(days.formatted(.number.precision(.fractionLength(days < 10 ? 1 : 0)))) \(days == 1 ? "Tag" : "Tage")",
                             help: "Schätzung: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten \(WrappedStats.trendWindowDays) Tage.")
                     }
-
-                    row("Dieses Jahr",
-                        "\(wrapped.yearCount)",
-                        mark: wrapped.milestone != nil ? "flag.fill" : nil,
-                        help: wrapped.milestone.map {
-                            "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr."
-                        })
                 }
             }
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { rowsWellHeight = $0 }
@@ -329,6 +327,17 @@ struct StatsPopover: View {
         VStack(alignment: .leading, spacing: 8) {
             well {
                 rows {
+                    // First, because it is the total the rest of this list
+                    // details. It carries its own period in its label, which
+                    // is why the footnote below can go on describing the
+                    // others without contradicting it.
+                    row("Dieses Jahr",
+                        "\(wrapped.yearCount)",
+                        mark: wrapped.milestone != nil ? "flag.fill" : nil,
+                        help: wrapped.milestone.map {
+                            "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr."
+                        })
+
                     row("Längste Folge", Self.days(streak.best))
 
                     if let best = wrapped.bestDay {
