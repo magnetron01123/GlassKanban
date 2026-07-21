@@ -133,6 +133,14 @@ enum Board {
     /// Backlog shows this many cards before offering "N weitere anzeigen".
     static let backlogCollapsedLimit = 15
 
+    /// Wells that zone the stats popover's sections — the lanes' recessed
+    /// treatment at panel scale, the way the system's own inset groups zone
+    /// Settings. Same fill as a lane (`columnFill`), radius one step under
+    /// the tooltip's per the nesting rule. Not glass: a well is content
+    /// sitting *in* the popover's glass, and the one thing it must never do
+    /// is blur what is behind it a second time.
+    static let wellShape = RoundedRectangle(cornerRadius: 9, style: .continuous)
+
     // Tooltips. Chrome, not content — so glass is right here, unlike on a
     // card. The radius is the card's own, less one: a tooltip rests directly
     // on paper, and matching its curve family is what keeps it from reading
@@ -194,21 +202,15 @@ enum BoardText {
     /// A single emphasised number — the streak counter.
     static let value = Font.system(size: 12, weight: .semibold)
 
-    // The stats popover's two sizes, both far above the board's scale. They
-    // are allowed to be, because they never appear on the board: the popover
-    // is a place you go to look at numbers, and there the number is the
-    // content rather than a label on something else.
-    //
-    // Both are `.rounded`, the only departure from SF Pro in the app. It is
-    // the face Apple sets large numbers in whenever the number is an
-    // achievement rather than a measurement — Fitness rings, Activity,
-    // Screen Time. At 52pt SF Pro's flat terminals read as a spreadsheet
-    // cell; rounded reads as something you earned. The labels stay SF Pro,
-    // so the shift lands on the numbers alone rather than restyling the UI.
-    /// The streak count at the top of the stats popover.
+    /// The streak count at the top of the stats popover — the one number in
+    /// the app set large, and the only place SF Pro is departed from.
+    ///
+    /// Rounded is the face Apple sets numbers in when the number is an
+    /// achievement rather than a measurement: Fitness, Activity, Screen Time.
+    /// At this size SF Pro's flat terminals read as a spreadsheet cell.
+    /// Everything else in the popover stays at reading size, so this carries
+    /// the hierarchy on its own and nothing has to compete with it.
     static let heroValue = Font.system(size: 52, weight: .bold, design: .rounded)
-    /// A value in the popover's 2×2 grid.
-    static let tileValue = Font.system(size: 24, weight: .semibold, design: .rounded)
 
     // Tooltip lines. Both 11pt — the rank comes from weight and colour, as
     // everywhere else on this board. The first draft set the lead at 11.5

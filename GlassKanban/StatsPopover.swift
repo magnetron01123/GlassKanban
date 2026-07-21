@@ -41,14 +41,27 @@ struct FlameIcon: View {
 
 /// Everything behind the toolbar flame, in one window.
 ///
+/// **One headline, one list.** These numbers were a 2×2 grid of tiles for
+/// several passes and never stopped reading as clutter, because a grid claims
+/// its cells are peers and these are not: today's count, current load, a
+/// forecast and a year total have nothing in common but the window they sit
+/// in. Reading them meant finding four small labels under four large numbers
+/// and working out which belonged to which. A label-left/value-right list is
+/// what the system itself uses wherever unlike figures are shown together —
+/// Battery, Screen Time, Settings — and it removes the guesswork: the label
+/// is always beside its number. It also lets an unavailable figure simply not
+/// appear, where a grid needed a placeholder to avoid looking broken.
+///
+/// One number is set large, and it is the streak: the reason the flame is in
+/// the toolbar. Everything else stays at reading size, so nothing competes.
+///
 /// Two tabs rather than two windows: "Jetzt" answers *how is it going right
-/// now*, "Rückblick" answers *what am I like*. Both are the same question at
-/// different distances, and stacking a sheet on top of a popover would make a
-/// glance feel like navigation.
+/// now*, "Rückblick" answers *what am I like*.
 ///
 /// The content carries no glass of its own — the popover already *is* the
 /// app's chrome glass, and glass inside glass renders as a boxed artifact
-/// (the same rule every toolbar item follows).
+/// (the same rule every toolbar item follows). The wells are the lanes'
+/// recessed fill at panel scale, which is depth without a second blur.
 ///
 /// Tooltips here use `.help()` rather than the board's own `boardTooltip`:
 /// `TooltipHost` lives at the board's root and a popover is a separate window
@@ -74,6 +87,7 @@ struct StatsPopover: View {
 
     @State private var tab: Tab = .now
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -86,15 +100,17 @@ struct StatsPopover: View {
         // 16 all round: the standard macOS popover inset, and the value the
         // rest of the spacing here is a multiple of.
         .padding(16)
-        // 360, not 340: at the narrower width a real Reminders list name
-        // ("Gemeinsame Aufgaben") truncated in the retrospective's grid.
-        .frame(width: 360, alignment: .leading)
+        // 330: the width at which a real Reminders list name ("Gemeinsame
+        // Aufgaben") still sets at the same size as every other value. Below
+        // it the row shrank its text, and one value a size smaller than the
+        // rest is the sort of thing you notice without being able to name.
+        .frame(width: 330, alignment: .leading)
         // The two tabs are different heights; without this the popover would
         // adopt whatever SwiftUI proposes rather than its content's own size.
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    // MARK: - Tabs
+    // MARK: - Structure
 
     /// The platform's own control for switching between peer views.
     ///
@@ -104,9 +120,8 @@ struct StatsPopover: View {
     /// as something to click, which is a discoverability defect no amount of
     /// restraint pays for. The standard control also announces itself
     /// correctly to VoiceOver for free, and on macOS 26 it is *itself* Liquid
-    /// Glass — the selected segment is a floating glass capsule. Reaching for
-    /// the system control is how the effect gets rendered properly rather
-    /// than imitated.
+    /// Glass. Reaching for the system control is how the effect gets rendered
+    /// properly rather than imitated.
     private var tabBar: some View {
         Picker("Ansicht", selection: $tab) {
             ForEach(Tab.allCases) { candidate in
@@ -115,22 +130,72 @@ struct StatsPopover: View {
         }
         .pickerStyle(.segmented)
         .labelsHidden()
-        .padding(.bottom, 20)
+        // Full width, like every segmented switcher the system puts at the
+        // top of a panel. Hugging its labels left it floating in the corner
+        // as one more loose element on the pile.
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 16)
+    }
+
+    /// The recessed group that holds a section — the lanes' own treatment at
+    /// panel scale, and the shape the system gives an inset group in
+    /// Settings. Fill only, no border: depth on this board comes from a
+    /// recess, and an outline would make it a box drawn on glass.
+    private func well(@ViewBuilder _ content: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 0) { content() }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Board.wellShape.fill(Board.columnFill(scheme)))
+            .overlay {
+                // A 6% wash is exactly the kind of boundary Increase Contrast
+                // exists to harden.
+                if contrast == .increased {
+                    Board.wellShape.strokeBorder(Board.columnBorder(contrast), lineWidth: 1)
+                }
+            }
     }
 
     // MARK: - Jetzt
 
     private var nowTab: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 14) {
             hero
-            nowGrid
-            trendRow
+            well {
+                rows {
+                    row("Heute",
+                        Self.tasks(streak.todayCount),
+                        // Clearing the personal daily average is the reward,
+                        // and it is carried by a glyph rather than a coloured
+                        // label: the board's badge rule is measured, and
+                        // orange at reading size on a light surface lands
+                        // under the contrast floor.
+                        mark: streak.todayCount >= max(1, streak.dailyTarget) ? "flame.fill" : nil,
+                        help: "Dein Schnitt an aktiven Tagen: \(Self.tasks(max(1, streak.dailyTarget))).")
+
+                    row("In Bearbeitung", wipValue, help: wipHelp)
+
+                    if let days = forecastDays {
+                        row("Bis fertig",
+                            "\(days.formatted(.number.precision(.fractionLength(days < 10 ? 1 : 0)))) \(days == 1 ? "Tag" : "Tage")",
+                            help: "Schätzung: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten \(WrappedStats.trendWindowDays) Tage.")
+                    }
+
+                    row("Dieses Jahr",
+                        "\(wrapped.yearCount)",
+                        mark: wrapped.milestone != nil ? "flag.fill" : nil,
+                        help: wrapped.milestone.map {
+                            "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr."
+                        })
+                }
+            }
+            well { trendSection }
         }
     }
 
-    /// The streak at the size it deserves — it is the reason the flame is in
-    /// the toolbar at all. Underneath sits a single adaptive line that does
-    /// three jobs and never two at once (see `heroNote`).
+    /// The streak, alone on the glass above the wells. It is the only figure
+    /// here set large, and the only one that needs no label to be understood
+    /// at a glance.
     private var hero: some View {
         // Baseline-aligned, not centred. Centring put the flame beside the
         // middle of the whole text stack, which is level with the number's
@@ -151,20 +216,19 @@ struct StatsPopover: View {
                     .font(BoardText.body)
                     .foregroundStyle(.secondary)
                 if let note = heroNote {
-                    // Rank by weight and system text colour, never by an
-                    // orange label. The board's badge rule is measured, not a
-                    // preference: system colours are calibrated as fills and
-                    // glyphs, and orange at 12pt on a light surface lands far
-                    // under the contrast floor. The reward reads as the only
-                    // primary-coloured line under the number; the invitation
-                    // steps back to secondary.
+                    // Ranked by weight and system text colour, never by an
+                    // orange label — see the badge rule above. The reward is
+                    // the only primary-coloured line under the number; the
+                    // invitation steps back to secondary.
                     Text(note.text)
                         .font(BoardText.body)
                         .fontWeight(note.isReward ? .semibold : .regular)
                         .foregroundStyle(note.isReward ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
+        .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             "\(Self.days(streak.current)) in Folge." + (heroNote.map { " \($0.text)." } ?? ""))
@@ -193,107 +257,98 @@ struct StatsPopover: View {
         // "Noch 38 Tage" is not a pull, it is a wall.
         let gap = streak.best - streak.current
         guard gap <= Self.recordInReachDays else { return nil }
-        return (gap == 1 ? "Noch 1 Tag bis zu deinem Rekord" : "Noch \(gap) Tage bis zu deinem Rekord", true)
+        return (gap == 1 ? "Noch 1 Tag bis zum Rekord" : "Noch \(gap) Tage bis zum Rekord", true)
     }
 
     private static let recordInReachDays = 5
 
-    private var nowGrid: some View {
-        // Top-aligned, not centred: the WIP cell is taller than its neighbour
-        // because of the capacity dots, and a centred row would push the
-        // number beside it half a line down out of alignment.
-        Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 20) {
-            GridRow {
-                todayTile
-                wipTile
-            }
-            GridRow {
-                // Year on the left, forecast on the right: the forecast is the
-                // one tile that can be absent, and a gap at the trailing edge
-                // is far less conspicuous than one in the middle of the grid.
-                yearTile
-                forecastTile
-            }
-        }
+    private var forecastDays: Double? {
+        WrappedStats.forecastDaysToDone(
+            wip: wip,
+            throughputPerDay: wrapped.throughputPerDay,
+            throughputSampleCount: wrapped.throughputSampleCount)
     }
 
-    /// Today's count, praised when it clears the personal daily average —
-    /// which `StreakStats` already computes for the flame. Above the average
-    /// the label turns into quiet praise; below it, it says nothing at all,
-    /// so there is no quota to fall short of.
-    private var todayTile: some View {
-        let isStrong = streak.todayCount >= max(1, streak.dailyTarget)
-        // The praise is carried by a glyph rather than a coloured label, for
-        // the same measured reason as the hero line above — and it makes the
-        // reward and the milestone read as one family of mark.
-        return tile(
-            value: "\(streak.todayCount)",
-            label: isStrong ? "Starker Tag" : "Heute",
-            help: isStrong
-                ? "Mehr als an einem durchschnittlichen Tag (\(Self.tasks(max(1, streak.dailyTarget))))."
-                : "Heute erledigte Aufgaben.",
-            mark: isStrong ? "flame.fill" : nil)
-    }
-
-    /// The milestone rides on this number instead of standing beside it: a
-    /// separate capsule reading "100 erledigt dieses Jahr" directly under a
-    /// tile reading "105 · Dieses Jahr" was two elements saying one thing.
-    private var yearTile: some View {
-        tile(
-            value: "\(wrapped.yearCount)",
-            label: "Dieses Jahr",
-            help: wrapped.milestone.map { "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr." },
-            mark: wrapped.milestone != nil ? "flag.fill" : nil)
-    }
-
-    private var wipTile: some View {
-        tile(value: "\(wip)", label: "In Bearbeitung", help: wipHelp) {
-            // The limit as dots rather than "3 von 3": capacity is a shape you
-            // can read at a glance, and dots never turn a full lane into a
-            // warning the way a red fraction would. Being at the limit is
-            // working as intended, not a problem to flag.
-            if let wipLimit {
-                HStack(spacing: 4) {
-                    ForEach(0..<max(wipLimit, wip), id: \.self) { index in
-                        Circle()
-                            .fill(index < wip ? AnyShapeStyle(Board.wipLimitTint) : AnyShapeStyle(.quaternary))
-                            .frame(width: 6, height: 6)
-                    }
-                }
-                .padding(.top, 6)
-            }
-        }
+    /// "3 von 3" rather than a row of dots. The dots were the only element in
+    /// the window with their own visual language, and spelling the limit out
+    /// says the same thing without one.
+    private var wipValue: String {
+        guard let wipLimit else { return "\(wip)" }
+        return "\(wip) von \(wipLimit)"
     }
 
     private var wipHelp: String {
-        guard let wipLimit else { return "Aufgaben, die gerade in Bearbeitung sind." }
-        return "Dein Limit für „In Bearbeitung“ liegt bei \(wipLimit)."
+        guard wipLimit != nil else { return "Aufgaben, die gerade in Bearbeitung sind." }
+        return "Dein selbst gesetztes Limit für „In Bearbeitung“."
     }
 
-    /// Little's Law. Labelled as an estimate on purpose: the value rises the
-    /// moment another card is pulled in — which is exactly the point a WIP
-    /// limit makes — so a label like "Ø bis fertig" would promise a
-    /// measurement and then look broken.
-    @ViewBuilder
-    private var forecastTile: some View {
-        if let days = WrappedStats.forecastDaysToDone(
-            wip: wip,
-            throughputPerDay: wrapped.throughputPerDay,
-            throughputSampleCount: wrapped.throughputSampleCount) {
-            tile(
-                value: days.formatted(.number.precision(.fractionLength(days < 10 ? 1 : 0))),
-                unit: days == 1 ? "Tag" : "Tage",
-                label: "Bis fertig",
-                help: "Schätzung: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten \(WrappedStats.trendWindowDays) Tage.")
-        } else {
-            // Nothing in progress, or too little recent data to divide by.
-            // An empty cell holds the grid without inventing a number.
-            emptyTile
+    // MARK: - Rückblick
+
+    private var pastTab: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            well {
+                rows {
+                    row("Längste Folge", Self.days(streak.best))
+
+                    if let best = wrapped.bestDay {
+                        row("Bester Tag",
+                            Self.tasks(best.count),
+                            help: best.date.formatted(date: .long, time: .omitted))
+                    }
+                    if let rank = wrapped.mostActiveWeekday {
+                        row("Stärkster Wochentag",
+                            Calendar.current.weekdaySymbols[rank.weekday - 1],
+                            help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
+                    }
+                    if let rank = wrapped.mostUsedList {
+                        row("Häufigste Liste",
+                            rank.name,
+                            dot: rank.color,
+                            help: Self.tasks(rank.count))
+                    }
+                }
+            }
+            // A footnote about the group, below it and indented to its
+            // content edge — the system's own group-footer position, where a
+            // note about the numbers never reads as one of them. A real month
+            // rather than a vague "letzte 13 Monate", which is the kind of
+            // range nobody can check.
+            if let since = historySince {
+                Text(since)
+                    .font(BoardText.meta)
+                    // Tertiary on glass is already near the contrast floor;
+                    // under Increase Contrast it has to step up, or the one
+                    // line that says which period these numbers cover is the
+                    // first thing to disappear for the people who asked for
+                    // more contrast.
+                    .foregroundStyle(contrast == .increased
+                        ? AnyShapeStyle(.secondary)
+                        : AnyShapeStyle(.tertiary))
+                    .padding(.leading, 12)
+            }
         }
     }
 
-    /// The last 30 days. No labels: the row is a shape, and the numbers behind
-    /// it live in each bar's tooltip.
+    private var historySince: String? {
+        guard let start = wrapped.historyStart else { return nil }
+        return "Seit \(start.formatted(.dateTime.month(.wide).year()))"
+    }
+
+    // MARK: - Trend
+
+    /// The last 30 days as a shape, under a label that says so. The bars once
+    /// stood alone at the foot of the window, and an unlabelled chart is the
+    /// difference between minimal and unfinished — quiet is allowed,
+    /// unexplained is not. Per-day figures stay in each bar's tooltip.
+    private var trendSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Letzte 30 Tage")
+                .font(BoardText.body)
+                .foregroundStyle(.secondary)
+            trendRow
+        }
+    }
+
     private var trendRow: some View {
         HStack(alignment: .bottom, spacing: 2) {
             ForEach(wrapped.last30) { day in
@@ -303,7 +358,7 @@ struct StatsPopover: View {
                     .help(trendHelp(day))
             }
         }
-        .frame(height: 26, alignment: .bottom)
+        .frame(height: 24, alignment: .bottom)
         // Otherwise this is 30 VoiceOver stops that each say nothing.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
@@ -313,7 +368,7 @@ struct StatsPopover: View {
     private func barHeight(_ day: DayCompletion) -> CGFloat {
         guard day.count > 0 else { return 3 }
         let peak = max(1, wrapped.last30.map(\.count).max() ?? 1)
-        return 7 + CGFloat(day.count) / CGFloat(peak) * 19
+        return 7 + CGFloat(day.count) / CGFloat(peak) * 17
     }
 
     private func trendHelp(_ day: DayCompletion) -> String {
@@ -329,168 +384,49 @@ struct StatsPopover: View {
         return "\(when): \(Self.tasks(day.count))"
     }
 
-    // MARK: - Rückblick
+    // MARK: - Rows
 
-    private var pastTab: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Top-aligned, not centred: the WIP cell is taller than its neighbour
-        // because of the capacity dots, and a centred row would push the
-        // number beside it half a line down out of alignment.
-        Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 20) {
-                GridRow {
-                    tile(
-                        value: "\(streak.best)",
-                        unit: streak.best == 1 ? "Tag" : "Tage",
-                        label: "Längste Folge")
-                    bestDayTile
-                }
-                GridRow {
-                    weekdayTile
-                    listTile
-                }
-            }
-            // One line covering all four numbers instead of qualifying each
-            // separately — and a real month rather than a vague "letzte 13
-            // Monate", which is the kind of range nobody can check.
-            if let since = historySince {
-                Text(since)
-                    .font(BoardText.meta)
-                    // Tertiary on glass is already near the contrast floor;
-                    // under Increase Contrast it has to step up, or the one
-                    // line that says which period these numbers cover is the
-                    // first thing to disappear for the people who asked for
-                    // more contrast.
-                    .foregroundStyle(contrast == .increased
-                        ? AnyShapeStyle(.secondary)
-                        : AnyShapeStyle(.tertiary))
-            }
-        }
+    private func rows(@ViewBuilder _ content: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 9) { content() }
     }
 
-    private var historySince: String? {
-        guard let start = wrapped.historyStart else { return nil }
-        return "Seit \(start.formatted(.dateTime.month(.wide).year()))"
-    }
-
-    @ViewBuilder
-    private var bestDayTile: some View {
-        if let best = wrapped.bestDay {
-            // With a unit, because "5 / Bester Tag" leaves the reader to guess
-            // whether five is tasks, hours or the date.
-            tile(
-                value: "\(best.count)",
-                unit: best.count == 1 ? "Aufgabe" : "Aufgaben",
-                label: "Bester Tag",
-                help: best.date.formatted(date: .long, time: .omitted))
-        } else {
-            emptyTile
-        }
-    }
-
-    @ViewBuilder
-    private var weekdayTile: some View {
-        if let rank = wrapped.mostActiveWeekday {
-            tile(
-                word: Calendar.current.weekdaySymbols[rank.weekday - 1],
-                label: "Stärkster Tag",
-                help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
-        } else {
-            emptyTile
-        }
-    }
-
-    @ViewBuilder
-    private var listTile: some View {
-        if let rank = wrapped.mostUsedList {
-            tile(
-                word: rank.name,
-                label: "Häufigste Liste",
-                help: Self.tasks(rank.count),
-                dot: rank.color)
-        } else {
-            emptyTile
-        }
-    }
-
-    /// Stands in while there is too little history to name a "most" (see
-    /// `WrappedStats.minSampleForRankings`). Holds the grid's shape without
-    /// claiming anything.
-    private var emptyTile: some View {
-        Color.clear.frame(height: 1)
-    }
-
-    // MARK: - Building blocks
-
-    private func tile(
-        value: String,
-        unit: String? = nil,
-        label: String,
-        help: String? = nil,
+    /// Label left, value right — the shape the system gives any list of
+    /// unlike figures. The label is never further from its value than the
+    /// width of one well.
+    private func row(
+        _ label: String,
+        _ value: String,
+        dot: Color? = nil,
         mark: String? = nil,
-        @ViewBuilder accessory: () -> some View = { EmptyView() }
+        help: String? = nil
     ) -> some View {
-        tileBody(label: label, help: help, accessory: accessory) {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(value)
-                    .font(BoardText.tileValue)
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
-                if let unit {
-                    Text(unit)
-                        .font(BoardText.body)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.secondary)
-                }
-                // The one place the board's no-badges rule is relaxed: a glyph
-                // beside a number it already belongs to, only while the round
-                // number is fresh (see `WrappedStats.milestone`).
-                if let mark {
-                    // Chip size, not glyph size: beside a 24pt numeral the
-                    // board's 9pt inline glyph reads as a speck of dust
-                    // rather than a mark.
-                    Image(systemName: mark)
-                        .font(BoardText.chip)
-                        .foregroundStyle(Color.orange)
-                        .accessibilityHidden(true)
-                }
-            }
-        }
-    }
-
-    /// A word instead of a number — a weekday, a list name. Set smaller than
-    /// `tileValue`: a long word at a number's size wraps and breaks the grid.
-    private func tile(word: String, label: String, help: String? = nil, dot: Color? = nil) -> some View {
-        tileBody(label: label, help: help, accessory: { EmptyView() }) {
-            HStack(spacing: 6) {
-                if let dot {
-                    Circle().fill(dot).frame(width: 7, height: 7)
-                }
-                Text(word)
-                    .font(BoardText.titleCompact)
-                    // List names are user-chosen and can be arbitrarily long.
-                    // Shrinking a little is a better failure than an ellipsis
-                    // that hides which list it actually was.
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .truncationMode(.tail)
-            }
-        }
-    }
-
-    private func tileBody(
-        label: String,
-        help: String?,
-        @ViewBuilder accessory: () -> some View,
-        @ViewBuilder value: () -> some View
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            value()
+        HStack(spacing: 10) {
             Text(label)
-                .font(BoardText.meta)
+                .font(BoardText.body)
                 .foregroundStyle(.secondary)
-            accessory()
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            if let dot {
+                Circle()
+                    .fill(dot)
+                    .frame(width: 7, height: 7)
+                    .accessibilityHidden(true)
+            }
+            if let mark {
+                Image(systemName: mark)
+                    .font(BoardText.glyph)
+                    .foregroundStyle(Color.orange)
+                    .accessibilityHidden(true)
+            }
+            Text(value)
+                .font(BoardText.value)
+                .monospacedDigit()
+                .contentTransition(.numericText())
+                // A list name is user-chosen and can be arbitrarily long;
+                // shrinking beats an ellipsis that hides which list it was.
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
         .modifier(OptionalHelp(text: help))
     }
@@ -505,15 +441,13 @@ struct StatsPopover: View {
     }
 }
 
-/// Attaches a tile's explanation to both the pointer and VoiceOver.
+/// Attaches a row's explanation to both the pointer and VoiceOver.
 ///
 /// `.help()` takes a non-optional string, and an empty one still attaches a
 /// tooltip that flashes an empty box on hover — hence the optional.
 ///
 /// The same words go to `accessibilityValue`, not `accessibilityHint`: a hint
-/// tells you what an action *will do*, and none of these are actions. What
-/// "27 %" means is the element's value, and reading it as a hint is how a
-/// screen reader ends up announcing a number with no idea what it counts.
+/// tells you what an action *will do*, and none of these are actions.
 private struct OptionalHelp: ViewModifier {
     let text: String?
 
