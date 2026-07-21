@@ -51,6 +51,23 @@ final class RemindersStore: ObservableObject {
         var id: String { cardID }
     }
 
+    /// Set when `updateTicket` fails to save. Board-level like `pendingOverflow`,
+    /// not sheet-level: the failure is only known once `eventStore.save` throws,
+    /// which happens inside the sheet's own `onDisappear` — by the time this is
+    /// set, the sheet that made the edit is already gone. Silently discarding a
+    /// multi-field edit (title, notes, due date, priority, list) was fine for
+    /// the single-field `renameTicket` this pattern started with; it isn't once
+    /// the sheet lets a whole card's content be lost the same quiet way — e.g.
+    /// editing a card whose list turned out to be read-only, which `TicketEditSheet`
+    /// deliberately keeps reachable rather than hiding.
+    @Published var pendingSaveFailure: SaveFailure?
+
+    struct SaveFailure: Identifiable {
+        let cardID: String
+        let message: String
+        var id: String { cardID }
+    }
+
     var streak: Int { streakStats.current }
 
     /// Calendar identifiers the user excluded in Settings (e.g. a shopping
@@ -483,7 +500,12 @@ final class RemindersStore: ObservableObject {
     ) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder,
               let index = cards.firstIndex(where: { $0.id == cardID }) else { return }
-        let status = cards[index].status
+        // Read from the reminder itself, not the cached `cards[index].status`:
+        // the sheet can sit open long enough for an external change (another
+        // device, a direct edit in Reminders.app) to move the card before
+        // this save runs. Using the stale cache here would silently reapply
+        // the old column's tag over whatever the live state already is.
+        let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
         let rewrittenNotes = StatusTagger.rewrittenNotes(notes, for: status)
         // Without a time of day the reminder stays all-day, the way Reminders
         // itself models it (see `EditableTicket.hasDueTime`).
@@ -502,6 +524,7 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
+            pendingSaveFailure = SaveFailure(cardID: cardID, message: error.localizedDescription)
             scheduleRefresh()
             return
         }

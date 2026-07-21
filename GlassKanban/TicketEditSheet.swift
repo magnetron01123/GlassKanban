@@ -1,5 +1,6 @@
 import SwiftUI
 import EventKit
+import AppKit
 
 /// Edits a reminder directly in GlassKanban, styled as the very card it
 /// opened from — same shape, fill, border, zone dividers and list stripe as
@@ -38,7 +39,6 @@ struct TicketEditSheet: View {
     /// without it, an instant close-before-load would overwrite the reminder
     /// with blank fields.
     @State private var isLoaded = false
-    @FocusState private var isTitleFocused: Bool
 
     var body: some View {
         VStack(spacing: 14) {
@@ -60,6 +60,17 @@ struct TicketEditSheet: View {
                     .keyboardShortcut(.defaultAction)
             }
         }
+        // macOS assigns a freshly presented sheet's first eligible text field
+        // as first responder on its own — before anything SwiftUI's own focus
+        // system can do about it. Both `@FocusState` (however it was timed)
+        // and `prefersDefaultFocus`/`.focusScope` were tried here and lost
+        // that race; they operate above AppKit's own default-responder
+        // assignment for a window that has just become key, not underneath
+        // it. `FirstResponderNeutralizer` reaches AppKit directly instead, so
+        // a stray keystroke while just glancing at a card is safely absorbed
+        // rather than landing — silently, permanently, this sheet has no
+        // Cancel — in the title field.
+        .background(FirstResponderNeutralizer())
         .padding(20)
         .frame(width: 420)
         // Glass for the surface the card rests on, paper for the card itself —
@@ -111,7 +122,6 @@ struct TicketEditSheet: View {
             TextField("", text: $title)
                 .textFieldStyle(.plain)
                 .font(BoardText.title)
-                .focused($isTitleFocused)
         }
         .padding(EdgeInsets(top: 11, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
     }
@@ -364,7 +374,6 @@ struct TicketEditSheet: View {
         priority = ticket.priority
         calendarID = ticket.calendarID
         isLoaded = true
-        isTitleFocused = true
     }
 
     private func save() {
@@ -406,6 +415,52 @@ private enum PriorityOption: Int, CaseIterable, Identifiable {
         case 5: .medium
         case 6...9: .low
         default: .none
+        }
+    }
+}
+
+/// A zero-size view whose only job is to take first responder away from
+/// whatever AppKit assigned it by default, the moment its window has one.
+/// `viewDidMoveToWindow` is not late enough by itself — the window can still
+/// be in the middle of becoming key — so `didBecomeKeyNotification` backs it
+/// up.
+///
+/// Targets `window.contentView` (the SwiftUI hosting view), not the window
+/// itself: an earlier version handed responder status to the window
+/// directly, which did stop stray characters from landing in the title
+/// field, but also silently broke Escape-to-dismiss — the sheet's own
+/// cancel handling apparently routes through the hosting view, and a bare
+/// `NSWindow` first responder doesn't forward into it. The hosting view is
+/// the neutral default this sheet would already have if AppKit didn't treat
+/// a fresh sheet's first text field as a special case; restoring that
+/// default, rather than replacing it with something else entirely, is what
+/// keeps Escape and Return both working.
+private struct FirstResponderNeutralizer: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        NeutralizingView()
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    final class NeutralizingView: NSView {
+        private var observer: NSObjectProtocol?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            observer.map(NotificationCenter.default.removeObserver)
+            guard let window else { return }
+            window.makeFirstResponder(window.contentView)
+            observer = NotificationCenter.default.addObserver(
+                forName: NSWindow.didBecomeKeyNotification,
+                object: window,
+                queue: .main
+            ) { [weak window] _ in
+                window?.makeFirstResponder(window?.contentView)
+            }
+        }
+
+        deinit {
+            observer.map(NotificationCenter.default.removeObserver)
         }
     }
 }
