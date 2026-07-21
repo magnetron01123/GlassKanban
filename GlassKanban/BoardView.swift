@@ -90,12 +90,26 @@ struct BoardView: View {
             // an offer, not an instruction.
             Text("Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?")
         }
+        // Board-level for the same reason as the alert above: the failure
+        // surfaces from `TicketEditSheet`'s own close, after that sheet is
+        // already gone, so nowhere on the sheet itself could show it.
+        .alert("Nicht gespeichert", isPresented: saveFailureBinding, presenting: store.pendingSaveFailure) { _ in
+            Button("OK") {}
+        } message: { failure in
+            Text(failure.message)
+        }
     }
 
     private var overflowBinding: Binding<Bool> {
         Binding(
             get: { store.pendingOverflow != nil },
             set: { if !$0 { store.pendingOverflow = nil } })
+    }
+
+    private var saveFailureBinding: Binding<Bool> {
+        Binding(
+            get: { store.pendingSaveFailure != nil },
+            set: { if !$0 { store.pendingSaveFailure = nil } })
     }
 
     private var overflowTitle: String {

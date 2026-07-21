@@ -3,9 +3,10 @@ import SwiftUI
 import AppKit
 
 /// The single data layer of the app. Reads reminders via EventKit, derives
-/// `KanbanCard`s, and performs the only write operations the app has:
-/// moving a card between columns (rewriting the status hashtag and/or
-/// `isCompleted`) plus tag hygiene. All app data lives in Reminders.
+/// `KanbanCard`s, and performs every write the app has: moving a card
+/// between columns (rewriting the status hashtag and/or `isCompleted`),
+/// editing a ticket's title/notes/due date/priority, tag hygiene, and
+/// ticket creation/deletion. All app data lives in Reminders.
 @MainActor
 final class RemindersStore: ObservableObject {
 
@@ -34,9 +35,10 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var draggingCardID: String?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
-    /// Not persisted, like the two filters above: `hiddenUntilDue` is the
-    /// board's normal state, so every launch should start there rather than
-    /// resuming a wide-open Backlog the user opened once, weeks ago.
+    /// The per-session view of recurring cards. Not persisted itself: it starts
+    /// each launch at `defaultRecurringFilter` — the saved preference — and can
+    /// be nudged from the find popover for a quick look, falling back to that
+    /// preference on the next launch.
     @Published var recurringFilter: RecurringFilter = .hiddenUntilDue
     @Published var searchText: String = ""
     /// Set when a move pushed a limited lane past its WIP limit. Lives here
@@ -50,6 +52,23 @@ final class RemindersStore: ObservableObject {
         let cardID: String
         let origin: KanbanStatus
         let status: KanbanStatus
+        var id: String { cardID }
+    }
+
+    /// Set when `updateTicket` fails to save. Board-level like `pendingOverflow`,
+    /// not sheet-level: the failure is only known once `eventStore.save` throws,
+    /// which happens inside the sheet's own `onDisappear` — by the time this is
+    /// set, the sheet that made the edit is already gone. Silently discarding a
+    /// multi-field edit (title, notes, due date, priority, list) was fine for
+    /// the single-field `renameTicket` this pattern started with; it isn't once
+    /// the sheet lets a whole card's content be lost the same quiet way — e.g.
+    /// editing a card whose list turned out to be read-only, which `TicketEditSheet`
+    /// deliberately keeps reachable rather than hiding.
+    @Published var pendingSaveFailure: SaveFailure?
+
+    struct SaveFailure: Identifiable {
+        let cardID: String
+        let message: String
         var id: String { cardID }
     }
 
@@ -73,8 +92,27 @@ final class RemindersStore: ObservableObject {
         }
     }
 
+    /// Whether Backlog hides recurring reminders until they come due — the
+    /// board's long-standing default, now a saved preference. `recurringFilter`
+    /// starts each launch from this and resets to it, so the board's resting
+    /// state stays one thing rather than two. Persisted like the settings above.
+    @Published var hideRecurringUntilDue: Bool {
+        didSet {
+            UserDefaults.standard.set(hideRecurringUntilDue, forKey: Self.hideRecurringKey)
+            // A preference change belongs on the board now, not next launch —
+            // even if that overrides a look the find popover is currently taking.
+            recurringFilter = defaultRecurringFilter
+        }
+    }
+
+    /// Backlog's resting state for recurring cards, from the saved preference.
+    var defaultRecurringFilter: RecurringFilter {
+        hideRecurringUntilDue ? .hiddenUntilDue : .alwaysVisible
+    }
+
     private static let excludedKey = "excludedCalendarIDs"
     private static let wipLimitsKey = "wipLimits"
+    private static let hideRecurringKey = "hideRecurringUntilDue"
 
     /// Completed reminders are shown in "Erledigt" for this many days.
     private static let doneWindowDays = 14
@@ -95,6 +133,11 @@ final class RemindersStore: ObservableObject {
                 uniqueKeysWithValues: KanbanStatus.allCases
                     .filter(\.supportsWIPLimit)
                     .map { ($0.rawValue, $0.defaultWIPLimit) })
+        // Hiding unless the user turned it off in Settings on an earlier launch.
+        // Assigning in init does not fire the didSet, so seed the session filter
+        // here rather than relying on the property's declared placeholder.
+        hideRecurringUntilDue = UserDefaults.standard.object(forKey: Self.hideRecurringKey) as? Bool ?? true
+        recurringFilter = hideRecurringUntilDue ? .hiddenUntilDue : .alwaysVisible
     }
 
     // MARK: - WIP limits
@@ -199,8 +242,17 @@ final class RemindersStore: ObservableObject {
         guard accessState == .granted else { return }
         let calendar = Calendar.current
 
-        reminderCalendars = eventStore.calendars(for: .reminder)
+        let calendars = eventStore.calendars(for: .reminder)
             .sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        // Only publish a genuinely different list. EventKit hands back fresh
+        // EKCalendar instances on every call, so assigning unconditionally
+        // republished identical data on every refresh — and refresh runs after
+        // every write, every EventKit notification, every wake. Each of those
+        // relaid out every view observing the store, which is what made the
+        // Settings window flicker while it was open.
+        if Self.identity(of: calendars) != Self.identity(of: reminderCalendars) {
+            reminderCalendars = calendars
+        }
         let included = reminderCalendars.filter { !excludedCalendarIDs.contains($0.calendarIdentifier) }
         guard !included.isEmpty else {
             cards = []
@@ -256,6 +308,19 @@ final class RemindersStore: ObservableObject {
             eventStore.fetchReminders(matching: predicate) { reminders in
                 continuation.resume(returning: reminders ?? [])
             }
+        }
+    }
+
+    /// Everything the UI actually renders from a calendar list: which lists
+    /// exist, in which order, under which name and colour. Comparing this
+    /// rather than the `EKCalendar` objects themselves is what makes the
+    /// equality check above meaningful — the objects are never equal across
+    /// two EventKit calls, but a renamed or recoloured list must still reach
+    /// the board.
+    private static func identity(of calendars: [EKCalendar]) -> [String] {
+        calendars.map { calendar in
+            let color = calendar.color.map { "\($0.redComponent),\($0.greenComponent),\($0.blueComponent)" } ?? "-"
+            return "\(calendar.calendarIdentifier)|\(calendar.title)|\(color)"
         }
     }
 
@@ -412,6 +477,85 @@ final class RemindersStore: ObservableObject {
         scheduleRefresh()
     }
 
+    /// Working copy for `TicketEditSheet`, read fresh from EventKit rather
+    /// than carried on `KanbanCard` — the full notes text is only ever
+    /// needed while a sheet is open, not for every card on the board.
+    func loadEditableTicket(cardID: String) -> EditableTicket? {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
+        let components = reminder.dueDateComponents
+        return EditableTicket(
+            title: reminder.title ?? "",
+            notes: StatusTagger.removingTags(reminder.notes ?? ""),
+            dueDate: components.flatMap { Foundation.Calendar.current.date(from: $0) },
+            hasDueTime: components?.hour != nil,
+            priority: reminder.priority,
+            calendarID: reminder.calendar?.calendarIdentifier ?? "")
+    }
+
+    /// Lists a card can be moved to from the edit sheet: writable, and not
+    /// hidden from the board — moving a card into an excluded list would
+    /// make it vanish, which is not what picking a list should mean.
+    var selectableCalendars: [EKCalendar] {
+        reminderCalendars.filter {
+            $0.allowsContentModifications && !excludedCalendarIDs.contains($0.calendarIdentifier)
+        }
+    }
+
+    /// Writes back the fields `TicketEditSheet` lets the user touch. The
+    /// status hashtag is reapplied for the card's current column — this
+    /// method never changes status, `move` does that — so a content edit
+    /// can never accidentally relocate the card.
+    func updateTicket(
+        cardID: String,
+        title: String,
+        notes: String,
+        dueDate: Date?,
+        hasDueTime: Bool,
+        priority: Int,
+        calendarID: String
+    ) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder,
+              let index = cards.firstIndex(where: { $0.id == cardID }) else { return }
+        // Read from the reminder itself, not the cached `cards[index].status`:
+        // the sheet can sit open long enough for an external change (another
+        // device, a direct edit in Reminders.app) to move the card before
+        // this save runs. Using the stale cache here would silently reapply
+        // the old column's tag over whatever the live state already is.
+        let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
+        let rewrittenNotes = StatusTagger.rewrittenNotes(notes, for: status)
+        // Without a time of day the reminder stays all-day, the way Reminders
+        // itself models it (see `EditableTicket.hasDueTime`).
+        let dueFields: Set<Foundation.Calendar.Component> =
+            hasDueTime ? [.year, .month, .day, .hour, .minute] : [.year, .month, .day]
+        let newCalendar = eventStore.calendar(withIdentifier: calendarID)
+        reminder.title = title
+        reminder.notes = rewrittenNotes
+        reminder.dueDateComponents = dueDate.map {
+            Foundation.Calendar.current.dateComponents(dueFields, from: $0)
+        }
+        reminder.priority = priority
+        if let newCalendar, newCalendar.calendarIdentifier != reminder.calendar?.calendarIdentifier {
+            reminder.calendar = newCalendar
+        }
+        do {
+            try eventStore.save(reminder, commit: true)
+        } catch {
+            pendingSaveFailure = SaveFailure(cardID: cardID, message: error.localizedDescription)
+            scheduleRefresh()
+            return
+        }
+        cards[index].title = title
+        cards[index].notesPreview = TextSanitizer.notesPreview(rewrittenNotes)
+        cards[index].notesExcerpt = TextSanitizer.notesExcerpt(rewrittenNotes)
+        cards[index].dueDate = dueDate
+        cards[index].priority = priority
+        if let newCalendar {
+            cards[index].listName = newCalendar.title
+            cards[index].listColor = Color(nsColor: newCalendar.color ?? .controlAccentColor)
+        }
+        scheduleRefresh()
+    }
+
     /// Marks cards as just-completed for ~0.7 s so their views can play the
     /// settle animation, then clears the flags.
     private func flagRecentlyCompleted(_ ids: Set<String>) {
@@ -435,8 +579,20 @@ final class RemindersStore: ObservableObject {
         draggingCardID = nil
     }
 
-    /// Opens the Reminders app (where all tasks are created and edited — the
-    /// board itself is read-only apart from drag & drop).
+    /// Opens one reminder in the Reminders app, for everything the board's
+    /// own editor deliberately leaves out — recurrence, subtasks,
+    /// attachments, location alerts. Deep-links straight to it where that
+    /// resolves; local lists have no public identifier to link to (see
+    /// `ReminderDeepLink`), so those simply bring the app forward.
+    func openInReminders(cardID: String) {
+        if let url = deepLinkURL(forCardID: cardID), NSWorkspace.shared.open(url) { return }
+        openRemindersApp()
+    }
+
+    /// Opens the Reminders app — the fallback when a deep link can't resolve
+    /// a specific reminder (e.g. local, non-synced lists), and still the
+    /// place list/calendar assignment is managed since the board doesn't
+    /// offer that.
     func openRemindersApp() {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.reminders") else { return }
         NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
@@ -480,7 +636,7 @@ final class RemindersStore: ObservableObject {
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all
-        recurringFilter = .hiddenUntilDue
+        recurringFilter = defaultRecurringFilter
         searchText = ""
     }
 
@@ -507,10 +663,12 @@ final class RemindersStore: ObservableObject {
     }
 
     /// Whether anything in the find popover sits away from its default —
-    /// which is a wider question than `isFiltering`, because "Immer anzeigen"
-    /// is a departure worth being able to undo without being a restriction.
+    /// which is a wider question than `isFiltering`, because a recurring value
+    /// away from the saved preference is a departure worth being able to undo
+    /// without being a restriction. Measured against that preference, so the
+    /// reset is not offered for a value that is already the resting one.
     var canResetFindSettings: Bool {
-        isFiltering || recurringFilter != .hiddenUntilDue
+        isFiltering || recurringFilter != defaultRecurringFilter
     }
 
     // MARK: - Empty board
