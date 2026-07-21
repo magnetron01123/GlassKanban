@@ -100,11 +100,11 @@ struct StatsPopover: View {
         // 16 all round: the standard macOS popover inset, and the value the
         // rest of the spacing here is a multiple of.
         .padding(16)
-        // 330: the width at which a real Reminders list name ("Gemeinsame
-        // Aufgaben") still sets at the same size as every other value. Below
-        // it the row shrank its text, and one value a size smaller than the
-        // rest is the sort of thing you notice without being able to name.
-        .frame(width: 330, alignment: .leading)
+        // Roomy enough that no row has to negotiate: the longest label and
+        // the longest value a real Reminders list can produce still sit on
+        // one line at full size, with air left between them. 330 fitted them
+        // exactly, which is not the same as comfortably.
+        .frame(width: 400, alignment: .leading)
         // The two tabs are different heights; without this the popover would
         // adopt whatever SwiftUI proposes rather than its content's own size.
         .fixedSize(horizontal: false, vertical: true)
@@ -197,13 +197,18 @@ struct StatsPopover: View {
     /// here set large, and the only one that needs no label to be understood
     /// at a glance.
     private var hero: some View {
-        // Baseline-aligned, not centred. Centring put the flame beside the
-        // middle of the whole text stack, which is level with the number's
-        // lower half — the glyph has to sit on the same line the number
-        // stands on, the way a currency symbol does.
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            FlameIcon(level: streak.flameLevel, size: 34)
-            VStack(alignment: .leading, spacing: 1) {
+        // One left edge for the whole block. The flame used to sit *beside*
+        // the stacked text, which put the glyph on one margin and all three
+        // lines of text on another 46pt to its right — two competing left
+        // edges in a four-line block, and the thing that made this corner
+        // look unresolved. Flame and number share the headline row;
+        // everything below starts where the flame starts.
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                // Baseline-aligned so the glyph stands on the same line as
+                // the number, the way a currency symbol does — centring left
+                // it level with the numeral's lower half.
+                FlameIcon(level: streak.flameLevel, size: 30)
                 Text("\(streak.current)")
                     .font(BoardText.heroValue)
                     .monospacedDigit()
@@ -212,20 +217,20 @@ struct StatsPopover: View {
                         streak.current == 0
                             ? AnyShapeStyle(.secondary)
                             : AnyShapeStyle(Color.orange.gradient))
-                Text(streak.current == 1 ? "Tag in Folge" : "Tage in Folge")
+            }
+            Text(streak.current == 1 ? "Tag in Folge" : "Tage in Folge")
+                .font(BoardText.body)
+                .foregroundStyle(.secondary)
+            if let note = heroNote {
+                // Ranked by weight and system text colour, never by an
+                // orange label — see the badge rule above. The reward is
+                // the only primary-coloured line under the number; the
+                // invitation steps back to secondary.
+                Text(note.text)
                     .font(BoardText.body)
-                    .foregroundStyle(.secondary)
-                if let note = heroNote {
-                    // Ranked by weight and system text colour, never by an
-                    // orange label — see the badge rule above. The reward is
-                    // the only primary-coloured line under the number; the
-                    // invitation steps back to secondary.
-                    Text(note.text)
-                        .font(BoardText.body)
-                        .fontWeight(note.isReward ? .semibold : .regular)
-                        .foregroundStyle(note.isReward ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                    .fontWeight(note.isReward ? .semibold : .regular)
+                    .foregroundStyle(note.isReward ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(.horizontal, 4)

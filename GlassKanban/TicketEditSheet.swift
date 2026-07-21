@@ -12,8 +12,27 @@ import AppKit
 /// actually meant; a caption stays.
 ///
 /// No Sichern/Abbrechen — like Reminders.app's own quick-look popover, every
-/// change is live and closing the sheet is what persists it (`save()` runs
-/// in `.onDisappear`, regardless of how the sheet closes).
+/// change is live and closing is what persists it (`save()` runs in
+/// `.onDisappear`, regardless of how it closes).
+///
+/// Presented as a popover (see `CardView`): a click anywhere beside it closes
+/// it, as does "Fertig" and Return. The type keeps its `Sheet` name only to
+/// avoid a file rename mid-branch; it is a popover.
+///
+/// **Escape does not close it, and that is a known defect.** AppKit gives the
+/// title field first responder as the popover opens, and a focused
+/// NSTextField consumes the key for its own "abort editing" instead of
+/// letting the popover see it. Measured, not assumed: Return reaches "Fertig"
+/// from the same focused field, so key equivalents do arrive — Escape
+/// specifically is eaten. Five approaches failed to reclaim it —
+/// `.onExitCommand`, a local `NSEvent` monitor scoped to this window, a
+/// hidden button carrying `.keyboardShortcut(.cancelAction)` (both as a
+/// zero-sized overlay and as a laid-out sibling), and removing
+/// `FirstResponderNeutralizer` altogether, which changed nothing and rules it
+/// out as the cause. The remaining candidate is preventing the field from
+/// taking focus at all, which is what that neutralizer already attempts and
+/// loses; solving it properly likely means an AppKit-level field editor
+/// subclass rather than another modifier stacked on top.
 struct TicketEditSheet: View {
     let card: KanbanCard
 
@@ -73,19 +92,11 @@ struct TicketEditSheet: View {
         .background(FirstResponderNeutralizer())
         .padding(20)
         .frame(width: 420)
-        // Glass for the surface the card rests on, paper for the card itself —
-        // the board's depth model applied to this sheet (see `DesignSystem`:
-        // glass belongs to the chrome, never to the content plane). Default
-        // `.behindWindow` blending is right here even though the tooltip uses
-        // `.withinWindow`: a sheet is its own window, so "behind" is the board
-        // beneath it, which is exactly what should frost through.
-        .presentationBackground {
-            if reduceTransparency {
-                Color(nsColor: .windowBackgroundColor)
-            } else {
-                HUDGlassMaterial()
-            }
-        }
+        // No `.presentationBackground` any more: as a popover this *is*
+        // chrome, and macOS gives it the system's own Liquid Glass. Painting
+        // a second material inside it would be glass on glass, the boxed
+        // artifact the board's depth model exists to avoid — the card inside
+        // still carries its own paper fill, which is the whole point.
         .task { load() }
         .onDisappear {
             save()

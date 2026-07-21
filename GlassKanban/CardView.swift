@@ -89,7 +89,16 @@ struct CardView: View {
             guard !isRenaming else { return }
             beginRename()
         }
-        .sheet(isPresented: $isEditing) {
+        // A popover, not a sheet. A sheet is modal by definition: it dims the
+        // board, ignores a click beside it and can only be left through its
+        // own buttons — the right shape for a decision, the wrong one for
+        // looking at a card. A popover closes on a click anywhere outside,
+        // handled by AppKit rather than reimplemented here, and since closing
+        // is what saves (see `TicketEditSheet.save()`), leaving that way keeps
+        // the edit. It is also the model this editor was written against in
+        // the first place: Reminders.app's own quick-look popover.
+        // (Escape still does not close it — see `TicketEditSheet`.)
+        .popover(isPresented: $isEditing, arrowEdge: .trailing) {
             TicketEditSheet(card: card).environmentObject(store)
         }
         .contextMenu {
