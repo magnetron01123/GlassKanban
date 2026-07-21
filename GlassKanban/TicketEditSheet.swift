@@ -147,42 +147,17 @@ struct TicketEditSheet: View {
                     hoveredField = hovering ? .title : (hoveredField == .title ? nil : hoveredField)
                 }
             }
-            if isDone {
-                doneMark
-            }
             openInRemindersMark
         }
         .padding(EdgeInsets(top: 16, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
     }
 
+    /// Only the spoken label distinguishes a finished ticket now. Nothing
+    /// on screen does, by design — but a screen reader has no lane around the
+    /// card to infer it from, and dropping the word for the sake of symmetry
+    /// would take away information rather than noise.
     private var isDone: Bool { card.status == .done }
 
-    /// Says a ticket is finished.
-    ///
-    /// The lanes strike the title through, and that was tried here first —
-    /// but `.strikethrough()` does not render on a `TextField`, nor does a
-    /// `foregroundStyle` meant to grey it: both modifiers apply to `Text`,
-    /// and an editable field ignores them. Verified on screen, not assumed.
-    ///
-    /// So the state moves to a chip, in the badge treatment the board already
-    /// uses for lane counts — quaternary fill, system text colour, never
-    /// coloured text on a coloured wash. Deliberately neutral rather than
-    /// green: in this app finished work *recedes*, and a celebratory badge on
-    /// a card whose paper and stripe have both just dimmed would pull in the
-    /// opposite direction.
-    private var doneMark: some View {
-        Text("Erledigt")
-            .font(BoardText.chip)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(Board.chipShape.fill(.quaternary.opacity(Board.chipFill)))
-            .accessibilityHidden(true)
-    }
-
-    /// Sits where `CardView.fullBody` puts its dwell-time label — the corner
-    /// a card keeps for the things that are *about* the ticket rather than
-    /// part of it.
     private var openInRemindersMark: some View {
         Button {
             opensRemindersOnClose = true
@@ -334,14 +309,17 @@ struct TicketEditSheet: View {
             ? Color(nsColor: .controlBackgroundColor)
             // The dimmer paper a finished ticket already has in its lane —
             // the parameter was there, this view just never passed it.
-            : Board.cardFill(colorScheme, isDone: isDone)
+            // One paper tone whatever the ticket's state. The lanes dim a
+            // finished card because it is one of many and has to recede among
+            // them; held open on its own there is nothing for it to recede
+            // behind, and a card that looks different depending on which lane
+            // it came from is two cards.
+            : Board.cardFill(colorScheme)
     }
 
     private var listStripe: some View {
         Capsule()
-            // Finished work's colour code fades, exactly as it does in the
-            // lane (`CardView.listStripe`).
-            .fill(stripeColor.opacity(isDone ? 0.45 : 0.9))
+            .fill(stripeColor.opacity(0.9))
             .frame(width: Board.cardStripeWidth + 1)
             .padding(.vertical, 12)
             .padding(.leading, 7)
