@@ -226,11 +226,19 @@ struct StatsPopover: View {
         // it, so there is nothing left to confuse it with — and the gap does
         // the rest.
         VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                // Baseline-aligned so the glyph stands on the same line as
-                // the number, the way a currency symbol does — centring left
-                // it level with the numeral's lower half.
-                FlameIcon(level: streak.flameLevel, size: 26)
+            // Centred, not baseline-aligned. A symbol has no true text
+            // baseline of its own — SwiftUI approximates one from the glyph's
+            // bounds at *its own* font size, and that approximation only
+            // lines up cleanly against text set at a similar size. Here it
+            // sat beside a 40pt numeral and a 20pt phrase at once, and it
+            // could not agree with both: the flame read as floating a touch
+            // above the line it was meant to share. Centring the row treats
+            // flame, number and words as one balanced cluster instead of
+            // three baselines negotiating — the way Weather centres a
+            // condition line beside its temperature rather than matching
+            // either one's baseline.
+            HStack(alignment: .center, spacing: 10) {
+                FlameIcon(level: streak.flameLevel, size: 32)
                 // The number takes the ordinary label colour, and the flame
                 // beside it is the only thing here wearing orange.
                 //
