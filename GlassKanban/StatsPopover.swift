@@ -113,16 +113,13 @@ struct StatsPopover: View {
         VStack(alignment: .leading, spacing: 20) {
             hero
             nowGrid
-            if let milestone = wrapped.milestone {
-                milestoneChip(milestone)
-            }
             trendRow
         }
     }
 
     /// The streak at the size it deserves — it is the reason the flame is in
-    /// the toolbar at all. "Heute" sits directly underneath because it is the
-    /// only number in this window that can still be changed today.
+    /// the toolbar at all. Underneath sits a single adaptive line that does
+    /// three jobs and never two at once (see `heroNote`).
     private var hero: some View {
         HStack(alignment: .center, spacing: 14) {
             FlameIcon(level: streak.flameLevel, size: 34)
@@ -138,42 +135,90 @@ struct StatsPopover: View {
                 Text(streak.current == 1 ? "Tag in Folge" : "Tage in Folge")
                     .font(BoardText.body)
                     .foregroundStyle(.secondary)
-                Text(todayLine)
-                    .font(BoardText.body)
-                    .fontWeight(.medium)
-                    .foregroundStyle(
-                        streak.todayCount == 0
-                            ? AnyShapeStyle(.secondary)
-                            : AnyShapeStyle(Color.orange))
+                if let note = heroNote {
+                    Text(note.text)
+                        .font(BoardText.body)
+                        .fontWeight(.medium)
+                        .foregroundStyle(note.isReward ? AnyShapeStyle(Color.orange) : AnyShapeStyle(.secondary))
+                }
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(Self.days(streak.current)) in Folge. \(todayLine).")
+        .accessibilityLabel(
+            "\(Self.days(streak.current)) in Folge." + (heroNote.map { " \($0.text)." } ?? ""))
     }
 
-    /// At zero this invites instead of reporting. A bare "Heute 0 erledigt"
-    /// is the one line here that could read as an accusation, and the board's
-    /// rule is to reward, never to punish.
-    private var todayLine: String {
-        streak.todayCount == 0
-            ? "Eine Aufgabe hält die Folge"
-            : "Heute \(Self.tasks(streak.todayCount))"
+    /// One line, three jobs, in strict priority — an invitation while today is
+    /// still empty, otherwise the goal gradient toward the personal record,
+    /// otherwise nothing.
+    ///
+    /// It never reports a shortfall. "Heute 0 erledigt" would be the one line
+    /// in this window that reads as an accusation, and a board whose rule is
+    /// to reward and never punish does not get to say that.
+    private var heroNote: (text: String, isReward: Bool)? {
+        guard streak.todayCount > 0 else {
+            return (streak.current == 0
+                        ? "Eine Aufgabe startet eine neue Folge"
+                        : "Eine Aufgabe hält die Folge",
+                    false)
+        }
+        guard streak.current > 0, streak.best > 0 else { return nil }
+        if streak.current >= streak.best {
+            return ("Dein längster Lauf bisher", true)
+        }
+        // Goal-gradient (Hull): closeness to the goal is what accelerates
+        // effort — so this only appears once the record is actually in reach.
+        // "Noch 38 Tage" is not a pull, it is a wall.
+        let gap = streak.best - streak.current
+        guard gap <= Self.recordInReachDays else { return nil }
+        return (gap == 1 ? "Noch 1 Tag bis zu deinem Rekord" : "Noch \(gap) Tage bis zu deinem Rekord", true)
     }
+
+    private static let recordInReachDays = 5
 
     private var nowGrid: some View {
-        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 20) {
+        // Top-aligned, not centred: the WIP cell is taller than its neighbour
+        // because of the capacity dots, and a centred row would push the
+        // number beside it half a line down out of alignment.
+        Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 20) {
             GridRow {
-                tile(value: "\(wrapped.yearCount)", label: "Dieses Jahr")
-                tile(
-                    value: "\(Int((wrapped.consistencyRatio * 100).rounded()))%",
-                    label: "Konstanz",
-                    help: "An \(wrapped.consistencyActiveDays) von \(WrappedStats.trendWindowDays) Tagen hast du mindestens eine Aufgabe erledigt.")
+                todayTile
+                wipTile
             }
             GridRow {
-                wipTile
+                // Year on the left, forecast on the right: the forecast is the
+                // one tile that can be absent, and a gap at the trailing edge
+                // is far less conspicuous than one in the middle of the grid.
+                yearTile
                 forecastTile
             }
         }
+    }
+
+    /// Today's count, praised when it clears the personal daily average —
+    /// which `StreakStats` already computes for the flame. Above the average
+    /// the label turns into quiet praise; below it, it says nothing at all,
+    /// so there is no quota to fall short of.
+    private var todayTile: some View {
+        let isStrong = streak.todayCount >= max(1, streak.dailyTarget)
+        return tile(
+            value: "\(streak.todayCount)",
+            label: isStrong ? "Starker Tag" : "Heute",
+            help: isStrong
+                ? "Mehr als an einem durchschnittlichen Tag (\(Self.tasks(max(1, streak.dailyTarget))))."
+                : "Heute erledigte Aufgaben.",
+            labelTint: isStrong ? .orange : nil)
+    }
+
+    /// The milestone rides on this number instead of standing beside it: a
+    /// separate capsule reading "100 erledigt dieses Jahr" directly under a
+    /// tile reading "105 · Dieses Jahr" was two elements saying one thing.
+    private var yearTile: some View {
+        tile(
+            value: "\(wrapped.yearCount)",
+            label: "Dieses Jahr",
+            help: wrapped.milestone.map { "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr." },
+            mark: wrapped.milestone != nil ? "flag.fill" : nil)
     }
 
     private var wipTile: some View {
@@ -263,7 +308,10 @@ struct StatsPopover: View {
 
     private var pastTab: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 20) {
+            // Top-aligned, not centred: the WIP cell is taller than its neighbour
+        // because of the capacity dots, and a centred row would push the
+        // number beside it half a line down out of alignment.
+        Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: 20) {
                 GridRow {
                     tile(
                         value: "\(streak.best)",
@@ -341,33 +389,16 @@ struct StatsPopover: View {
 
     // MARK: - Building blocks
 
-    /// The one place the board's no-badges rule is relaxed — and only for a
-    /// round number crossed within the last week, so it is a moment rather
-    /// than a permanent fixture (see `WrappedStats.milestone`).
-    private func milestoneChip(_ threshold: Int) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: "flag.fill")
-                .font(BoardText.glyph)
-            Text("\(threshold) erledigt dieses Jahr")
-                .font(BoardText.chip)
-        }
-        // Same treatment as the board's badges: the capsule carries the
-        // colour and the label keeps a system text colour, because orange
-        // text on an orange wash measures far below the contrast floor.
-        .foregroundStyle(.primary)
-        .padding(.horizontal, 9)
-        .padding(.vertical, 4)
-        .background(Color.orange.opacity(Board.badgeTintFill), in: Board.chipShape)
-    }
-
     private func tile(
         value: String,
         unit: String? = nil,
         label: String,
         help: String? = nil,
+        labelTint: Color? = nil,
+        mark: String? = nil,
         @ViewBuilder accessory: () -> some View = { EmptyView() }
     ) -> some View {
-        tileBody(label: label, help: help, accessory: accessory) {
+        tileBody(label: label, help: help, labelTint: labelTint, accessory: accessory) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value)
                     .font(BoardText.tileValue)
@@ -379,6 +410,15 @@ struct StatsPopover: View {
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
                 }
+                // The one place the board's no-badges rule is relaxed: a glyph
+                // beside a number it already belongs to, only while the round
+                // number is fresh (see `WrappedStats.milestone`).
+                if let mark {
+                    Image(systemName: mark)
+                        .font(BoardText.glyph)
+                        .foregroundStyle(Color.orange)
+                        .accessibilityHidden(true)
+                }
             }
         }
     }
@@ -386,7 +426,7 @@ struct StatsPopover: View {
     /// A word instead of a number — a weekday, a list name. Set smaller than
     /// `tileValue`: a long word at a number's size wraps and breaks the grid.
     private func tile(word: String, label: String, help: String? = nil, dot: Color? = nil) -> some View {
-        tileBody(label: label, help: help, accessory: { EmptyView() }) {
+        tileBody(label: label, help: help, labelTint: nil, accessory: { EmptyView() }) {
             HStack(spacing: 6) {
                 if let dot {
                     Circle().fill(dot).frame(width: 7, height: 7)
@@ -406,6 +446,7 @@ struct StatsPopover: View {
     private func tileBody(
         label: String,
         help: String?,
+        labelTint: Color?,
         @ViewBuilder accessory: () -> some View,
         @ViewBuilder value: () -> some View
     ) -> some View {
@@ -413,7 +454,7 @@ struct StatsPopover: View {
             value()
             Text(label)
                 .font(BoardText.meta)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(labelTint.map { AnyShapeStyle($0) } ?? AnyShapeStyle(.secondary))
             accessory()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
