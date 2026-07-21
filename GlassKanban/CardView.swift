@@ -77,16 +77,19 @@ struct CardView: View {
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
-        // One click for the common action (edit), two for the rare one
-        // (rename) — SwiftUI holds the single-tap just long enough to rule
-        // out a second one, same as Finder's icon-name click-to-rename.
-        .onTapGesture(count: 1) {
+        // One click, one meaning. Double-click used to start an inline
+        // rename, and the cost of that was paid on every single click:
+        // SwiftUI has to hold a lone tap back until a second one can be ruled
+        // out, so opening a card — the thing you actually do — always lagged
+        // behind the click by the double-click interval.
+        //
+        // Renaming loses nothing. The card that opens on a single click has
+        // the title as its first editable field, and "Umbenennen" is still in
+        // the context menu and the accessibility actions for anyone who wants
+        // the inline route.
+        .onTapGesture {
             guard !isRenaming else { return }
             beginEdit()
-        }
-        .onTapGesture(count: 2) {
-            guard !isRenaming else { return }
-            beginRename()
         }
         .contextMenu {
             Button("Bearbeiten") { beginEdit() }
