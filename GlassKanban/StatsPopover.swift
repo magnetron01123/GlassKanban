@@ -237,25 +237,15 @@ struct StatsPopover: View {
             // three baselines negotiating — the way Weather centres a
             // condition line beside its temperature rather than matching
             // either one's baseline.
-            HStack(alignment: .center, spacing: 10) {
-                // Matched to `heroUnit`, not grown to compete with the
-                // numeral: the flame is what the whole popover hangs off of,
-                // not a second hero figure standing beside the first.
+            // One size, one weight, for all three — flame, count and words.
+            // The row used to run a 40pt bold rounded numeral against a 20pt
+            // regular phrase, a hero figure with a caption trailing it; set
+            // uniform, nothing here outranks anything else, and the flame's
+            // own colour is the one thing left to carry emphasis.
+            HStack(alignment: .center, spacing: 8) {
                 FlameIcon(level: streak.flameLevel, size: BoardText.heroUnitSize)
-                // The number takes the ordinary label colour, and the flame
-                // beside it is the only thing here wearing orange.
-                //
-                // Both were orange before, and the two oranges meant
-                // different things: on the flame it encodes the day's
-                // progress and greys out until something is done, on the
-                // number it encoded nothing at all. So on a normal morning
-                // the line showed a grey glyph — the one element actually
-                // saying something — beside a number shouting in colour for
-                // no reason, which is what made the pair read as broken.
-                // Colour carries meaning here or it is not spent: at 52pt
-                // the count already has all the emphasis it needs.
                 Text("\(streak.current)")
-                    .font(BoardText.heroValue)
+                    .font(BoardText.heroUnit)
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .foregroundStyle(streak.current == 0 ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
