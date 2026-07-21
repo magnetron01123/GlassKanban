@@ -86,6 +86,8 @@ struct StatsPopover: View {
     }
 
     @State private var tab: Tab = .now
+    /// Height of the values well, so the trend well beneath can match it.
+    @State private var rowsWellHeight: CGFloat?
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.colorScheme) private var scheme
 
@@ -191,7 +193,15 @@ struct StatsPopover: View {
                         })
                 }
             }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { rowsWellHeight = $0 }
+            // Matched to the well above rather than left at its natural size.
+            // Two stacked groups of nearly-but-not-quite the same height read
+            // as a layout that missed, not as a pair — and the difference was
+            // only ever the accident of how many rows the list happened to
+            // hold. Measured rather than guessed, because that row count
+            // varies: the forecast drops out whenever nothing is in progress.
             well { trendSection }
+                .frame(height: rowsWellHeight)
         }
     }
 
@@ -220,15 +230,24 @@ struct StatsPopover: View {
                 // Baseline-aligned so the glyph stands on the same line as
                 // the number, the way a currency symbol does — centring left
                 // it level with the numeral's lower half.
-                FlameIcon(level: streak.flameLevel, size: 30)
+                FlameIcon(level: streak.flameLevel, size: 34)
+                // The number takes the ordinary label colour, and the flame
+                // beside it is the only thing here wearing orange.
+                //
+                // Both were orange before, and the two oranges meant
+                // different things: on the flame it encodes the day's
+                // progress and greys out until something is done, on the
+                // number it encoded nothing at all. So on a normal morning
+                // the line showed a grey glyph — the one element actually
+                // saying something — beside a number shouting in colour for
+                // no reason, which is what made the pair read as broken.
+                // Colour carries meaning here or it is not spent: at 52pt
+                // the count already has all the emphasis it needs.
                 Text("\(streak.current)")
                     .font(BoardText.heroValue)
                     .monospacedDigit()
                     .contentTransition(.numericText())
-                    .foregroundStyle(
-                        streak.current == 0
-                            ? AnyShapeStyle(.secondary)
-                            : AnyShapeStyle(Color.orange.gradient))
+                    .foregroundStyle(streak.current == 0 ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
                 Text(streak.current == 1 ? "Tag in Folge" : "Tage in Folge")
                     .font(BoardText.heroUnit)
                     .foregroundStyle(.secondary)
@@ -368,28 +387,44 @@ struct StatsPopover: View {
                 .foregroundStyle(.secondary)
             trendRow
         }
+        // Takes whatever the matched well height leaves after the label, so
+        // the chart grows into the space rather than sitting at the bottom
+        // of a half-empty box.
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private var trendRow: some View {
-        HStack(alignment: .bottom, spacing: 2) {
-            ForEach(wrapped.last30) { day in
-                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
-                    .fill(day.didComplete ? AnyShapeStyle(Color.orange.gradient) : AnyShapeStyle(.quaternary))
-                    .frame(height: barHeight(day))
-                    .help(trendHelp(day))
+        // The bars are sized against the height they are actually given, not
+        // against a constant. Once the well matches the one above it, that
+        // height depends on how many rows the list holds — a fixed 24pt row
+        // would leave the difference as dead space.
+        GeometryReader { proxy in
+            HStack(alignment: .bottom, spacing: 2) {
+                ForEach(wrapped.last30) { day in
+                    RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                        .fill(day.didComplete ? AnyShapeStyle(Color.orange.gradient) : AnyShapeStyle(.quaternary))
+                        .frame(height: barHeight(day, in: proxy.size.height))
+                        .help(trendHelp(day))
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
-        .frame(height: 24, alignment: .bottom)
+        .frame(minHeight: 24)
         // Otherwise this is 30 VoiceOver stops that each say nothing.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             "Letzte \(WrappedStats.trendWindowDays) Tage: an \(wrapped.consistencyActiveDays) Tagen etwas erledigt.")
     }
 
-    private func barHeight(_ day: DayCompletion) -> CGFloat {
+    /// A day with nothing done keeps a hairline so the row still reads as a
+    /// row of days; everything else scales between a visible floor and the
+    /// full height available.
+    private func barHeight(_ day: DayCompletion, in available: CGFloat) -> CGFloat {
+        guard available > 0 else { return 0 }
         guard day.count > 0 else { return 3 }
         let peak = max(1, wrapped.last30.map(\.count).max() ?? 1)
-        return 7 + CGFloat(day.count) / CGFloat(peak) * 17
+        let floor = min(7, available)
+        return floor + CGFloat(day.count) / CGFloat(peak) * (available - floor)
     }
 
     private func trendHelp(_ day: DayCompletion) -> String {
