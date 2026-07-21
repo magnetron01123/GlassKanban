@@ -171,6 +171,22 @@ enum Board {
     // Motion
     static let hoverAnimation: Animation = .easeOut(duration: 0.16)
     static let dropTargetAnimation: Animation = .easeOut(duration: 0.15)
+    /// Taking a ticket off the board, and putting it back.
+    ///
+    /// A spring, because every panel macOS opens is sprung — but damped
+    /// almost flat. The settle below bounces on purpose; this must not. A
+    /// card you are about to read should arrive and stop, and an overshoot
+    /// at this size reads as a wobble rather than as life.
+    ///
+    /// One constant for the whole gesture: the lanes going out of focus, the
+    /// board dimming and the card growing all run on this, so it reads as one
+    /// movement instead of three that happen to coincide.
+    static let cardOpenAnimation: Animation = .spring(response: 0.30, dampingFraction: 0.86)
+
+    /// How far under full size the card starts. Small on purpose — enough to
+    /// read as arriving, not so much that it flies in.
+    static let cardOpenScale: CGFloat = 0.92
+
     /// Card "settling" into Erledigt — a small reward on completion.
     /// The board's only recurring animation: motion is spent on things that
     /// just happened, never on a standing invitation. An empty lane is its own

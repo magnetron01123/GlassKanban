@@ -43,8 +43,12 @@ struct BoardView: View {
         // The lanes go out of focus while a card is held up in front of them.
         // Applied to the board and not the window, so the toolbar — which is
         // chrome, not content — stays sharp and reachable.
+        // No `.animation(value:)` for this: the blur rides on whatever
+        // animation the mutation was made inside (see `closeEditor` and
+        // `CardView.beginEdit`), which is how it stays welded to the card's
+        // own arrival rather than running a second, nearly-identical curve
+        // beside it.
         .blur(radius: store.editingCardID == nil ? 0 : (reduceTransparency ? 0 : 7))
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: store.editingCardID)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
             // Shown as soon as there is any history at all — not just during
@@ -137,18 +141,32 @@ struct BoardView: View {
                     .contentShape(Rectangle())
                     // The board is the way out: put the card back by clicking
                     // where it came from. Nothing on the card itself closes it.
-                    .onTapGesture { store.editingCardID = nil }
+                    .onTapGesture { closeEditor() }
                     .accessibilityLabel("Karte schließen")
                     .accessibilityAddTraits(.isButton)
-                    .accessibilityAction { store.editingCardID = nil }
+                    .accessibilityAction { closeEditor() }
+                    // The scrim fades; only the card scales. Scaling a
+                    // full-bleed rectangle would slide its edges in from
+                    // outside the window, which is motion nobody asked for at
+                    // the edge of the screen.
+                    .transition(.opacity)
 
-                TicketEditSheet(card: card) { store.editingCardID = nil }
+                TicketEditSheet(card: card, onClose: closeEditor)
                     .environmentObject(store)
                     .transition(
                         reduceMotion
                             ? .opacity
-                            : .scale(scale: 0.94).combined(with: .opacity))
+                            : .scale(scale: Board.cardOpenScale).combined(with: .opacity))
             }
+        }
+    }
+
+    /// Every route out runs the same animated close, so putting the card back
+    /// looks the same whether it was the board, the corner mark or a card
+    /// vanishing from underneath the editor that did it.
+    private func closeEditor() {
+        withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
+            store.editingCardID = nil
         }
     }
 

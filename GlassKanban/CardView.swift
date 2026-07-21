@@ -508,7 +508,14 @@ struct CardView: View {
         // The board presents the editor, not the card — see
         // `RemindersStore.editingCardID` for why its position must not depend
         // on where the card that opened it happens to sit.
-        store.editingCardID = card.id
+        // Animated at the source, not by a modifier further up: a
+        // `.transition` only plays if the state change that triggers it is
+        // itself animated, and the board's blur lives on a different view
+        // than the card's arrival. Wrapping the mutation is what makes the
+        // two one gesture rather than two coincidences.
+        withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
+            store.editingCardID = card.id
+        }
     }
 
     /// Escape hatch to the native app, for anything the edit sheet
