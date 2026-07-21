@@ -31,9 +31,10 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var draggingCardID: String?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
-    /// Not persisted, like the two filters above: `hiddenUntilDue` is the
-    /// board's normal state, so every launch should start there rather than
-    /// resuming a wide-open Backlog the user opened once, weeks ago.
+    /// The per-session view of recurring cards. Not persisted itself: it starts
+    /// each launch at `defaultRecurringFilter` — the saved preference — and can
+    /// be nudged from the find popover for a quick look, falling back to that
+    /// preference on the next launch.
     @Published var recurringFilter: RecurringFilter = .hiddenUntilDue
     @Published var searchText: String = ""
     /// Set when a move pushed a limited lane past its WIP limit. Lives here
@@ -70,8 +71,27 @@ final class RemindersStore: ObservableObject {
         }
     }
 
+    /// Whether Backlog hides recurring reminders until they come due — the
+    /// board's long-standing default, now a saved preference. `recurringFilter`
+    /// starts each launch from this and resets to it, so the board's resting
+    /// state stays one thing rather than two. Persisted like the settings above.
+    @Published var hideRecurringUntilDue: Bool {
+        didSet {
+            UserDefaults.standard.set(hideRecurringUntilDue, forKey: Self.hideRecurringKey)
+            // A preference change belongs on the board now, not next launch —
+            // even if that overrides a look the find popover is currently taking.
+            recurringFilter = defaultRecurringFilter
+        }
+    }
+
+    /// Backlog's resting state for recurring cards, from the saved preference.
+    var defaultRecurringFilter: RecurringFilter {
+        hideRecurringUntilDue ? .hiddenUntilDue : .alwaysVisible
+    }
+
     private static let excludedKey = "excludedCalendarIDs"
     private static let wipLimitsKey = "wipLimits"
+    private static let hideRecurringKey = "hideRecurringUntilDue"
 
     /// Completed reminders are shown in "Erledigt" for this many days.
     private static let doneWindowDays = 14
@@ -92,6 +112,11 @@ final class RemindersStore: ObservableObject {
                 uniqueKeysWithValues: KanbanStatus.allCases
                     .filter(\.supportsWIPLimit)
                     .map { ($0.rawValue, $0.defaultWIPLimit) })
+        // Hiding unless the user turned it off in Settings on an earlier launch.
+        // Assigning in init does not fire the didSet, so seed the session filter
+        // here rather than relying on the property's declared placeholder.
+        hideRecurringUntilDue = UserDefaults.standard.object(forKey: Self.hideRecurringKey) as? Bool ?? true
+        recurringFilter = hideRecurringUntilDue ? .hiddenUntilDue : .alwaysVisible
     }
 
     // MARK: - WIP limits
@@ -550,7 +575,7 @@ final class RemindersStore: ObservableObject {
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all
-        recurringFilter = .hiddenUntilDue
+        recurringFilter = defaultRecurringFilter
         searchText = ""
     }
 
@@ -577,10 +602,12 @@ final class RemindersStore: ObservableObject {
     }
 
     /// Whether anything in the find popover sits away from its default —
-    /// which is a wider question than `isFiltering`, because "Immer anzeigen"
-    /// is a departure worth being able to undo without being a restriction.
+    /// which is a wider question than `isFiltering`, because a recurring value
+    /// away from the saved preference is a departure worth being able to undo
+    /// without being a restriction. Measured against that preference, so the
+    /// reset is not offered for a value that is already the resting one.
     var canResetFindSettings: Bool {
-        isFiltering || recurringFilter != .hiddenUntilDue
+        isFiltering || recurringFilter != defaultRecurringFilter
     }
 
     // MARK: - Empty board
