@@ -278,9 +278,13 @@ enum DueFilter: String, CaseIterable, Identifiable {
 /// is the deviation. It is still a visible row rather than a silent rule,
 /// for the same reason the WIP limit rides along in the lane count: a board
 /// must be able to say what it is not showing ("make policies explicit").
+///
+/// Which of the two the board rests at is the user's to set — see
+/// `RemindersStore.hideRecurringUntilDue`, the Settings preference this filter
+/// starts from on every launch. The popover row then only borrows it for a look.
 enum RecurringFilter: String, CaseIterable, Identifiable {
-    /// Default. The card joins Backlog once it reaches the same due window
-    /// `DueFilter` already calls Überfällig / Heute / Diese Woche.
+    /// The factory resting state. The card joins Backlog once it reaches the
+    /// same due window `DueFilter` already calls Überfällig / Heute.
     case hiddenUntilDue
     case alwaysVisible
 
