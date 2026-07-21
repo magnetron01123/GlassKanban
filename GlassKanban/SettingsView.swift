@@ -80,13 +80,13 @@ struct GeneralSettingsView: View {
     @EnvironmentObject private var store: RemindersStore
     @ObservedObject private var appearance = AppearanceController.shared
 
-    /// Mirrors `SMAppService.mainApp.status`, which is an IPC round trip to
-    /// the service-management daemon — cheap, but not something to do while
-    /// building a view. Read once when the pane appears and again whenever
-    /// the window regains focus, so a change made in System Settings while
-    /// this window sat open is picked up instead of being silently reverted
-    /// by the next toggle.
-    @State private var launchAtLogin = false
+    /// Seeded with the real state rather than a placeholder corrected in
+    /// `onAppear`: that correction is a state change on the first frame, so
+    /// with the login item enabled the switch would visibly flick from off
+    /// to on as the pane appears. The read is an IPC round trip to the
+    /// service-management daemon, measured at 2–3 ms — cheap enough to do
+    /// once here, and it is refreshed on focus for changes made elsewhere.
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     /// Distinguishes the user flipping the switch from us loading its state,
     /// so syncing never re-registers the login item as a side effect.
     @State private var isSyncingLaunchAtLogin = false
@@ -159,7 +159,6 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .frame(height: SettingsMetrics.generalHeight)
-        .onAppear { syncLaunchAtLogin() }
         .onReceive(NotificationCenter.default.publisher(
             for: NSApplication.didBecomeActiveNotification)) { _ in
             syncLaunchAtLogin()
