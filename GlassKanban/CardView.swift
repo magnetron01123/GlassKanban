@@ -24,7 +24,6 @@ struct CardView: View {
     @State private var settleFlash = false
     @State private var isRenaming = false
     @State private var renameText = ""
-    @State private var isEditing = false
     @FocusState private var isFocused: Bool
     @FocusState private var isRenameFieldFocused: Bool
 
@@ -88,18 +87,6 @@ struct CardView: View {
         .onTapGesture(count: 2) {
             guard !isRenaming else { return }
             beginRename()
-        }
-        // A popover, not a sheet. A sheet is modal by definition: it dims the
-        // board, ignores a click beside it and can only be left through its
-        // own buttons — the right shape for a decision, the wrong one for
-        // looking at a card. A popover closes on a click anywhere outside,
-        // handled by AppKit rather than reimplemented here, and since closing
-        // is what saves (see `TicketEditSheet.save()`), leaving that way keeps
-        // the edit. It is also the model this editor was written against in
-        // the first place: Reminders.app's own quick-look popover.
-        // (Escape still does not close it — see `TicketEditSheet`.)
-        .popover(isPresented: $isEditing, arrowEdge: .trailing) {
-            TicketEditSheet(card: card).environmentObject(store)
         }
         .contextMenu {
             Button("Bearbeiten") { beginEdit() }
@@ -518,7 +505,10 @@ struct CardView: View {
     /// A click opens the in-app editor now — title, notes, due date and
     /// priority all live in GlassKanban itself.
     private func beginEdit() {
-        isEditing = true
+        // The board presents the editor, not the card — see
+        // `RemindersStore.editingCardID` for why its position must not depend
+        // on where the card that opened it happens to sit.
+        store.editingCardID = card.id
     }
 
     /// Escape hatch to the native app, for anything the edit sheet

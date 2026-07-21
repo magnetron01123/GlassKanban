@@ -15,29 +15,33 @@ import AppKit
 /// change is live and closing is what persists it (`save()` runs in
 /// `.onDisappear`, regardless of how it closes).
 ///
-/// Presented as a popover (see `CardView`): a click anywhere beside it closes
-/// it, as does "Fertig" and Return. The type keeps its `Sheet` name only to
-/// avoid a file rename mid-branch; it is a popover.
+/// Presented by the board, centred, over a dimmed backdrop (see
+/// `BoardView.editorOverlay`) — not anchored to the card that opened it. An
+/// anchored panel put its own position at the mercy of where that card
+/// happened to sit: a ticket near the top pushed it over the title bar, one
+/// in the last lane pushed it off to the side. Centred, it is in the same
+/// place every time. A click on the backdrop closes it, as do "Fertig" and
+/// Return.
 ///
 /// **Escape does not close it, and that is a known defect.** AppKit gives the
-/// title field first responder as the popover opens, and a focused
+/// title field first responder as the editor opens, and a focused
 /// NSTextField consumes the key for its own "abort editing" instead of
-/// letting the popover see it. Measured, not assumed: Return reaches "Fertig"
-/// from the same focused field, so key equivalents do arrive — Escape
-/// specifically is eaten. Five approaches failed to reclaim it —
-/// `.onExitCommand`, a local `NSEvent` monitor scoped to this window, a
-/// hidden button carrying `.keyboardShortcut(.cancelAction)` (both as a
-/// zero-sized overlay and as a laid-out sibling), and removing
-/// `FirstResponderNeutralizer` altogether, which changed nothing and rules it
-/// out as the cause. The remaining candidate is preventing the field from
-/// taking focus at all, which is what that neutralizer already attempts and
-/// loses; solving it properly likely means an AppKit-level field editor
-/// subclass rather than another modifier stacked on top.
+/// letting it travel up. Measured, not assumed: Return reaches "Fertig" from
+/// the same focused field, so key equivalents do arrive — Escape specifically
+/// is eaten. `.onExitCommand`, a local `NSEvent` monitor, a hidden button
+/// carrying `.keyboardShortcut(.cancelAction)`, and removing
+/// `FirstResponderNeutralizer` altogether were all tried against the previous
+/// popover presentation and all failed; the last of those rules the
+/// neutralizer out as the cause.
 struct TicketEditSheet: View {
     let card: KanbanCard
 
+    /// Closing is the only exit, and it is what saves — see `save()`. Passed
+    /// in rather than taken from `\.dismiss` because the board presents this,
+    /// not a sheet or popover of its own.
+    let onClose: () -> Void
+
     @EnvironmentObject private var store: RemindersStore
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -59,44 +63,46 @@ struct TicketEditSheet: View {
     /// with blank fields.
     @State private var isLoaded = false
 
+    /// One surface, edge to edge.
+    ///
+    /// The card used to be inset by 20pt inside a popover, which put two
+    /// backgrounds on screen behind one piece of content: an opaque rectangle
+    /// floating in a ring of glass, with the board showing through the ring.
+    /// That doubling is exactly what this board's depth model exists to
+    /// prevent. The paper now fills the panel, and the panel is the card.
+    ///
     var body: some View {
-        VStack(spacing: 14) {
-            cardSurface
-            HStack {
-                // A link, not a second filled button: this is the rarely
-                // needed way out to the native app, and giving it equal
-                // weight beside "Fertig" would suggest the sheet needs it.
-                // It lives here because the card's context menu — the other
-                // route to it — is unreachable while this sheet is open.
-                Button("In Erinnerungen öffnen") {
-                    opensRemindersOnClose = true
-                    dismiss()
-                }
-                .buttonStyle(.link)
-                .font(BoardText.body)
-                Spacer(minLength: 12)
-                Button("Fertig") { dismiss() }
-                    .keyboardShortcut(.defaultAction)
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            header
+            zoneDivider
+            notesZone
+            zoneDivider
+            factsZone
+            zoneDivider
+            actionsZone
         }
-        // macOS assigns a freshly presented sheet's first eligible text field
-        // as first responder on its own — before anything SwiftUI's own focus
-        // system can do about it. Both `@FocusState` (however it was timed)
-        // and `prefersDefaultFocus`/`.focusScope` were tried here and lost
-        // that race; they operate above AppKit's own default-responder
+        .frame(width: 420)
+        .background(cardFill)
+        .overlay(alignment: .leading) { listStripe }
+        // The card's own contour, back now that nothing else supplies one:
+        // a popover brought its shape, border and shadow with it, and this
+        // is presented on the bare board. Same shape as every card on it,
+        // because that is what this is.
+        .clipShape(Board.cardShape)
+        .overlay { Board.cardShape.strokeBorder(Board.cardBorder(contrast)) }
+        .shadow(color: Board.cardShadowResting.color, radius: Board.cardShadowResting.radius, y: Board.cardShadowResting.y)
+        .shadow(color: .black.opacity(0.22), radius: 30, y: 12)
+        // macOS assigns a freshly presented popover's first eligible text
+        // field as first responder on its own — before anything SwiftUI's own
+        // focus system can do about it. Both `@FocusState` (however it was
+        // timed) and `prefersDefaultFocus`/`.focusScope` were tried here and
+        // lost that race; they operate above AppKit's own default-responder
         // assignment for a window that has just become key, not underneath
         // it. `FirstResponderNeutralizer` reaches AppKit directly instead, so
         // a stray keystroke while just glancing at a card is safely absorbed
-        // rather than landing — silently, permanently, this sheet has no
+        // rather than landing — silently, permanently, this editor has no
         // Cancel — in the title field.
         .background(FirstResponderNeutralizer())
-        .padding(20)
-        .frame(width: 420)
-        // No `.presentationBackground` any more: as a popover this *is*
-        // chrome, and macOS gives it the system's own Liquid Glass. Painting
-        // a second material inside it would be glass on glass, the boxed
-        // artifact the board's depth model exists to avoid — the card inside
-        // still carries its own paper fill, which is the whole point.
         .task { load() }
         .onDisappear {
             save()
@@ -106,23 +112,27 @@ struct TicketEditSheet: View {
         }
     }
 
-    // MARK: - Card surface (mirrors CardView.fullBody)
-
-    private var cardSurface: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            header
-            zoneDivider
-            notesZone
-            zoneDivider
-            factsZone
+    /// The card's last zone rather than a button bar below it — once the card
+    /// fills the popover there is no "below it" left, and the buttons belong
+    /// to the same surface as everything else.
+    private var actionsZone: some View {
+        HStack {
+            // A link, not a second filled button: this is the rarely needed
+            // way out to the native app, and giving it equal weight beside
+            // "Fertig" would suggest the editor needs it. It lives here
+            // because the card's context menu — the other route to it — is
+            // unreachable while this popover is open.
+            Button("In Erinnerungen öffnen") {
+                opensRemindersOnClose = true
+                onClose()
+            }
+            .buttonStyle(.link)
+            .font(BoardText.body)
+            Spacer(minLength: 12)
+            Button("Fertig") { onClose() }
+                .keyboardShortcut(.defaultAction)
         }
-        .frame(minHeight: Board.fullCardMinHeight, alignment: .topLeading)
-        .background { Board.cardShape.fill(cardFill) }
-        .overlay(alignment: .leading) { listStripe }
-        .overlay { Board.cardShape.strokeBorder(Board.cardBorder(contrast)) }
-        .overlay { topHighlight }
-        .shadow(color: Board.cardShadowResting.color, radius: Board.cardShadowResting.radius, y: Board.cardShadowResting.y)
-        .shadow(color: Board.cardShadowAmbient.color, radius: Board.cardShadowAmbient.radius, y: Board.cardShadowAmbient.y)
+        .padding(EdgeInsets(top: 10, leading: Board.cardInsetLeading, bottom: 12, trailing: Board.cardInsetTrailing))
     }
 
     private var header: some View {
@@ -266,29 +276,47 @@ struct TicketEditSheet: View {
             set: { priority = $0.rawValue })
     }
 
-    /// One button in both states — with and without a date — so setting or
-    /// clearing a due date never changes the row's size and the card stays
-    /// still. Its text is formatted here rather than by a stepper field,
-    /// whose own text follows the system region ("1. 9.2026") with no way to
-    /// pin it to dd.MM.yyyy.
+    /// One button at one width, whatever it is showing — no date, a date, or
+    /// a date and time. Its text is formatted here rather than by a stepper
+    /// field, whose own text follows the system region ("1. 9.2026") with no
+    /// way to pin it to dd.MM.yyyy.
+    ///
+    /// The width is held by an invisible copy of the longest form it can ever
+    /// show. Without it the button shrank the moment the time was switched
+    /// off — and since the calendar hangs off this button, the whole popover
+    /// slid sideways under the pointer while the switch that caused it was
+    /// still being aimed at.
     private var dueDateControl: some View {
         Button {
             isDuePopoverPresented = true
         } label: {
-            Group {
-                if let dueDate {
-                    Text(Self.dueLabel(for: dueDate, includesTime: hasDueTime))
-                        .monospacedDigit()
-                } else {
-                    Text("Kein Datum").foregroundStyle(.secondary)
+            Text(Self.dueWidthTemplate)
+                .monospacedDigit()
+                .font(BoardText.body)
+                .hidden()
+                .overlay(alignment: .trailing) {
+                    Group {
+                        if let dueDate {
+                            Text(Self.dueLabel(for: dueDate, includesTime: hasDueTime))
+                                .monospacedDigit()
+                        } else {
+                            Text("Kein Datum").foregroundStyle(.secondary)
+                        }
+                    }
+                    .font(BoardText.body)
+                    .lineLimit(1)
+                    .fixedSize()
                 }
-            }
-            .font(BoardText.body)
         }
         .popover(isPresented: $isDuePopoverPresented, arrowEdge: .bottom) {
             duePopover
         }
     }
+
+    /// The widest string this button can hold — a full date with a time. All
+    /// digits, so `monospacedDigit()` makes it an exact stand-in for any real
+    /// value rather than an estimate.
+    private static let dueWidthTemplate = "00.00.0000, 00:00"
 
     /// Picking a day in the calendar is what sets the date — opening the
     /// popover on an undated card must not, or merely looking would date it.
@@ -297,6 +325,8 @@ struct TicketEditSheet: View {
             get: { dueDate ?? Foundation.Calendar.current.startOfDay(for: .now) },
             set: { dueDate = $0 })
     }
+
+    private var showsTimePicker: Bool { hasDueTime && dueDate != nil }
 
     private var duePopover: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -311,11 +341,18 @@ struct TicketEditSheet: View {
                 Toggle("Uhrzeit", isOn: $hasDueTime)
                     .disabled(dueDate == nil)
                 Spacer(minLength: 8)
-                if hasDueTime, dueDate != nil {
-                    DatePicker("Uhrzeit", selection: dueBinding, displayedComponents: .hourAndMinute)
-                        .labelsHidden()
-                        .monospacedDigit()
-                }
+                // Always laid out, only sometimes visible. Inserting the time
+                // field when the switch went on resized the popover under the
+                // pointer — and the switch sits one row above the calendar, so
+                // the whole grid jumped with it. A control that appears must
+                // not move the thing you are still aiming at; reserving its
+                // space costs nothing and keeps the panel still.
+                DatePicker("Uhrzeit", selection: dueBinding, displayedComponents: .hourAndMinute)
+                    .labelsHidden()
+                    .monospacedDigit()
+                    .opacity(showsTimePicker ? 1 : 0)
+                    .disabled(!showsTimePicker)
+                    .accessibilityHidden(!showsTimePicker)
             }
             .font(BoardText.body)
             if dueDate != nil {

@@ -47,6 +47,17 @@ final class RemindersStore: ObservableObject {
     /// question. A limit that only applies to mouse users is not a limit.
     @Published var pendingOverflow: PendingOverflow?
 
+    /// The card currently open in the editor, if any.
+    ///
+    /// Board-level for the same reason as `pendingOverflow`: the editor is
+    /// presented once, centred over the whole board, rather than by the card
+    /// that opened it. Anchoring it to the card made its position a function
+    /// of where that card happened to sit — a ticket near the top pushed the
+    /// panel over the title bar, one in the last lane pushed it off to the
+    /// side — and an editor that lands somewhere different every time is one
+    /// the eye has to hunt for.
+    @Published var editingCardID: String?
+
     /// A card that just pushed its lane past the limit, awaiting an answer.
     struct PendingOverflow: Identifiable {
         let cardID: String
