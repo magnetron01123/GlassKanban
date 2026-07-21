@@ -201,6 +201,13 @@ struct KanbanCard: Identifiable, Equatable {
 struct EditableTicket {
     var title: String
     var notes: String
+    /// The reminder's URL field, as text.
+    ///
+    /// Kept as a string rather than a `URL` because that is what the user
+    /// types into: a half-finished address is still worth holding on to
+    /// while the editor is open, and only the write back to EventKit — which
+    /// takes a real `URL?` — has to decide whether it parses.
+    var url: String
     var dueDate: Date?
     /// Whether the due date carries a time of day. Reminders distinguishes
     /// an all-day reminder (date components without hour/minute) from one

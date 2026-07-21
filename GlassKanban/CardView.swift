@@ -24,7 +24,6 @@ struct CardView: View {
     @State private var settleFlash = false
     @State private var isRenaming = false
     @State private var renameText = ""
-    @State private var isEditing = false
     @FocusState private var isFocused: Bool
     @FocusState private var isRenameFieldFocused: Bool
 
@@ -78,19 +77,19 @@ struct CardView: View {
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
-        // One click for the common action (edit), two for the rare one
-        // (rename) — SwiftUI holds the single-tap just long enough to rule
-        // out a second one, same as Finder's icon-name click-to-rename.
-        .onTapGesture(count: 1) {
+        // One click, one meaning. Double-click used to start an inline
+        // rename, and the cost of that was paid on every single click:
+        // SwiftUI has to hold a lone tap back until a second one can be ruled
+        // out, so opening a card — the thing you actually do — always lagged
+        // behind the click by the double-click interval.
+        //
+        // Renaming loses nothing. The card that opens on a single click has
+        // the title as its first editable field, and "Umbenennen" is still in
+        // the context menu and the accessibility actions for anyone who wants
+        // the inline route.
+        .onTapGesture {
             guard !isRenaming else { return }
             beginEdit()
-        }
-        .onTapGesture(count: 2) {
-            guard !isRenaming else { return }
-            beginRename()
-        }
-        .sheet(isPresented: $isEditing) {
-            TicketEditSheet(card: card).environmentObject(store)
         }
         .contextMenu {
             Button("Bearbeiten") { beginEdit() }
@@ -108,13 +107,23 @@ struct CardView: View {
             Button("Umbenennen") { beginRename() }
             Button("Löschen", role: .destructive) { store.deleteTicket(cardID: card.id) }
         }
-        .boardTooltip(helpText)
+        // No tooltip on the card body. It fired wherever the pointer came to
+        // rest on a lane, which on a board you keep open all day is a panel
+        // that follows you around rather than one you asked for — and the
+        // lanes are mostly cards, so "hovering a card" is close to "using the
+        // app". The lane header and the small glyphs keep theirs: those are
+        // deliberate targets you have to aim at, and each explains one thing
+        // that has no room to say itself.
+        //
+        // Nothing is lost that is not now one click away. Its three lines
+        // were the notes preview, the list name and "Klick öffnet Bearbeiten"
+        // — and the click it advertised opens a card showing all of it at
+        // reading size.
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(accessibilityLabel)
-        // `.help` used to carry this to VoiceOver as well. The notes preview
-        // is only on the tooltip for compact rows, so without it here that
-        // text would exist for sighted users alone.
+        // Still spoken, though no longer drawn: VoiceOver has no other route
+        // to a compact row's notes preview.
         .accessibilityHint(helpText)
         .accessibilityAction(named: "Bearbeiten") { beginEdit() }
         .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
@@ -509,7 +518,17 @@ struct CardView: View {
     /// A click opens the in-app editor now — title, notes, due date and
     /// priority all live in GlassKanban itself.
     private func beginEdit() {
-        isEditing = true
+        // The board presents the editor, not the card — see
+        // `RemindersStore.editingCardID` for why its position must not depend
+        // on where the card that opened it happens to sit.
+        // Animated at the source, not by a modifier further up: a
+        // `.transition` only plays if the state change that triggers it is
+        // itself animated, and the board's blur lives on a different view
+        // than the card's arrival. Wrapping the mutation is what makes the
+        // two one gesture rather than two coincidences.
+        withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
+            store.editingCardID = card.id
+        }
     }
 
     /// Escape hatch to the native app, for anything the edit sheet

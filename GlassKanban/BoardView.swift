@@ -3,6 +3,9 @@ import SwiftUI
 struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Blur is the depth cue here; when it is switched off, the scrim has to
+    /// carry the separation on its own and darkens to compensate.
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var showStreak = false
     @State private var showFind = false
 
@@ -37,11 +40,23 @@ struct BoardView: View {
         .frame(maxWidth: .infinity)
         .padding(Board.boardPadding)
         .frame(minWidth: Board.boardMinWidth, minHeight: 560)
+        // The lanes go out of focus while a card is held up in front of them.
+        // Applied to the board and not the window, so the toolbar — which is
+        // chrome, not content — stays sharp and reachable.
+        // No `.animation(value:)` for this: the blur rides on whatever
+        // animation the mutation was made inside (see `closeEditor` and
+        // `CardView.beginEdit`), which is how it stays welded to the card's
+        // own arrival rather than running a second, nearly-identical curve
+        // beside it.
+        .blur(radius: store.editingCardID == nil ? 0 : (reduceTransparency ? 0 : 7))
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
-            // Only shown once there is a streak — a "0" pill next to the
-            // window controls just looks broken.
-            if store.streakStats.current > 0 {
+            // Shown as soon as there is any history at all — not just during
+            // a live streak. The pill is the only way into the statistics, and
+            // a broken streak must not also lock away everything else. At
+            // streak 0 it shows the grey flame alone: a "0" beside the window
+            // controls looks broken, and reads as a reprimand besides.
+            if store.wrappedStats.totalCompleted > 0 {
                 ToolbarItem(placement: .navigation) {
                     streakPill
                 }
@@ -87,6 +102,7 @@ struct BoardView: View {
             // an offer, not an instruction.
             Text("Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?")
         }
+        .overlay { editorOverlay }
         // Board-level for the same reason as the alert above: the failure
         // surfaces from `TicketEditSheet`'s own close, after that sheet is
         // already gone, so nowhere on the sheet itself could show it.
@@ -95,6 +111,72 @@ struct BoardView: View {
         } message: { failure in
             Text(failure.message)
         }
+    }
+
+    // MARK: - Ticket editor
+
+    /// Taking the note off the wall.
+    ///
+    /// The staging is the whole point here, and it was what failed before: a
+    /// card laid over an undimmed board is just a bigger card among cards,
+    /// with nothing saying it has been picked up. So the board goes back a
+    /// step — blurred and dimmed together — and the card comes forward. Two
+    /// planes, unmistakably.
+    ///
+    /// Blur rather than dimming alone, because dimming only darkens: the
+    /// lanes stay just as sharp, and sharp detail behind a sharp card reads
+    /// as clutter rather than distance. Out-of-focus is how the eye actually
+    /// tells "that is behind this".
+    ///
+    /// It grows in from just under full size, so the card arrives rather than
+    /// appearing — the visual echo of a ticket being lifted. Under Reduce
+    /// Motion it simply fades.
+    @ViewBuilder
+    private var editorOverlay: some View {
+        if let card = editingCard {
+            ZStack {
+                Rectangle()
+                    .fill(.black.opacity(reduceTransparency ? 0.45 : 0.32))
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    // The board is the way out: put the card back by clicking
+                    // where it came from. Nothing on the card itself closes it.
+                    .onTapGesture { closeEditor() }
+                    .accessibilityLabel("Karte schließen")
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction { closeEditor() }
+                    // The scrim fades; only the card scales. Scaling a
+                    // full-bleed rectangle would slide its edges in from
+                    // outside the window, which is motion nobody asked for at
+                    // the edge of the screen.
+                    .transition(.opacity)
+
+                TicketEditSheet(card: card, onClose: closeEditor)
+                    .environmentObject(store)
+                    .transition(
+                        reduceMotion
+                            ? .opacity
+                            : .scale(scale: Board.cardOpenScale).combined(with: .opacity))
+            }
+        }
+    }
+
+    /// Every route out runs the same animated close, so putting the card back
+    /// looks the same whether it was the board, the corner mark or a card
+    /// vanishing from underneath the editor that did it.
+    private func closeEditor() {
+        withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
+            store.editingCardID = nil
+        }
+    }
+
+    /// Resolved from the store on every change, so an edit that lands from
+    /// Reminders while the panel is open is reflected rather than frozen —
+    /// and so a card deleted elsewhere closes the editor instead of leaving
+    /// it editing something that no longer exists.
+    private var editingCard: KanbanCard? {
+        guard let id = store.editingCardID else { return nil }
+        return store.cards.first { $0.id == id }
     }
 
     private var overflowBinding: Binding<Bool> {
@@ -119,33 +201,46 @@ struct BoardView: View {
 
     // MARK: - Streak pill + popover
 
-    /// The streak counter, clickable to reveal details. The flame fills as the
-    /// day's work gets done (see StreakStats.flameLevel). No custom background:
-    /// the macOS 26 toolbar already wraps its items in Liquid Glass, and glass
-    /// inside glass renders as a boxed artifact. Every item in this toolbar
-    /// obeys that rule — see `remindersButton` for what happens when one does
-    /// not.
+    /// The streak counter, clickable to reveal the statistics. The flame fills
+    /// as the day's work gets done (see StreakStats.flameLevel). No custom
+    /// background: the macOS 26 toolbar already wraps its items in Liquid
+    /// Glass, and glass inside glass renders as a boxed artifact. Every item
+    /// in this toolbar obeys that rule — see `remindersButton` for what
+    /// happens when one does not.
     private var streakPill: some View {
         Button {
             showStreak.toggle()
         } label: {
             HStack(spacing: 4) {
                 FlameIcon(level: store.streakStats.flameLevel)
-                Text("\(store.streakStats.current)")
-                    .font(BoardText.value)
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
+                // The count disappears at 0 rather than showing one, leaving
+                // the flame as the button. See the toolbar's visibility rule.
+                if store.streakStats.current > 0 {
+                    Text("\(store.streakStats.current)")
+                        .font(BoardText.value)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                }
             }
             .padding(.horizontal, 2)
         }
         // A bare number plus a decorative flame announces as "1" — true and
         // useless. The label says what the number counts.
-        .accessibilityLabel("Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe")
-        .help("Tage nacheinander mit mindestens einer erledigten Aufgabe")
+        .accessibilityLabel(streakPillLabel)
+        .help("Statistiken")
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
-            StreakPopover(stats: store.streakStats)
-                .frame(width: 260)
+            StatsPopover(
+                streak: store.streakStats,
+                wrapped: store.wrappedStats,
+                wip: store.cards(for: .inProgress).count,
+                wipLimit: store.wipLimit(for: .inProgress))
         }
+    }
+
+    private var streakPillLabel: String {
+        store.streakStats.current > 0
+            ? "Statistiken. Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe"
+            : "Statistiken. Zurzeit keine Folge"
     }
 
     // MARK: - Find
