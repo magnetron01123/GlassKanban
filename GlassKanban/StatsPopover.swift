@@ -205,7 +205,17 @@ struct StatsPopover: View {
         // edges in a four-line block, and the thing that made this corner
         // look unresolved. Flame and number share the headline row;
         // everything below starts where the flame starts.
-        VStack(alignment: .leading, spacing: 2) {
+        // The count reads as one phrase — "2 Tage in Folge" — and the message
+        // stands apart from it.
+        //
+        // The unit used to sit on its own line under the number, directly
+        // above the message, both at body size and two points apart. That made
+        // two candidate captions for one figure, and the message read as a
+        // condition attached to the count rather than as a separate thought.
+        // Moving the unit up beside the number leaves exactly one line below
+        // it, so there is nothing left to confuse it with — and the gap does
+        // the rest.
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 // Baseline-aligned so the glyph stands on the same line as
                 // the number, the way a currency symbol does — centring left
@@ -219,17 +229,21 @@ struct StatsPopover: View {
                         streak.current == 0
                             ? AnyShapeStyle(.secondary)
                             : AnyShapeStyle(Color.orange.gradient))
+                Text(streak.current == 1 ? "Tag in Folge" : "Tage in Folge")
+                    .font(BoardText.heroUnit)
+                    .foregroundStyle(.secondary)
             }
-            Text(streak.current == 1 ? "Tag in Folge" : "Tage in Folge")
-                .font(BoardText.body)
-                .foregroundStyle(.secondary)
             if let note = heroNote {
-                // Ranked by weight and system text colour, never by an
-                // orange label — see the badge rule above. The reward is
-                // the only primary-coloured line under the number; the
-                // invitation steps back to secondary.
+                // Ranked by weight, size and system text colour — never by an
+                // orange label, see the badge rule above.
+                //
+                // The two states are different kinds of line and are set as
+                // such. A reward states a fact about the count and stays at
+                // reading size in the primary colour. A prompt is a caption
+                // on it and drops to `meta`, which is also what stops it
+                // reading as a second figure standing level with the first.
                 Text(note.text)
-                    .font(BoardText.body)
+                    .font(note.isReward ? BoardText.body : BoardText.meta)
                     .fontWeight(note.isReward ? .semibold : .regular)
                     .foregroundStyle(note.isReward ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                     .fixedSize(horizontal: false, vertical: true)

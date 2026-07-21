@@ -254,6 +254,15 @@ enum BoardText {
     /// for the same reason `chip` is: small text that has to stay legible.
     static let editorCaption = Font.system(size: 12, weight: .semibold)
 
+    /// The unit beside the streak count — "Tage in Folge".
+    ///
+    /// Big enough to read as part of the number it follows rather than as a
+    /// caption under it. That distinction is the whole reason it exists: set
+    /// on its own line at body size it sat level with the message below it,
+    /// and the two became one paragraph in which nobody could tell which line
+    /// belonged to the count.
+    static let heroUnit = Font.system(size: 17, weight: .medium)
+
     /// The streak count at the top of the stats popover — the one number in
     /// the app set large, and the only place SF Pro is departed from.
     ///
