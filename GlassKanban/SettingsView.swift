@@ -10,7 +10,7 @@ struct SettingsView: View {
             GeneralSettingsView()
                 .tabItem { Label("Allgemein", systemImage: "gearshape") }
         }
-        .frame(width: 420, height: 380)
+        .frame(width: 420)
     }
 }
 
@@ -40,6 +40,12 @@ struct ListsSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        // Matches `GeneralSettingsView`: without this the window keeps
+        // whichever height the other tab last reported, leaving blank space
+        // under a short list. A very long one still scrolls within the
+        // window instead of growing past the screen — `Form` stays
+        // internally scrollable regardless of this modifier.
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func inclusionBinding(for calendar: EKCalendar) -> Binding<Bool> {
@@ -97,7 +103,12 @@ struct GeneralSettingsView: View {
             } header: {
                 Text("Backlog")
             } footer: {
-                Text("Wiederkehrende Aufgaben erscheinen im Backlog erst, wenn sie fällig oder überfällig sind. Ausgeschaltet sind sie immer sichtbar.")
+                // Two things to convey, and the old wording only managed the
+                // first: what the switch does, and that it is the *resting*
+                // state the find popover's row starts from and returns to.
+                // Without the second, the two controls look like a
+                // contradiction the moment they disagree.
+                Text("Wiederkehrende Aufgaben erscheinen im Backlog erst ab Fälligkeit. Unter „Finden“ vorübergehend umstellbar — Ausgangswert bleibt diese Einstellung.")
             }
 
             // Deliberately the only place a limit can be changed: a limit you
@@ -121,6 +132,13 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        // `Form` reports a flexible, not an intrinsic, height — without this
+        // the Settings window sizes itself from some default rather than
+        // this tab's actual content, and clips the last row behind a
+        // scrollbar. Only this tab: `ListsSettingsView` grows with however
+        // many reminder lists exist, which should scroll rather than push
+        // the window past the screen.
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func limitBinding(for status: KanbanStatus) -> Binding<Int> {
