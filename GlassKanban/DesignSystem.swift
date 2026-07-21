@@ -132,6 +132,24 @@ enum Board {
 
     static let columnInnerShadow = Color.black.opacity(0.10)
 
+    /// Grouped content inside a popover — the stats window's wells.
+    ///
+    /// Not `columnFill`, which they used to borrow. That value is tuned for a
+    /// lane cut into the window's large glass sheet, where dark mode needs a
+    /// heavy 25% black to read as a recess; dropped into a popover it made
+    /// the wells nearly opaque slabs, so the panel was visibly less
+    /// see-through in dark than in light. Measured side by side, that was a
+    /// 3.8× difference in overlay strength between the two modes.
+    ///
+    /// Dark lifts with white rather than pressing with black, which is how
+    /// the system grouped content on a dark material (Control Centre modules,
+    /// Notification Centre cards) and the only way to separate a group
+    /// without spending the translucency the material exists for. Both modes
+    /// now sit near 5–7%, so the panel reads equally glassy either way.
+    static func wellFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.07) : Color.black.opacity(0.05)
+    }
+
     /// The wash under an editable field while the pointer is over it.
     ///
     /// Much fainter than `columnFill`: a lane is a place, this is only a hint

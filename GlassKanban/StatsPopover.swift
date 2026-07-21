@@ -150,7 +150,7 @@ struct StatsPopover: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Board.wellShape.fill(Board.columnFill(scheme)))
+            .background(Board.wellShape.fill(Board.wellFill(scheme)))
             .overlay {
                 // A 6% wash is exactly the kind of boundary Increase Contrast
                 // exists to harden.
