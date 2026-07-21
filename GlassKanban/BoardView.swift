@@ -39,9 +39,12 @@ struct BoardView: View {
         .frame(minWidth: Board.boardMinWidth, minHeight: 560)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
-            // Only shown once there is a streak — a "0" pill next to the
-            // window controls just looks broken.
-            if store.streakStats.current > 0 {
+            // Shown as soon as there is any history at all — not just during
+            // a live streak. The pill is the only way into the statistics, and
+            // a broken streak must not also lock away everything else. At
+            // streak 0 it shows the grey flame alone: a "0" beside the window
+            // controls looks broken, and reads as a reprimand besides.
+            if store.wrappedStats.totalCompleted > 0 {
                 ToolbarItem(placement: .navigation) {
                     streakPill
                 }
@@ -105,33 +108,46 @@ struct BoardView: View {
 
     // MARK: - Streak pill + popover
 
-    /// The streak counter, clickable to reveal details. The flame fills as the
-    /// day's work gets done (see StreakStats.flameLevel). No custom background:
-    /// the macOS 26 toolbar already wraps its items in Liquid Glass, and glass
-    /// inside glass renders as a boxed artifact. Every item in this toolbar
-    /// obeys that rule — see `remindersButton` for what happens when one does
-    /// not.
+    /// The streak counter, clickable to reveal the statistics. The flame fills
+    /// as the day's work gets done (see StreakStats.flameLevel). No custom
+    /// background: the macOS 26 toolbar already wraps its items in Liquid
+    /// Glass, and glass inside glass renders as a boxed artifact. Every item
+    /// in this toolbar obeys that rule — see `remindersButton` for what
+    /// happens when one does not.
     private var streakPill: some View {
         Button {
             showStreak.toggle()
         } label: {
             HStack(spacing: 4) {
                 FlameIcon(level: store.streakStats.flameLevel)
-                Text("\(store.streakStats.current)")
-                    .font(BoardText.value)
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
+                // The count disappears at 0 rather than showing one, leaving
+                // the flame as the button. See the toolbar's visibility rule.
+                if store.streakStats.current > 0 {
+                    Text("\(store.streakStats.current)")
+                        .font(BoardText.value)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                }
             }
             .padding(.horizontal, 2)
         }
         // A bare number plus a decorative flame announces as "1" — true and
         // useless. The label says what the number counts.
-        .accessibilityLabel("Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe")
-        .help("Tage nacheinander mit mindestens einer erledigten Aufgabe")
+        .accessibilityLabel(streakPillLabel)
+        .help("Statistiken")
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
-            StreakPopover(stats: store.streakStats)
-                .frame(width: 260)
+            StatsPopover(
+                streak: store.streakStats,
+                wrapped: store.wrappedStats,
+                wip: store.cards(for: .inProgress).count,
+                wipLimit: store.wipLimit(for: .inProgress))
         }
+    }
+
+    private var streakPillLabel: String {
+        store.streakStats.current > 0
+            ? "Statistiken. Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe"
+            : "Statistiken. Zurzeit keine Folge"
     }
 
     // MARK: - Find

@@ -194,6 +194,15 @@ enum BoardText {
     /// A single emphasised number — the streak counter.
     static let value = Font.system(size: 12, weight: .semibold)
 
+    // The stats popover's two sizes, both far above the board's scale. They
+    // are allowed to be, because they never appear on the board: the popover
+    // is a place you go to look at numbers, and there the number is the
+    // content rather than a label on something else.
+    /// The streak count at the top of the stats popover.
+    static let heroValue = Font.system(size: 52, weight: .bold)
+    /// A value in the popover's 2×2 grid.
+    static let tileValue = Font.system(size: 24, weight: .semibold)
+
     // Tooltip lines. Both 11pt — the rank comes from weight and colour, as
     // everywhere else on this board. The first draft set the lead at 11.5
     // against 11, which is both off the macOS grid (11/12/13) and exactly the

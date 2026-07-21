@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA01BE9C1F4D40A7B2C30002 /* WrappedStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01BE9C1F4D40A7B2C30001 /* WrappedStats.swift */; };
+		AA01BE9C1F4D40A7B2C30003 /* WrappedStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01BE9C1F4D40A7B2C30001 /* WrappedStats.swift */; };
+		AA01BE9C1F4D40A7B2C30005 /* WrappedStatsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01BE9C1F4D40A7B2C30004 /* WrappedStatsTests.swift */; };
 		095FD46B8BF0F4B3C0DF18D0 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */; };
 		17AAD6984070753493382FA9 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E363E5F11832E63EE2539D70 /* CardView.swift */; };
 		17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */; };
@@ -14,7 +17,7 @@
 		1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */; };
 		1E7F6ED58D7DBA4FB4175DE6 /* AppAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885796666D14CA49747DB258 /* AppAppearance.swift */; };
 		262B9D2A64B3478DC0B7D42F /* BoardTooltip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */; };
-		2FA0675B56569C16EB972A13 /* StreakPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B365227CBE04B748E55FE /* StreakPopover.swift */; };
+		2FA0675B56569C16EB972A13 /* StatsPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B365227CBE04B748E55FE /* StatsPopover.swift */; };
 		4DDD94D9BA542BA62B842C25 /* BacklogTicketCreationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */; };
 		5C60750477A63990C6B97E35 /* EmptyBoardNotice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */; };
 		6E3C54C9398748DCB39B3DB3 /* BacklogTicketTargeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */; };
@@ -47,11 +50,13 @@
 /* Begin PBXFileReference section */
 		0C252FF02D5162B99A3F30F7 /* WIPLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WIPLimitTests.swift; sourceTree = "<group>"; };
 		10ECC48E9096FEF7E8FFDCB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		1C6B365227CBE04B748E55FE /* StreakPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakPopover.swift; sourceTree = "<group>"; };
+		1C6B365227CBE04B748E55FE /* StatsPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsPopover.swift; sourceTree = "<group>"; };
 		2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculatorTests.swift; sourceTree = "<group>"; };
 		4F5178AE744F393F737442A5 /* FilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterTests.swift; sourceTree = "<group>"; };
 		616551F8C95C166758DC62DD /* TextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizer.swift; sourceTree = "<group>"; };
+		AA01BE9C1F4D40A7B2C30001 /* WrappedStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrappedStats.swift; sourceTree = "<group>"; };
+		AA01BE9C1F4D40A7B2C30004 /* WrappedStatsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrappedStatsTests.swift; sourceTree = "<group>"; };
 		61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculator.swift; sourceTree = "<group>"; };
 		63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardTooltip.swift; sourceTree = "<group>"; };
 		6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassKanban.entitlements; sourceTree = "<group>"; };
@@ -99,6 +104,7 @@
 				4F5178AE744F393F737442A5 /* FilterTests.swift */,
 				E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */,
 				4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */,
+				AA01BE9C1F4D40A7B2C30004 /* WrappedStatsTests.swift */,
 				EF53DB3FE2E8D54F03CE48E9 /* TextSanitizerTests.swift */,
 				0C252FF02D5162B99A3F30F7 /* WIPLimitTests.swift */,
 			);
@@ -129,8 +135,9 @@
 				73CAB35E9902F258F00D82A7 /* SettingsView.swift */,
 				C8099603D0D48B34633EB69D /* StatusTagger.swift */,
 				61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */,
-				1C6B365227CBE04B748E55FE /* StreakPopover.swift */,
+				1C6B365227CBE04B748E55FE /* StatsPopover.swift */,
 				616551F8C95C166758DC62DD /* TextSanitizer.swift */,
+				AA01BE9C1F4D40A7B2C30001 /* WrappedStats.swift */,
 			);
 			path = GlassKanban;
 			sourceTree = "<group>";
@@ -250,8 +257,9 @@
 				A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */,
 				9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */,
 				17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */,
-				2FA0675B56569C16EB972A13 /* StreakPopover.swift in Sources */,
+				2FA0675B56569C16EB972A13 /* StatsPopover.swift in Sources */,
 				9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */,
+				AA01BE9C1F4D40A7B2C30002 /* WrappedStats.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,6 +281,8 @@
 				F02B830CE81DFD65A6C33E55 /* TextSanitizer.swift in Sources */,
 				D10E1E7C10AD77A2A5815F45 /* TextSanitizerTests.swift in Sources */,
 				C3122530F3FD6606EBCD4E6C /* WIPLimitTests.swift in Sources */,
+				AA01BE9C1F4D40A7B2C30003 /* WrappedStats.swift in Sources */,
+				AA01BE9C1F4D40A7B2C30005 /* WrappedStatsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
