@@ -79,15 +79,19 @@ struct TicketEditSheet: View {
             zoneDivider
             factsZone
         }
-        .frame(width: 420)
+        // 500, and the notes below reserve four lines: at 520 with a three-line
+        // notes field the card came out near 3:1, which is a banner rather
+        // than a note. The lanes' own full cards sit near 2.4:1, and matching
+        // that is what keeps this reading as the same object enlarged.
+        .frame(width: 500)
         .background(cardFill)
         .overlay(alignment: .leading) { listStripe }
         // The card's own contour, back now that nothing else supplies one:
         // a popover brought its shape, border and shadow with it, and this
         // is presented on the bare board. Same shape as every card on it,
         // because that is what this is.
-        .clipShape(Board.cardShape)
-        .overlay { Board.cardShape.strokeBorder(Board.cardBorder(contrast)) }
+        .clipShape(Board.openCardShape)
+        .overlay { Board.openCardShape.strokeBorder(Board.cardBorder(contrast)) }
         .shadow(color: Board.cardShadowResting.color, radius: Board.cardShadowResting.radius, y: Board.cardShadowResting.y)
         .shadow(color: .black.opacity(0.22), radius: 30, y: 12)
         // macOS assigns a freshly presented popover's first eligible text
@@ -128,11 +132,11 @@ struct TicketEditSheet: View {
                 // thing twice.
                 TextField("", text: $title)
                     .textFieldStyle(.plain)
-                    .font(BoardText.title)
+                    .font(BoardText.editorTitle)
             }
             openInRemindersMark
         }
-        .padding(EdgeInsets(top: 11, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
+        .padding(EdgeInsets(top: 16, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
     }
 
     /// Sits where `CardView.fullBody` puts its dwell-time label — the corner
@@ -144,7 +148,7 @@ struct TicketEditSheet: View {
             onClose()
         } label: {
             Image(systemName: "arrow.up.forward.app")
-                .font(.system(size: 13))
+                .font(.system(size: 15))
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
@@ -161,11 +165,14 @@ struct TicketEditSheet: View {
             // entirely for the common case (short notes), matching how
             // Reminders.app's own notes field behaves.
             TextField("", text: $notes, axis: .vertical)
-                .font(BoardText.body)
+                .font(BoardText.editorBody)
                 .textFieldStyle(.plain)
-                .lineLimit(3...8)
+                // Four lines at rest, like the lanes' own cards keep a body
+                // even when the notes are empty — a card with no room for
+                // text is a label.
+                .lineLimit(4...12)
         }
-        .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 8, trailing: Board.cardInsetTrailing))
+        .padding(EdgeInsets(top: 12, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
     }
 
     /// The card's facts, one labelled row each — from the most stable
@@ -179,7 +186,7 @@ struct TicketEditSheet: View {
             factRow("Dringlichkeit") { priorityControl }
             factRow("Fälligkeit") { dueDateControl }
         }
-        .padding(EdgeInsets(top: 10, leading: Board.cardInsetLeading, bottom: 11, trailing: Board.cardInsetTrailing))
+        .padding(EdgeInsets(top: 14, leading: Board.openCardInset, bottom: 16, trailing: Board.openCardInset))
     }
 
     private func factRow<Control: View>(
@@ -202,7 +209,7 @@ struct TicketEditSheet: View {
 
     /// Height of a menu picker at this text size — the tallest of the three
     /// controls, and therefore what the other rows have to reserve.
-    private static let factRowHeight: CGFloat = 22
+    private static let factRowHeight: CGFloat = 26
 
     /// A structural label, not decorative meta — it has to read clearly at a
     /// glance, so it borrows `BoardText.chip`'s semibold weight (this app's
@@ -210,7 +217,7 @@ struct TicketEditSheet: View {
     /// thinner `BoardText.meta` used for de-emphasized detail.
     private func fieldCaption(_ text: String) -> some View {
         Text(text)
-            .font(BoardText.chip)
+            .font(BoardText.editorCaption)
             .foregroundStyle(.secondary)
     }
 
@@ -218,8 +225,8 @@ struct TicketEditSheet: View {
         Rectangle()
             .fill(Board.cardBorder(contrast))
             .frame(height: 1)
-            .padding(.leading, Board.cardInsetLeading)
-            .padding(.trailing, Board.cardInsetTrailing)
+            .padding(.leading, Board.openCardInset)
+            .padding(.trailing, Board.openCardInset)
     }
 
     private var cardFill: Color {
@@ -231,9 +238,9 @@ struct TicketEditSheet: View {
     private var listStripe: some View {
         Capsule()
             .fill(stripeColor.opacity(0.9))
-            .frame(width: Board.cardStripeWidth)
-            .padding(.vertical, 9)
-            .padding(.leading, 5)
+            .frame(width: Board.cardStripeWidth + 1)
+            .padding(.vertical, 12)
+            .padding(.leading, 7)
             .allowsHitTesting(false)
     }
 
@@ -297,7 +304,7 @@ struct TicketEditSheet: View {
         } label: {
             Text(Self.dueWidthTemplate)
                 .monospacedDigit()
-                .font(BoardText.body)
+                .font(BoardText.editorBody)
                 .hidden()
                 .overlay(alignment: .trailing) {
                     Group {
@@ -308,7 +315,7 @@ struct TicketEditSheet: View {
                             Text("Kein Datum").foregroundStyle(.secondary)
                         }
                     }
-                    .font(BoardText.body)
+                    .font(BoardText.editorBody)
                     .lineLimit(1)
                     .fixedSize()
                 }
@@ -359,7 +366,7 @@ struct TicketEditSheet: View {
                     .disabled(!showsTimePicker)
                     .accessibilityHidden(!showsTimePicker)
             }
-            .font(BoardText.body)
+            .font(BoardText.editorBody)
             if dueDate != nil {
                 Divider()
                 Button("Datum entfernen") {
@@ -368,7 +375,7 @@ struct TicketEditSheet: View {
                     isDuePopoverPresented = false
                 }
                 .buttonStyle(.link)
-                .font(BoardText.body)
+                .font(BoardText.editorBody)
             }
         }
         .padding(14)

@@ -52,6 +52,13 @@ enum Board {
     // tokens so the style cannot be forgotten at an individual call site.
     static let columnShape = RoundedRectangle(cornerRadius: columnRadius, style: .continuous)
     static let cardShape = RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
+    /// The opened card. Its corner grows with it — the same note brought
+    /// closer, not a lane-sized corner stretched across twice the width,
+    /// which is what makes an enlarged panel look flat.
+    static let openCardShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+    /// Text margins in the opened card, wider than a lane card's for the same
+    /// reason its type is larger: it is read, not scanned.
+    static let openCardInset: CGFloat = 20
 
     /// One shape for every chip that carries a small, quiet value — the date
     /// badge on a card and the count in a lane header. These had drifted into
@@ -201,6 +208,20 @@ enum BoardText {
     static let glyph = Font.system(size: 9, weight: .semibold)
     /// A single emphasised number — the streak counter.
     static let value = Font.system(size: 12, weight: .semibold)
+
+    // The opened card, one rung up the scale.
+    //
+    // A card in a lane is scanned at a glance from across the desk; the same
+    // card held open is read and typed into. Enlarging the surface alone
+    // would only have set lane-sized text in a bigger field — which reads as
+    // a card that was stretched rather than one brought closer.
+    /// Title field in the opened card.
+    static let editorTitle = Font.system(size: 17, weight: .semibold)
+    /// Notes and every value in the opened card.
+    static let editorBody = Font.system(size: 13)
+    /// Field captions in the opened card ("Titel", "Fälligkeit"). Semibold
+    /// for the same reason `chip` is: small text that has to stay legible.
+    static let editorCaption = Font.system(size: 12, weight: .semibold)
 
     /// The streak count at the top of the stats popover — the one number in
     /// the app set large, and the only place SF Pro is departed from.
