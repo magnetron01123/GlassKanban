@@ -493,10 +493,26 @@ final class RemindersStore: ObservableObject {
         return EditableTicket(
             title: reminder.title ?? "",
             notes: StatusTagger.removingTags(reminder.notes ?? ""),
+            url: reminder.url?.absoluteString ?? "",
             dueDate: components.flatMap { Foundation.Calendar.current.date(from: $0) },
             hasDueTime: components?.hour != nil,
             priority: reminder.priority,
             calendarID: reminder.calendar?.calendarIdentifier ?? "")
+    }
+
+    /// Turns what was typed in the URL field into what EventKit stores.
+    ///
+    /// `URL(string:)` is permissive enough for the way people actually write
+    /// addresses — "example.com" parses and round-trips unchanged, so a
+    /// scheme is not forced onto text the user did not write one into. An
+    /// empty field clears the reminder's URL rather than leaving a stale one
+    /// behind. Text that is not an address at all (anything with a space)
+    /// does not parse and therefore is not stored; the field is labelled URL
+    /// and Reminders has nowhere else to put it.
+    private static func parsedURL(_ text: String) -> URL? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return URL(string: trimmed)
     }
 
     /// Lists a card can be moved to from the edit sheet: writable, and not
@@ -516,6 +532,7 @@ final class RemindersStore: ObservableObject {
         cardID: String,
         title: String,
         notes: String,
+        url: String,
         dueDate: Date?,
         hasDueTime: Bool,
         priority: Int,
@@ -537,6 +554,7 @@ final class RemindersStore: ObservableObject {
         let newCalendar = eventStore.calendar(withIdentifier: calendarID)
         reminder.title = title
         reminder.notes = rewrittenNotes
+        reminder.url = Self.parsedURL(url)
         reminder.dueDateComponents = dueDate.map {
             Foundation.Calendar.current.dateComponents(dueFields, from: $0)
         }

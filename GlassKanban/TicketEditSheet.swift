@@ -48,6 +48,7 @@ struct TicketEditSheet: View {
 
     @State private var title = ""
     @State private var notes = ""
+    @State private var url = ""
     @State private var dueDate: Date?
     @State private var hasDueTime = false
     @State private var priority = 0
@@ -210,18 +211,47 @@ struct TicketEditSheet: View {
                 // text is a label.
                 .lineLimit(4...12)
                 .editableHint(hoveredField == .notes, scheme: colorScheme)
+                .onHover { hovering in
+                    withAnimation(Board.hoverAnimation) {
+                        hoveredField = hovering ? .notes : (hoveredField == .notes ? nil : hoveredField)
+                    }
+                }
+
+            urlField
         }
         .padding(EdgeInsets(top: 12, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
-        .onHover { hovering in
-            withAnimation(Board.hoverAnimation) {
-                hoveredField = hovering ? .notes : (hoveredField == .notes ? nil : hoveredField)
-            }
-        }
     }
 
     /// Which field the pointer is over, so each lights up on its own rather
     /// than the whole card reacting as one block.
-    private enum EditableField { case title, notes }
+    private enum EditableField { case title, notes, url }
+
+    /// The reminder's own URL field, which Reminders shows on every task and
+    /// this editor did not.
+    ///
+    /// It shares the notes' zone rather than opening one of its own: both are
+    /// free text the user writes, where the facts below are values picked
+    /// from a fixed set. A hairline between them would rank a one-line field
+    /// as its own chapter of the card.
+    private var urlField: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            fieldCaption("URL")
+            TextField("", text: $url)
+                .font(BoardText.editorBody)
+                .textFieldStyle(.plain)
+                .lineLimit(1)
+                // No autocorrection or capitalisation on an address — the
+                // system would otherwise "fix" a domain into a sentence.
+                .autocorrectionDisabled()
+                .editableHint(hoveredField == .url, scheme: colorScheme)
+                .onHover { hovering in
+                    withAnimation(Board.hoverAnimation) {
+                        hoveredField = hovering ? .url : (hoveredField == .url ? nil : hoveredField)
+                    }
+                }
+        }
+        .padding(.top, 10)
+    }
 
     /// The card's facts, one labelled row each — from the most stable
     /// property to the most volatile: which list a card belongs to rarely
@@ -481,6 +511,7 @@ struct TicketEditSheet: View {
         guard let ticket = store.loadEditableTicket(cardID: card.id) else { return }
         title = ticket.title
         notes = ticket.notes
+        url = ticket.url
         dueDate = ticket.dueDate
         hasDueTime = ticket.hasDueTime
         priority = ticket.priority
@@ -494,6 +525,7 @@ struct TicketEditSheet: View {
             cardID: card.id,
             title: title,
             notes: notes,
+            url: url,
             dueDate: dueDate,
             hasDueTime: hasDueTime,
             priority: priority,
