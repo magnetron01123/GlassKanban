@@ -79,6 +79,8 @@ struct TicketEditSheet: View {
             zoneDivider
             notesZone
             zoneDivider
+            urlZone
+            zoneDivider
             factsZone
         }
         // 500, and the notes below reserve four lines: at 520 with a three-line
@@ -216,8 +218,6 @@ struct TicketEditSheet: View {
                         hoveredField = hovering ? .notes : (hoveredField == .notes ? nil : hoveredField)
                     }
                 }
-
-            urlField
         }
         .padding(EdgeInsets(top: 12, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
     }
@@ -229,11 +229,11 @@ struct TicketEditSheet: View {
     /// The reminder's own URL field, which Reminders shows on every task and
     /// this editor did not.
     ///
-    /// It shares the notes' zone rather than opening one of its own: both are
-    /// free text the user writes, where the facts below are values picked
-    /// from a fixed set. A hairline between them would rank a one-line field
-    /// as its own chapter of the card.
-    private var urlField: some View {
+    /// A zone of its own, ruled off from the notes above it. It is a
+    /// different kind of content — one address, not a body of text — and
+    /// sharing the notes' zone left the two reading as one block whose
+    /// second half happened to be labelled.
+    private var urlZone: some View {
         VStack(alignment: .leading, spacing: 3) {
             fieldCaption("URL")
             TextField("", text: $url)
@@ -250,7 +250,7 @@ struct TicketEditSheet: View {
                     }
                 }
         }
-        .padding(.top, 10)
+        .padding(EdgeInsets(top: 12, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
     }
 
     /// The card's facts, one labelled row each — from the most stable
