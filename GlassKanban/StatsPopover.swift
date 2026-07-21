@@ -10,14 +10,20 @@ struct FlameIcon: View {
     /// ignores its companion text reads as misaligned in one of the two.
     var size: CGFloat = 12
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         Image(systemName: level == 0 ? "flame" : "flame.fill")
             .font(.system(size: size))
             .foregroundStyle(style)
             // Reaching the day's target is the reward moment the concept asks
-            // for; without these it is a one-frame glyph swap.
+            // for; without this it is a one-frame glyph swap. The crossfade
+            // stays under Reduce Motion — it is a dissolve, not travel — but
+            // the bounce is motion and has to go. Feeding it a value that
+            // never changes is how it is switched off without a second code
+            // path drifting out of sync with this one.
             .contentTransition(.symbolEffect(.replace))
-            .symbolEffect(.bounce, value: level)
+            .symbolEffect(.bounce, value: reduceMotion ? 0 : level)
             // The button around it carries the spoken label.
             .accessibilityHidden(true)
     }
@@ -67,6 +73,7 @@ struct StatsPopover: View {
     }
 
     @State private var tab: Tab = .now
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -76,7 +83,9 @@ struct StatsPopover: View {
             case .past: pastTab
             }
         }
-        .padding(18)
+        // 16 all round: the standard macOS popover inset, and the value the
+        // rest of the spacing here is a multiple of.
+        .padding(16)
         // 360, not 340: at the narrower width a real Reminders list name
         // ("Gemeinsame Aufgaben") truncated in the retrospective's grid.
         .frame(width: 360, alignment: .leading)
@@ -87,24 +96,26 @@ struct StatsPopover: View {
 
     // MARK: - Tabs
 
-    /// Plain text labels, not a segmented control. A segmented control is a
-    /// filled slab of chrome inside a window whose entire point is that the
-    /// numbers are the only thing in it.
+    /// The platform's own control for switching between peer views.
+    ///
+    /// This was two plain text labels, on the argument that a segmented
+    /// control is a slab of chrome in a window meant to be only numbers. That
+    /// argument loses: the inactive label read as disabled text rather than
+    /// as something to click, which is a discoverability defect no amount of
+    /// restraint pays for. The standard control also announces itself
+    /// correctly to VoiceOver for free, and on macOS 26 it is *itself* Liquid
+    /// Glass — the selected segment is a floating glass capsule. Reaching for
+    /// the system control is how the effect gets rendered properly rather
+    /// than imitated.
     private var tabBar: some View {
-        HStack(spacing: 14) {
+        Picker("Ansicht", selection: $tab) {
             ForEach(Tab.allCases) { candidate in
-                Button {
-                    tab = candidate
-                } label: {
-                    Text(candidate.title)
-                        .font(BoardText.header)
-                        .foregroundStyle(tab == candidate ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(tab == candidate ? [.isSelected] : [])
+                Text(candidate.title).tag(candidate)
             }
         }
-        .padding(.bottom, 18)
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .padding(.bottom, 20)
     }
 
     // MARK: - Jetzt
@@ -121,7 +132,11 @@ struct StatsPopover: View {
     /// the toolbar at all. Underneath sits a single adaptive line that does
     /// three jobs and never two at once (see `heroNote`).
     private var hero: some View {
-        HStack(alignment: .center, spacing: 14) {
+        // Baseline-aligned, not centred. Centring put the flame beside the
+        // middle of the whole text stack, which is level with the number's
+        // lower half — the glyph has to sit on the same line the number
+        // stands on, the way a currency symbol does.
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
             FlameIcon(level: streak.flameLevel, size: 34)
             VStack(alignment: .leading, spacing: 1) {
                 Text("\(streak.current)")
@@ -136,10 +151,17 @@ struct StatsPopover: View {
                     .font(BoardText.body)
                     .foregroundStyle(.secondary)
                 if let note = heroNote {
+                    // Rank by weight and system text colour, never by an
+                    // orange label. The board's badge rule is measured, not a
+                    // preference: system colours are calibrated as fills and
+                    // glyphs, and orange at 12pt on a light surface lands far
+                    // under the contrast floor. The reward reads as the only
+                    // primary-coloured line under the number; the invitation
+                    // steps back to secondary.
                     Text(note.text)
                         .font(BoardText.body)
-                        .fontWeight(.medium)
-                        .foregroundStyle(note.isReward ? AnyShapeStyle(Color.orange) : AnyShapeStyle(.secondary))
+                        .fontWeight(note.isReward ? .semibold : .regular)
+                        .foregroundStyle(note.isReward ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 }
             }
         }
@@ -201,13 +223,16 @@ struct StatsPopover: View {
     /// so there is no quota to fall short of.
     private var todayTile: some View {
         let isStrong = streak.todayCount >= max(1, streak.dailyTarget)
+        // The praise is carried by a glyph rather than a coloured label, for
+        // the same measured reason as the hero line above — and it makes the
+        // reward and the milestone read as one family of mark.
         return tile(
             value: "\(streak.todayCount)",
             label: isStrong ? "Starker Tag" : "Heute",
             help: isStrong
                 ? "Mehr als an einem durchschnittlichen Tag (\(Self.tasks(max(1, streak.dailyTarget))))."
                 : "Heute erledigte Aufgaben.",
-            labelTint: isStrong ? .orange : nil)
+            mark: isStrong ? "flame.fill" : nil)
     }
 
     /// The milestone rides on this number instead of standing beside it: a
@@ -307,7 +332,7 @@ struct StatsPopover: View {
     // MARK: - Rückblick
 
     private var pastTab: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 20) {
             // Top-aligned, not centred: the WIP cell is taller than its neighbour
         // because of the capacity dots, and a centred row would push the
         // number beside it half a line down out of alignment.
@@ -330,7 +355,14 @@ struct StatsPopover: View {
             if let since = historySince {
                 Text(since)
                     .font(BoardText.meta)
-                    .foregroundStyle(.tertiary)
+                    // Tertiary on glass is already near the contrast floor;
+                    // under Increase Contrast it has to step up, or the one
+                    // line that says which period these numbers cover is the
+                    // first thing to disappear for the people who asked for
+                    // more contrast.
+                    .foregroundStyle(contrast == .increased
+                        ? AnyShapeStyle(.secondary)
+                        : AnyShapeStyle(.tertiary))
             }
         }
     }
@@ -394,11 +426,10 @@ struct StatsPopover: View {
         unit: String? = nil,
         label: String,
         help: String? = nil,
-        labelTint: Color? = nil,
         mark: String? = nil,
         @ViewBuilder accessory: () -> some View = { EmptyView() }
     ) -> some View {
-        tileBody(label: label, help: help, labelTint: labelTint, accessory: accessory) {
+        tileBody(label: label, help: help, accessory: accessory) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value)
                     .font(BoardText.tileValue)
@@ -414,8 +445,11 @@ struct StatsPopover: View {
                 // beside a number it already belongs to, only while the round
                 // number is fresh (see `WrappedStats.milestone`).
                 if let mark {
+                    // Chip size, not glyph size: beside a 24pt numeral the
+                    // board's 9pt inline glyph reads as a speck of dust
+                    // rather than a mark.
                     Image(systemName: mark)
-                        .font(BoardText.glyph)
+                        .font(BoardText.chip)
                         .foregroundStyle(Color.orange)
                         .accessibilityHidden(true)
                 }
@@ -426,7 +460,7 @@ struct StatsPopover: View {
     /// A word instead of a number — a weekday, a list name. Set smaller than
     /// `tileValue`: a long word at a number's size wraps and breaks the grid.
     private func tile(word: String, label: String, help: String? = nil, dot: Color? = nil) -> some View {
-        tileBody(label: label, help: help, labelTint: nil, accessory: { EmptyView() }) {
+        tileBody(label: label, help: help, accessory: { EmptyView() }) {
             HStack(spacing: 6) {
                 if let dot {
                     Circle().fill(dot).frame(width: 7, height: 7)
@@ -446,7 +480,6 @@ struct StatsPopover: View {
     private func tileBody(
         label: String,
         help: String?,
-        labelTint: Color?,
         @ViewBuilder accessory: () -> some View,
         @ViewBuilder value: () -> some View
     ) -> some View {
@@ -454,15 +487,11 @@ struct StatsPopover: View {
             value()
             Text(label)
                 .font(BoardText.meta)
-                .foregroundStyle(labelTint.map { AnyShapeStyle($0) } ?? AnyShapeStyle(.secondary))
+                .foregroundStyle(.secondary)
             accessory()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        // The tooltip is the whole explanation behind a bare number, so it has
-        // to reach VoiceOver too — there is nowhere else in this window to put
-        // it without adding the prose the design is built to avoid.
         .accessibilityElement(children: .combine)
-        .accessibilityHint(help ?? "")
         .modifier(OptionalHelp(text: help))
     }
 
@@ -476,14 +505,23 @@ struct StatsPopover: View {
     }
 }
 
+/// Attaches a tile's explanation to both the pointer and VoiceOver.
+///
 /// `.help()` takes a non-optional string, and an empty one still attaches a
-/// tooltip that flashes an empty box on hover.
+/// tooltip that flashes an empty box on hover — hence the optional.
+///
+/// The same words go to `accessibilityValue`, not `accessibilityHint`: a hint
+/// tells you what an action *will do*, and none of these are actions. What
+/// "27 %" means is the element's value, and reading it as a hint is how a
+/// screen reader ends up announcing a number with no idea what it counts.
 private struct OptionalHelp: ViewModifier {
     let text: String?
 
     func body(content: Content) -> some View {
         if let text {
-            content.help(text)
+            content
+                .help(text)
+                .accessibilityValue(text)
         } else {
             content
         }

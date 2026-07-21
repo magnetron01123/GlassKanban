@@ -198,10 +198,17 @@ enum BoardText {
     // are allowed to be, because they never appear on the board: the popover
     // is a place you go to look at numbers, and there the number is the
     // content rather than a label on something else.
+    //
+    // Both are `.rounded`, the only departure from SF Pro in the app. It is
+    // the face Apple sets large numbers in whenever the number is an
+    // achievement rather than a measurement — Fitness rings, Activity,
+    // Screen Time. At 52pt SF Pro's flat terminals read as a spreadsheet
+    // cell; rounded reads as something you earned. The labels stay SF Pro,
+    // so the shift lands on the numbers alone rather than restyling the UI.
     /// The streak count at the top of the stats popover.
-    static let heroValue = Font.system(size: 52, weight: .bold)
+    static let heroValue = Font.system(size: 52, weight: .bold, design: .rounded)
     /// A value in the popover's 2×2 grid.
-    static let tileValue = Font.system(size: 24, weight: .semibold)
+    static let tileValue = Font.system(size: 24, weight: .semibold, design: .rounded)
 
     // Tooltip lines. Both 11pt — the rank comes from weight and colour, as
     // everywhere else on this board. The first draft set the lead at 11.5
