@@ -262,7 +262,8 @@ enum BoardText {
     /// third of the number's size hangs off it like a caption stuck to a
     /// poster. Just under half reads as one thought with an emphasised
     /// number in it.
-    static let heroUnit = Font.system(size: 20, weight: .medium)
+    static let heroUnitSize: CGFloat = 20
+    static let heroUnit = Font.system(size: heroUnitSize, weight: .medium)
 
     /// The streak count at the top of the stats popover — the one number in
     /// the app set large, and the only place SF Pro is departed from.

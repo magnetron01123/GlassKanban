@@ -238,7 +238,10 @@ struct StatsPopover: View {
             // condition line beside its temperature rather than matching
             // either one's baseline.
             HStack(alignment: .center, spacing: 10) {
-                FlameIcon(level: streak.flameLevel, size: 32)
+                // Matched to `heroUnit`, not grown to compete with the
+                // numeral: the flame is what the whole popover hangs off of,
+                // not a second hero figure standing beside the first.
+                FlameIcon(level: streak.flameLevel, size: BoardText.heroUnitSize)
                 // The number takes the ordinary label colour, and the flame
                 // beside it is the only thing here wearing orange.
                 //
