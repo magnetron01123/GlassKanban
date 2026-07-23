@@ -116,7 +116,12 @@ struct ColumnView: View {
                                     .onEnded { _ in store.endDrag() })
                             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                                 // One card is enough to size the placeholder.
-                                if card.id == displayedCards.first?.id { cardHeight = height }
+                                if card.id == displayedCards.first?.id {
+                                    cardHeight = height
+                                    // The pull slot next door borrows this
+                                    // measurement (see `nextTopCardHeight`).
+                                    if status == .next { store.nextTopCardHeight = height }
+                                }
                             }
                             // A card arriving in a lane settles into place
                             // instead of blinking on: it grows the last few
@@ -189,7 +194,10 @@ struct ColumnView: View {
         // A lane that empties must forget its last card's height, or the
         // standing pull slot gets sized by whatever happened to be here last.
         .onChange(of: displayedCards.isEmpty) { _, isEmpty in
-            if isEmpty { cardHeight = nil }
+            if isEmpty {
+                cardHeight = nil
+                if status == .next { store.nextTopCardHeight = nil }
+            }
         }
         // Without this a card announces its title and nothing about where it
         // is — on a board, the lane is half the meaning.
@@ -354,7 +362,7 @@ struct ColumnView: View {
             .strokeBorder(
                 Color.primary.opacity(0.25),
                 style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
-            .frame(height: slotHeight)
+            .frame(height: pullSlotHeight)
             .overlay {
                 // Names the payoff rather than the emptiness: this lane is not
                 // "empty", it is the entrance to finishing. Shares its key word
@@ -378,6 +386,16 @@ struct ColumnView: View {
     /// metrics while the lane is still empty.
     private var slotHeight: CGFloat {
         cardHeight ?? (singleLine ? Board.compactCardHeight : Board.fullCardMinHeight)
+    }
+
+    /// The pull slot's height: exactly the ticket it is inviting. The top
+    /// card of "Als Nächstes" keeps its measured height when it lands here —
+    /// both lanes render at full density — so the promised spot and the
+    /// promised card are the same size, not "a card-ish rectangle" next to
+    /// a visibly different real one. Falls back to the lane's own metrics
+    /// while "Als Nächstes" has nothing measured.
+    private var pullSlotHeight: CGFloat {
+        store.nextTopCardHeight ?? slotHeight
     }
 
     /// Quick-add for Backlog. Sits right after the last card, like the "+" at

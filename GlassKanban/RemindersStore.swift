@@ -33,6 +33,14 @@ final class RemindersStore: ObservableObject {
     /// payload is not readable while merely hovering — so a lane can tell
     /// whether a drop would actually move anything.
     @Published private(set) var draggingCardID: String?
+    /// Measured height of the top card in "Als Nächstes", reported by that
+    /// lane as it lays out. The empty "In Bearbeitung" lane sizes its pull
+    /// slot with it, so the promised spot is exactly as tall as the ticket
+    /// it is inviting — both lanes render cards at the same full density,
+    /// so the ticket keeps this height when it lands. Nil while "Als
+    /// Nächstes" is empty; the slot then falls back to the standard card
+    /// metrics.
+    @Published var nextTopCardHeight: CGFloat?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
     /// The per-session view of recurring cards. Not persisted itself: it starts
