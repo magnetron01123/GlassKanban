@@ -533,8 +533,14 @@ private struct AddButtonGlass: ViewModifier {
                 .background { Circle().fill(Color(nsColor: .windowBackgroundColor)) }
                 .overlay { Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1) }
         } else {
+            // `.clear`, not `.regular`: the thinner glass sits lower. The
+            // regular material raised the button above the cards — a control
+            // popping out further than the paper it serves inverts the
+            // board's depth order (cards are the content, chrome stays
+            // beneath them). Interactivity still lifts it on hover, so the
+            // press response is where the prominence lives, not the rest state.
             content
-                .glassEffect(.regular.interactive(), in: .circle)
+                .glassEffect(.clear.interactive(), in: .circle)
         }
     }
 }
