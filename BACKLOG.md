@@ -28,11 +28,10 @@ Begründung, warum später (oder warum grundsätzlich nicht).
 
 ## Board-Struktur
 
-- ~~**WIP-Limit für "In Bearbeitung"**~~ — umgesetzt, siehe SPEC.md und
-  [design/wip-limit-concept.md](design/wip-limit-concept.md). Anders als hier gedacht in
-  den Einstellungen konfigurierbar, teal statt amber (amber liegt zu nah an der
-  Dringlichkeitsfarbe), und "In Bearbeitung" fragt beim Überschreiten einmal nach, statt
-  nur die Farbe zu wechseln.
+- ~~**WIP-Limit für "In Bearbeitung"**~~ — umgesetzt, siehe SPEC.md (Herleitung in
+  CONCEPT.md, Abschnitt Motivation). Anders als hier gedacht in den Einstellungen
+  konfigurierbar, teal statt amber (amber liegt zu nah an der Dringlichkeitsfarbe), und
+  "In Bearbeitung" fragt beim Überschreiten einmal nach, statt nur die Farbe zu wechseln.
 - **Swimlane-Trennung im Backlog ("Heute-Absatz")** — dringliche Karten (überfällig/heute)
   schwimmen bereits nach oben, gehen aber nahtlos in den Rest über. Eine einzige feine
   Trennlinie unter der letzten dringlichen Karte würde den Backlog in zwei stille Absätze
@@ -98,17 +97,15 @@ nicht möglich)
 
 ## Aufgaben-Bearbeitung in der App
 
-- **Notizen, Fälligkeit, Priorität und Wiederholung in Glass Kanban bearbeiten** — bleibt
-  bewusste Grundsatzentscheidung, nicht Zeitmangel: Das sind Felder mit eigener UI
-  (Datumsauswahl, Wiederholungsregeln, mehrzeiliger Text), die Reminders bereits gut löst
-  und die das Board zu einem Formular machen würden. Ein Klick auf die Karte öffnet die
-  Aufgabe dort.
-- ~~**Titel anlegen und umbenennen**~~ — umgesetzt (siehe SPEC.md, Abschnitt Interaktion).
-  Bewusste Abweichung von der ursprünglichen Grundsatzentscheidung, weil der Titel der
-  Sonderfall unter den Feldern ist: einzeilig, ohne Formatierung, ohne eigene UI. Der
-  Umweg über die Reminders-App kostete für eine Zeile Text einen App-Wechsel — und in der
-  ersten Umsetzung (leere Erinnerung anlegen, dann rüberspringen) ließ ein Abbruch
-  regelmäßig namenlose Karteileichen zurück.
+- ~~**Titel, Notizen, URL, Liste, Priorität und Fälligkeit bearbeiten**~~ — **umgesetzt**
+  als Karten-Editor (`TicketEditSheet`, siehe SPEC.md): Ein Klick öffnet die Karte
+  vergrößert über dem Board. Die ursprüngliche Grundsatzentscheidung „read-only außer
+  Drag & Drop" ist damit bewusst und schrittweise revidiert worden — erst der Titel
+  (einzeilig, ohne eigene UI), dann die restlichen Felder, als der Umweg über die
+  Reminders-App für jede Kleinigkeit einen App-Wechsel kostete.
+- **Wiederholungsregeln bearbeiten** — bleibt draußen: eigene, komplexe UI
+  (täglich/wöchentlich/benutzerdefiniert…), die Reminders bereits gut löst. Der ↗-Knopf im
+  Editor führt genau dafür in die native App.
 
 ## Spätere Apple-/Mac-Ausbaustufen
 
@@ -124,11 +121,11 @@ nicht möglich)
 ## Statistiken / Jahresrückblick
 
 - ~~**Produktivitäts-Statistiken im Spotify-Wrapped-Stil**~~ — **umgesetzt** als
-  Statistik-Fenster hinter der Toolbar-Flamme (Reiter „Rückblick": meistgenutzte Liste,
-  stärkster Wochentag, bester Tag, längste Folge; Reiter „Jetzt": Jahreszahl, Konstanz,
-  Auslastung, Durchlaufzeit-Schätzung). Die erwartete Aggregations-Logik sitzt in
-  `WrappedStats.swift` und läuft ohne zweite EventKit-Abfrage in derselben Auswertung mit,
-  die den Streak berechnet.
+  Statistik-Fenster hinter der Toolbar-Flamme (Reiter „Jetzt": Folge, heute, Auslastung
+  gegen WIP-Limit, Durchlaufzeit-Schätzung, 30-Tage-Verlauf; Reiter „Rückblick":
+  Jahreszahl, längste Folge, bester Tag, stärkster Wochentag, häufigste Liste,
+  Meilenstein). Die Aggregations-Logik sitzt in `WrappedStats.swift` und läuft ohne zweite
+  EventKit-Abfrage in derselben Auswertung mit, die den Streak berechnet.
 - **Teilbare Zusammenfassung** — der ursprüngliche Wrapped-Gedanke enthielt eine Share-Ansicht
   zum Weitergeben. Bewusst nicht mitgebaut: das Fenster ist auf einen Blick ausgelegt, eine
   Export-/Teilen-Darstellung wäre ein eigenes Layout mit eigenen Fragen (was darf ein

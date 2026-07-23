@@ -18,13 +18,17 @@ struct CardView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.undoManager) private var undoManager
 
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
     @State private var settleFlash = false
     @State private var isRenaming = false
     @State private var renameText = ""
-    @FocusState private var isFocused: Bool
+    /// The title the edit started from — the *stored* one, not the sanitized
+    /// display form. Kept so the commit can tell a real change from a no-op
+    /// (see `TicketRename`).
+    @State private var renameOriginal = ""
     @FocusState private var isRenameFieldFocused: Bool
 
     /// Lanes this card can be sent to — everything except where it already is.
@@ -60,20 +64,13 @@ struct CardView: View {
         .opacity(store.draggingCardID == card.id ? 0.4 : 1)
         .animation(reduceMotion ? nil : Board.hoverAnimation, value: store.draggingCardID)
         .contentShape(Board.cardShape)
-        .focusable()
-        // The default system ring is what we just removed our own overlay
-        // for — .focusable() draws its own underneath regardless. Keyboard
-        // focus (Tab, then Return to open) still works without it.
-        .focusEffectDisabled()
-        .focused($isFocused)
-        // Return matches what a single click does, so the keyboard path is
-        // not a lesser version of the pointer one. Renaming already owns
-        // Return — the TextField's own `onSubmit` — so this steps aside.
-        .onKeyPress(.return) {
-            guard !isRenaming else { return .ignored }
-            beginEdit()
-            return .handled
-        }
+        // Deliberately NOT `.focusable()`. Cards must not take keyboard focus
+        // — settled user decision, recorded in BACKLOG.md ("Explizit
+        // abgelehnt"): cards are dragged around all day, and a board that
+        // keeps pointing at one of them emphasises exactly the thing that
+        // needs no emphasis. Reintroduced once by a merge, removed again —
+        // check BACKLOG.md before touching this. VoiceOver is unaffected: it
+        // carries its own cursor and the accessibility actions below.
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
@@ -100,25 +97,26 @@ struct CardView: View {
             // question fires either way.
             Menu("Verschieben nach") {
                 ForEach(moveTargets) { target in
-                    Button(target.displayName) { store.move(cardID: card.id, to: target) }
+                    Button(target.displayName) {
+                        store.move(cardID: card.id, to: target, undoManager: undoManager)
+                    }
                 }
             }
             Divider()
             Button("Umbenennen") { beginRename() }
-            Button("Löschen", role: .destructive) { store.deleteTicket(cardID: card.id) }
+            // The undo manager is what stands in for a confirmation here: the
+            // store registers the inverse write, so ⌘Z brings the card back.
+            Button("Löschen", role: .destructive) {
+                store.deleteTicket(cardID: card.id, undoManager: undoManager)
+            }
         }
-        // No tooltip on the card body. It fired wherever the pointer came to
-        // rest on a lane, which on a board you keep open all day is a panel
-        // that follows you around rather than one you asked for — and the
-        // lanes are mostly cards, so "hovering a card" is close to "using the
-        // app". The lane header and the small glyphs keep theirs: those are
-        // deliberate targets you have to aim at, and each explains one thing
-        // that has no room to say itself.
-        //
-        // Nothing is lost that is not now one click away. Its three lines
-        // were the notes preview, the list name and "Klick öffnet Bearbeiten"
-        // — and the click it advertised opens a card showing all of it at
-        // reading size.
+        // No tooltip anywhere on a card — body, dwell label or repeat glyph.
+        // Settled user decision, recorded in BACKLOG.md ("Explizit
+        // abgelehnt"): text springing up on every touched ticket is standing
+        // noise, and everything it said is one click away in the editor.
+        // Tooltips belong to the chrome (lane header, "+" button), where they
+        // explain rules. Reintroduced once by a merge, removed again — check
+        // BACKLOG.md before touching this.
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(accessibilityLabel)
@@ -130,17 +128,24 @@ struct CardView: View {
         .accessibilityActions {
             ForEach(moveTargets) { target in
                 Button("Verschieben nach \(target.displayName)") {
-                    store.move(cardID: card.id, to: target)
+                    store.move(cardID: card.id, to: target, undoManager: undoManager)
                 }
             }
             Button("Umbenennen") { beginRename() }
-            Button("Löschen") { store.deleteTicket(cardID: card.id) }
+            Button("Löschen") { store.deleteTicket(cardID: card.id, undoManager: undoManager) }
         }
         // Losing focus commits, same as clicking away from a Finder rename —
         // Escape (`onExitCommand` on the field itself) is the only way out
         // that discards instead.
         .onChange(of: isRenameFieldFocused) { _, focused in
             if !focused { commitRename() }
+        }
+        // A click on bare lane, or another edit starting anywhere on the
+        // board, also ends this rename. Focus alone cannot carry that: the
+        // click lands in a view that has no way to reach this one (see
+        // `BoardEdit`).
+        .onChange(of: store.activeEdit) { _, edit in
+            if isRenaming, edit != .renaming(cardID: card.id) { commitRename() }
         }
         .onAppear {
             // The completed card appears fresh in Erledigt with the flag
@@ -233,10 +238,6 @@ struct CardView: View {
                     .monospacedDigit()
             }
             .foregroundStyle(.secondary)
-            // The card as a whole already announces its dwell time in
-            // `accessibilityLabel`, and the row is combined into one element —
-            // so this is the tooltip only, with no accessibility to restore.
-            .boardTooltip("Seit \(days) Tagen in dieser Spalte")
         }
     }
 
@@ -293,7 +294,12 @@ struct CardView: View {
                 .focused($isRenameFieldFocused)
                 .onAppear { isRenameFieldFocused = true }
                 .onSubmit { commitRename() }
-                .onExitCommand { isRenaming = false }
+                .onExitCommand {
+                    isRenaming = false
+                    if store.activeEdit == .renaming(cardID: card.id) {
+                        store.activeEdit = nil
+                    }
+                }
         } else {
             titleText.font(font)
         }
@@ -303,8 +309,6 @@ struct CardView: View {
         Image(systemName: "repeat")
             .font(BoardText.glyph)
             .foregroundStyle(.secondary)
-            // Likewise announced by the card's own label ("Wiederholend").
-            .boardTooltip("Wiederholende Erinnerung")
     }
 
     /// Compact rows have no room for the notes preview, so the tooltip
@@ -538,18 +542,31 @@ struct CardView: View {
         store.openInReminders(cardID: card.id)
     }
 
-    /// Pre-fills with the real title, not `displayTitle` — "Ohne Titel" is a
-    /// placeholder for display, never something to actually type as a title.
+    /// Starts from the title as *stored in Reminders*, not the one on the
+    /// card. The card shows the sanitized form with URLs stripped, so opening
+    /// the field on `card.title` and letting it commit — which a click
+    /// elsewhere does on its own — would write the stripped text back and
+    /// delete the link for good. ("Ohne Titel" is likewise a display
+    /// placeholder, never something to hand the user to type over.)
     private func beginRename() {
-        renameText = card.title
+        renameOriginal = store.storedTitle(forCardID: card.id) ?? card.title
+        renameText = renameOriginal
         isRenaming = true
+        store.activeEdit = .renaming(cardID: card.id)
     }
 
-    /// Guarded so the focus-loss path (`onChange` above) and a manual Return
-    /// can't both fire for the same edit.
+    /// Guarded so the three paths that can end an edit — Return, focus loss,
+    /// a click elsewhere on the board — can't all fire for the same one.
+    /// Writes only a real change: an untouched or emptied field discards
+    /// instead (see `TicketRename`).
     private func commitRename() {
         guard isRenaming else { return }
         isRenaming = false
-        store.renameTicket(cardID: card.id, title: renameText)
+        if store.activeEdit == .renaming(cardID: card.id) {
+            store.activeEdit = nil
+        }
+        guard case let .save(title) = TicketRename.outcome(
+            original: renameOriginal, edited: renameText) else { return }
+        store.renameTicket(cardID: card.id, title: title, undoManager: undoManager)
     }
 }

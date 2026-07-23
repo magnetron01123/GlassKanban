@@ -11,7 +11,7 @@ import AppKit
 ///
 /// Note this covers the app's windows only. The Dock icon always follows the
 /// system: macOS picks the icon's light or dark appearance itself (see
-/// design/app-icon-concept.md), and an app cannot override that choice.
+/// the git history of AppIcon.icon), and an app cannot override that choice.
 enum AppAppearance: String, CaseIterable, Identifiable {
     case system
     case light

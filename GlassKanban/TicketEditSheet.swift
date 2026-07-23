@@ -63,6 +63,13 @@ struct TicketEditSheet: View {
     /// without it, an instant close-before-load would overwrite the reminder
     /// with blank fields.
     @State private var isLoaded = false
+    /// What was loaded, verbatim — the reference a close compares against.
+    /// Without it every glance at a card wrote every field back on close,
+    /// which bumped `lastModifiedDate` (resetting the card's dwell-time
+    /// label), pushed no-op changes through iCloud, and raised the save-error
+    /// alert on read-only lists for merely looking.
+    @State private var loadedTicket: EditableTicket?
+    @Environment(\.undoManager) private var undoManager
     @State private var hoveredField: EditableField?
 
     /// One surface, edge to edge.
@@ -336,17 +343,6 @@ struct TicketEditSheet: View {
         return color.mix(with: Color(nsColor: .labelColor), by: 0.18)
     }
 
-    @ViewBuilder
-    private var topHighlight: some View {
-        if colorScheme == .dark {
-            Board.cardShape
-                .strokeBorder(
-                    LinearGradient(colors: [Board.cardTopHighlight, .clear], startPoint: .top, endPoint: .center),
-                    lineWidth: 1)
-                .blendMode(.plusLighter)
-                .allowsHitTesting(false)
-        }
-    }
 
     // MARK: - Fact controls
 
@@ -516,20 +512,38 @@ struct TicketEditSheet: View {
         hasDueTime = ticket.hasDueTime
         priority = ticket.priority
         calendarID = ticket.calendarID
+        loadedTicket = ticket
         isLoaded = true
     }
 
+    /// Writes only when something actually changed — opening a card to read
+    /// it and putting it back must be a read, not a write. An emptied title
+    /// falls back to the loaded one: a card whose name was wiped by accident
+    /// is not a rename (same rule as `TicketRename` for the inline path).
     private func save() {
-        guard isLoaded else { return }
-        store.updateTicket(
-            cardID: card.id,
-            title: title,
+        guard isLoaded, let loadedTicket else { return }
+        var edited = EditableTicket(
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             notes: notes,
             url: url,
             dueDate: dueDate,
             hasDueTime: hasDueTime,
             priority: priority,
             calendarID: calendarID)
+        if edited.title.isEmpty {
+            edited.title = loadedTicket.title
+        }
+        guard edited != loadedTicket else { return }
+        store.updateTicket(
+            cardID: card.id,
+            title: edited.title,
+            notes: edited.notes,
+            url: edited.url,
+            dueDate: edited.dueDate,
+            hasDueTime: edited.hasDueTime,
+            priority: edited.priority,
+            calendarID: edited.calendarID,
+            undoManager: undoManager)
     }
 }
 

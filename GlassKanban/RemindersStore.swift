@@ -82,7 +82,13 @@ final class RemindersStore: ObservableObject {
         var id: String { cardID }
     }
 
-    var streak: Int { streakStats.current }
+    /// Cards in a lane regardless of search or filters. The lane header counts
+    /// what is *visible* (documented intent), but the statistics window states
+    /// facts about the system — a Little's-Law estimate fed a filtered load
+    /// against an unfiltered throughput would quietly mix two worlds.
+    func totalCount(for status: KanbanStatus) -> Int {
+        cards.filter { $0.status == status }.count
+    }
 
     /// Calendar identifiers the user excluded in Settings (e.g. a shopping
     /// list). Persisted in UserDefaults; everything else is included.
@@ -721,10 +727,27 @@ final class RemindersStore: ObservableObject {
         dueDate: Date?,
         hasDueTime: Bool,
         priority: Int,
-        calendarID: String
+        calendarID: String,
+        undoManager: UndoManager? = nil
     ) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder,
               let index = cards.firstIndex(where: { $0.id == cardID }) else { return }
+        // The inverse write, captured before anything is touched — the same
+        // shape the editor itself reads, so ⌘Z is one updateTicket back.
+        if let previous = loadEditableTicket(cardID: cardID) {
+            register(undoManager, name: "Bearbeiten") { store in
+                store.updateTicket(
+                    cardID: cardID,
+                    title: previous.title,
+                    notes: previous.notes,
+                    url: previous.url,
+                    dueDate: previous.dueDate,
+                    hasDueTime: previous.hasDueTime,
+                    priority: previous.priority,
+                    calendarID: previous.calendarID,
+                    undoManager: undoManager)
+            }
+        }
         // Read from the reminder itself, not the cached `cards[index].status`:
         // the sheet can sit open long enough for an external change (another
         // device, a direct edit in Reminders.app) to move the card before

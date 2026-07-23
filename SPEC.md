@@ -96,36 +96,46 @@ der App gewechselt.
 
 ## Interaktion
 
-Die App schreibt vier Dinge: den Status-Hashtag, den Titel, neue Tickets und Löschungen.
-Alles andere — Notizen, Fälligkeit, Priorität, Wiederholung, Personen — gehört weiterhin
-ausschließlich der nativen Reminders-App.
+Die App schreibt: den Status-Hashtag (Spaltenwechsel), die Editor-Felder (Titel, Notizen,
+URL, Liste, Priorität, Fälligkeit), neue Tickets und Löschungen. Nicht bearbeitbar in der
+App bleiben nur die Felder, die EventKit nicht öffentlich anbietet (Tags, Flags,
+Unteraufgaben, Personen) sowie Wiederholungsregeln — dafür gibt es den Sprung nach
+Reminders.
 
 | Geste | Wirkung |
 |---|---|
 | **Drag & Drop** zwischen Spalten | Spaltenwechsel (siehe Datenmodell) |
-| **Einfacher Klick** auf eine Karte | öffnet die Aufgabe im Bearbeitungs-Popover der Reminders-App |
-| **Doppelklick** auf eine Karte | Titel direkt auf der Karte umbenennen |
-| **Rechtsklick** | Kontextmenü: In Erinnerungen öffnen, Verschieben nach, Umbenennen, Löschen |
+| **Einfacher Klick** auf eine Karte | öffnet den **Karten-Editor** direkt auf dem Board |
+| **Rechtsklick** | Kontextmenü: Bearbeiten, In Erinnerungen öffnen, Verschieben nach, Umbenennen, Löschen |
 | **„+" im Backlog** | Neues Ticket direkt auf dem Board anlegen (nur Titel) |
 
-**Einfacher Klick öffnet, Doppelklick benennt um** — die häufigere Aktion hat die
-einfachere Geste, wie beim Klick auf einen Dateinamen im Finder.
+### Karten-Editor (`TicketEditSheet`)
+
+Der Klick öffnet die Karte vergrößert und zentriert über dem abgeblendeten Board — dieselbe
+Karte, näher herangeholt, kein separates Formularfenster. Editierbar: **Titel, Notizen
+(mehrzeilig, Absätze bleiben erhalten), URL-Feld, Liste, Dringlichkeit, Fälligkeit** (mit
+oder ohne Uhrzeit — ohne bleibt die Erinnerung ganztägig). Änderungen werden beim Verlassen
+eines Feldes direkt gespeichert; Escape oder ein Klick aufs Board schließt die Karte. Der
+↗-Knopf springt zur Aufgabe in der Reminders-App, für alles, was der Editor bewusst
+auslässt. Der Status-Hashtag ist im Notizen-Feld nie sichtbar und wird beim Speichern für
+die aktuelle Spalte wieder angehängt — ein Inhalts-Edit kann eine Karte nie verschieben.
+Ein Listenwechsel bietet nur beschreibbare, nicht ausgeblendete Listen an.
 
 **Karten tragen keinen Tastaturfokus und keine Hover-Tooltips** — beides war kurz
 implementiert und wurde als bewusste Entscheidung wieder entfernt (Begründung in
 BACKLOG.md, Abschnitt „Explizit abgelehnt"). Karten werden mit der Maus bewegt; ein
 Fokusrahmen betont Karten ohne Not, ein Hover-Text ist Dauerrauschen. VoiceOver ist davon
-unberührt: Karten behalten Labels, Hints und die Aktionen (Öffnen, Verschieben, Umbenennen,
-Löschen).
+unberührt: Karten behalten Labels, Hints und alle Aktionen.
 
-**Umbenennen** startet immer beim *gespeicherten* Titel, nicht bei dem, was die Karte
-anzeigt (die Karte blendet URLs aus, siehe unten). Ein unverändert gelassenes oder leer
-gemachtes Feld schreibt nichts. Escape verwirft, Return und ein Klick daneben übernehmen.
+**Umbenennen** (Kontextmenü, für die schnelle Ein-Zeilen-Korrektur ohne Editor) startet
+immer beim *gespeicherten* Titel, nicht bei dem, was die Karte anzeigt (die Karte blendet
+URLs aus, siehe unten). Ein unverändert gelassenes oder leer gemachtes Feld schreibt
+nichts. Escape verwirft, Return und ein Klick daneben übernehmen.
 
 **Ticket anlegen** fragt nur nach dem Titel und speichert in die Standardliste (bzw. in die
 erste eingeschlossene Liste, falls die Standardliste ausgeschlossen ist). Return legt an und
 lässt die Zeile für den nächsten Eintrag offen; ein leeres Feld legt nichts an. Details
-ergänzt man mit einem Klick auf die fertige Karte in Reminders.
+ergänzt man mit einem Klick auf die fertige Karte.
 
 **Löschen fragt nicht nach, sondern lässt sich rückgängig machen.** Jede Schreib-Aktion der
 App — Verschieben, Umbenennen, Anlegen, Löschen — registriert ihr Gegenteil beim
@@ -160,9 +170,10 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   Kartenkante
 - **Verweildauer:** ab 3 Tagen in derselben Spalte zeigt die Karte „N Tage" (approximiert
   über `lastModifiedDate`)
-- **Links werden immer ausgeblendet:** URL-artige Textteile werden vor der Anzeige aus
-  Titel und Notizen entfernt. Das betrifft **nur die Darstellung** — in EventKit wird nichts
-  zurückgeschrieben, auch nicht beim Umbenennen (siehe oben)
+- **Links werden auf der Karte immer ausgeblendet:** URL-artige Textteile werden vor der
+  Anzeige aus Titel und Notizen entfernt. Das betrifft **nur die Karten-Darstellung** — in
+  EventKit wird nichts zurückgeschrieben, auch nicht beim Umbenennen, und der Editor zeigt
+  Notizen und URL-Feld ungefiltert
 - **Status-Hashtag** wird aus der Notizen-Anzeige immer herausgefiltert
 - **Backlog klappt ab 15 Karten ein** („N weitere anzeigen")
 - **Keine Tooltips auf Karten** (siehe Interaktion) — Tooltips gibt es nur am Chrome:
@@ -211,7 +222,8 @@ Einblenden).
   dem Ablegen ein Dialog („Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?").
   Das Board blockt nichts — es lässt die Karte landen und bietet an, sie zurückzulegen. Die
   Frage stellt sich bei jeder Route (Drag & Drop, Kontextmenü, VoiceOver)
-- Details und Herleitung: [design/wip-limit-concept.md](design/wip-limit-concept.md)
+- Herleitung (Selbstverpflichtungs-Psychologie, „Reibung statt Verbot"): siehe CONCEPT.md,
+  Abschnitt Motivation
 
 ## Motivation
 

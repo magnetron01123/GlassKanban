@@ -239,7 +239,7 @@ enum BoardEmptiness: Equatable {
 /// Working copy of a reminder's editable content for `TicketEditSheet`.
 /// `notes` has the status hashtag already stripped — the sheet never shows
 /// or lets the user touch that control token.
-struct EditableTicket {
+struct EditableTicket: Equatable {
     var title: String
     var notes: String
     /// The reminder's URL field, as text.

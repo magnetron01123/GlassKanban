@@ -234,7 +234,7 @@ struct BoardView: View {
             StatsPopover(
                 streak: store.streakStats,
                 wrapped: store.wrappedStats,
-                wip: store.cards(for: .inProgress).count,
+                wip: store.totalCount(for: .inProgress),
                 wipLimit: store.wipLimit(for: .inProgress))
         }
     }

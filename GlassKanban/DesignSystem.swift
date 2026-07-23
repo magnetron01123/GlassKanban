@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-/// Design tokens for the board (see design/iteration-2-concept.md).
+/// Design tokens for the board.
 ///
 /// Depth model ("a real kanban board"): the window is the only large glass
 /// surface, columns are recessed lanes cut into the board, cards are
