@@ -107,7 +107,7 @@ Reminders.
 | **Drag & Drop** zwischen Spalten | Spaltenwechsel (siehe Datenmodell) |
 | **Einfacher Klick** auf eine Karte | öffnet den **Karten-Editor** direkt auf dem Board |
 | **Rechtsklick** | Kontextmenü: Bearbeiten, In Erinnerungen öffnen, Verschieben nach, Umbenennen, Löschen |
-| **„+" im Backlog** | Neues Ticket direkt auf dem Board anlegen (nur Titel) |
+| **„+" im Backlog** | Neues Ticket anlegen und sofort im Karten-Editor öffnen |
 
 ### Karten-Editor (`TicketEditSheet`)
 
@@ -132,10 +132,11 @@ immer beim *gespeicherten* Titel, nicht bei dem, was die Karte anzeigt (die Kart
 URLs aus, siehe unten). Ein unverändert gelassenes oder leer gemachtes Feld schreibt
 nichts. Escape verwirft, Return und ein Klick daneben übernehmen.
 
-**Ticket anlegen** fragt nur nach dem Titel und speichert in die Standardliste (bzw. in die
-erste eingeschlossene Liste, falls die Standardliste ausgeschlossen ist). Return legt an und
-lässt die Zeile für den nächsten Eintrag offen; ein leeres Feld legt nichts an. Details
-ergänzt man mit einem Klick auf die fertige Karte.
+**Ticket anlegen = Karten-Editor.** Das „+" im Backlog legt das Ticket an (Standardliste
+bzw. erste eingeschlossene Liste) und öffnet sofort den Karten-Editor mit dem Cursor im
+Titel — Name, Notizen, Datum und alles Weitere entstehen an einem Ort, ohne zweiten
+Schritt. Wird der Editor ohne jede Eingabe geschlossen, entfernt die App das Ticket
+rückstandslos wieder; der ↗-Sprung nach Reminders zählt dabei als Behalten.
 
 **Löschen fragt nicht nach, sondern lässt sich rückgängig machen.** Jede Schreib-Aktion der
 App — Verschieben, Umbenennen, Anlegen, Löschen — registriert ihr Gegenteil beim

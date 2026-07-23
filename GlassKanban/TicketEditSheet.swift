@@ -71,6 +71,11 @@ struct TicketEditSheet: View {
     @State private var loadedTicket: EditableTicket?
     @Environment(\.undoManager) private var undoManager
     @State private var hoveredField: EditableField?
+    /// Claimed for a brand-new ticket only. An existing card opens for
+    /// *reading* — there the neutralizer keeps stray keystrokes out of the
+    /// title on purpose. A ticket the "+" just made opens for *writing*, and
+    /// its first missing thing is the name.
+    @FocusState private var titleFocused: Bool
 
     /// One surface, edge to edge.
     ///
@@ -122,6 +127,11 @@ struct TicketEditSheet: View {
             if opensRemindersOnClose {
                 store.openInReminders(cardID: card.id)
             }
+            // A ticket the "+" just made, closed without any input, is an
+            // abandoned creation — the store removes it again so no untitled
+            // ghost stays behind. Jumping to Reminders counts as keeping it:
+            // the user is clearly on the way to fill it in over there.
+            store.finalizeNewTicket(cardID: card.id, keep: opensRemindersOnClose)
         }
     }
 
@@ -144,6 +154,7 @@ struct TicketEditSheet: View {
                 TextField("", text: $title)
                     .textFieldStyle(.plain)
                     .font(BoardText.editorTitle)
+                    .focused($titleFocused)
                     .editableHint(hoveredField == .title, scheme: colorScheme)
                     // The chip beside it is a sibling view, not part of this
                     // field, so the state has to be said here too.
@@ -514,6 +525,16 @@ struct TicketEditSheet: View {
         calendarID = ticket.calendarID
         loadedTicket = ticket
         isLoaded = true
+        // A brand-new ticket opens ready to type its name. Delayed a beat:
+        // the field is not in the responder chain in the same tick it
+        // appears, and the neutralizer below needs to have done its work
+        // first so this claim lands after it, not before.
+        if store.newlyCreatedCardID == card.id {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(120))
+                titleFocused = true
+            }
+        }
     }
 
     /// Writes only when something actually changed — opening a card to read
