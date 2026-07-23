@@ -15,6 +15,10 @@ struct EmptyBoardNotice: View {
         VStack(spacing: 10) {
             Text(line)
                 .font(BoardText.title)
+                // A step down from title's semibold: card-title size so the
+                // sentence carries the same weight of announcement, but
+                // lighter so it never reads as a ticket competing for
+                // attention among (absent) real ones.
                 .fontWeight(.medium)
                 .foregroundStyle(.secondary)
 

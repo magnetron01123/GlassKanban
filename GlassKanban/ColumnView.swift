@@ -321,6 +321,9 @@ struct ColumnView: View {
                 // the board speaks about its principle in one vocabulary.
                 Text("Fertig werden beginnt hier")
                     .font(BoardText.body)
+                    // One weight up from body's regular: this line is an
+                    // invitation, not a caption, and has to read as such
+                    // against the plain metadata `body` sets elsewhere.
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
             }
@@ -394,6 +397,9 @@ struct ColumnView: View {
         } label: {
             Text("\(hiddenCount) weitere anzeigen")
                 .font(BoardText.meta)
+                // One weight up from meta's regular: the only clickable line
+                // at this scale, and it has to read as a link, not as the
+                // passive metadata `meta` sets everywhere else.
                 .fontWeight(.medium)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
