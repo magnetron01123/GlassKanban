@@ -345,55 +345,46 @@ struct StatsPopover: View {
     /// can simply be absent on a young board rather than showing three
     /// confident-looking dashes.
     ///
-    /// Both wells carry a heading now, not just the ranked one — one labelled
-    /// section beside one unlabelled one read as an accident, as if the
-    /// second half of the list had grown a heading the first half never got.
-    /// Both use `sectionHeading`, the same caption "Letzte 30 Tage" already
-    /// wears over the trend chart in the Jetzt tab, rather than a heavier
-    /// style invented just for this tab — one label language for the whole
-    /// window, not one per tab.
+    /// No heading on either well: a caption on one and not the other read as
+    /// an accident, and a caption on both was tried and read as clutter this
+    /// tab did not need — the gap between the two wells already says "these
+    /// are two groups", and every row still names itself.
     private var pastTab: some View {
         VStack(alignment: .leading, spacing: 14) {
             well {
-                VStack(alignment: .leading, spacing: 8) {
-                    sectionHeading("Bilanz")
-                    rows {
-                        // Carries its own period in its label, which is why
-                        // the footnote below can go on describing the ranked
-                        // section without contradicting it.
-                        row("Dieses Jahr",
-                            "\(wrapped.yearCount)",
-                            mark: wrapped.milestone != nil ? "flag.fill" : nil,
-                            help: wrapped.milestone.map {
-                                "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr."
-                            })
+                rows {
+                    // Carries its own period in its label, which is why the
+                    // footnote below can go on describing the ranked section
+                    // without contradicting it.
+                    row("Dieses Jahr",
+                        "\(wrapped.yearCount)",
+                        mark: wrapped.milestone != nil ? "flag.fill" : nil,
+                        help: wrapped.milestone.map {
+                            "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr."
+                        })
 
-                        row("Längste Folge", Self.days(streak.best))
-                    }
+                    row("Längste Folge", Self.days(streak.best))
                 }
             }
             if hasRankings {
                 VStack(alignment: .leading, spacing: 8) {
                     well {
-                        VStack(alignment: .leading, spacing: 8) {
-                            sectionHeading("Rekorde")
-                            rows {
-                                if let best = wrapped.bestDay {
-                                    row("Bester Tag",
-                                        Self.tasks(best.count),
-                                        help: best.date.formatted(date: .long, time: .omitted))
-                                }
-                                if let rank = wrapped.mostActiveWeekday {
-                                    row("Stärkster Wochentag",
-                                        Calendar.current.weekdaySymbols[rank.weekday - 1],
-                                        help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
-                                }
-                                if let rank = wrapped.mostUsedList {
-                                    row("Häufigste Liste",
-                                        rank.name,
-                                        dot: rank.color,
-                                        help: Self.tasks(rank.count))
-                                }
+                        rows {
+                            if let best = wrapped.bestDay {
+                                row("Bester Tag",
+                                    Self.tasks(best.count),
+                                    help: best.date.formatted(date: .long, time: .omitted))
+                            }
+                            if let rank = wrapped.mostActiveWeekday {
+                                row("Stärkster Wochentag",
+                                    Calendar.current.weekdaySymbols[rank.weekday - 1],
+                                    help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
+                            }
+                            if let rank = wrapped.mostUsedList {
+                                row("Häufigste Liste",
+                                    rank.name,
+                                    dot: rank.color,
+                                    help: Self.tasks(rank.count))
                             }
                         }
                     }
