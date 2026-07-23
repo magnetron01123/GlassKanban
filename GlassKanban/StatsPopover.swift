@@ -323,14 +323,24 @@ struct StatsPopover: View {
 
     // MARK: - Rückblick
 
+    /// Two sections, not one list of five — because the five rows were never
+    /// one kind of figure. "Dieses Jahr" and "Längste Folge" are running
+    /// tallies: a board with a single completed reminder can already show
+    /// both, one by counting and the other from `StreakCalculator` alone.
+    /// "Bester Tag", "Stärkster Wochentag" and "Häufigste Liste" are
+    /// rankings — a claim that something is *the most* of anything needs
+    /// enough history to carry it, which is exactly what
+    /// `WrappedStats.minSampleForRankings` gates: the three either all exist
+    /// or none do. That gate is the split. It also means the second section
+    /// can simply be absent on a young board rather than showing three
+    /// confident-looking dashes.
     private var pastTab: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 14) {
             well {
                 rows {
-                    // First, because it is the total the rest of this list
-                    // details. It carries its own period in its label, which
-                    // is why the footnote below can go on describing the
-                    // others without contradicting it.
+                    // Carries its own period in its label, which is why the
+                    // footnote below can go on describing the ranked section
+                    // without contradicting it.
                     row("Dieses Jahr",
                         "\(wrapped.yearCount)",
                         mark: wrapped.milestone != nil ? "flag.fill" : nil,
@@ -339,44 +349,76 @@ struct StatsPopover: View {
                         })
 
                     row("Längste Folge", Self.days(streak.best))
-
-                    if let best = wrapped.bestDay {
-                        row("Bester Tag",
-                            Self.tasks(best.count),
-                            help: best.date.formatted(date: .long, time: .omitted))
+                }
+            }
+            if hasRankings {
+                VStack(alignment: .leading, spacing: 8) {
+                    well {
+                        VStack(alignment: .leading, spacing: 8) {
+                            // The one label in this tab, for the one section
+                            // whose rows need it: unlike the tallies above,
+                            // "the most of something" is not self-explanatory
+                            // without a word for what kind of claim it is.
+                            // Same treatment as "Letzte 30 Tage" over the
+                            // trend chart — a caption only where a bare
+                            // number would leave a question.
+                            Text("Rekorde")
+                                .font(BoardText.body)
+                                .foregroundStyle(.secondary)
+                            rows {
+                                if let best = wrapped.bestDay {
+                                    row("Bester Tag",
+                                        Self.tasks(best.count),
+                                        help: best.date.formatted(date: .long, time: .omitted))
+                                }
+                                if let rank = wrapped.mostActiveWeekday {
+                                    row("Stärkster Wochentag",
+                                        Calendar.current.weekdaySymbols[rank.weekday - 1],
+                                        help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
+                                }
+                                if let rank = wrapped.mostUsedList {
+                                    row("Häufigste Liste",
+                                        rank.name,
+                                        dot: rank.color,
+                                        help: Self.tasks(rank.count))
+                                }
+                            }
+                        }
                     }
-                    if let rank = wrapped.mostActiveWeekday {
-                        row("Stärkster Wochentag",
-                            Calendar.current.weekdaySymbols[rank.weekday - 1],
-                            help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
-                    }
-                    if let rank = wrapped.mostUsedList {
-                        row("Häufigste Liste",
-                            rank.name,
-                            dot: rank.color,
-                            help: Self.tasks(rank.count))
+                    // A footnote about this group, below it and indented to
+                    // its content edge — the system's own group-footer
+                    // position, where a note about the numbers never reads as
+                    // one of them. A real month rather than a vague "letzte
+                    // 13 Monate", which is the kind of range nobody can
+                    // check. Scoped to the rankings rather than the tab as a
+                    // whole: "Dieses Jahr" and "Längste Folge" above already
+                    // state their own period.
+                    if let since = historySince {
+                        Text(since)
+                            .font(BoardText.meta)
+                            // Tertiary on glass is already near the contrast
+                            // floor; under Increase Contrast it has to step
+                            // up, or the one line that says which period
+                            // these numbers cover is the first thing to
+                            // disappear for the people who asked for more
+                            // contrast.
+                            .foregroundStyle(contrast == .increased
+                                ? AnyShapeStyle(.secondary)
+                                : AnyShapeStyle(.tertiary))
+                            .padding(.leading, 12)
                     }
                 }
             }
-            // A footnote about the group, below it and indented to its
-            // content edge — the system's own group-footer position, where a
-            // note about the numbers never reads as one of them. A real month
-            // rather than a vague "letzte 13 Monate", which is the kind of
-            // range nobody can check.
-            if let since = historySince {
-                Text(since)
-                    .font(BoardText.meta)
-                    // Tertiary on glass is already near the contrast floor;
-                    // under Increase Contrast it has to step up, or the one
-                    // line that says which period these numbers cover is the
-                    // first thing to disappear for the people who asked for
-                    // more contrast.
-                    .foregroundStyle(contrast == .increased
-                        ? AnyShapeStyle(.secondary)
-                        : AnyShapeStyle(.tertiary))
-                    .padding(.leading, 12)
-            }
         }
+    }
+
+    /// True exactly when the ranked section has something to show.
+    /// `WrappedStats` only ever produces `bestDay`, `mostActiveWeekday` and
+    /// `mostUsedList` together (see `minSampleForRankings`), so checking one
+    /// would already do — checking all three costs nothing and does not
+    /// depend on that invariant holding forever.
+    private var hasRankings: Bool {
+        wrapped.bestDay != nil || wrapped.mostActiveWeekday != nil || wrapped.mostUsedList != nil
     }
 
     private var historySince: String? {
