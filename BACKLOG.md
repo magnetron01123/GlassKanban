@@ -210,6 +210,11 @@ nicht möglich)
   Ruhezustand gehört dem Minimalismus, der Blick zurück ist ein Moment (ein Klick, eine
   Sitzung), Übersicht entsteht durch Begrenzung statt durch Struktur, Tiefe wird an
   Reminders delegiert.
+  **Darstellung, im selben Zug verworfen:** die Fußzeile als `.glass`-Button (eine
+  Glasplatte in der Mulde verletzt „Glas ist Chrome, nie Inhalt" — gültig ist die blanke
+  Textzeile mit Hover) und der System-Scrollbalken in den Spalten (läge als einziges
+  Element über den Karten und bräche die Tiefenordnung der Mulde — das „mehr"-Signal ist
+  der Fade am Spaltenrand).
 - **„0" in der Streak-Pille anzeigen** — abgelehnt. Eine „0" neben den Fensterknöpfen sieht
   kaputt aus und liest sich als Rüge. Die gültige Lösung steht in SPEC.md und ist bereits
   gebaut: Die Pille erscheint, sobald es überhaupt Historie gibt (`totalCompleted > 0`),

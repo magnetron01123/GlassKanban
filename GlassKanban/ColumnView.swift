@@ -11,6 +11,7 @@ struct ColumnView: View {
     @Environment(\.undoManager) private var undoManager
     @State private var isTargeted = false
     @State private var expanded = false
+    @State private var moreHovered = false
     /// Height of a real card in this lane, so the drop placeholder can match
     /// it exactly instead of guessing at a constant.
     @State private var cardHeight: CGFloat?
@@ -23,8 +24,7 @@ struct ColumnView: View {
     /// and brings back a month on request (see `DoneWindow`). Same gesture,
     /// different cut — one is "there is more of the same", the other is
     /// "there is a past".
-    private var displayedCards: [KanbanCard] {
-        guard !expanded else { return cards }
+    private var restingCards: [KanbanCard] {
         switch status {
         case .backlog where cards.count > Board.backlogCollapsedLimit:
             return Array(cards.prefix(Board.backlogCollapsedLimit))
@@ -35,7 +35,11 @@ struct ColumnView: View {
         }
     }
 
-    private var hiddenCount: Int { cards.count - displayedCards.count }
+    private var displayedCards: [KanbanCard] { expanded ? cards : restingCards }
+
+    /// How many cards the resting cut folds away right now — the number the
+    /// footer offers to bring back, and the reason the footer exists at all.
+    private var foldedCount: Int { cards.count - restingCards.count }
 
     /// True while a card from this very lane is being dragged. Dropping it
     /// back here changes nothing, so the lane must not promise a landing
@@ -140,9 +144,15 @@ struct ColumnView: View {
                 .padding(.top, 10)
                 .padding(.bottom, 12)
             }
+            // No scroll indicator inside the wells: the system's overlay bar
+            // is the one element that would draw *above* the cards and break
+            // the lane's depth model (recessed well, paper on top). The fade
+            // below is the board's own "there is more" signal, and scrolling
+            // itself is untouched.
+            .scrollIndicators(.never)
             .mask(scrollFade)
 
-            if hiddenCount > 0, !expanded {
+            if foldedCount > 0 {
                 moreButton
             }
         }
@@ -290,8 +300,8 @@ struct ColumnView: View {
         // thing still missing lives in the Reminders app — named here, at
         // the exact moment someone is digging for it.
         if status == .done {
-            if !expanded, hiddenCount > 0 {
-                details.append("\(hiddenCount) ältere Karten")
+            if !expanded, foldedCount > 0 {
+                details.append("\(foldedCount) ältere Karten")
             } else if expanded {
                 details.append("Älteres liegt in Erinnerungen")
             }
@@ -411,31 +421,51 @@ struct ColumnView: View {
         .padding(.vertical, 4)
     }
 
+    /// The fold line at the foot of a stack lane, and the way back out.
+    ///
+    /// A bare text line, not a plated button: the board's own rule is that
+    /// glass belongs to the chrome and never to the content plane (see
+    /// CONCEPT.md, Design-Anspruch) — the earlier `.glass` footer sat inside
+    /// the recessed well as a raised plate and broke exactly that. At meta
+    /// scale in secondary it reads as the lane's last, quiet line; hover
+    /// lifts it to primary, which is all the affordance a link this local
+    /// needs. The same line closes the fold again ("Ältere ausblenden"), so
+    /// the way back sits precisely where the way in was.
     private var moreButton: some View {
         Button {
-            // Expanding drops 15+ cards into the lane at once — the largest
-            // layout change the board can make, and the one most worth
-            // gating on Reduce Motion.
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded = true }
+            // Folding 15+ cards in or out at once is the largest layout
+            // change the board can make, and the one most worth gating on
+            // Reduce Motion.
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded.toggle() }
         } label: {
-            // "weitere" for Backlog (more of the same pile), "ältere" for
-            // Erledigt (a look into the past) — the word carries what the
-            // click will do.
-            Text(status == .done
-                ? "\(hiddenCount) ältere anzeigen"
-                : "\(hiddenCount) weitere anzeigen")
+            Text(moreLabel)
                 .font(BoardText.meta)
                 // One weight up from meta's regular: the only clickable line
                 // at this scale, and it has to read as a link, not as the
                 // passive metadata `meta` sets everywhere else.
                 .fontWeight(.medium)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(moreHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 7)
+                .contentShape(Rectangle())
         }
-        .buttonStyle(.glass)
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) { moreHovered = hovering }
+        }
         .padding(.horizontal, Board.laneMargin)
-        .padding(.bottom, 10)
+        .padding(.bottom, 6)
+    }
+
+    /// "weitere" for Backlog (more of the same pile), "ältere" for Erledigt
+    /// (a look into the past) — the word carries what the click will do.
+    private var moreLabel: String {
+        switch (status, expanded) {
+        case (.done, false): "\(foldedCount) ältere anzeigen"
+        case (.done, true): "Ältere ausblenden"
+        case (_, false): "\(foldedCount) weitere anzeigen"
+        case (_, true): "Weniger anzeigen"
+        }
     }
 
     /// Cards fade out at the bottom edge, hinting there is more to scroll
