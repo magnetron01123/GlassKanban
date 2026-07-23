@@ -322,11 +322,14 @@ struct ColumnView: View {
                 // with the WIP dialog ("Weniger gleichzeitig, mehr fertig") so
                 // the board speaks about its principle in one vocabulary.
                 Text("Fertig werden beginnt hier")
-                    .font(BoardText.body)
-                    // One weight up from body's regular: this line is an
-                    // invitation, not a caption, and has to read as such
-                    // against the plain metadata `body` sets elsewhere.
-                    .fontWeight(.medium)
+                    // Card scale, because this slot stands in for a card: at
+                    // `body` it was a 12pt line adrift in a 118pt outline,
+                    // reading as a caption for the empty space rather than as
+                    // the ticket that belongs there. `titleCompact` is the
+                    // card title's size one weight down — present enough to
+                    // fill the slot it occupies, light and secondary enough to
+                    // stay the ghost it is.
+                    .font(BoardText.titleCompact)
                     .foregroundStyle(.secondary)
             }
             .transition(.opacity)
