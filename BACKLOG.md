@@ -144,6 +144,16 @@ nicht möglich)
 - **Eigene Push-Benachrichtigungen der App** — Reminders hat bereits eigene
   Benachrichtigungen; eigene Notifications würden sich doppeln und widersprechen dem ruhigen
   Minimal-Desk-Setup-Vibe der App.
+- **Spalten enden mit dem Inhalt („Board endet, wo die Arbeit endet")** — gebaut, angeschaut
+  und am 23.07.2026 vom Nutzer abgelehnt (PR #14, ungemergt geschlossen). Der Vorschlag: alle
+  vier Spalten so hoch wie die vollste, darunter Fensterglas. Entscheidung: **Die Spalten
+  behalten die volle Fensterhöhe.** Die durchgehenden Mulden sind das Board — auch halb leer
+  sollen sie als stehende Struktur lesbar sein, nicht als Block, der mit dem Inhalt atmet.
+  Wer weniger Leerfläche will, macht das Fenster kleiner; genau dafür ist es frei skalierbar.
+  Nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst öffnet.
+- **Schmalere Ablage-Spalten (Backlog/Erledigt)** — im selben Zug vorgeschlagen und nicht
+  weiterverfolgt: Alle vier Spalten bleiben gleich breit, der Grundsatz „Fokus kommt aus dem
+  Karteninhalt, nicht aus der Spalten-Geometrie" bleibt stehen.
 - **Punkte/Levels/Bestenlisten und ein dauerhaftes Abzeichen-Regal** — zu viel Komplexität
   ohne echten Mehrwert für ein Einzelnutzer-Ambient-Board. **Ausnahme (umgesetzt):** der
   Meilenstein-Hinweis im Statistik-Fenster, der nur bei einer in den letzten sieben Tagen

@@ -237,8 +237,13 @@ enum Board {
 /// Separation now comes from weight and colour (see `Board.headerStyle`),
 /// not from a single point of size.
 enum BoardText {
-    /// Card title in the working lanes — the board's primary content.
-    static let title = Font.system(size: 14, weight: .semibold)
+    /// Card title in the working lanes — the board's primary content, and
+    /// the one line meant to be read from across the room. 15, not 14, on
+    /// user request after living with the board: one deliberate point for
+    /// glanceability, which also widens the gap to the 13pt lane header the
+    /// original 14 sat uncomfortably close to. The rest of the scale stays —
+    /// this is a reading aid, not an inflation.
+    static let title = Font.system(size: 15, weight: .semibold)
     /// Card title in the single-line lanes, where a row is a list entry
     /// rather than a ticket.
     static let titleCompact = Font.system(size: 13, weight: .medium)

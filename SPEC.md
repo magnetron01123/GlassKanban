@@ -252,6 +252,11 @@ Einblenden).
 
 - Liquid Glass auf der Chrome-Ebene (Fensterrücken, Toolbar, Popover); Spalten sind
   eingelassene Mulden, Karten deckendes Papier — siehe CONCEPT.md, Abschnitt Design-Anspruch
+- **Spalten füllen immer die volle Fensterhöhe** — bewusste Entscheidung, siehe BACKLOG.md
+  („Explizit abgelehnt": Spalten enden mit dem Inhalt). Weniger Leerfläche = Fenster kleiner
+  ziehen
+- **Kartentitel in den Arbeitsspalten: 15pt** (eine bewusste Stufe über dem alten 14, für
+  Lesbarkeit auf Distanz — der Rest der Typo-Skala bleibt unverändert)
 - Typografie/Abstände nach Apple HIG (SF Pro), Tokens in `DesignSystem.swift`
 - Bewegung wird für Dinge ausgegeben, die *gerade passiert sind* (Karte rastet in „Erledigt"
   ein), nie für stehende Einladungen
