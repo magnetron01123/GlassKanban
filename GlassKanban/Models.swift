@@ -206,7 +206,6 @@ struct KanbanCard: Identifiable, Equatable {
 /// focus handling — the field kept its caret and stayed open.
 enum BoardEdit: Equatable {
     case renaming(cardID: String)
-    case newTicket
 }
 
 /// Why the whole board is blank. The reasons need different answers, and a

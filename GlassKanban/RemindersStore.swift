@@ -492,14 +492,21 @@ final class RemindersStore: ObservableObject {
     /// Reminders for the title, which meant abandoning that edit left an
     /// untitled ghost on the board, and the app switch swallowed anything
     /// typed before Reminders had finished coming forward.
-    @discardableResult
-    func createBacklogTicket(title: String, undoManager: UndoManager? = nil) -> String? {
-        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let calendar = targetCalendarForNewTicket() else { return nil }
+    /// The card the "+" just created, still open in the editor. If the editor
+    /// closes with the ticket still completely empty, `finalizeNewTicket`
+    /// removes it again — abandoning a creation must not leave an untitled
+    /// ghost on the board (the failure mode of both earlier creation flows).
+    private(set) var newlyCreatedCardID: String?
+
+    /// Creates an empty Backlog ticket and hands its ID to the caller, which
+    /// opens the editor on it — creation *is* editing, the same card at
+    /// reading size, instead of a bare title row that could hold nothing else.
+    func createTicketForEditing(undoManager: UndoManager? = nil) -> String? {
+        guard let calendar = targetCalendarForNewTicket() else { return nil }
 
         let reminder = EKReminder(eventStore: eventStore)
         reminder.calendar = calendar
-        reminder.title = trimmed
+        reminder.title = ""
 
         do {
             try eventStore.save(reminder, commit: true)
@@ -509,11 +516,38 @@ final class RemindersStore: ObservableObject {
         }
 
         let cardID = reminder.calendarItemIdentifier
+        newlyCreatedCardID = cardID
         register(undoManager, name: "Ticket anlegen") { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
+        // Optimistic, like `move`: the editor opens on this card immediately,
+        // it cannot wait out the debounced refresh.
+        if let card = Self.card(from: reminder) {
+            cards.append(card)
+        }
         scheduleRefresh()
         return cardID
+    }
+
+    /// Called by the editor as it closes. A brand-new ticket that is still
+    /// empty in every field was a creation that got abandoned — it is removed
+    /// silently, no undo entry: there is nothing to restore. `keep` is passed
+    /// when the close is a jump to Reminders, where the user is clearly about
+    /// to fill the ticket in over there.
+    func finalizeNewTicket(cardID: String, keep: Bool = false) {
+        guard newlyCreatedCardID == cardID else { return }
+        newlyCreatedCardID = nil
+        guard !keep, let ticket = loadEditableTicket(cardID: cardID) else { return }
+        let isEmpty = ticket.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && ticket.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && ticket.url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && ticket.dueDate == nil
+            && ticket.priority == 0
+        guard isEmpty,
+              let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
+        try? eventStore.remove(reminder, commit: true)
+        cards.removeAll { $0.id == cardID }
+        scheduleRefresh()
     }
 
     /// `defaultCalendarForNewReminders()`, unless that list is excluded from

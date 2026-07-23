@@ -14,10 +14,6 @@ struct ColumnView: View {
     /// Height of a real card in this lane, so the drop placeholder can match
     /// it exactly instead of guessing at a constant.
     @State private var cardHeight: CGFloat?
-    /// Text of the ticket being typed, or nil while the lane is not taking
-    /// one. Only Backlog ever sets it.
-    @State private var draftTitle: String?
-    @FocusState private var draftFocused: Bool
 
     private var cards: [KanbanCard] { store.cards(for: status) }
     private var singleLine: Bool { status.cardDensity.isSingleLine }
@@ -122,11 +118,7 @@ struct ColumnView: View {
                     }
 
                     if status == .backlog {
-                        if draftTitle != nil {
-                            draftRow
-                        } else {
-                            addTicketButton
-                        }
+                        addTicketButton
                     }
 
                     if showsDropFeedback {
@@ -344,12 +336,21 @@ struct ColumnView: View {
     /// Quick-add for Backlog. Sits right after the last card, like the "+" at
     /// the foot of a lane in familiar Kanban tools — but scaled to this
     /// board's quiet chrome instead of a standalone accent button.
+    ///
+    /// Creating IS editing: the "+" makes the ticket and lifts it straight
+    /// into the card editor, where title, notes, date and everything else
+    /// live in one place. The earlier bare title row could hold nothing but
+    /// a name and made every other field a second trip. A creation abandoned
+    /// without any input is removed again on close (see
+    /// `RemindersStore.finalizeNewTicket`) — no untitled ghosts.
     private var addTicketButton: some View {
         HStack {
             Spacer()
             Button {
-                draftTitle = ""
-                store.activeEdit = .newTicket
+                guard let id = store.createTicketForEditing(undoManager: undoManager) else { return }
+                withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
+                    store.editingCardID = id
+                }
             } label: {
                 Image(systemName: "plus")
                     // Sized to the toolbar's own controls (find, streak), not
@@ -382,98 +383,6 @@ struct ColumnView: View {
             Spacer()
         }
         .padding(.vertical, 4)
-    }
-
-    /// The new ticket is written on the board, in a row shaped like the card it
-    /// is about to become — not in another app. The title is all Glass Kanban
-    /// asks for; notes, date and priority stay with Reminders, one click away
-    /// on the finished card.
-    ///
-    /// Return files it and leaves the field open for the next one, the way
-    /// Reminders' own list does: capturing three things in a row should not
-    /// cost three trips to a button.
-    private var draftRow: some View {
-        TextField("Neues Ticket", text: Binding(
-            get: { draftTitle ?? "" },
-            set: { draftTitle = $0 }))
-            .textFieldStyle(.plain)
-            .font(BoardText.titleCompact)
-            .focused($draftFocused)
-            .padding(EdgeInsets(
-                top: 9, leading: Board.cardInsetLeading,
-                bottom: 9, trailing: Board.cardInsetTrailing))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background { Board.cardShape.fill(draftFill) }
-            .overlay { Board.cardShape.strokeBorder(Board.cardBorder(contrast)) }
-            // A stable identity through every reload: without it the lane's
-            // next refresh rebuilds this row as a new view and the caret
-            // vanishes mid-word.
-            .id("draft-row")
-            .onAppear { claimDraftFocus() }
-            .onSubmit { fileDraft(keepingOpen: true) }
-            .onExitCommand { closeDraft() }
-            // Clicking elsewhere on the board, or starting to rename a card,
-            // files what has been typed and closes the row.
-            .onChange(of: store.activeEdit) { _, edit in
-                if draftTitle != nil, edit != .newTicket { fileDraft(keepingOpen: false) }
-            }
-            // Clicking away is a commit, like every other inline edit on this
-            // board — but it also closes the row, because the intent was to
-            // leave rather than to add another.
-            .onChange(of: draftFocused) { _, focused in
-                guard !focused, draftTitle != nil else { return }
-                Task { @MainActor in
-                    // A refresh landing at the wrong moment can take focus off
-                    // the field for an instant. Only a loss that outlives that
-                    // is the user actually leaving — otherwise saving a card
-                    // would close the row it just reopened.
-                    try? await Task.sleep(for: .milliseconds(120))
-                    guard !draftFocused, draftTitle != nil else { return }
-                    fileDraft(keepingOpen: false)
-                }
-            }
-    }
-
-    /// Focus set in the same tick the field appears is a coin flip: the field
-    /// is not in the responder chain yet. One turn of the run loop later it is.
-    private func claimDraftFocus() {
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(60))
-            guard draftTitle != nil else { return }
-            draftFocused = true
-        }
-    }
-
-    private var draftFill: Color {
-        reduceTransparency
-            ? Color(nsColor: .controlBackgroundColor)
-            : Board.cardFill(colorScheme)
-    }
-
-    /// Saves what has been typed, if anything. An empty field is not a ticket:
-    /// it closes without leaving anything behind.
-    private func fileDraft(keepingOpen: Bool) {
-        let text = (draftTitle ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else {
-            closeDraft()
-            return
-        }
-        store.createBacklogTicket(title: text, undoManager: undoManager)
-        if keepingOpen {
-            draftTitle = ""
-            claimDraftFocus()
-        } else {
-            closeDraft()
-        }
-    }
-
-    /// Only releases the board's edit if it is still the draft's — a rename
-    /// starting elsewhere may already own it, which is what closed this row.
-    private func closeDraft() {
-        draftTitle = nil
-        if store.activeEdit == .newTicket {
-            store.activeEdit = nil
-        }
     }
 
     private var moreButton: some View {
