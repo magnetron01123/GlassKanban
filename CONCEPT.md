@@ -229,8 +229,9 @@ selbst ein Produktivitäts-Hebel — weniger visuelles Rauschen senkt die Schwel
 überhaupt regelmäßig zu öffnen, passend zum Anspruch, dauerhaft geöffnet zu bleiben.
 
 Damit die App nicht nur ein reines Produktivitäts-Werkzeug ist, zwei bewusst kleine,
-technisch günstige Zusätze — ausdrücklich **keine** Punkte/Levels/Badges/Bestenlisten, das
-würde für ein Einzelnutzer-Ambient-Board zu viel Komplexität ohne echten Mehrwert bedeuten:
+technisch günstige Zusätze — ausdrücklich **keine** Punkte/Levels/Bestenlisten und kein
+Abzeichen-Regal, das würde für ein Einzelnutzer-Ambient-Board zu viel Komplexität ohne echten
+Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weiter unten):
 
 - **Streak-Zähler:** z. B. „🔥 5 Tage in Folge" im Fensterrahmen. Wird rein lesend aus dem
   bereits vorhandenen `completionDate` aller erledigten Erinnerungen berechnet (an wie vielen
@@ -240,6 +241,19 @@ würde für ein Einzelnutzer-Ambient-Board zu viel Komplexität ohne echten Mehr
   (~20 Sätze, u. a. an die Personal-Kanban-Philosophie angelehnt), Auswahl nach Kalendertag —
   ändert sich jeden Tag, bleibt am selben Tag stabil. Komplett offline, keine Analyse des
   Nutzerverhaltens, kein Server.
+
+- **Statistik-Fenster:** hinter der Flamme in der Toolbar, zwei Reiter („Jetzt" /
+  „Rückblick"), rein lesend aus denselben `completionDate`-Werten plus dem Listennamen der
+  erledigten Erinnerung. Enthält neben Streak und Tagesfortschritt die Personal-Kanban-Sicht
+  auf das eigene System: aktuelle Auslastung („In Bearbeitung" gegen das eigene WIP-Limit)
+  und eine Durchlaufzeit-Schätzung nach Little's Law (Auslastung ÷ Tempo). Bewusst als
+  *Schätzung* beschriftet — der Wert steigt, sobald mehr gleichzeitig begonnen wird, und
+  genau das ist die Aussage eines WIP-Limits.
+  **Die eine bewusste Ausnahme von der Abzeichen-Regel:** ein Meilenstein-Hinweis bei runden
+  Zahlen (50/100/250/…) — aber nur, wenn die Schwelle in den letzten sieben Tagen
+  überschritten wurde. Er wird jedes Mal neu aus der Historie abgeleitet, nichts wird
+  gespeichert, und er verschwindet von selbst wieder. Ein Abzeichen, das monatelang steht,
+  ist kein Moment mehr, sondern Mobiliar.
 
 **Weitere, an anderer Stelle bereits ausgearbeitete Anwendungen desselben Grundsatzes:**
 

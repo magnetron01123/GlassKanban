@@ -52,6 +52,13 @@ enum Board {
     // tokens so the style cannot be forgotten at an individual call site.
     static let columnShape = RoundedRectangle(cornerRadius: columnRadius, style: .continuous)
     static let cardShape = RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
+    /// The opened card. Its corner grows with it — the same note brought
+    /// closer, not a lane-sized corner stretched across twice the width,
+    /// which is what makes an enlarged panel look flat.
+    static let openCardShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+    /// Text margins in the opened card, wider than a lane card's for the same
+    /// reason its type is larger: it is read, not scanned.
+    static let openCardInset: CGFloat = 20
 
     /// One shape for every chip that carries a small, quiet value — the date
     /// badge on a card and the count in a lane header. These had drifted into
@@ -125,6 +132,39 @@ enum Board {
 
     static let columnInnerShadow = Color.black.opacity(0.10)
 
+    /// Grouped content inside a popover — the stats window's wells.
+    ///
+    /// Not `columnFill`, which they used to borrow. That value is tuned for a
+    /// lane cut into the window's large glass sheet, where dark mode needs a
+    /// heavy 25% black to read as a recess; dropped into a popover it made
+    /// the wells nearly opaque slabs, so the panel was visibly less
+    /// see-through in dark than in light. Measured side by side, that was a
+    /// 3.8× difference in overlay strength between the two modes.
+    ///
+    /// Dark lifts with white rather than pressing with black, which is how
+    /// the system grouped content on a dark material (Control Centre modules,
+    /// Notification Centre cards) and the only way to separate a group
+    /// without spending the translucency the material exists for. Both modes
+    /// now sit near 5–7%, so the panel reads equally glassy either way.
+    static func wellFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.07) : Color.black.opacity(0.05)
+    }
+
+    /// The wash under an editable field while the pointer is over it.
+    ///
+    /// Much fainter than `columnFill`: a lane is a place, this is only a hint
+    /// that you may type here. It exists because the opened card sets its
+    /// title and notes as plain text — right for a card, but it leaves
+    /// nothing to say the text can be changed until you have already clicked
+    /// it. Shown on approach and gone again, so the card at rest stays paper.
+    static func editableHoverFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.045)
+    }
+
+    /// Corner of that wash. One step under the card's own, per the nesting
+    /// rule: what sits inside a shape never curves wider than it.
+    static let editableHoverShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+
     // Card shadows: tight contact shadow + soft ambient = physical elevation
     static let cardShadowResting = (color: Color.black.opacity(0.10), radius: CGFloat(1.5), y: CGFloat(1))
     static let cardShadowAmbient = (color: Color.black.opacity(0.05), radius: CGFloat(5), y: CGFloat(3))
@@ -133,17 +173,12 @@ enum Board {
     /// Backlog shows this many cards before offering "N weitere anzeigen".
     static let backlogCollapsedLimit = 15
 
-    /// Grouped content inside a popover — the stats window's wells. Deliberately
-    /// weaker than the lane fill: inside a popover the backdrop is already
-    /// darkened glass, and the lane's own value made the wells nearly opaque
-    /// slabs, so the panel was visibly less glassy than the board behind it.
-    static func wellFill(_ scheme: ColorScheme) -> Color {
-        scheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04)
-    }
-
-    /// A well sits inside a popover, so its radius steps below the card's and
+    /// Wells that zone the stats popover's sections — the lanes' recessed
+    /// treatment at panel scale, the way the system's own inset groups zone
+    /// Settings. Same fill as a lane (`columnFill`), radius one step under
     /// the tooltip's per the nesting rule. Not glass: a well is content
-    /// grouping, and glass belongs to the chrome around it.
+    /// sitting *in* the popover's glass, and the one thing it must never do
+    /// is blur what is behind it a second time.
     static let wellShape = RoundedRectangle(cornerRadius: 9, style: .continuous)
 
     // Tooltips. Chrome, not content — so glass is right here, unlike on a
@@ -169,6 +204,22 @@ enum Board {
     // Motion
     static let hoverAnimation: Animation = .easeOut(duration: 0.16)
     static let dropTargetAnimation: Animation = .easeOut(duration: 0.15)
+    /// Taking a ticket off the board, and putting it back.
+    ///
+    /// A spring, because every panel macOS opens is sprung — but damped
+    /// almost flat. The settle below bounces on purpose; this must not. A
+    /// card you are about to read should arrive and stop, and an overshoot
+    /// at this size reads as a wobble rather than as life.
+    ///
+    /// One constant for the whole gesture: the lanes going out of focus, the
+    /// board dimming and the card growing all run on this, so it reads as one
+    /// movement instead of three that happen to coincide.
+    static let cardOpenAnimation: Animation = .spring(response: 0.30, dampingFraction: 0.86)
+
+    /// How far under full size the card starts. Small on purpose — enough to
+    /// read as arriving, not so much that it flies in.
+    static let cardOpenScale: CGFloat = 0.92
+
     /// Card "settling" into Erledigt — a small reward on completion.
     /// The board's only recurring animation: motion is spent on things that
     /// just happened, never on a standing invitation. An empty lane is its own
@@ -206,9 +257,25 @@ enum BoardText {
     static let glyph = Font.system(size: 9, weight: .semibold)
     /// A single emphasised number — the streak counter.
     static let value = Font.system(size: 12, weight: .semibold)
-    /// The stats window's headline number and the word beside it. Declared as a
-    /// size too, because the flame next to it is sized from the same value —
-    /// a glyph that ignores its companion text reads as misaligned.
+
+    // The opened card, one rung up the scale.
+    //
+    // A card in a lane is scanned at a glance from across the desk; the same
+    // card held open is read and typed into. Enlarging the surface alone
+    // would only have set lane-sized text in a bigger field — which reads as
+    // a card that was stretched rather than one brought closer.
+    /// Title field in the opened card.
+    static let editorTitle = Font.system(size: 17, weight: .semibold)
+    /// Notes and every value in the opened card.
+    static let editorBody = Font.system(size: 13)
+    /// Field captions in the opened card ("Titel", "Fälligkeit"). Semibold
+    /// for the same reason `chip` is: small text that has to stay legible.
+    static let editorCaption = Font.system(size: 12, weight: .semibold)
+
+    /// The streak row — flame, count and "Tage in Folge" — set as one
+    /// uniform line rather than a hero number with a caption trailing it.
+    /// One size, one (regular) weight: nothing in the row outranks anything
+    /// else in it, the flame's own colour is the only emphasis it carries.
     static let heroUnitSize: CGFloat = 20
     static let heroUnit = Font.system(size: heroUnitSize, weight: .regular)
 

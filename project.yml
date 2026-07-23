@@ -9,7 +9,7 @@ settings:
     # non-Sendable EKObjects make strict Swift 6 concurrency checking a
     # poor fit right now. Revisit after the data layer stabilizes.
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
 targets:
   GlassKanban:
@@ -20,11 +20,22 @@ targets:
     info:
       path: GlassKanban/Info.plist
       properties:
+        # Must describe write access too: the board renames, moves, edits,
+        # creates and deletes reminders. Understating this is a standard
+        # 5.1.1 review rejection.
         NSRemindersFullAccessUsageDescription: >-
-          Glass Kanban zeigt deine Erinnerungen als Kanban-Board an und benötigt dafür
-          Lesezugriff auf deine Erinnerungen.
-        NSHumanReadableCopyright: ""
+          Glass Kanban zeigt deine Erinnerungen als Kanban-Board an und liest
+          sowie bearbeitet dafür deine Erinnerungen.
+        NSHumanReadableCopyright: "© 2026 David Trogemann"
         LSApplicationCategoryType: public.app-category.productivity
+        # Without these two the plist would carry XcodeGen's literal 1.0/1
+        # defaults and MARKETING_VERSION would never reach the app — only the
+        # test bundle, which never ships.
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        # No network code, no encryption of our own — declaring it here stops
+        # App Store Connect asking the export-compliance question every upload.
+        ITSAppUsesNonExemptEncryption: false
         # The app's own strings are German, but AppKit localizes the standard
         # menus (Bearbeiten, Darstellung, Fenster, Hilfe) from the bundle's
         # declared languages — without this it hands out English ones next to

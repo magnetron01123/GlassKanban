@@ -105,7 +105,10 @@ enum StatusTagger {
     /// re-tidied (collapsed double spaces, trimmed) — untouched user lines are
     /// preserved character-for-character. A line that held nothing but a tag
     /// disappears with it instead of leaving a blank line where it stood.
-    private static func removingTags(_ text: String) -> String {
+    /// Also used by `TicketEditSheet` to show notes without the hidden
+    /// hashtag; unlike `TextSanitizer`, URLs are left alone since here
+    /// they're real, editable content.
+    static func removingTags(_ text: String) -> String {
         var lines: [String] = []
         for line in text.components(separatedBy: "\n") {
             var cleaned = line

@@ -123,13 +123,16 @@ nicht möglich)
 
 ## Statistiken / Jahresrückblick
 
-- **Produktivitäts-Statistiken im Spotify-Wrapped-Stil** — ein jährlicher (oder periodischer)
-  Rückblick auf erledigte Karten, ähnlich wie Spotifys Jahresrückblick für gehörte Musik (z. B.
-  meistgenutzte Liste, produktivster Wochentag, längste Streak, Gesamtzahl erledigter Aufgaben,
-  als teilbare Zusammenfassung). Passt gut zum bestehenden Motivations-Thema (Streak-Zähler),
-  braucht aber eigene Aggregations-Logik über historische Daten und eine dedizierte
-  Darstellung/Share-Ansicht — deutlich mehr Aufwand als die MVP-Motivationsfeatures, daher erst
-  nach stabilem MVP sinnvoll.
+- ~~**Produktivitäts-Statistiken im Spotify-Wrapped-Stil**~~ — **umgesetzt** als
+  Statistik-Fenster hinter der Toolbar-Flamme (Reiter „Rückblick": meistgenutzte Liste,
+  stärkster Wochentag, bester Tag, längste Folge; Reiter „Jetzt": Jahreszahl, Konstanz,
+  Auslastung, Durchlaufzeit-Schätzung). Die erwartete Aggregations-Logik sitzt in
+  `WrappedStats.swift` und läuft ohne zweite EventKit-Abfrage in derselben Auswertung mit,
+  die den Streak berechnet.
+- **Teilbare Zusammenfassung** — der ursprüngliche Wrapped-Gedanke enthielt eine Share-Ansicht
+  zum Weitergeben. Bewusst nicht mitgebaut: das Fenster ist auf einen Blick ausgelegt, eine
+  Export-/Teilen-Darstellung wäre ein eigenes Layout mit eigenen Fragen (was darf ein
+  Screenshot über Listennamen verraten?).
 
 ## Plattform-Erweiterung: iOS-App
 
@@ -144,8 +147,11 @@ nicht möglich)
 - **Eigene Push-Benachrichtigungen der App** — Reminders hat bereits eigene
   Benachrichtigungen; eigene Notifications würden sich doppeln und widersprechen dem ruhigen
   Minimal-Desk-Setup-Vibe der App.
-- **Punkte/Levels/Badges/Bestenlisten** — zu viel Komplexität ohne echten Mehrwert für ein
-  Einzelnutzer-Ambient-Board.
+- **Punkte/Levels/Bestenlisten und ein dauerhaftes Abzeichen-Regal** — zu viel Komplexität
+  ohne echten Mehrwert für ein Einzelnutzer-Ambient-Board. **Ausnahme (umgesetzt):** der
+  Meilenstein-Hinweis im Statistik-Fenster, der nur bei einer in den letzten sieben Tagen
+  überschrittenen runden Zahl erscheint und rein abgeleitet ist — siehe CONCEPT.md,
+  „Motivation".
 - **Täglich wechselnder Motivationssatz** — war ursprünglich als zweites
   Motivationselement neben dem Streak-Zähler geplant (~20 lokale Sätze, Auswahl nach
   Kalendertag) und hat sich in der Praxis als unpraktikabel erwiesen. Ein fest stehender

@@ -6,22 +6,28 @@ import os.log
 /// Background: the (undocumented) scheme is
 /// `x-apple-reminderkit://REMCDReminder/<UUID>`, but the UUID it expects is
 /// the Reminders-internal record UUID — NOT EventKit's
-/// `calendarItemIdentifier`. Two resolution paths, in order:
+/// `calendarItemIdentifier`. The only public source for that UUID is
+/// `calendarItemExternalIdentifier`, which for CloudKit-backed (iCloud/
+/// CalDAV/Exchange) reminders is typically "x-apple-reminder://<UUID>".
 ///
-/// 1. `calendarItemExternalIdentifier`: for CloudKit-backed (iCloud)
-///    reminders this is typically "x-apple-reminder://<UUID>".
-/// 2. The private backing-object chain (backingObject → _reminder → …uuid),
-///    the same workaround the open-source app "Reminders MenuBar" uses in
-///    production on macOS 26. Private API — acceptable for this personal,
-///    non-App-Store app; if Apple changes it, the caller falls back to
-///    simply opening the Reminders app.
+/// Local ("On My Mac") reminders have no external identifier at all — there
+/// is no public API that exposes their internal UUID — so this resolves to
+/// `nil` for them and the caller falls back to simply opening the Reminders
+/// app. That is an acceptable gap here: editing a reminder's content no
+/// longer depends on this deep link (see `TicketEditSheet`), so this is now
+/// only a shortcut into the native app, not the sole way to reach a
+/// reminder's content. An earlier version of this resolver used a private,
+/// reflection-based fallback (`backingObject` → `_reminder` → `uuid`, the
+/// same trick the open-source app "Reminders MenuBar" uses) to cover this
+/// gap — removed once the in-app editor made it unnecessary, since Mac App
+/// Store Guideline 2.5.1 prohibits private/undocumented API use.
 enum ReminderDeepLink {
 
     private static let log = Logger(subsystem: "com.davidtrogemann.GlassKanban", category: "deeplink")
 
     static func url(for reminder: EKReminder) -> URL? {
-        guard let uuid = internalUUIDString(of: reminder) else {
-            log.notice("no internal UUID resolved for \(reminder.calendarItemIdentifier, privacy: .public)")
+        guard let uuid = uuidString(fromExternalIdentifier: reminder.calendarItemExternalIdentifier) else {
+            log.notice("no internal UUID resolved for \(reminder.calendarItemIdentifier, privacy: .private)")
             return nil
         }
         // "/details" opens the reminder's edit popover instead of merely
@@ -29,22 +35,11 @@ enum ReminderDeepLink {
         return URL(string: "x-apple-reminderkit://REMCDReminder/\(uuid)/details")
     }
 
-    private static func internalUUIDString(of reminder: EKReminder) -> String? {
-        if let uuid = uuidString(fromExternalIdentifier: reminder.calendarItemExternalIdentifier) {
-            return uuid
-        }
-        if let uuid = backingUUID(of: reminder) {
-            log.notice("resolved via private backing object")
-            return uuid.uuidString
-        }
-        return nil
-    }
-
     /// The two shapes `calendarItemExternalIdentifier` is known to take, and
     /// nothing else. Split out from the EventKit lookup because this is the
     /// part that can silently start returning nonsense if Apple changes the
-    /// format — the identifier is not documented, so it is worth pinning down
-    /// exactly what is accepted.
+    /// format — the identifier is undocumented, so what is accepted is worth
+    /// pinning down (and testing) explicitly.
     static func uuidString(fromExternalIdentifier external: String?) -> String? {
         guard let external else { return nil }
         if let range = external.range(of: "x-apple-reminder://") {
@@ -57,25 +52,9 @@ enum ReminderDeepLink {
             log.notice("resolved via external identifier (bare UUID)")
             return external
         }
-        log.notice("external identifier has unexpected format: \(external, privacy: .public)")
+        // `.private`: this identifies one of the user's reminders, and the
+        // unified log is readable well beyond this app.
+        log.notice("external identifier has unexpected format: \(external, privacy: .private)")
         return nil
-    }
-
-    private static func backingUUID(of reminder: EKReminder) -> UUID? {
-        guard let backing = perform("backingObject", on: reminder),
-              let rem = perform("_reminder", on: backing) else { return nil }
-        for idSelector in ["reminderID", "objectID"] {
-            if let idObject = perform(idSelector, on: rem),
-               let uuid = perform("uuid", on: idObject) as? UUID {
-                return uuid
-            }
-        }
-        return perform("uuid", on: rem) as? UUID
-    }
-
-    private static func perform(_ name: String, on object: AnyObject) -> AnyObject? {
-        let selector = NSSelectorFromString(name)
-        guard object.responds(to: selector) else { return nil }
-        return object.perform(selector)?.takeUnretainedValue()
     }
 }

@@ -18,17 +18,13 @@ struct CardView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
-    @Environment(\.undoManager) private var undoManager
 
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
     @State private var settleFlash = false
     @State private var isRenaming = false
     @State private var renameText = ""
-    /// The title the edit started from — the *stored* one, which is not what
-    /// the card displays. Kept so the commit can tell a real change from a
-    /// no-op (see `TicketRename`).
-    @State private var renameOriginal = ""
+    @FocusState private var isFocused: Bool
     @FocusState private var isRenameFieldFocused: Bool
 
     /// Lanes this card can be sent to — everything except where it already is.
@@ -64,29 +60,39 @@ struct CardView: View {
         .opacity(store.draggingCardID == card.id ? 0.4 : 1)
         .animation(reduceMotion ? nil : Board.hoverAnimation, value: store.draggingCardID)
         .contentShape(Board.cardShape)
-        // Deliberately NOT `.focusable()`. Cards held keyboard focus for a
-        // while (Tab, then Return; later arrow keys), and the focused card
-        // wore an accent contour so the cursor was not invisible. Removed as
-        // a decision, not an oversight: cards are dragged around all day, and
-        // a board that keeps pointing at one of them emphasises exactly the
-        // thing that needs no emphasis. VoiceOver is unaffected — it carries
-        // its own cursor and the accessibility actions below. Recorded in
-        // BACKLOG.md.
+        .focusable()
+        // The default system ring is what we just removed our own overlay
+        // for — .focusable() draws its own underneath regardless. Keyboard
+        // focus (Tab, then Return to open) still works without it.
+        .focusEffectDisabled()
+        .focused($isFocused)
+        // Return matches what a single click does, so the keyboard path is
+        // not a lesser version of the pointer one. Renaming already owns
+        // Return — the TextField's own `onSubmit` — so this steps aside.
+        .onKeyPress(.return) {
+            guard !isRenaming else { return .ignored }
+            beginEdit()
+            return .handled
+        }
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
-        // One click for the common action (open), two for the rare one
-        // (rename) — SwiftUI holds the single-tap just long enough to rule
-        // out a second one, same as Finder's icon-name click-to-rename.
-        .onTapGesture(count: 1) {
+        // One click, one meaning. Double-click used to start an inline
+        // rename, and the cost of that was paid on every single click:
+        // SwiftUI has to hold a lone tap back until a second one can be ruled
+        // out, so opening a card — the thing you actually do — always lagged
+        // behind the click by the double-click interval.
+        //
+        // Renaming loses nothing. The card that opens on a single click has
+        // the title as its first editable field, and "Umbenennen" is still in
+        // the context menu and the accessibility actions for anyone who wants
+        // the inline route.
+        .onTapGesture {
             guard !isRenaming else { return }
-            openInReminders()
-        }
-        .onTapGesture(count: 2) {
-            guard !isRenaming else { return }
-            beginRename()
+            beginEdit()
         }
         .contextMenu {
+            Button("Bearbeiten") { beginEdit() }
             Button("In Erinnerungen öffnen") { openInReminders() }
             Divider()
             // Drag & drop is the accelerator; this is the route that works
@@ -94,54 +100,47 @@ struct CardView: View {
             // question fires either way.
             Menu("Verschieben nach") {
                 ForEach(moveTargets) { target in
-                    Button(target.displayName) {
-                        store.move(cardID: card.id, to: target, undoManager: undoManager)
-                    }
+                    Button(target.displayName) { store.move(cardID: card.id, to: target) }
                 }
             }
             Divider()
             Button("Umbenennen") { beginRename() }
-            // No confirmation sheet: deleting registers an undo, and ⌘Z is
-            // both what a Mac user reaches for and cheaper than a dialog that
-            // taxes every deletion to catch the rare wrong one.
-            Button("Löschen", role: .destructive) {
-                store.deleteTicket(cardID: card.id, undoManager: undoManager)
-            }
+            Button("Löschen", role: .destructive) { store.deleteTicket(cardID: card.id) }
         }
-        // No tooltip on the card itself — a hover that surfaces extra text on
-        // every ticket is standing noise on a board meant to stay quiet, and
-        // everything it said is one click away in Reminders. The lane header
-        // keeps its tooltip: it explains a rule, not a ticket. Recorded in
-        // BACKLOG.md. VoiceOver keeps the same content via the hint below —
-        // removing a visual layer must not remove the spoken one.
+        // No tooltip on the card body. It fired wherever the pointer came to
+        // rest on a lane, which on a board you keep open all day is a panel
+        // that follows you around rather than one you asked for — and the
+        // lanes are mostly cards, so "hovering a card" is close to "using the
+        // app". The lane header and the small glyphs keep theirs: those are
+        // deliberate targets you have to aim at, and each explains one thing
+        // that has no room to say itself.
+        //
+        // Nothing is lost that is not now one click away. Its three lines
+        // were the notes preview, the list name and "Klick öffnet Bearbeiten"
+        // — and the click it advertised opens a card showing all of it at
+        // reading size.
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(accessibilityLabel)
-        // `.help` used to carry this to VoiceOver as well. The notes preview
-        // is only on the tooltip for compact rows, so without it here that
-        // text would exist for sighted users alone.
+        // Still spoken, though no longer drawn: VoiceOver has no other route
+        // to a compact row's notes preview.
         .accessibilityHint(helpText)
+        .accessibilityAction(named: "Bearbeiten") { beginEdit() }
         .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
         .accessibilityActions {
             ForEach(moveTargets) { target in
                 Button("Verschieben nach \(target.displayName)") {
-                    store.move(cardID: card.id, to: target, undoManager: undoManager)
+                    store.move(cardID: card.id, to: target)
                 }
             }
             Button("Umbenennen") { beginRename() }
-            Button("Löschen") { store.deleteTicket(cardID: card.id, undoManager: undoManager) }
+            Button("Löschen") { store.deleteTicket(cardID: card.id) }
         }
         // Losing focus commits, same as clicking away from a Finder rename —
         // Escape (`onExitCommand` on the field itself) is the only way out
         // that discards instead.
         .onChange(of: isRenameFieldFocused) { _, focused in
             if !focused { commitRename() }
-        }
-        // A click on bare board, or an edit starting on another card, ends this
-        // one. Focus alone cannot carry that: the click lands in a view that
-        // has no way to reach this one.
-        .onChange(of: store.activeEdit) { _, edit in
-            if isRenaming, edit != .renaming(cardID: card.id) { commitRename() }
         }
         .onAppear {
             // The completed card appears fresh in Erledigt with the flag
@@ -234,6 +233,10 @@ struct CardView: View {
                     .monospacedDigit()
             }
             .foregroundStyle(.secondary)
+            // The card as a whole already announces its dwell time in
+            // `accessibilityLabel`, and the row is combined into one element —
+            // so this is the tooltip only, with no accessibility to restore.
+            .boardTooltip("Seit \(days) Tagen in dieser Spalte")
         }
     }
 
@@ -290,10 +293,7 @@ struct CardView: View {
                 .focused($isRenameFieldFocused)
                 .onAppear { isRenameFieldFocused = true }
                 .onSubmit { commitRename() }
-                .onExitCommand {
-                    isRenaming = false
-                    endBoardEdit()
-                }
+                .onExitCommand { isRenaming = false }
         } else {
             titleText.font(font)
         }
@@ -303,18 +303,24 @@ struct CardView: View {
         Image(systemName: "repeat")
             .font(BoardText.glyph)
             .foregroundStyle(.secondary)
+            // Likewise announced by the card's own label ("Wiederholend").
+            .boardTooltip("Wiederholende Erinnerung")
     }
 
-    /// Spoken, never shown: the card carries no tooltip (see the note on the
-    /// body), but VoiceOver still gets the notes preview a compact row has no
-    /// pixels for, plus the gesture that opens the ticket.
+    /// Compact rows have no room for the notes preview, so the tooltip
+    /// carries it — information without pixels.
+    ///
+    /// One fact per line, because the tooltip sets the first line as the
+    /// subject and the rest as its qualifiers. Joined with "·" they were one
+    /// run-on that wrapped mid-phrase and threw the note, the list and the
+    /// gesture hint into a single weight.
     private var helpText: String {
         var lines: [String] = []
         if density.isSingleLine && !card.notesPreview.isEmpty {
             lines.append(card.notesPreview)
         }
         lines.append(card.listName)
-        lines.append("Klick öffnet Erinnerungen")
+        lines.append("Klick öffnet Bearbeiten")
         return lines.joined(separator: "\n")
     }
 
@@ -509,46 +515,41 @@ struct CardView: View {
 
     // MARK: - Actions
 
-    /// Editing happens in the Reminders app (the board is read-only apart from
-    /// drag & drop). Deep link to this reminder; if none resolves, at least
-    /// bring Reminders to the front.
-    private func openInReminders() {
-        if let url = store.deepLinkURL(forCardID: card.id),
-           NSWorkspace.shared.open(url) {
-            return
+    /// A click opens the in-app editor now — title, notes, due date and
+    /// priority all live in GlassKanban itself.
+    private func beginEdit() {
+        // The board presents the editor, not the card — see
+        // `RemindersStore.editingCardID` for why its position must not depend
+        // on where the card that opened it happens to sit.
+        // Animated at the source, not by a modifier further up: a
+        // `.transition` only plays if the state change that triggers it is
+        // itself animated, and the board's blur lives on a different view
+        // than the card's arrival. Wrapping the mutation is what makes the
+        // two one gesture rather than two coincidences.
+        withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
+            store.editingCardID = card.id
         }
-        store.openRemindersApp()
     }
 
-    /// Starts from the title as *stored in Reminders*, not from the one on the
-    /// card. The card shows the sanitized form with URLs stripped, so opening
-    /// the field on `card.title` and letting it commit — which a click
-    /// elsewhere does on its own — would write the stripped text back and
-    /// delete the link for good. ("Ohne Titel" is likewise a display
-    /// placeholder, never something to hand the user to type over.)
+    /// Escape hatch to the native app, for anything the edit sheet
+    /// deliberately leaves out. The sheet offers the same route, so both go
+    /// through one implementation.
+    private func openInReminders() {
+        store.openInReminders(cardID: card.id)
+    }
+
+    /// Pre-fills with the real title, not `displayTitle` — "Ohne Titel" is a
+    /// placeholder for display, never something to actually type as a title.
     private func beginRename() {
-        renameOriginal = store.storedTitle(forCardID: card.id) ?? card.title
-        renameText = renameOriginal
+        renameText = card.title
         isRenaming = true
-        store.activeEdit = .renaming(cardID: card.id)
     }
 
-    /// Guarded so the three paths that can end an edit — Return, focus loss,
-    /// and a click elsewhere on the board — cannot all fire for the same one.
+    /// Guarded so the focus-loss path (`onChange` above) and a manual Return
+    /// can't both fire for the same edit.
     private func commitRename() {
         guard isRenaming else { return }
         isRenaming = false
-        endBoardEdit()
-        guard case let .save(title) = TicketRename.outcome(
-            original: renameOriginal, edited: renameText) else { return }
-        store.renameTicket(cardID: card.id, title: title, undoManager: undoManager)
-    }
-
-    /// Only clears the board's edit if it is still ours — another card may
-    /// already have claimed it, which is what ended this one.
-    private func endBoardEdit() {
-        if store.activeEdit == .renaming(cardID: card.id) {
-            store.activeEdit = nil
-        }
+        store.renameTicket(cardID: card.id, title: renameText)
     }
 }

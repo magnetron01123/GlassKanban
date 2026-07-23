@@ -377,8 +377,8 @@ struct ColumnView: View {
                     }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Neues Ticket anlegen")
-            .boardTooltip("Neues Ticket anlegen")
+            .accessibilityLabel("Neue Karte anlegen")
+            .boardTooltip("Neue Karte anlegen")
             Spacer()
         }
         .padding(.vertical, 4)

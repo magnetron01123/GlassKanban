@@ -84,21 +84,22 @@ enum CardDensity {
     var isSingleLine: Bool { self != .full }
 }
 
-/// Immutable display model for one card, derived from an `EKReminder`.
-/// `status`/`completionDate`/`title` change locally (optimistic update)
-/// until the next EventKit refresh confirms them.
+/// Display model for one card, derived from an `EKReminder`. `status`/
+/// `completionDate`/`title`/`notesPreview`/`notesExcerpt`/`dueDate`/
+/// `priority` change locally (optimistic update) until the next EventKit
+/// refresh confirms them.
 struct KanbanCard: Identifiable, Equatable {
     let id: String
     var title: String
     /// One line, for compact rows and tooltips.
-    let notesPreview: String
+    var notesPreview: String
     /// Several lines, for the roomier cards in the working lanes.
-    let notesExcerpt: String
-    let dueDate: Date?
-    let priority: Int
+    var notesExcerpt: String
+    var dueDate: Date?
+    var priority: Int
     var status: KanbanStatus
-    let listName: String
-    let listColor: Color
+    var listName: String
+    var listColor: Color
     var completionDate: Date?
     let isRecurring: Bool
     /// EventKit's last-modified timestamp. Used as an approximation for
@@ -235,6 +236,29 @@ enum BoardEmptiness: Equatable {
         return recurringHiddenCount > 0 ? .recurringOnly : .nothingToDo
     }
 }
+/// Working copy of a reminder's editable content for `TicketEditSheet`.
+/// `notes` has the status hashtag already stripped — the sheet never shows
+/// or lets the user touch that control token.
+struct EditableTicket {
+    var title: String
+    var notes: String
+    /// The reminder's URL field, as text.
+    ///
+    /// Kept as a string rather than a `URL` because that is what the user
+    /// types into: a half-finished address is still worth holding on to
+    /// while the editor is open, and only the write back to EventKit — which
+    /// takes a real `URL?` — has to decide whether it parses.
+    var url: String
+    var dueDate: Date?
+    /// Whether the due date carries a time of day. Reminders distinguishes
+    /// an all-day reminder (date components without hour/minute) from one
+    /// due at a specific time, and writing hour/minute unconditionally would
+    /// silently turn every all-day reminder into a "due at 00:00" one.
+    var hasDueTime: Bool
+    /// Raw EventKit scale: 0 = none, 1 = high, 5 = medium, 9 = low.
+    var priority: Int
+    var calendarID: String
+}
 
 /// Priority filter groups following the EventKit convention:
 /// 0 = none, 1–4 = high, 5 = medium, 6–9 = low.
@@ -320,9 +344,13 @@ enum DueFilter: String, CaseIterable, Identifiable {
 /// is the deviation. It is still a visible row rather than a silent rule,
 /// for the same reason the WIP limit rides along in the lane count: a board
 /// must be able to say what it is not showing ("make policies explicit").
+///
+/// Which of the two the board rests at is the user's to set — see
+/// `RemindersStore.hideRecurringUntilDue`, the Settings preference this filter
+/// starts from on every launch. The popover row then only borrows it for a look.
 enum RecurringFilter: String, CaseIterable, Identifiable {
-    /// Default. The card joins Backlog once it reaches the same due window
-    /// `DueFilter` already calls Überfällig / Heute / Diese Woche.
+    /// The factory resting state. The card joins Backlog once it reaches the
+    /// same due window `DueFilter` already calls Überfällig / Heute.
     case hiddenUntilDue
     case alwaysVisible
 
