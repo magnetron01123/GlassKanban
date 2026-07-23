@@ -9,6 +9,20 @@ struct BoardView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var showStreak = false
     @State private var showFind = false
+    /// Every lane's natural (content) height, reported from below. The block
+    /// takes the tallest of them, so the four lanes stay one rectangle.
+    @State private var laneNaturalHeights: [String: CGFloat] = [:]
+
+    /// One height for all four lanes: the fullest lane's natural height,
+    /// never less than `Board.laneMinHeight` (the drop target and the pull
+    /// slot need somewhere to live) and never more than the window offers.
+    /// Nil until the first measurement arrives — the lanes then fall back to
+    /// filling the window for that single frame instead of collapsing.
+    private func laneHeight(in geometry: GeometryProxy) -> CGFloat? {
+        guard let tallest = laneNaturalHeights.values.max() else { return nil }
+        let available = geometry.size.height - Board.boardPadding * 2
+        return min(available, max(Board.laneMinHeight, tallest.rounded(.up)))
+    }
 
     var body: some View {
         // Wraps the lanes, not the window: the tooltip has to escape the
@@ -21,27 +35,41 @@ struct BoardView: View {
     }
 
     private var board: some View {
-        HStack(alignment: .top, spacing: Board.columnSpacing) {
-            ForEach(KanbanStatus.allCases) { status in
-                ColumnView(status: status)
+        // The GeometryReader supplies the ceiling: lanes may grow with their
+        // content only until the window is full, then they scroll as before.
+        GeometryReader { geometry in
+            HStack(alignment: .top, spacing: Board.columnSpacing) {
+                ForEach(KanbanStatus.allCases) { status in
+                    ColumnView(status: status, laneHeight: laneHeight(in: geometry))
+                }
             }
-        }
-        // Four wordless empty lanes read as a broken app. Individual lanes stay
-        // silent — only the whole board being blank is worth a sentence, and
-        // then exactly one, laid over the lanes rather than inside them.
-        .overlay {
-            if let emptiness = store.emptiness {
-                EmptyBoardNotice(
-                    emptiness: emptiness,
-                    onReset: { store.resetFilters() },
-                    onShowRecurring: { store.showRecurringCards() })
+            // Four wordless empty lanes read as a broken app. Individual lanes
+            // stay silent — only the whole board being blank is worth a
+            // sentence, and then exactly one, laid over the lanes rather than
+            // inside them.
+            .overlay {
+                if let emptiness = store.emptiness {
+                    EmptyBoardNotice(
+                        emptiness: emptiness,
+                        onReset: { store.resetFilters() },
+                        onShowRecurring: { store.showRecurringCards() })
+                }
             }
+            // Lanes flex between ticket-friendly bounds; the block sits
+            // centered like a board mounted on a wall — and ends where the
+            // work ends. All four lanes share the height of the fullest one
+            // (see `laneHeight`), anchored to the top, so what is empty is
+            // the window's own glass below the board, not dead space inside
+            // recessed wells that claim to hold content. With enough cards
+            // the block reaches the window edge and behaves exactly as a
+            // full-height board again.
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(Board.boardPadding)
         }
-        // Lanes flex between ticket-friendly bounds; the whole block sits
-        // centered in the window like a board mounted on a wall.
-        .frame(maxWidth: .infinity)
-        .padding(Board.boardPadding)
-        .frame(minWidth: Board.boardMinWidth, minHeight: 560)
+        .frame(minWidth: Board.boardMinWidth, minHeight: Board.boardMinHeight)
+        .onPreferenceChange(LaneNaturalHeightKey.self) { heights in
+            laneNaturalHeights = heights
+        }
         // The lanes go out of focus while a card is held up in front of them.
         // Applied to the board and not the window, so the toolbar — which is
         // chrome, not content — stays sharp and reachable.

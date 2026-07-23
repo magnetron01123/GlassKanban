@@ -251,6 +251,11 @@ Einblenden).
 
 - Liquid Glass auf der Chrome-Ebene (Fensterrücken, Toolbar, Popover); Spalten sind
   eingelassene Mulden, Karten deckendes Papier — siehe CONCEPT.md, Abschnitt Design-Anspruch
+- **Das Board endet, wo die Arbeit endet:** Alle vier Spalten teilen sich die Höhe der
+  vollsten Spalte (Mindesthöhe: Kopf + eine volle Karte), der Block sitzt oben im Fenster —
+  Leere gehört damit dem Fensterglas unter dem Board, nicht den Mulden. Mit genug Karten
+  wächst der Block bis zur Fensterhöhe; ab dann scrollen die Spalten einzeln, wie ein
+  volles Board es immer tat
 - Typografie/Abstände nach Apple HIG (SF Pro), Tokens in `DesignSystem.swift`
 - Bewegung wird für Dinge ausgegeben, die *gerade passiert sind* (Karte rastet in „Erledigt"
   ein), nie für stehende Einladungen

@@ -19,6 +19,15 @@ enum Board {
     static let columnMinWidth: CGFloat = 280
     static let columnMaxWidth: CGFloat = 400
     static let boardMinWidth: CGFloat = columnMinWidth * 4 + columnSpacing * 3 + boardPadding * 2
+    /// The window's floor, not the board's height: lanes size to their
+    /// content (see `BoardView.laneHeight`), the window may not shrink below
+    /// a usable board.
+    static let boardMinHeight: CGFloat = 560
+    /// The least a lane may be, even holding nothing: room for its header
+    /// plus one full card — the pull slot has to fit, and a drop needs a
+    /// target larger than a ruler's edge. Below this the lanes stop reading
+    /// as places where work can land.
+    static let laneMinHeight: CGFloat = 220
     static let cardSpacing: CGFloat = 8
     /// The lane's inner margin — one value for the header, its hairline, the
     /// cards and the "more" button, so everything inside a lane shares a

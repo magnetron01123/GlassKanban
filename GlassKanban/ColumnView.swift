@@ -2,6 +2,9 @@ import SwiftUI
 
 struct ColumnView: View {
     let status: KanbanStatus
+    /// The height all four lanes share this frame, computed by the board from
+    /// the natural heights the lanes report (see `LaneNaturalHeightKey`).
+    let laneHeight: CGFloat?
 
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -59,15 +62,35 @@ struct ColumnView: View {
         return cards.filter { $0.completionDate.map(calendar.isDateInToday) ?? false }.count
     }
 
+    // The lane's natural height is assembled from three measurements rather
+    // than one because the ScrollView in the middle is greedy: asked for its
+    // ideal size it takes everything, so the only honest numbers are the
+    // chrome above it, the content inside it and the button below it.
+    @State private var headerHeight: CGFloat = 0
+    @State private var contentHeight: CGFloat = 0
+    @State private var moreButtonHeight: CGFloat = 0
+
+    /// The measured button height only counts while the button is actually
+    /// in the tree — the measurement itself goes stale on removal, it does
+    /// not reset to zero.
+    private var visibleMoreButtonHeight: CGFloat {
+        (status == .backlog && hiddenCount > 0 && !expanded) ? moreButtonHeight : 0
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            header
+            VStack(spacing: 0) {
+                header
 
-            // Hairline between header and cards, like a physical label strip.
-            Rectangle()
-                .fill(Board.columnBorder(contrast))
-                .frame(height: 1)
-                .padding(.horizontal, Board.laneMargin)
+                // Hairline between header and cards, like a physical label strip.
+                Rectangle()
+                    .fill(Board.columnBorder(contrast))
+                    .frame(height: 1)
+                    .padding(.horizontal, Board.laneMargin)
+            }
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                headerHeight = height
+            }
 
             ScrollView {
                 LazyVStack(spacing: singleLine ? 5 : Board.cardSpacing) {
@@ -138,18 +161,39 @@ struct ColumnView: View {
                 .padding(.horizontal, Board.laneMargin)
                 .padding(.top, 10)
                 .padding(.bottom, 12)
+                // The content's own height, measured inside the ScrollView —
+                // it does not depend on the lane's frame, so this cannot
+                // feed back into itself.
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    contentHeight = height
+                }
             }
             .mask(scrollFade)
 
             if status == .backlog, hiddenCount > 0, !expanded {
                 moreButton
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                        moreButtonHeight = height
+                    }
             }
         }
         .frame(
             minWidth: Board.columnMinWidth,
             maxWidth: Board.columnMaxWidth,
-            maxHeight: .infinity,
+            minHeight: Board.laneMinHeight,
             alignment: .top)
+        // The height every lane shares, decided by the board (the fullest
+        // lane wins, the window caps). Nil only before the first measurement,
+        // where `maxHeight` lets the lane fill the window for one frame
+        // rather than collapse.
+        .frame(height: laneHeight)
+        .frame(maxHeight: laneHeight == nil ? .infinity : nil)
+        .animation(reduceMotion ? nil : .spring(duration: 0.35), value: laneHeight)
+        // What this lane would like to be: chrome plus content. The board
+        // reads these from all four lanes and hands back one shared height.
+        .preference(
+            key: LaneNaturalHeightKey.self,
+            value: [status.rawValue: headerHeight + contentHeight + visibleMoreButtonHeight])
         .background { columnSurface }
         .overlay { columnContour }
         // Clicking the bare lane — not a card, not a control — is "outside"
@@ -538,5 +582,16 @@ struct ColumnView: View {
         reduceTransparency
             ? Color(nsColor: .underPageBackgroundColor)
             : Board.columnFill(colorScheme)
+    }
+}
+
+/// Each lane reports what it would like to be; the board answers with one
+/// shared height. Keyed by `KanbanStatus.rawValue` so four lanes can merge
+/// into a single dictionary on the way up.
+struct LaneNaturalHeightKey: PreferenceKey {
+    static var defaultValue: [String: CGFloat] = [:]
+
+    static func reduce(value: inout [String: CGFloat], nextValue: () -> [String: CGFloat]) {
+        value.merge(nextValue()) { max($0, $1) }
     }
 }
