@@ -160,6 +160,16 @@ struct StatsPopover: View {
             }
     }
 
+    /// The one caption style a well's content ever wears, wherever a group
+    /// needs to say what it is — first written for "Letzte 30 Tage" over the
+    /// trend chart, now shared by every section heading in this window so
+    /// none of them can drift from the others one at a time.
+    private func sectionHeading(_ text: String) -> some View {
+        Text(text)
+            .font(BoardText.body)
+            .foregroundStyle(.secondary)
+    }
+
     // MARK: - Jetzt
 
     private var nowTab: some View {
@@ -334,37 +344,39 @@ struct StatsPopover: View {
     /// or none do. That gate is the split. It also means the second section
     /// can simply be absent on a young board rather than showing three
     /// confident-looking dashes.
+    ///
+    /// Both wells carry a heading now, not just the ranked one — one labelled
+    /// section beside one unlabelled one read as an accident, as if the
+    /// second half of the list had grown a heading the first half never got.
+    /// Both use `sectionHeading`, the same caption "Letzte 30 Tage" already
+    /// wears over the trend chart in the Jetzt tab, rather than a heavier
+    /// style invented just for this tab — one label language for the whole
+    /// window, not one per tab.
     private var pastTab: some View {
         VStack(alignment: .leading, spacing: 14) {
             well {
-                rows {
-                    // Carries its own period in its label, which is why the
-                    // footnote below can go on describing the ranked section
-                    // without contradicting it.
-                    row("Dieses Jahr",
-                        "\(wrapped.yearCount)",
-                        mark: wrapped.milestone != nil ? "flag.fill" : nil,
-                        help: wrapped.milestone.map {
-                            "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr."
-                        })
+                VStack(alignment: .leading, spacing: 8) {
+                    sectionHeading("Bilanz")
+                    rows {
+                        // Carries its own period in its label, which is why
+                        // the footnote below can go on describing the ranked
+                        // section without contradicting it.
+                        row("Dieses Jahr",
+                            "\(wrapped.yearCount)",
+                            mark: wrapped.milestone != nil ? "flag.fill" : nil,
+                            help: wrapped.milestone.map {
+                                "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr."
+                            })
 
-                    row("Längste Folge", Self.days(streak.best))
+                        row("Längste Folge", Self.days(streak.best))
+                    }
                 }
             }
             if hasRankings {
                 VStack(alignment: .leading, spacing: 8) {
                     well {
                         VStack(alignment: .leading, spacing: 8) {
-                            // The one label in this tab, for the one section
-                            // whose rows need it: unlike the tallies above,
-                            // "the most of something" is not self-explanatory
-                            // without a word for what kind of claim it is.
-                            // Same treatment as "Letzte 30 Tage" over the
-                            // trend chart — a caption only where a bare
-                            // number would leave a question.
-                            Text("Rekorde")
-                                .font(BoardText.body)
-                                .foregroundStyle(.secondary)
+                            sectionHeading("Rekorde")
                             rows {
                                 if let best = wrapped.bestDay {
                                     row("Bester Tag",
@@ -434,9 +446,7 @@ struct StatsPopover: View {
     /// unexplained is not. Per-day figures stay in each bar's tooltip.
     private var trendSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Letzte 30 Tage")
-                .font(BoardText.body)
-                .foregroundStyle(.secondary)
+            sectionHeading("Letzte 30 Tage")
             trendRow
         }
         // Takes whatever the matched well height leaves after the label, so
