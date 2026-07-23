@@ -215,11 +215,22 @@ Einblenden).
 
 ## Motivation
 
-- **Streak-Zähler:** Tage in Folge mit mindestens einer erledigten Aufgabe, rein lesend aus
-  `completionDate` berechnet (Blickfenster: 400 Tage). Die Flamme füllt sich mit dem
-  Tagesfortschritt; Klick öffnet ein Popover mit Wochenstrip und Statistik (heute erledigt,
-  diese Woche, längste Folge). Die Pille erscheint **nur ab Serie 1** — eine „0" neben den
-  Fensterknöpfen sieht kaputt aus. Feste Entscheidung, siehe BACKLOG.md
+- **Streak-Zähler in der Toolbar:** Flamme plus Zahl, rein lesend aus `completionDate`
+  berechnet (Blickfenster: 400 Tage). Die Flamme füllt sich mit dem Tagesfortschritt.
+  Sichtbar, sobald es überhaupt erledigte Aufgaben gibt; bei Serie 0 zeigt sie **nur die
+  graue Flamme ohne Zahl** — eine „0" neben den Fensterknöpfen sieht kaputt aus und liest
+  sich als Rüge, aber der Zugang zur Statistik darf nach einem Serienriss nicht verschwinden
+  (siehe BACKLOG.md)
+- **Statistik-Fenster** (Klick auf die Flamme, `StatsPopover`): zwei Ansichten über
+  Textumschalter, damit ein Blick nie zur Navigation wird —
+  - **Jetzt:** Folge als Schlagzeile, heute erledigte Aufgaben, aktuelle Auslastung gegen
+    das WIP-Limit, Durchlaufzeit-Schätzung nach Little's Law (Bestand ÷ Tempo, bewusst als
+    Schätzung beschriftet), 30-Tage-Verlauf als Balken
+  - **Rückblick:** dieses Jahr, längste Folge, bester Tag, stärkster Wochentag, häufigste
+    Liste, Meilenstein bei einer runden Zahl innerhalb der letzten 7 Tage
+  - Alles aus den Erinnerungen abgeleitet, die die App ohnehin lädt — keine zweite
+    EventKit-Abfrage, keine eigene Speicherung. Der Meilenstein ist die eine bewusste
+    Lockerung der „keine Badges"-Regel: nur ein Moment, nie dauerhaft (siehe CONCEPT.md)
 - **Kein täglich wechselnder Motivationssatz** — war im ursprünglichen MVP vorgesehen und
   hat sich als unpraktikabel erwiesen (siehe BACKLOG.md)
 - Ausdrücklich **keine** Punkte/Levels/Badges/Bestenlisten

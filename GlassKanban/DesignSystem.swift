@@ -133,6 +133,19 @@ enum Board {
     /// Backlog shows this many cards before offering "N weitere anzeigen".
     static let backlogCollapsedLimit = 15
 
+    /// Grouped content inside a popover — the stats window's wells. Deliberately
+    /// weaker than the lane fill: inside a popover the backdrop is already
+    /// darkened glass, and the lane's own value made the wells nearly opaque
+    /// slabs, so the panel was visibly less glassy than the board behind it.
+    static func wellFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04)
+    }
+
+    /// A well sits inside a popover, so its radius steps below the card's and
+    /// the tooltip's per the nesting rule. Not glass: a well is content
+    /// grouping, and glass belongs to the chrome around it.
+    static let wellShape = RoundedRectangle(cornerRadius: 9, style: .continuous)
+
     // Tooltips. Chrome, not content — so glass is right here, unlike on a
     // card. The radius is the card's own, less one: a tooltip rests directly
     // on paper, and matching its curve family is what keeps it from reading
@@ -193,6 +206,11 @@ enum BoardText {
     static let glyph = Font.system(size: 9, weight: .semibold)
     /// A single emphasised number — the streak counter.
     static let value = Font.system(size: 12, weight: .semibold)
+    /// The stats window's headline number and the word beside it. Declared as a
+    /// size too, because the flame next to it is sized from the same value —
+    /// a glyph that ignores its companion text reads as misaligned.
+    static let heroUnitSize: CGFloat = 20
+    static let heroUnit = Font.system(size: heroUnitSize, weight: .regular)
 
     // Tooltip lines. Both 11pt — the rank comes from weight and colour, as
     // everywhere else on this board. The first draft set the lead at 11.5

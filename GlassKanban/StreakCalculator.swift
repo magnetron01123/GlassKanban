@@ -55,14 +55,23 @@ enum StreakCalculator {
         return count
     }
 
+    /// Buckets completion dates into per-day counts. Shared with `WrappedStats`
+    /// so both read the same history through one implementation — the two are
+    /// separate types on purpose (one is the flame, the other the stats view),
+    /// but they must never disagree about what happened on a given day.
+    static func perDayCounts(_ dates: [Date], calendar: Calendar) -> [Date: Int] {
+        var perDay: [Date: Int] = [:]
+        for date in dates {
+            perDay[calendar.startOfDay(for: date), default: 0] += 1
+        }
+        return perDay
+    }
+
     /// Full statistics for the streak popover and the filling flame.
     static func stats(completionDates: [Date], calendar: Calendar = .current, now: Date = .now) -> StreakStats {
         let today = calendar.startOfDay(for: now)
 
-        var perDay: [Date: Int] = [:]
-        for date in completionDates {
-            perDay[calendar.startOfDay(for: date), default: 0] += 1
-        }
+        let perDay = perDayCounts(completionDates, calendar: calendar)
 
         let weekCount = completionDates.filter {
             calendar.isDate($0, equalTo: now, toGranularity: .weekOfYear)

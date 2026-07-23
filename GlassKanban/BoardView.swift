@@ -41,17 +41,12 @@ struct BoardView: View {
         .frame(minWidth: Board.boardMinWidth, minHeight: 560)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
-            // Only shown once there is a streak — a "0" pill next to the
-            // window controls just looks broken.
-            //
-            // Settled decision (90634bc, July 2026). It was overridden once on
-            // the reasoning that the pill is the only way into the statistics
-            // popover; that reasoning is real but does not outweigh what it
-            // costs, because the state it exposes is the grey zero-state of
-            // both the pill and the popover — precisely what this line exists
-            // to keep off the board. Do not change again without being asked.
-            // See BACKLOG.md, "Explizit abgelehnt".
-            if store.streakStats.current > 0 {
+            // Shown as soon as there is any history at all — not just during
+            // a live streak. The pill is the only way into the statistics, and
+            // a broken streak must not also lock away everything else. At
+            // streak 0 it shows the grey flame alone: a "0" beside the window
+            // controls looks broken, and reads as a reprimand besides.
+            if store.wrappedStats.totalCompleted > 0 {
                 ToolbarItem(placement: .navigation) {
                     streakPill
                 }
@@ -127,21 +122,34 @@ struct BoardView: View {
         } label: {
             HStack(spacing: 4) {
                 FlameIcon(level: store.streakStats.flameLevel)
-                Text("\(store.streakStats.current)")
-                    .font(BoardText.value)
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
+                // The count disappears at 0 rather than showing one, leaving
+                // the flame as the button. See the toolbar's visibility rule.
+                if store.streakStats.current > 0 {
+                    Text("\(store.streakStats.current)")
+                        .font(BoardText.value)
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                }
             }
             .padding(.horizontal, 2)
         }
         // A bare number plus a decorative flame announces as "1" — true and
         // useless. The label says what the number counts.
-        .accessibilityLabel("Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe")
-        .help("Tage nacheinander mit mindestens einer erledigten Aufgabe")
+        .accessibilityLabel(streakPillLabel)
+        .help("Statistiken")
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
-            StreakPopover(stats: store.streakStats)
-                .frame(width: 260)
+            StatsPopover(
+                streak: store.streakStats,
+                wrapped: store.wrappedStats,
+                wip: store.cards(for: .inProgress).count,
+                wipLimit: store.wipLimit(for: .inProgress))
         }
+    }
+
+    private var streakPillLabel: String {
+        store.streakStats.current > 0
+            ? "Statistiken. Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe"
+            : "Statistiken. Zurzeit keine Folge"
     }
 
     // MARK: - Find

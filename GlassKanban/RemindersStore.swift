@@ -20,6 +20,9 @@ final class RemindersStore: ObservableObject {
     @Published private(set) var cards: [KanbanCard] = []
     @Published private(set) var reminderCalendars: [EKCalendar] = []
     @Published private(set) var streakStats = StreakStats()
+    /// The rest of the stats popover. Derived from the same completed
+    /// reminders the streak already fetches — no second EventKit query.
+    @Published private(set) var wrappedStats = WrappedStats()
     /// Cards that were just completed, for the brief "settle" animation —
     /// whether completed here or elsewhere (a shared list on someone else's
     /// device). Cleared automatically shortly after.
@@ -265,6 +268,7 @@ final class RemindersStore: ObservableObject {
         guard !included.isEmpty else {
             cards = []
             streakStats = StreakStats()
+            wrappedStats = WrappedStats()
             return
         }
 
@@ -283,7 +287,18 @@ final class RemindersStore: ObservableObject {
 
         performTagHygiene(on: incomplete + completed)
 
-        streakStats = StreakCalculator.stats(completionDates: completed.compactMap(\.completionDate))
+        // The stats view is the one place that needs more than a date from a
+        // completed reminder: it ranks lists, so it keeps their name and colour
+        // from this same pass rather than asking EventKit a second time.
+        let completionRecords: [CompletionRecord] = completed.compactMap { reminder in
+            guard let date = reminder.completionDate, let calendar = reminder.calendar else { return nil }
+            return CompletionRecord(
+                date: date,
+                listName: calendar.title,
+                listColor: Color(nsColor: calendar.color ?? .controlAccentColor))
+        }
+        streakStats = StreakCalculator.stats(completionDates: completionRecords.map(\.date))
+        wrappedStats = WrappedStats.stats(records: completionRecords)
 
         let doneWindowStart = calendar.date(
             byAdding: .day, value: -Self.doneWindowDays, to: calendar.startOfDay(for: .now))!
