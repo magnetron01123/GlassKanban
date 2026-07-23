@@ -6,10 +6,6 @@ struct BoardView: View {
     @Environment(\.undoManager) private var undoManager
     @State private var showStreak = false
     @State private var showFind = false
-    /// Keyboard focus lives here rather than in each card, because the arrow
-    /// keys move it *between* lanes — a card cannot hand focus to a sibling it
-    /// knows nothing about.
-    @FocusState private var focusedCardID: String?
 
     var body: some View {
         // Wraps the lanes, not the window: the tooltip has to escape the
@@ -24,7 +20,7 @@ struct BoardView: View {
     private var board: some View {
         HStack(alignment: .top, spacing: Board.columnSpacing) {
             ForEach(KanbanStatus.allCases) { status in
-                ColumnView(status: status, focusedCardID: $focusedCardID)
+                ColumnView(status: status)
             }
         }
         // Four wordless empty lanes read as a broken app. Individual lanes stay
@@ -45,12 +41,15 @@ struct BoardView: View {
         .frame(minWidth: Board.boardMinWidth, minHeight: 560)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
-            // Only shown once there is a streak — a "0" pill next to the
-            // window controls just looks broken.
-            if store.streakStats.current > 0 {
-                ToolbarItem(placement: .navigation) {
-                    streakPill
-                }
+            // Always present, streak or not. An earlier pass hid the pill at
+            // zero ("a 0 next to the window controls looks broken") — but the
+            // pill is also the only door to the statistics popover, so hiding
+            // it removed the week strip and the counts exactly when a run had
+            // just broken. A control the user knows disappearing reads as the
+            // app having lost a feature, not as tact. Decision recorded in
+            // BACKLOG.md: the pill stays.
+            ToolbarItem(placement: .navigation) {
+                streakPill
             }
             // Two separate glass groups, not one: narrowing the view down and
             // leaving for Reminders are different jobs, and sharing a capsule

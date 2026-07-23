@@ -10,7 +10,6 @@ import SwiftUI
 /// - minimal (Erledigt): the title alone.
 struct CardView: View {
     let card: KanbanCard
-    @FocusState.Binding var focusedCardID: String?
 
     private var density: CardDensity { card.status.cardDensity }
 
@@ -65,31 +64,14 @@ struct CardView: View {
         .opacity(store.draggingCardID == card.id ? 0.4 : 1)
         .animation(reduceMotion ? nil : Board.hoverAnimation, value: store.draggingCardID)
         .contentShape(Board.cardShape)
-        .focusable()
-        // The system's own ring is suppressed in favour of the contour below,
-        // which is drawn in the board's own vocabulary. Suppressing it without
-        // replacing it — which is what this did while Tab was the only way to
-        // move focus — leaves the keyboard navigating an invisible cursor.
-        .focusEffectDisabled()
-        .focused($focusedCardID, equals: card.id)
-        // Return matches what a single click does, so the keyboard path is
-        // not a lesser version of the pointer one. Renaming already owns
-        // Return — the TextField's own `onSubmit` — so this steps aside.
-        .onKeyPress(.return) {
-            guard !isRenaming else { return .ignored }
-            openInReminders()
-            return .handled
-        }
-        // Arrow keys walk the board itself, so the keyboard is not stuck with
-        // Tab's single chain through every card in every lane. Focus is held
-        // by the board (see `BoardView.focusedCardID`) because moving left or
-        // right lands on a card this one knows nothing about.
-        .onMoveCommand { direction in
-            guard !isRenaming, let direction = BoardNavigation.Direction(direction) else { return }
-            if let target = store.navigationTarget(from: card.id, direction: direction) {
-                focusedCardID = target
-            }
-        }
+        // Deliberately NOT `.focusable()`. Cards held keyboard focus for a
+        // while (Tab, then Return; later arrow keys), and the focused card
+        // wore an accent contour so the cursor was not invisible. Removed as
+        // a decision, not an oversight: cards are dragged around all day, and
+        // a board that keeps pointing at one of them emphasises exactly the
+        // thing that needs no emphasis. VoiceOver is unaffected — it carries
+        // its own cursor and the accessibility actions below. Recorded in
+        // BACKLOG.md.
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
@@ -126,7 +108,12 @@ struct CardView: View {
                 store.deleteTicket(cardID: card.id, undoManager: undoManager)
             }
         }
-        .boardTooltip(helpText)
+        // No tooltip on the card itself — a hover that surfaces extra text on
+        // every ticket is standing noise on a board meant to stay quiet, and
+        // everything it said is one click away in Reminders. The lane header
+        // keeps its tooltip: it explains a rule, not a ticket. Recorded in
+        // BACKLOG.md. VoiceOver keeps the same content via the hint below —
+        // removing a visual layer must not remove the spoken one.
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(accessibilityLabel)
@@ -247,10 +234,6 @@ struct CardView: View {
                     .monospacedDigit()
             }
             .foregroundStyle(.secondary)
-            // The card as a whole already announces its dwell time in
-            // `accessibilityLabel`, and the row is combined into one element —
-            // so this is the tooltip only, with no accessibility to restore.
-            .boardTooltip("Seit \(days) Tagen in dieser Spalte")
         }
     }
 
@@ -320,17 +303,11 @@ struct CardView: View {
         Image(systemName: "repeat")
             .font(BoardText.glyph)
             .foregroundStyle(.secondary)
-            // Likewise announced by the card's own label ("Wiederholend").
-            .boardTooltip("Wiederholende Erinnerung")
     }
 
-    /// Compact rows have no room for the notes preview, so the tooltip
-    /// carries it — information without pixels.
-    ///
-    /// One fact per line, because the tooltip sets the first line as the
-    /// subject and the rest as its qualifiers. Joined with "·" they were one
-    /// run-on that wrapped mid-phrase and threw the note, the list and the
-    /// gesture hint into a single weight.
+    /// Spoken, never shown: the card carries no tooltip (see the note on the
+    /// body), but VoiceOver still gets the notes preview a compact row has no
+    /// pixels for, plus the gesture that opens the ticket.
     private var helpText: String {
         var lines: [String] = []
         if density.isSingleLine && !card.notesPreview.isEmpty {
@@ -417,18 +394,8 @@ struct CardView: View {
             : Board.cardFill(colorScheme, isDone: card.status == .done)
     }
 
-    private var isFocused: Bool { focusedCardID == card.id }
-
-    /// The card's edge, and — when it holds keyboard focus — the board's only
-    /// cursor. Accent-coloured and a hair thicker, the same way a lane marks
-    /// itself as a drop target: one visual language for "this is the thing
-    /// you are pointing at", whether the pointer is a mouse or the arrow keys.
     private var contour: some View {
-        Board.cardShape
-            .strokeBorder(
-                isFocused ? Color.accentColor : Board.cardBorder(contrast),
-                lineWidth: isFocused ? 2 : 1)
-            .animation(reduceMotion ? nil : Board.hoverAnimation, value: isFocused)
+        Board.cardShape.strokeBorder(Board.cardBorder(contrast))
     }
 
     /// Light catching the top edge. Only in dark mode: on white paper a white
@@ -582,21 +549,6 @@ struct CardView: View {
     private func endBoardEdit() {
         if store.activeEdit == .renaming(cardID: card.id) {
             store.activeEdit = nil
-        }
-    }
-}
-
-extension BoardNavigation.Direction {
-    /// SwiftUI's own direction type, mapped onto the board's. Kept here rather
-    /// than in `BoardNavigation` so the navigation rules stay free of SwiftUI
-    /// and can be tested on their own.
-    init?(_ direction: MoveCommandDirection) {
-        switch direction {
-        case .up: self = .up
-        case .down: self = .down
-        case .left: self = .left
-        case .right: self = .right
-        @unknown default: return nil
         }
     }
 }

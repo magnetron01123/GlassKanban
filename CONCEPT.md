@@ -314,6 +314,11 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   zwischen Zusage-Warteschlange und Ablage), trägt das jeweilige UI-Element einen kurzen
   Hover-Tooltip — ein Fragment, kein ganzer Satz, keine separate Anleitung. Wissen entsteht
   im Moment der Berührung, nicht über Onboarding.
+  **Wichtige Abgrenzung (Entscheidung Juli 2026):** Das gilt nur für das *Chrome*
+  (Spaltenkopf, Bedienelemente), das Regeln erklärt — **nie für die Karten selbst**.
+  Tooltips, die auf jedem berührten Ticket Zusatzinfos aufspringen lassen, wurden
+  ausprobiert und als Dauerrauschen wieder entfernt, siehe BACKLOG.md („Explizit
+  abgelehnt"). Dieselbe Entscheidung gilt für Tastaturfokus auf Karten.
 
 **Warum das zur bestehenden Philosophie passt, nicht nur zusätzlich dazu:** Ein
 `.help(...)`-Tooltip ist ein Standard-SwiftUI-Mechanismus, kein Custom-UI — bleibt

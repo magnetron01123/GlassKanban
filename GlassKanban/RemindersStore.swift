@@ -653,14 +653,6 @@ final class RemindersStore: ObservableObject {
         searchText = ""
     }
 
-    /// The card an arrow key moves the focus to, resolved against what the
-    /// board is showing right now — a hidden card is not a place to land.
-    func navigationTarget(from cardID: String?, direction: BoardNavigation.Direction) -> String? {
-        BoardNavigation.target(
-            from: cardID,
-            direction: direction,
-            lanes: KanbanStatus.allCases.map { cards(for: $0).map(\.id) })
-    }
 
     // MARK: - Find field
 

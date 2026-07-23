@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ColumnView: View {
     let status: KanbanStatus
-    @FocusState.Binding var focusedCardID: String?
 
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -70,7 +69,6 @@ struct ColumnView: View {
                 .frame(height: 1)
                 .padding(.horizontal, Board.laneMargin)
 
-            ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: singleLine ? 5 : Board.cardSpacing) {
                     ForEach(displayedCards) { card in
@@ -81,7 +79,7 @@ struct ColumnView: View {
                         // itself crisply and adds its own depth; the
                         // drag-preview content shape rounds its corners so
                         // no rectangular snapshot edge shows behind them.
-                        CardView(card: card, focusedCardID: $focusedCardID)
+                        CardView(card: card)
                             .contentShape(.dragPreview, Board.cardShape)
                             .draggable(card.id)
                             // Runs alongside the system drag purely to note
@@ -142,17 +140,6 @@ struct ColumnView: View {
                 .padding(.bottom, 12)
             }
             .mask(scrollFade)
-            // Keyboard focus has to stay on screen, and in Backlog it can land
-            // on a card the collapsed stack is not showing — so the lane opens
-            // itself rather than sending the focus somewhere invisible.
-            .onChange(of: focusedCardID) { _, id in
-                guard let id, cards.contains(where: { $0.id == id }) else { return }
-                if !displayedCards.contains(where: { $0.id == id }) { expanded = true }
-                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
-                    proxy.scrollTo(id, anchor: .center)
-                }
-            }
-            }
 
             if status == .backlog, hiddenCount > 0, !expanded {
                 moreButton

@@ -61,7 +61,6 @@ targets:
       - path: GlassKanban/StreakCalculator.swift
       - path: GlassKanban/BacklogTicketTargeting.swift
       - path: GlassKanban/TicketRename.swift
-      - path: GlassKanban/BoardNavigation.swift
       - path: GlassKanban/ReminderDeepLink.swift
     settings:
       base:

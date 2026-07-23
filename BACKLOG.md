@@ -159,3 +159,24 @@ nicht möglich)
   besteuert jede Löschung, um die seltene falsche abzufangen; ein Undo kostet nur die
   Person etwas, die sich tatsächlich vertan hat, und ist das, wonach ein Mac-Nutzer
   ohnehin greift.
+- **Tastaturfokus und Pfeiltasten-Navigation auf Karten** — war im Juli 2026 kurz
+  implementiert (fokussierbare Karten, Pfeiltasten über die Spalten, Akzent-Kontur als
+  Fokus-Cursor) und wurde auf Nutzerentscheidung wieder entfernt. Karten werden mit der
+  Maus hin- und hergeschoben — ein Rahmen, der dauerhaft eine davon hervorhebt, betont
+  genau das, was keine Betonung braucht, und stört das ruhige Bild. Nicht wieder
+  einführen, ohne diese Entscheidung bewusst zu revidieren. VoiceOver bleibt davon
+  unberührt (eigener Cursor, eigene Aktionen auf jeder Karte).
+- **Hover-Tooltips auf Karten** — ebenfalls Juli 2026 auf Nutzerentscheidung entfernt
+  (vorher: Notizen-Vorschau, Listenname und Gestenhinweis beim Überfahren, Verweildauer-
+  und Wiederholungs-Tooltip). Ein Text, der auf jeder berührten Karte aufspringt, ist
+  Dauerrauschen und widerspricht dem Minimalismus-Anspruch; alles, was er zeigte, ist
+  einen Klick entfernt in Reminders. Tooltips bleiben dem Chrome vorbehalten
+  (Spaltenkopf, „+"-Button), wo sie Regeln erklären statt Inhalte zu doppeln. Die
+  Inhalte bleiben für VoiceOver als Label/Hint erhalten.
+- **Streak-Pille bei Serie 0 ausblenden** — so war es eine Zeit lang gebaut („eine 0
+  neben den Fensterknöpfen sieht kaputt aus") und es hat sich als Fehler erwiesen: Die
+  Pille ist der einzige Zugang zum Statistik-Popover (Wochenstrip, heute/diese Woche,
+  längste Folge), und genau nach einem Serienriss verschwand der ganze Zugang — was wie
+  ein gelöschtes Feature wirkt, nicht wie Zurückhaltung. Die Pille ist jetzt immer
+  sichtbar; ein sichtbarer Nullstand ist der ehrlichere Zustand. Ein bekanntes Bedienelement
+  darf nicht situationsabhängig verschwinden.

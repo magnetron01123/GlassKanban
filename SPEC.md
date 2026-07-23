@@ -107,11 +107,16 @@ ausschließlich der nativen Reminders-App.
 | **Doppelklick** auf eine Karte | Titel direkt auf der Karte umbenennen |
 | **Rechtsklick** | Kontextmenü: In Erinnerungen öffnen, Verschieben nach, Umbenennen, Löschen |
 | **„+" im Backlog** | Neues Ticket direkt auf dem Board anlegen (nur Titel) |
-| **Return** (Karte fokussiert) | wie einfacher Klick |
-| **Pfeiltasten** | Kartennavigation über alle vier Spalten |
 
 **Einfacher Klick öffnet, Doppelklick benennt um** — die häufigere Aktion hat die
 einfachere Geste, wie beim Klick auf einen Dateinamen im Finder.
+
+**Karten tragen keinen Tastaturfokus und keine Hover-Tooltips** — beides war kurz
+implementiert und wurde als bewusste Entscheidung wieder entfernt (Begründung in
+BACKLOG.md, Abschnitt „Explizit abgelehnt"). Karten werden mit der Maus bewegt; ein
+Fokusrahmen betont Karten ohne Not, ein Hover-Text ist Dauerrauschen. VoiceOver ist davon
+unberührt: Karten behalten Labels, Hints und die Aktionen (Öffnen, Verschieben, Umbenennen,
+Löschen).
 
 **Umbenennen** startet immer beim *gespeicherten* Titel, nicht bei dem, was die Karte
 anzeigt (die Karte blendet URLs aus, siehe unten). Ein unverändert gelassenes oder leer
@@ -139,8 +144,6 @@ Wiederherstellen, die Erinnerung bekommt also eine neue interne ID.
 | ⌘N | Erinnerungen-App öffnen |
 | ⌘R | Board aktualisieren |
 | ⌘Z / ⇧⌘Z | letzte Board-Änderung rückgängig / wiederherstellen |
-| Pfeiltasten | Karte fokussieren, über Spaltengrenzen hinweg |
-| Return | fokussierte Karte in Erinnerungen öffnen |
 | ⌘, | Einstellungen |
 
 ## Karten-Anzeige
@@ -161,8 +164,9 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   Titel und Notizen entfernt. Das betrifft **nur die Darstellung** — in EventKit wird nichts
   zurückgeschrieben, auch nicht beim Umbenennen (siehe oben)
 - **Status-Hashtag** wird aus der Notizen-Anzeige immer herausgefiltert
-- **Backlog klappt ab 15 Karten ein** („N weitere anzeigen"); Tastaturnavigation zu einer
-  eingeklappten Karte klappt die Spalte automatisch auf
+- **Backlog klappt ab 15 Karten ein** („N weitere anzeigen")
+- **Keine Tooltips auf Karten** (siehe Interaktion) — Tooltips gibt es nur am Chrome:
+  Spaltenkopf (Zähler/Regeln) und „+"-Button
 
 **Sortierung** in den offenen Spalten: Dringlichkeit (überfällig/heute zuerst) → Priorität →
 frühestes Fälligkeitsdatum (Karten ohne Datum zuletzt) → Titel. Der Titel als letztes
@@ -212,9 +216,10 @@ Einblenden).
 ## Motivation
 
 - **Streak-Zähler:** Tage in Folge mit mindestens einer erledigten Aufgabe, rein lesend aus
-  `completionDate` berechnet (Blickfenster: 400 Tage). Erscheint nur ab einer Serie von 1;
-  die Flamme füllt sich mit dem Tagesfortschritt. Klick öffnet ein Popover mit Wochenstrip
-  und Statistik
+  `completionDate` berechnet (Blickfenster: 400 Tage). Die Flamme füllt sich mit dem
+  Tagesfortschritt; Klick öffnet ein Popover mit Wochenstrip und Statistik. Die Pille ist
+  **immer sichtbar**, auch bei Serie 0 — sie ist der einzige Zugang zur Statistik und darf
+  nicht verschwinden, gerade wenn eine Serie gerissen ist (Entscheidung in BACKLOG.md)
 - **Kein täglich wechselnder Motivationssatz** — war im ursprünglichen MVP vorgesehen und
   hat sich als unpraktikabel erwiesen (siehe BACKLOG.md)
 - Ausdrücklich **keine** Punkte/Levels/Badges/Bestenlisten
@@ -227,7 +232,8 @@ Einblenden).
 - Bewegung wird für Dinge ausgegeben, die *gerade passiert sind* (Karte rastet in „Erledigt"
   ein), nie für stehende Einladungen
 - Erscheinungsbild: Nach System / Hell / Dunkel, in den Einstellungen wählbar
-- Eigene Hover-Tooltips statt `.help(...)`, mit eigenen VoiceOver-Labels/Hints
+- Eigene Hover-Tooltips statt `.help(...)`, mit eigenen VoiceOver-Labels/Hints — nur am
+  Chrome (Spaltenkopf, „+"-Button), nie auf Karten
 - **Vibe-Referenz:** „Minimal Desk Setup" — die App als ruhiges, fast gegenständliches
   Objekt auf dem Screen statt auffällige Software
 
