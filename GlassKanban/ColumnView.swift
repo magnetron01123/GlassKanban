@@ -11,6 +11,8 @@ struct ColumnView: View {
     @Environment(\.undoManager) private var undoManager
     @State private var isTargeted = false
     @State private var expanded = false
+    @State private var moreHovered = false
+    @State private var addHovered = false
     /// Height of a real card in this lane, so the drop placeholder can match
     /// it exactly instead of guessing at a constant.
     @State private var cardHeight: CGFloat?
@@ -18,15 +20,27 @@ struct ColumnView: View {
     private var cards: [KanbanCard] { store.cards(for: status) }
     private var singleLine: Bool { status.cardDensity.isSingleLine }
 
-    /// Backlog can be huge, so it shows a capped stack with "N weitere".
-    private var displayedCards: [KanbanCard] {
-        guard status == .backlog, !expanded, cards.count > Board.backlogCollapsedLimit else {
+    /// The two stack lanes fold away what the resting board does not need:
+    /// Backlog caps a huge pile at a count, Erledigt rests at the last week
+    /// and brings back a month on request (see `DoneWindow`). Same gesture,
+    /// different cut — one is "there is more of the same", the other is
+    /// "there is a past".
+    private var restingCards: [KanbanCard] {
+        switch status {
+        case .backlog where cards.count > Board.backlogCollapsedLimit:
+            return Array(cards.prefix(Board.backlogCollapsedLimit))
+        case .done:
+            return DoneWindow.recent(cards)
+        default:
             return cards
         }
-        return Array(cards.prefix(Board.backlogCollapsedLimit))
     }
 
-    private var hiddenCount: Int { cards.count - displayedCards.count }
+    private var displayedCards: [KanbanCard] { expanded ? cards : restingCards }
+
+    /// How many cards the resting cut folds away right now — the number the
+    /// footer offers to bring back, and the reason the footer exists at all.
+    private var foldedCount: Int { cards.count - restingCards.count }
 
     /// True while a card from this very lane is being dragged. Dropping it
     /// back here changes nothing, so the lane must not promise a landing
@@ -102,7 +116,12 @@ struct ColumnView: View {
                                     .onEnded { _ in store.endDrag() })
                             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
                                 // One card is enough to size the placeholder.
-                                if card.id == displayedCards.first?.id { cardHeight = height }
+                                if card.id == displayedCards.first?.id {
+                                    cardHeight = height
+                                    // The pull slot next door borrows this
+                                    // measurement (see `nextTopCardHeight`).
+                                    if status == .next { store.nextTopCardHeight = height }
+                                }
                             }
                             // A card arriving in a lane settles into place
                             // instead of blinking on: it grows the last few
@@ -131,9 +150,15 @@ struct ColumnView: View {
                 .padding(.top, 10)
                 .padding(.bottom, 12)
             }
+            // No scroll indicator inside the wells: the system's overlay bar
+            // is the one element that would draw *above* the cards and break
+            // the lane's depth model (recessed well, paper on top). The fade
+            // below is the board's own "there is more" signal, and scrolling
+            // itself is untouched.
+            .scrollIndicators(.never)
             .mask(scrollFade)
 
-            if status == .backlog, hiddenCount > 0, !expanded {
+            if foldedCount > 0 {
                 moreButton
             }
         }
@@ -169,7 +194,10 @@ struct ColumnView: View {
         // A lane that empties must forget its last card's height, or the
         // standing pull slot gets sized by whatever happened to be here last.
         .onChange(of: displayedCards.isEmpty) { _, isEmpty in
-            if isEmpty { cardHeight = nil }
+            if isEmpty {
+                cardHeight = nil
+                if status == .next { store.nextTopCardHeight = nil }
+            }
         }
         // Without this a card announces its title and nothing about where it
         // is — on a board, the lane is half the meaning.
@@ -236,13 +264,21 @@ struct ColumnView: View {
     private var wipLimit: Int? { store.wipLimit(for: status) }
     private var isOverLimit: Bool { wipLimit.map { cards.count > $0 } ?? false }
 
+    /// What the capsule counts. Erledigt's membership is defined by its time
+    /// window, so the capsule states what the lane shows and grows when the
+    /// look back opens. Backlog's cap is a pure display crop — every card is
+    /// genuinely in the lane — so its count stays the full pile.
+    private var shownCount: Int {
+        status == .done ? displayedCards.count : cards.count
+    }
+
     /// The rule belongs on the board, not just in Settings ("make policies
     /// explicit"), so the limit rides along in the count itself.
     private var countLabel: String {
         if let wipLimit {
             return "\(cards.count) / \(wipLimit)"
         }
-        return "\(cards.count)"
+        return "\(shownCount)"
     }
 
     /// One shape for all four lanes: a lead line stating what the lane holds,
@@ -259,7 +295,7 @@ struct ColumnView: View {
 
     /// Every lane opens the same way, so the four read as one family.
     private var countSummary: String {
-        guard let wipLimit else { return "\(cards.count) Karten" }
+        guard let wipLimit else { return "\(shownCount) Karten" }
         return "\(cards.count) von \(wipLimit) Karten"
     }
 
@@ -267,6 +303,17 @@ struct ColumnView: View {
         var details: [String] = []
         if status == .done, todayCount > 0 {
             details.append("\(todayCount) heute erledigt")
+        }
+        // Same reasoning as `recurringHint`: a lane that shows less than it
+        // could must be able to say so. Once the look back is open, the one
+        // thing still missing lives in the Reminders app — named here, at
+        // the exact moment someone is digging for it.
+        if status == .done {
+            if !expanded, foldedCount > 0 {
+                details.append("\(foldedCount) ältere Karten")
+            } else if expanded {
+                details.append("Älteres liegt in Erinnerungen")
+            }
         }
         if isOverLimit {
             details.append("Limit überschritten")
@@ -315,7 +362,7 @@ struct ColumnView: View {
             .strokeBorder(
                 Color.primary.opacity(0.25),
                 style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
-            .frame(height: slotHeight)
+            .frame(height: pullSlotHeight)
             .overlay {
                 // Names the payoff rather than the emptiness: this lane is not
                 // "empty", it is the entrance to finishing. Shares its key word
@@ -341,6 +388,16 @@ struct ColumnView: View {
         cardHeight ?? (singleLine ? Board.compactCardHeight : Board.fullCardMinHeight)
     }
 
+    /// The pull slot's height: exactly the ticket it is inviting. The top
+    /// card of "Als Nächstes" keeps its measured height when it lands here —
+    /// both lanes render at full density — so the promised spot and the
+    /// promised card are the same size, not "a card-ish rectangle" next to
+    /// a visibly different real one. Falls back to the lane's own metrics
+    /// while "Als Nächstes" has nothing measured.
+    private var pullSlotHeight: CGFloat {
+        store.nextTopCardHeight ?? slotHeight
+    }
+
     /// Quick-add for Backlog. Sits right after the last card, like the "+" at
     /// the foot of a lane in familiar Kanban tools — but scaled to this
     /// board's quiet chrome instead of a standalone accent button.
@@ -361,31 +418,35 @@ struct ColumnView: View {
                 }
             } label: {
                 Image(systemName: "plus")
-                    // Sized to the toolbar's own controls (find, streak), not
-                    // to the board's chip scale: this is chrome, and every
-                    // control the user reaches for should read at one size.
-                    .font(.system(size: 14, weight: .semibold))
-                    // `.primary` is the one foreground guaranteed to read in
-                    // both appearances (same reasoning as `Board.columnBorder`).
-                    .foregroundStyle(.primary)
-                    .frame(width: 30, height: 30)
-                    .background {
-                        // Filled with the window's own glass — the same
-                        // material visible in the gaps beside the columns —
-                        // instead of a new surface, so the circle still reads
-                        // as a distinct, tappable button without competing
-                        // with the lane's own recessed fill.
-                        if reduceTransparency {
-                            Circle().fill(Color(nsColor: .windowBackgroundColor))
-                        } else {
-                            HUDGlassMaterial().clipShape(Circle())
-                        }
-                    }
-                    .overlay {
-                        Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1)
-                    }
+                    // A touch larger than the toolbar's controls: this is the
+                    // one creating gesture on the board, and at the foot of a
+                    // lane it has to be found without hunting. Presence through
+                    // size, not colour.
+                    .font(.system(size: 16, weight: .semibold))
+                    // Secondary, not a flat black glyph: on the earlier
+                    // hand-built material the `.primary` plus sat on top of the
+                    // glass instead of in it and read as pasted on. The native
+                    // glass effect below composites the symbol into the surface
+                    // with its own vibrancy, so a softer weight is all it needs.
+                    .foregroundStyle(.secondary)
+                    .frame(width: 35, height: 35)
+                    .modifier(AddButtonGlass(reduceTransparency: reduceTransparency, contrast: contrast))
+                    // On hover the button lifts exactly like a card — same
+                    // -1pt rise, same shadow, same animation — so the board
+                    // speaks one depth language: flat at rest beneath the
+                    // paper, and anything you are about to pick up comes to
+                    // the same height. Without this the cards rose on hover
+                    // and the button stayed pinned, which read as broken.
+                    .shadow(
+                        color: Board.cardShadowHover.color.opacity(addHovered ? 1 : 0),
+                        radius: Board.cardShadowHover.radius,
+                        y: Board.cardShadowHover.y)
+                    .offset(y: addHovered && !reduceMotion ? -1 : 0)
             }
             .buttonStyle(.plain)
+            .onHover { hovering in
+                withAnimation(reduceMotion ? nil : Board.hoverAnimation) { addHovered = hovering }
+            }
             .accessibilityLabel("Neue Karte anlegen")
             .boardTooltip("Neue Karte anlegen")
             Spacer()
@@ -393,26 +454,51 @@ struct ColumnView: View {
         .padding(.vertical, 4)
     }
 
+    /// The fold line at the foot of a stack lane, and the way back out.
+    ///
+    /// A bare text line, not a plated button: the board's own rule is that
+    /// glass belongs to the chrome and never to the content plane (see
+    /// CONCEPT.md, Design-Anspruch) — the earlier `.glass` footer sat inside
+    /// the recessed well as a raised plate and broke exactly that. At meta
+    /// scale in secondary it reads as the lane's last, quiet line; hover
+    /// lifts it to primary, which is all the affordance a link this local
+    /// needs. The same line closes the fold again ("Ältere ausblenden"), so
+    /// the way back sits precisely where the way in was.
     private var moreButton: some View {
         Button {
-            // Expanding drops 15+ cards into the lane at once — the largest
-            // layout change the board can make, and the one most worth
-            // gating on Reduce Motion.
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded = true }
+            // Folding 15+ cards in or out at once is the largest layout
+            // change the board can make, and the one most worth gating on
+            // Reduce Motion.
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded.toggle() }
         } label: {
-            Text("\(hiddenCount) weitere anzeigen")
+            Text(moreLabel)
                 .font(BoardText.meta)
                 // One weight up from meta's regular: the only clickable line
                 // at this scale, and it has to read as a link, not as the
                 // passive metadata `meta` sets everywhere else.
                 .fontWeight(.medium)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(moreHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 7)
+                .contentShape(Rectangle())
         }
-        .buttonStyle(.glass)
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) { moreHovered = hovering }
+        }
         .padding(.horizontal, Board.laneMargin)
-        .padding(.bottom, 10)
+        .padding(.bottom, 6)
+    }
+
+    /// "weitere" for Backlog (more of the same pile), "ältere" for Erledigt
+    /// (a look into the past) — the word carries what the click will do.
+    private var moreLabel: String {
+        switch (status, expanded) {
+        case (.done, false): "\(foldedCount) ältere anzeigen"
+        case (.done, true): "Ältere ausblenden"
+        case (_, false): "\(foldedCount) weitere anzeigen"
+        case (_, true): "Weniger anzeigen"
+        }
     }
 
     /// Cards fade out at the bottom edge, hinting there is more to scroll
@@ -458,5 +544,36 @@ struct ColumnView: View {
         reduceTransparency
             ? Color(nsColor: .underPageBackgroundColor)
             : Board.columnFill(colorScheme)
+    }
+}
+
+/// The circular Liquid Glass surface behind the Backlog add button.
+///
+/// The system's own `glassEffect` rather than a hand-assembled material:
+/// it bends and reflects the board behind it and pulls the "+" into the
+/// surface with real vibrancy, where the previous `HUDGlassMaterial` +
+/// stroked border + flat `.primary` glyph only stacked a frosted disc under
+/// a pasted-on symbol. `.interactive()` gives the press and hover reaction
+/// for free. When "Transparenz reduzieren" is on, it degrades to the same
+/// solid disc the rest of the board uses in that mode.
+private struct AddButtonGlass: ViewModifier {
+    let reduceTransparency: Bool
+    let contrast: ColorSchemeContrast
+
+    func body(content: Content) -> some View {
+        if reduceTransparency {
+            content
+                .background { Circle().fill(Color(nsColor: .windowBackgroundColor)) }
+                .overlay { Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1) }
+        } else {
+            // `.clear`, not `.regular`: the thinner glass sits lower. The
+            // regular material raised the button above the cards — a control
+            // popping out further than the paper it serves inverts the
+            // board's depth order (cards are the content, chrome stays
+            // beneath them). Interactivity still lifts it on hover, so the
+            // press response is where the prominence lives, not the rest state.
+            content
+                .glassEffect(.clear.interactive(), in: .circle)
+        }
     }
 }

@@ -197,6 +197,24 @@ nicht möglich)
   einen Klick entfernt in Reminders. Tooltips bleiben dem Chrome vorbehalten
   (Spaltenkopf, „+"-Button), wo sie Regeln erklären statt Inhalte zu doppeln. Die
   Inhalte bleiben für VoiceOver als Label/Hint erhalten.
+- **Archiv für erledigte Tickets in der App** — abgelehnt (Juli 2026, im Zug der
+  Verkürzung des Erledigt-Fensters von 14 auf 7 Tage). Geprüft und verworfen wurden:
+  ein eigenes Archivfenster bzw. eine Archiv-Ansicht (neues Chrome, macht die App zum
+  Verwaltungswerkzeug), Ticketlisten im „Rückblick"-Tab (der ist bewusst Aggregat, kein
+  Scrollen durch Einzeltickets), unbegrenztes Aufklappen aller geladenen Completions
+  (eine Liste über Monate braucht Struktur — Datums-Überschriften, Gruppen, Suche — und
+  genau dieses Chrome soll die Spalte nicht tragen) sowie Datums-Gruppierung in der
+  Spalte. Gültige Lösung (SPEC.md): 7 Tage Ruhezustand, „N ältere anzeigen" holt die
+  letzten 30 Tage für die Sitzung, alles Ältere zeigt die Reminders-App — sie ist der
+  Speicher und hat Suche und Erledigt-Ansicht bereits. Leitsatz der Abwägung: Der
+  Ruhezustand gehört dem Minimalismus, der Blick zurück ist ein Moment (ein Klick, eine
+  Sitzung), Übersicht entsteht durch Begrenzung statt durch Struktur, Tiefe wird an
+  Reminders delegiert.
+  **Darstellung, im selben Zug verworfen:** die Fußzeile als `.glass`-Button (eine
+  Glasplatte in der Mulde verletzt „Glas ist Chrome, nie Inhalt" — gültig ist die blanke
+  Textzeile mit Hover) und der System-Scrollbalken in den Spalten (läge als einziges
+  Element über den Karten und bräche die Tiefenordnung der Mulde — das „mehr"-Signal ist
+  der Fade am Spaltenrand).
 - **„0" in der Streak-Pille anzeigen** — abgelehnt. Eine „0" neben den Fensterknöpfen sieht
   kaputt aus und liest sich als Rüge. Die gültige Lösung steht in SPEC.md und ist bereits
   gebaut: Die Pille erscheint, sobald es überhaupt Historie gibt (`totalCompleted > 0`),

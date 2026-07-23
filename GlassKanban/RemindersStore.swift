@@ -33,6 +33,14 @@ final class RemindersStore: ObservableObject {
     /// payload is not readable while merely hovering — so a lane can tell
     /// whether a drop would actually move anything.
     @Published private(set) var draggingCardID: String?
+    /// Measured height of the top card in "Als Nächstes", reported by that
+    /// lane as it lays out. The empty "In Bearbeitung" lane sizes its pull
+    /// slot with it, so the promised spot is exactly as tall as the ticket
+    /// it is inviting — both lanes render cards at the same full density,
+    /// so the ticket keeps this height when it lands. Nil while "Als
+    /// Nächstes" is empty; the slot then falls back to the standard card
+    /// metrics.
+    @Published var nextTopCardHeight: CGFloat?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
     /// The per-session view of recurring cards. Not persisted itself: it starts
@@ -137,10 +145,6 @@ final class RemindersStore: ObservableObject {
     private static let wipLimitsKey = "wipLimits"
     private static let hideRecurringKey = "hideRecurringUntilDue"
 
-    /// Completed reminders are shown in "Erledigt" for this many days. Long
-    /// enough that a week's work stays visible as evidence, short enough that
-    /// the lane never becomes an archive nobody reads.
-    private static let doneWindowDays = 14
     /// How far back completions are fetched for the streak calculation. A
     /// streak longer than this would be reported short — deliberately far
     /// beyond any plausible run for a personal board, and the cost of asking
@@ -366,8 +370,9 @@ final class RemindersStore: ObservableObject {
         streakStats = StreakCalculator.stats(completionDates: completionRecords.map(\.date))
         wrappedStats = WrappedStats.stats(records: completionRecords)
 
-        let doneWindowStart = calendar.date(
-            byAdding: .day, value: -Self.doneWindowDays, to: calendar.startOfDay(for: .now))!
+        // Cards exist for the widened window; the lane itself rests at the
+        // last week and only shows the rest on request (see `DoneWindow`).
+        let doneWindowStart = DoneWindow.keptCutoff(calendar: calendar)
         let visibleCompleted = completed.filter { ($0.completionDate ?? .distantPast) >= doneWindowStart }
 
         let refreshed = (incomplete + visibleCompleted).compactMap(Self.card(from:))
