@@ -155,6 +155,12 @@ struct BoardView: View {
 
                 TicketEditSheet(card: card, onClose: closeEditor)
                     .environmentObject(store)
+                    // One editor per card, never one editor re-pointed at
+                    // another card: its fields, and its "this card has been
+                    // answered" state, belong to the ticket it was opened on.
+                    // Swapping the card underneath a shared identity would
+                    // keep both.
+                    .id(card.id)
                     .transition(
                         reduceMotion
                             ? .opacity

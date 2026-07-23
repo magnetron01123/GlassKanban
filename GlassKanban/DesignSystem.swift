@@ -59,6 +59,15 @@ enum Board {
     /// Text margins in the opened card, wider than a lane card's for the same
     /// reason its type is larger: it is read, not scanned.
     static let openCardInset: CGFloat = 20
+    /// Caption to the field it names, in the opened card.
+    ///
+    /// It was 3 — less than the 4pt the hover wash bleeds past the field's
+    /// own frame (see `editableHint`), so approaching a field pushed its
+    /// highlight up into the line box of the caption naming it, and the
+    /// label read as part of the box about to be typed in. 6 leaves the wash
+    /// 2pt clear of it. The pair still binds: the next caption down is 25pt
+    /// away across a zone divider, four times this gap.
+    static let editorCaptionSpacing: CGFloat = 6
 
     /// One shape for every chip that carries a small, quiet value — the date
     /// badge on a card and the count in a lane header. These had drifted into

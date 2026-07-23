@@ -160,6 +160,16 @@ struct StatsPopover: View {
             }
     }
 
+    /// The one caption style a well's content ever wears, wherever a group
+    /// needs to say what it is — first written for "Letzte 30 Tage" over the
+    /// trend chart, now shared by every section heading in this window so
+    /// none of them can drift from the others one at a time.
+    private func sectionHeading(_ text: String) -> some View {
+        Text(text)
+            .font(BoardText.body)
+            .foregroundStyle(.secondary)
+    }
+
     // MARK: - Jetzt
 
     private var nowTab: some View {
@@ -323,14 +333,29 @@ struct StatsPopover: View {
 
     // MARK: - Rückblick
 
+    /// Two sections, not one list of five — because the five rows were never
+    /// one kind of figure. "Dieses Jahr" and "Längste Folge" are running
+    /// tallies: a board with a single completed reminder can already show
+    /// both, one by counting and the other from `StreakCalculator` alone.
+    /// "Bester Tag", "Stärkster Wochentag" and "Häufigste Liste" are
+    /// rankings — a claim that something is *the most* of anything needs
+    /// enough history to carry it, which is exactly what
+    /// `WrappedStats.minSampleForRankings` gates: the three either all exist
+    /// or none do. That gate is the split. It also means the second section
+    /// can simply be absent on a young board rather than showing three
+    /// confident-looking dashes.
+    ///
+    /// No heading on either well: a caption on one and not the other read as
+    /// an accident, and a caption on both was tried and read as clutter this
+    /// tab did not need — the gap between the two wells already says "these
+    /// are two groups", and every row still names itself.
     private var pastTab: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 14) {
             well {
                 rows {
-                    // First, because it is the total the rest of this list
-                    // details. It carries its own period in its label, which
-                    // is why the footnote below can go on describing the
-                    // others without contradicting it.
+                    // Carries its own period in its label, which is why the
+                    // footnote below can go on describing the ranked section
+                    // without contradicting it.
                     row("Dieses Jahr",
                         "\(wrapped.yearCount)",
                         mark: wrapped.milestone != nil ? "flag.fill" : nil,
@@ -339,44 +364,64 @@ struct StatsPopover: View {
                         })
 
                     row("Längste Folge", Self.days(streak.best))
-
-                    if let best = wrapped.bestDay {
-                        row("Bester Tag",
-                            Self.tasks(best.count),
-                            help: best.date.formatted(date: .long, time: .omitted))
+                }
+            }
+            if hasRankings {
+                VStack(alignment: .leading, spacing: 8) {
+                    well {
+                        rows {
+                            if let best = wrapped.bestDay {
+                                row("Bester Tag",
+                                    Self.tasks(best.count),
+                                    help: best.date.formatted(date: .long, time: .omitted))
+                            }
+                            if let rank = wrapped.mostActiveWeekday {
+                                row("Stärkster Wochentag",
+                                    Calendar.current.weekdaySymbols[rank.weekday - 1],
+                                    help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
+                            }
+                            if let rank = wrapped.mostUsedList {
+                                row("Häufigste Liste",
+                                    rank.name,
+                                    dot: rank.color,
+                                    help: Self.tasks(rank.count))
+                            }
+                        }
                     }
-                    if let rank = wrapped.mostActiveWeekday {
-                        row("Stärkster Wochentag",
-                            Calendar.current.weekdaySymbols[rank.weekday - 1],
-                            help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
-                    }
-                    if let rank = wrapped.mostUsedList {
-                        row("Häufigste Liste",
-                            rank.name,
-                            dot: rank.color,
-                            help: Self.tasks(rank.count))
+                    // A footnote about this group, below it and indented to
+                    // its content edge — the system's own group-footer
+                    // position, where a note about the numbers never reads as
+                    // one of them. A real month rather than a vague "letzte
+                    // 13 Monate", which is the kind of range nobody can
+                    // check. Scoped to the rankings rather than the tab as a
+                    // whole: "Dieses Jahr" and "Längste Folge" above already
+                    // state their own period.
+                    if let since = historySince {
+                        Text(since)
+                            .font(BoardText.meta)
+                            // Tertiary on glass is already near the contrast
+                            // floor; under Increase Contrast it has to step
+                            // up, or the one line that says which period
+                            // these numbers cover is the first thing to
+                            // disappear for the people who asked for more
+                            // contrast.
+                            .foregroundStyle(contrast == .increased
+                                ? AnyShapeStyle(.secondary)
+                                : AnyShapeStyle(.tertiary))
+                            .padding(.leading, 12)
                     }
                 }
             }
-            // A footnote about the group, below it and indented to its
-            // content edge — the system's own group-footer position, where a
-            // note about the numbers never reads as one of them. A real month
-            // rather than a vague "letzte 13 Monate", which is the kind of
-            // range nobody can check.
-            if let since = historySince {
-                Text(since)
-                    .font(BoardText.meta)
-                    // Tertiary on glass is already near the contrast floor;
-                    // under Increase Contrast it has to step up, or the one
-                    // line that says which period these numbers cover is the
-                    // first thing to disappear for the people who asked for
-                    // more contrast.
-                    .foregroundStyle(contrast == .increased
-                        ? AnyShapeStyle(.secondary)
-                        : AnyShapeStyle(.tertiary))
-                    .padding(.leading, 12)
-            }
         }
+    }
+
+    /// True exactly when the ranked section has something to show.
+    /// `WrappedStats` only ever produces `bestDay`, `mostActiveWeekday` and
+    /// `mostUsedList` together (see `minSampleForRankings`), so checking one
+    /// would already do — checking all three costs nothing and does not
+    /// depend on that invariant holding forever.
+    private var hasRankings: Bool {
+        wrapped.bestDay != nil || wrapped.mostActiveWeekday != nil || wrapped.mostUsedList != nil
     }
 
     private var historySince: String? {
@@ -392,9 +437,7 @@ struct StatsPopover: View {
     /// unexplained is not. Per-day figures stay in each bar's tooltip.
     private var trendSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Letzte 30 Tage")
-                .font(BoardText.body)
-                .foregroundStyle(.secondary)
+            sectionHeading("Letzte 30 Tage")
             trendRow
         }
         // Takes whatever the matched well height leaves after the label, so

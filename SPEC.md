@@ -114,12 +114,20 @@ Reminders.
 Der Klick öffnet die Karte vergrößert und zentriert über dem abgeblendeten Board — dieselbe
 Karte, näher herangeholt, kein separates Formularfenster. Editierbar: **Titel, Notizen
 (mehrzeilig, Absätze bleiben erhalten), URL-Feld, Liste, Dringlichkeit, Fälligkeit** (mit
-oder ohne Uhrzeit — ohne bleibt die Erinnerung ganztägig). Änderungen werden beim Verlassen
-eines Feldes direkt gespeichert; Escape oder ein Klick aufs Board schließt die Karte. Der
+oder ohne Uhrzeit — ohne bleibt die Erinnerung ganztägig). Der
 ↗-Knopf springt zur Aufgabe in der Reminders-App, für alles, was der Editor bewusst
 auslässt. Der Status-Hashtag ist im Notizen-Feld nie sichtbar und wird beim Speichern für
 die aktuelle Spalte wieder angehängt — ein Inhalts-Edit kann eine Karte nie verschieben.
 Ein Listenwechsel bietet nur beschreibbare, nicht ausgeblendete Listen an.
+
+**Der Editor hat keine Sichern-/Abbrechen-Knöpfe — die beiden Antworten liegen auf der
+Tastatur, in denselben Worten wie beim Umbenennen: Return übernimmt, Escape verwirft.** Ein
+Klick aufs Board zählt als Return (die Notiz wird zurück an die Wand gehängt, mit dem, was
+draufsteht). Geschrieben wird erst beim Schließen und nur, wenn sich wirklich etwas geändert
+hat — eine Karte nur anzuschauen ist ein Lesevorgang, kein Schreibvorgang, sonst würde jeder
+Blick die Verweildauer zurücksetzen. Escape wirft die Änderungen dieser Sitzung weg; das ist
+gefahrlos, weil bis dahin nichts geschrieben wurde. Im mehrzeiligen Notizfeld gehört Return
+dem Feld (Notizen sind öfter Listen als Sätze) — von dort schließt **⌘Return**.
 
 **Karten tragen keinen Tastaturfokus und keine Hover-Tooltips** — beides war kurz
 implementiert und wurde als bewusste Entscheidung wieder entfernt (Begründung in
@@ -135,8 +143,10 @@ nichts. Escape verwirft, Return und ein Klick daneben übernehmen.
 **Ticket anlegen = Karten-Editor.** Das „+" im Backlog legt das Ticket an (Standardliste
 bzw. erste eingeschlossene Liste) und öffnet sofort den Karten-Editor mit dem Cursor im
 Titel — Name, Notizen, Datum und alles Weitere entstehen an einem Ort, ohne zweiten
-Schritt. Wird der Editor ohne jede Eingabe geschlossen, entfernt die App das Ticket
-rückstandslos wieder; der ↗-Sprung nach Reminders zählt dabei als Behalten.
+Schritt. **Return legt das Ticket an, Escape bricht die Anlage ab** und entfernt die
+Erinnerung wieder, egal was schon in den Feldern stand — abgebrochen ist abgebrochen. Wird
+der Editor ohne jede Eingabe geschlossen, entfernt die App das Ticket ebenfalls
+rückstandslos; der ↗-Sprung nach Reminders zählt dabei als Behalten.
 
 **Löschen fragt nicht nach, sondern lässt sich rückgängig machen.** Jede Schreib-Aktion der
 App — Verschieben, Umbenennen, Anlegen, Löschen — registriert ihr Gegenteil beim
@@ -156,6 +166,9 @@ Wiederherstellen, die Erinnerung bekommt also eine neue interne ID.
 | ⌘R | Board aktualisieren |
 | ⌘Z / ⇧⌘Z | letzte Board-Änderung rückgängig / wiederherstellen |
 | ⌘, | Einstellungen |
+| Return | im Karten-Editor: übernehmen und schließen (legt ein neues Ticket an) |
+| ⌘Return | dasselbe aus dem Notizfeld heraus, wo Return die Zeile umbricht |
+| Escape | im Karten-Editor: verwerfen und schließen (bricht eine Neuanlage ab) |
 
 ## Karten-Anzeige
 

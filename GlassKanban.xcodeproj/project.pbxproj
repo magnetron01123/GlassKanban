@@ -11,11 +11,13 @@
 		0BF10963C66C61A85AB63DBD /* WrappedStatsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECE5585CC13DA3C6F665594A /* WrappedStatsTests.swift */; };
 		17AAD6984070753493382FA9 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E363E5F11832E63EE2539D70 /* CardView.swift */; };
 		17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */; };
+		1903C02128FB6F5CEF1379DD /* EditorKeyCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A5342367B7E44D3B673B801 /* EditorKeyCommandTests.swift */; };
 		1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1A968F6964BFEE0832A01A /* ColumnView.swift */; };
 		1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */; };
 		1E7F6ED58D7DBA4FB4175DE6 /* AppAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885796666D14CA49747DB258 /* AppAppearance.swift */; };
 		262B9D2A64B3478DC0B7D42F /* BoardTooltip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */; };
 		3A14FF729609BD536B4851BE /* BoardEmptinessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CE58D9AEFF55A2F7A8F53B /* BoardEmptinessTests.swift */; };
+		3B0C7B14654C8CB9B6C8E973 /* EditorKeyCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */; };
 		4BD67FD6516E1386444BD060 /* TicketRename.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350F062261A839B0E19ADC65 /* TicketRename.swift */; };
 		4DDD94D9BA542BA62B842C25 /* BacklogTicketCreationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */; };
 		5579A24C7243C659DB0C9698 /* TicketRename.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350F062261A839B0E19ADC65 /* TicketRename.swift */; };
@@ -37,6 +39,7 @@
 		A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CAB35E9902F258F00D82A7 /* SettingsView.swift */; };
 		A70E5A894D67BF2B9B9C0779 /* AppAppearanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48CB5158B3D021C846E9BDE /* AppAppearanceTests.swift */; };
 		B5100A228F130EF0A3292797 /* StreakCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */; };
+		B57FB64598820E281C5E6066 /* EditorKeyCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */; };
 		B70019CC6B6074138D0342C5 /* WrappedStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E1A9343D54C7091C20BBDE /* WrappedStats.swift */; };
 		BA331CEEE97A7000C960DB81 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE77523ACBD14B219E0031C5 /* ContentView.swift */; };
 		BC16F8EF904EDF88D5EC21A0 /* ReminderDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */; };
@@ -59,6 +62,7 @@
 		0C252FF02D5162B99A3F30F7 /* WIPLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WIPLimitTests.swift; sourceTree = "<group>"; };
 		10C56C38B8A1956F2F2974FE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		10ECC48E9096FEF7E8FFDCB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorKeyCommand.swift; sourceTree = "<group>"; };
 		168AF2A9B4F0AA4920636C98 /* TicketRenameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketRenameTests.swift; sourceTree = "<group>"; };
 		2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		350F062261A839B0E19ADC65 /* TicketRename.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketRename.swift; sourceTree = "<group>"; };
@@ -75,6 +79,7 @@
 		85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyBoardNotice.swift; sourceTree = "<group>"; };
 		885796666D14CA49747DB258 /* AppAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearance.swift; sourceTree = "<group>"; };
 		916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderDeepLink.swift; sourceTree = "<group>"; };
+		9A5342367B7E44D3B673B801 /* EditorKeyCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorKeyCommandTests.swift; sourceTree = "<group>"; };
 		9AD1B4A61352C1461953925D /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklogTicketTargeting.swift; sourceTree = "<group>"; };
 		BD0CD245EE900300AA1B6709 /* FindPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindPopover.swift; sourceTree = "<group>"; };
@@ -116,6 +121,7 @@
 				D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */,
 				D7CE58D9AEFF55A2F7A8F53B /* BoardEmptinessTests.swift */,
 				DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */,
+				9A5342367B7E44D3B673B801 /* EditorKeyCommandTests.swift */,
 				4F5178AE744F393F737442A5 /* FilterTests.swift */,
 				57D665E92128A470288652C9 /* ReminderDeepLinkTests.swift */,
 				E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */,
@@ -140,6 +146,7 @@
 				EC1A968F6964BFEE0832A01A /* ColumnView.swift */,
 				EE77523ACBD14B219E0031C5 /* ContentView.swift */,
 				F5DCA4E02A36CF7D719EC339 /* DesignSystem.swift */,
+				11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */,
 				85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */,
 				BD0CD245EE900300AA1B6709 /* FindPopover.swift */,
 				6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */,
@@ -268,6 +275,7 @@
 				1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */,
 				BA331CEEE97A7000C960DB81 /* ContentView.swift in Sources */,
 				D3765DBF0B271BAFF4FFD965 /* DesignSystem.swift in Sources */,
+				B57FB64598820E281C5E6066 /* EditorKeyCommand.swift in Sources */,
 				5C60750477A63990C6B97E35 /* EmptyBoardNotice.swift in Sources */,
 				7D478069741C025AEBDC3C41 /* FindPopover.swift in Sources */,
 				1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */,
@@ -296,6 +304,8 @@
 				73526449E43A7458F4BA2C81 /* BacklogTicketTargeting.swift in Sources */,
 				3A14FF729609BD536B4851BE /* BoardEmptinessTests.swift in Sources */,
 				D5D9047BF7E12AD928F47F76 /* CardSortingTests.swift in Sources */,
+				3B0C7B14654C8CB9B6C8E973 /* EditorKeyCommand.swift in Sources */,
+				1903C02128FB6F5CEF1379DD /* EditorKeyCommandTests.swift in Sources */,
 				875104CDC32ECDEB5C2494F0 /* FilterTests.swift in Sources */,
 				CF6FC09044300C4AEE056EF2 /* Models.swift in Sources */,
 				BC16F8EF904EDF88D5EC21A0 /* ReminderDeepLink.swift in Sources */,
