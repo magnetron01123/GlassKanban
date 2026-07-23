@@ -3,6 +3,7 @@ import SwiftUI
 struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.undoManager) private var undoManager
     /// Blur is the depth cue here; when it is switched off, the scrim has to
     /// carry the separation on its own and darkens to compensate.
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -30,9 +31,10 @@ struct BoardView: View {
         // then exactly one, laid over the lanes rather than inside them.
         .overlay {
             if let emptiness = store.emptiness {
-                EmptyBoardNotice(emptiness: emptiness) {
-                    store.resetFilters()
-                }
+                EmptyBoardNotice(
+                    emptiness: emptiness,
+                    onReset: { store.resetFilters() },
+                    onShowRecurring: { store.showRecurringCards() })
             }
         }
         // Lanes flex between ticket-friendly bounds; the whole block sits
@@ -91,7 +93,7 @@ struct BoardView: View {
             // action is the prominent one, carries Return, and — via the
             // cancel role — Escape too. Overloading takes a deliberate click.
             Button("Erst abschließen", role: .cancel) {
-                store.move(cardID: overflow.cardID, to: overflow.origin)
+                store.move(cardID: overflow.cardID, to: overflow.origin, undoManager: undoManager)
             }
             .keyboardShortcut(.defaultAction)
             // "Passt schon" rather than "Trotzdem": the board does not get to
@@ -232,7 +234,7 @@ struct BoardView: View {
             StatsPopover(
                 streak: store.streakStats,
                 wrapped: store.wrappedStats,
-                wip: store.cards(for: .inProgress).count,
+                wip: store.totalCount(for: .inProgress),
                 wipLimit: store.wipLimit(for: .inProgress))
         }
     }

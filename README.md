@@ -13,24 +13,29 @@ Erinnerungs-Zugriff.
 - **Status als Hashtag in den Notizen** (`#alsnächstes`, `#inbearbeitung`) — die
   Listenzugehörigkeit der Erinnerung bleibt unangetastet, Backlog = kein Tag,
   Erledigt = abgehakt (`isCompleted`)
-- **Drag & Drop** zwischen den Spalten ist die einzige Schreib-Interaktion; Aufgaben
-  werden ausschließlich in der nativen Erinnerungen-App angelegt und bearbeitet
-- **Doppelklick auf eine Karte** öffnet die Aufgabe direkt im Bearbeitungs-Popover
-  der Erinnerungen-App
+- **Drag & Drop** zwischen den Spalten; **Klick** auf eine Karte öffnet den Karten-Editor
+  direkt auf dem Board (Titel, Notizen, URL, Liste, Dringlichkeit, Fälligkeit)
+- **Tickets anlegen** über das „+" im Backlog — Titel tippen, Return, fertig
+- **Alles widerrufbar:** Verschieben, Bearbeiten, Umbenennen, Anlegen und Löschen lassen
+  sich mit ⌘Z rückgängig machen — deshalb fragt das Löschen nicht nach
 - **Bidirektionaler Live-Sync**: Änderungen in der Erinnerungen-App (auch auf
   iPhone/iPad via iCloud) erscheinen sofort im Board — der Status-Hashtag kann auch
   unterwegs von Hand getippt werden
-- **Filter** nach Dringlichkeit und Fälligkeit, **Listen-Auswahl** in den Einstellungen
-  (z. B. Einkaufsliste ausblenden)
-- **Motivation, dezent:** Streak-Zähler (🔥) und ein täglich wechselnder Satz
+- **Finden** (⌘F): Suche, Dringlichkeit, Fälligkeit und wiederkehrende Aufgaben in einem
+  Bedienelement; **Listen-Auswahl** und **WIP-Limits** in den Einstellungen
+- **Motivation, dezent:** Streak-Flamme (🔥) mit Statistik-Fenster („Jetzt" und
+  „Rückblick" — Auslastung, Durchlaufzeit-Schätzung, bester Tag, häufigste Liste)
 
 ## Philosophie
 
 Angelehnt an *Personal Kanban* (Jim Benson & Tonianne DeMaria Barry): Arbeit sichtbar
 machen, ohne den bestehenden Workflow zu stören. Optisch orientiert an der
 Minimal-Desk-Setup-Ästhetik — ein ruhiges, dauerhaft geöffnetes Board statt auffälliger
-Software. Details: [CONCEPT.md](CONCEPT.md), verbindlicher Funktionsumfang:
-[MVP.md](MVP.md), bewusst Verschobenes: [BACKLOG.md](BACKLOG.md).
+Software.
+
+Drei Dokumente, drei Fragen: **Warum** es so ist — [CONCEPT.md](CONCEPT.md). **Was** die
+App heute tut — [SPEC.md](SPEC.md). Was bewusst **nicht** drin ist —
+[BACKLOG.md](BACKLOG.md).
 
 ## Build
 

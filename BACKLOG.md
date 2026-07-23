@@ -13,7 +13,7 @@ Begründung, warum später (oder warum grundsätzlich nicht).
 - **Eigene Hashtags aus den Notizen als Tag auf der Karte anzeigen** — wer Erinnerungen schon
   mit eigenen Hashtags kategorisiert (z. B. `#projektx`), sieht die aktuell nur als rohen Text
   in der Notizen-Vorschau, sofern es nicht zufällig der Status-Hashtag ist (der schon
-  herausgefiltert wird, siehe MVP.md). Vorschlag: eigene Hashtags erkennen und als kleine
+  herausgefiltert wird, siehe SPEC.md). Vorschlag: eigene Hashtags erkennen und als kleine
   Tag-Chips auf der Karte anzeigen statt/zusätzlich zur reinen Notizen-Vorschau. Bewusst nicht
   im MVP: Karte soll reduziert bleiben, und Hashtag-Erkennung im Notiztext ist bereits fürs
   interne Status-Tag reserviert — Kollision/Abgrenzung zwischen Status-Hashtag und
@@ -28,11 +28,10 @@ Begründung, warum später (oder warum grundsätzlich nicht).
 
 ## Board-Struktur
 
-- **WIP-Limit für "In Bearbeitung"** — passt thematisch zur Personal-Kanban-Philosophie,
-  aber zusätzlicher Konfigurations- und UI-Aufwand fürs Erst-Release. Gedachte Umsetzung:
-  ab n Karten färbt sich die Zähler-Kapsel der Spalte dezent amber, kein Blocken, kein
-  Text — nur ein leises "zu viel offen". Offene Frage: fester Wert oder in den
-  Einstellungen konfigurierbar.
+- ~~**WIP-Limit für "In Bearbeitung"**~~ — umgesetzt, siehe SPEC.md (Herleitung in
+  CONCEPT.md, Abschnitt Motivation). Anders als hier gedacht in den Einstellungen
+  konfigurierbar, teal statt amber (amber liegt zu nah an der Dringlichkeitsfarbe), und
+  "In Bearbeitung" fragt beim Überschreiten einmal nach, statt nur die Farbe zu wechseln.
 - **Swimlane-Trennung im Backlog ("Heute-Absatz")** — dringliche Karten (überfällig/heute)
   schwimmen bereits nach oben, gehen aber nahtlos in den Rest über. Eine einzige feine
   Trennlinie unter der letzten dringlichen Karte würde den Backlog in zwei stille Absätze
@@ -68,7 +67,7 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   (Das ↻-Icon auf der Karte, das eine Wiederholung überhaupt erst sichtbar macht, gibt es
   bereits — `CardView.repeatIcon` — hier geht es nur noch um das Verhalten beim Abhaken.)
 - ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt, siehe
-  MVP.md (Filterleiste, Zeile "Wiederkehrende").
+  SPEC.md (Filterleiste, Zeile "Wiederkehrende").
 
 ## Fensterverhalten
 
@@ -98,10 +97,15 @@ nicht möglich)
 
 ## Aufgaben-Bearbeitung in der App
 
-- **Aufgaben anlegen/inhaltlich bearbeiten (Titel, Notizen, Fälligkeit, Priorität) in Glass
-  Kanban** — bewusste Grundsatzentscheidung, nicht nur Zeitmangel: Inhalte werden
-  ausschließlich in der nativen Reminders-App gepflegt, Glass Kanban bleibt überwiegend
-  read-only (einzige Ausnahme: Drag & Drop).
+- ~~**Titel, Notizen, URL, Liste, Priorität und Fälligkeit bearbeiten**~~ — **umgesetzt**
+  als Karten-Editor (`TicketEditSheet`, siehe SPEC.md): Ein Klick öffnet die Karte
+  vergrößert über dem Board. Die ursprüngliche Grundsatzentscheidung „read-only außer
+  Drag & Drop" ist damit bewusst und schrittweise revidiert worden — erst der Titel
+  (einzeilig, ohne eigene UI), dann die restlichen Felder, als der Umweg über die
+  Reminders-App für jede Kleinigkeit einen App-Wechsel kostete.
+- **Wiederholungsregeln bearbeiten** — bleibt draußen: eigene, komplexe UI
+  (täglich/wöchentlich/benutzerdefiniert…), die Reminders bereits gut löst. Der ↗-Knopf im
+  Editor führt genau dafür in die native App.
 
 ## Spätere Apple-/Mac-Ausbaustufen
 
@@ -117,11 +121,11 @@ nicht möglich)
 ## Statistiken / Jahresrückblick
 
 - ~~**Produktivitäts-Statistiken im Spotify-Wrapped-Stil**~~ — **umgesetzt** als
-  Statistik-Fenster hinter der Toolbar-Flamme (Reiter „Rückblick": meistgenutzte Liste,
-  stärkster Wochentag, bester Tag, längste Folge; Reiter „Jetzt": Jahreszahl, Konstanz,
-  Auslastung, Durchlaufzeit-Schätzung). Die erwartete Aggregations-Logik sitzt in
-  `WrappedStats.swift` und läuft ohne zweite EventKit-Abfrage in derselben Auswertung mit,
-  die den Streak berechnet.
+  Statistik-Fenster hinter der Toolbar-Flamme (Reiter „Jetzt": Folge, heute, Auslastung
+  gegen WIP-Limit, Durchlaufzeit-Schätzung, 30-Tage-Verlauf; Reiter „Rückblick":
+  Jahreszahl, längste Folge, bester Tag, stärkster Wochentag, häufigste Liste,
+  Meilenstein). Die Aggregations-Logik sitzt in `WrappedStats.swift` und läuft ohne zweite
+  EventKit-Abfrage in derselben Auswertung mit, die den Streak berechnet.
 - **Teilbare Zusammenfassung** — der ursprüngliche Wrapped-Gedanke enthielt eine Share-Ansicht
   zum Weitergeben. Bewusst nicht mitgebaut: das Fenster ist auf einen Blick ausgelegt, eine
   Export-/Teilen-Darstellung wäre ein eigenes Layout mit eigenen Fragen (was darf ein
@@ -131,7 +135,7 @@ nicht möglich)
 
 - **Begleitende iOS-App (iPhone + iPad)** — eigene Glass-Kanban-Ansicht auf iPhone/iPad statt
   nur über die native Reminders-App unterwegs Hashtags zu setzen (das funktioniert schon jetzt
-  ohne eigene App, siehe Bonus-Hinweis in MVP.md). Eigenes Xcode-Multiplatform-Target, eigene
+  ohne eigene App, siehe Bonus-Hinweis in SPEC.md). Eigenes Xcode-Multiplatform-Target, eigene
   UI-Anpassung für kleinere Bildschirme/Touch-Bedienung, eigene App-Store-Überlegungen — klare
   Plattformerweiterung nach dem Mac-MVP, nicht Teil davon.
 
@@ -145,3 +149,42 @@ nicht möglich)
   Meilenstein-Hinweis im Statistik-Fenster, der nur bei einer in den letzten sieben Tagen
   überschrittenen runden Zahl erscheint und rein abgeleitet ist — siehe CONCEPT.md,
   „Motivation".
+- **Täglich wechselnder Motivationssatz** — war ursprünglich als zweites
+  Motivationselement neben dem Streak-Zähler geplant (~20 lokale Sätze, Auswahl nach
+  Kalendertag) und hat sich in der Praxis als unpraktikabel erwiesen. Ein fest stehender
+  Satz auf einem Board, das den ganzen Tag offen liegt, wird nach zwei Tagen weggefiltert
+  wie eine Bannerwerbung und kostet trotzdem dauerhaft Fläche — dasselbe Muster, das
+  bereits das pulsierende Pull-Signal gekostet hat (siehe CONCEPT.md): Aufmerksamkeit
+  gehört Dingen, die gerade passiert sind, nicht Dauerzuständen. Aus derselben Überlegung
+  ist das Motivierende dorthin gewandert, wo es an ein Ereignis gekoppelt ist: die sich
+  füllende Streak-Flamme und der Settle-Moment beim Erledigen.
+- **Bestätigungsdialog vor dem Löschen** — abgelöst durch Undo (⌘Z). Eine Rückfrage
+  besteuert jede Löschung, um die seltene falsche abzufangen; ein Undo kostet nur die
+  Person etwas, die sich tatsächlich vertan hat, und ist das, wonach ein Mac-Nutzer
+  ohnehin greift.
+- **Tastaturfokus und Pfeiltasten-Navigation auf Karten** — war im Juli 2026 kurz
+  implementiert (fokussierbare Karten, Pfeiltasten über die Spalten, Akzent-Kontur als
+  Fokus-Cursor) und wurde auf Nutzerentscheidung wieder entfernt. Karten werden mit der
+  Maus hin- und hergeschoben — ein Rahmen, der dauerhaft eine davon hervorhebt, betont
+  genau das, was keine Betonung braucht, und stört das ruhige Bild. Nicht wieder
+  einführen, ohne diese Entscheidung bewusst zu revidieren. VoiceOver bleibt davon
+  unberührt (eigener Cursor, eigene Aktionen auf jeder Karte).
+- **Hover-Tooltips auf Karten** — ebenfalls Juli 2026 auf Nutzerentscheidung entfernt
+  (vorher: Notizen-Vorschau, Listenname und Gestenhinweis beim Überfahren, Verweildauer-
+  und Wiederholungs-Tooltip). Ein Text, der auf jeder berührten Karte aufspringt, ist
+  Dauerrauschen und widerspricht dem Minimalismus-Anspruch; alles, was er zeigte, ist
+  einen Klick entfernt in Reminders. Tooltips bleiben dem Chrome vorbehalten
+  (Spaltenkopf, „+"-Button), wo sie Regeln erklären statt Inhalte zu doppeln. Die
+  Inhalte bleiben für VoiceOver als Label/Hint erhalten.
+- **„0" in der Streak-Pille anzeigen** — abgelehnt. Eine „0" neben den Fensterknöpfen sieht
+  kaputt aus und liest sich als Rüge. Die gültige Lösung steht in SPEC.md und ist bereits
+  gebaut: Die Pille erscheint, sobald es überhaupt Historie gibt (`totalCompleted > 0`),
+  und zeigt bei Serie 0 **nur die graue Flamme ohne Zahl**. Damit bleibt der Zugang zum
+  Statistik-Fenster auch nach einem Serienriss erhalten, ohne die Zahl zu zeigen.
+  **Vorgeschichte, damit sie sich nicht wiederholt:** Am 18.07.2026 (`90634bc`) wurde die
+  Pille bei Serie 0 komplett ausgeblendet — was den einzigen Zugang zur Statistik mit
+  verschwinden ließ. Am 21.07.2026 (`5718915`) wurde daraus die heutige Regel entwickelt.
+  Am 23.07.2026 habe ich beim Review beides übersehen, weil ich nur gegen `main` verglichen
+  habe statt gegen die tatsächliche Feature-History — erst „immer sichtbar mit 0", dann
+  wieder „ganz versteckt". Beides falsch. **Vor Änderungen an bestehendem UI-Verhalten
+  immer `git log --all` auf die betroffene Datei prüfen.**

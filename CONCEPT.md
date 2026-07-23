@@ -1,8 +1,13 @@
 # Glass Kanban für macOS-Erinnerungen — Konzept & Begründung
 
-> **Hinweis:** Der verbindliche, umsetzungsfertige Funktionsumfang steht in [MVP.md](MVP.md),
-> verschobene/abgelehnte Ideen in [BACKLOG.md](BACKLOG.md). Dieses Dokument liefert die
-> Herleitung und Begründung der Entscheidungen — bei Widersprüchen gilt MVP.md.
+> **Hinweis:** Was die App heute tatsächlich tut, steht in [SPEC.md](SPEC.md), verschobene
+> und abgelehnte Ideen in [BACKLOG.md](BACKLOG.md). Dieses Dokument liefert die Herleitung
+> und Begründung der Entscheidungen — bei Widersprüchen gilt SPEC.md.
+>
+> Teile dieses Dokuments beschreiben den Planungsstand vor der Umsetzung (erkennbar an
+> Formulierungen wie „im MVP" oder „bewusst außerhalb des MVP"). Sie bleiben als Begründung
+> stehen, auch wo die App inzwischen weiter ist — die Argumente gelten weiterhin, nur der
+> Umfang hat sich verschoben. Maßgeblich für den Ist-Stand ist immer SPEC.md.
 
 App-Name: **Glass Kanban** — der Name benennt direkt die beiden Kerneigenschaften der App:
 das Liquid-Glass-Design und das Kanban-Prinzip. Inhaltlich bleibt das Buch *Personal Kanban:
@@ -252,19 +257,23 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
 
 **Weitere, an anderer Stelle bereits ausgearbeitete Anwendungen desselben Grundsatzes:**
 
-- **Sensorik & Belohnungsmomente** (Trackpad-Haptik, Settle-Moment beim Erledigen, sich
-  füllende Streak-Flamme nach Goal-Gradient-Effekt, Tages-/Wochenfortschritt nach Endowed
-  Progress/Progress Principle) — volle Herleitung in
-  [design/iteration-2-concept.md](design/iteration-2-concept.md), Punkt 7.
+- **Sensorik & Belohnungsmomente:** Trackpad-Haptik beim Andocken und Ablegen,
+  Settle-Moment beim Erledigen (kurzes Einrasten plus grüner Schimmer), die sich mit dem
+  Tagesfortschritt füllende Streak-Flamme (Goal-Gradient-Effekt), Tages-/Wochenfortschritt
+  im Statistik-Fenster (Endowed Progress/Progress Principle).
 - **Grenze, die sich daraus ergibt:** Bewegung gehört Dingen, die *gerade passiert sind* —
   nie einer stehenden Einladung. Eine Dauer-Animation wird binnen Tagen weggefiltert und
   entwertet dabei die Momente, die sich Aufmerksamkeit verdient haben. Deshalb wurde das
   pulsierende Pull-Signal nach dem Praxistest wieder entfernt: Kanbans Pull-Signal ist der
   freie Platz auf dem Board selbst, kein Effekt darüber.
 - **WIP-Limits:** bewusste, aber vorsichtig eingehegte Anwendung von
-  Selbstverpflichtungs-Psychologie (Reibung statt Verbot, Details in
-  [design/wip-limit-concept.md](design/wip-limit-concept.md)) — dort auch offen benannt, wo
-  das in Spannung zu „belohnen, nie bestrafen" gerät und wie das eingegrenzt wird.
+  Selbstverpflichtungs-Psychologie — **Reibung statt Verbot**. Das Board blockt eine
+  Überschreitung nie (das wäre Bestrafung und würde dem „belohnen, nie bestrafen"-Grundsatz
+  widersprechen), sondern lässt die Karte landen und stellt *danach* genau eine Frage
+  („Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?"), deren bequemste Antworten
+  — Return und Escape — das Limit respektieren. Überschreiten bleibt ein bewusster Klick,
+  kein Kampf. Das Limit läuft sichtbar im Spaltenzähler mit („make policies explicit"),
+  und nur „In Bearbeitung" fragt nach: Kanban begrenzt begonnene Arbeit, nicht Planung.
 
 ## Design-Anspruch
 
@@ -323,15 +332,20 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   zwischen Zusage-Warteschlange und Ablage), trägt das jeweilige UI-Element einen kurzen
   Hover-Tooltip — ein Fragment, kein ganzer Satz, keine separate Anleitung. Wissen entsteht
   im Moment der Berührung, nicht über Onboarding.
+  **Wichtige Abgrenzung (Entscheidung Juli 2026):** Das gilt nur für das *Chrome*
+  (Spaltenkopf, Bedienelemente), das Regeln erklärt — **nie für die Karten selbst**.
+  Tooltips, die auf jedem berührten Ticket Zusatzinfos aufspringen lassen, wurden
+  ausprobiert und als Dauerrauschen wieder entfernt, siehe BACKLOG.md („Explizit
+  abgelehnt"). Dieselbe Entscheidung gilt für Tastaturfokus auf Karten.
 
 **Warum das zur bestehenden Philosophie passt, nicht nur zusätzlich dazu:** Ein
 `.help(...)`-Tooltip ist ein Standard-SwiftUI-Mechanismus, kein Custom-UI — bleibt
 unsichtbar bis zum Hover (Minimalismus: kein Dauertext, kein neues Element, keine
-Onboarding-Fläche), ist rein statischer, in der App gebündelter Text wie die
-täglichen Motivations-Sätze (lokal/offline: keine Server-Anfrage, keine Analyse,
+Onboarding-Fläche), ist rein statischer, in der App gebündelter Text
+(lokal/offline: keine Server-Anfrage, keine Analyse,
 welche Tipps gelesen werden), und fügt sich als natives Systemverhalten unauffällig
 in bestehende Mac-Konventionen ein (native Apple-App statt Custom-Tooling). Konkret
-angewendet z. B. im WIP-Limit-Konzept ([design/wip-limit-concept.md](design/wip-limit-concept.md)).
+angewendet z. B. am Spaltenkopf, dessen Tooltip das WIP-Limit erklärt.
 
 ## Mac-/Apple-spezifische Vertiefung
 

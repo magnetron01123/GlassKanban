@@ -2,7 +2,7 @@ import Foundation
 
 /// Reads and writes the Kanban status hashtag in reminder notes.
 ///
-/// Rules (see MVP.md):
+/// Rules (see SPEC.md):
 /// - Reading: a tag is recognized anywhere in the text, case-insensitively,
 ///   with a word boundary so "#nextlevel" does not count.
 /// - If several tags are present, the one appearing last in the text wins
@@ -69,15 +69,31 @@ enum StatusTagger {
         tagCount(notes) > 0
     }
 
+    /// Whether these notes need a hygiene rewrite: a completed reminder still
+    /// carrying a status tag, several tags at once, or a tag in a legacy
+    /// spelling. Pure, so the rule the sync loop runs on every reminder can be
+    /// tested without EventKit.
+    static func needsHygiene(notes: String?, isCompleted: Bool) -> Bool {
+        (isCompleted && hasStatusTag(notes))
+            || tagCount(notes) > 1
+            || hasLegacyTag(notes)
+    }
+
     /// Returns the notes rewritten for the given status. The user's own text
     /// is preserved; only tags are removed/appended. Returns nil when the
     /// result would be empty (EventKit prefers nil over an empty string).
     static func rewrittenNotes(_ notes: String?, for status: KanbanStatus) -> String? {
-        var text = removingTags(notes ?? "")
-        // Runs of blank lines can appear where a tag-only line was removed.
-        text.replace(#/\n{3,}/#, with: "\n\n")
-        while let last = text.last, last.isWhitespace {
-            text.removeLast()
+        let original = notes ?? ""
+        var text = removingTags(original)
+        // Trailing whitespace is tidied only when this call touches the end of
+        // the text anyway — a tag line came out, or one is about to go on.
+        // An earlier version collapsed every run of blank lines in the whole
+        // note on every single move, which quietly ate the paragraph breaks of
+        // anyone who writes their notes with them.
+        if text != original || status.tag != nil {
+            while let last = text.last, last.isWhitespace {
+                text.removeLast()
+            }
         }
         if let tag = status.tag {
             text = text.isEmpty ? tag : text + "\n" + tag
@@ -86,21 +102,28 @@ enum StatusTagger {
     }
 
     /// Removes all status tags. Only lines that actually contained a tag are
-    /// re-tidied (collapsed double spaces, trimmed) — untouched user lines
-    /// are preserved character-for-character. Also used by `TicketEditSheet`
-    /// to show notes without the hidden hashtag; unlike `TextSanitizer`,
-    /// URLs are left alone since here they're real, editable content.
+    /// re-tidied (collapsed double spaces, trimmed) — untouched user lines are
+    /// preserved character-for-character. A line that held nothing but a tag
+    /// disappears with it instead of leaving a blank line where it stood.
+    /// Also used by `TicketEditSheet` to show notes without the hidden
+    /// hashtag; unlike `TextSanitizer`, URLs are left alone since here
+    /// they're real, editable content.
     static func removingTags(_ text: String) -> String {
-        text.components(separatedBy: "\n")
-            .map { line in
-                var cleaned = line
-                for regex in allTagRegexes {
-                    cleaned.replace(regex, with: "")
-                }
-                guard cleaned != line else { return line }
-                cleaned.replace(#/[ \t]{2,}/#, with: " ")
-                return cleaned.trimmingCharacters(in: .whitespaces)
+        var lines: [String] = []
+        for line in text.components(separatedBy: "\n") {
+            var cleaned = line
+            for regex in allTagRegexes {
+                cleaned.replace(regex, with: "")
             }
-            .joined(separator: "\n")
+            guard cleaned != line else {
+                lines.append(line)
+                continue
+            }
+            cleaned.replace(#/[ \t]{2,}/#, with: " ")
+            cleaned = cleaned.trimmingCharacters(in: .whitespaces)
+            guard !cleaned.isEmpty else { continue }
+            lines.append(cleaned)
+        }
+        return lines.joined(separator: "\n")
     }
 }

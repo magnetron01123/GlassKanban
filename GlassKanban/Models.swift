@@ -195,10 +195,51 @@ struct KanbanCard: Identifiable, Equatable {
     }
 }
 
+/// What is being typed on the board right now — a card's title, or the
+/// new-ticket row at the foot of Backlog.
+///
+/// Board-wide rather than local to the view doing the editing, because ending
+/// an edit is something that happens *elsewhere*: a click on another lane, or
+/// starting a second edit. That click never reaches the view holding the field,
+/// and handing the job to AppKit's responder chain
+/// (`makeFirstResponder(nil)`) did not survive contact with SwiftUI's own
+/// focus handling — the field kept its caret and stayed open.
+enum BoardEdit: Equatable {
+    case renaming(cardID: String)
+    case newTicket
+}
+
+/// Why the whole board is blank. The reasons need different answers, and a
+/// wordless empty window reads as a broken app whichever one it is. Nil while
+/// anything is visible; individual empty lanes stay silent (see
+/// `ColumnView.showsPullSlot`).
+enum BoardEmptiness: Equatable {
+    /// Nothing to show anywhere: no reminders in the chosen lists.
+    case nothingToDo
+    /// There is work, but the current find settings hide all of it.
+    case filteredAway
+    /// Nothing is filtered and yet nothing shows, because everything the board
+    /// holds is a recurring card that is not due yet. Its own case rather than
+    /// a second `filteredAway`: the honest answer is neither "you are done"
+    /// (untrue) nor "reset your filters" (the filters are already at rest —
+    /// the way out is to *widen* the recurring rule, not to reset it).
+    case recurringOnly
+
+    /// Pure, so the three-way decision can be tested without EventKit.
+    static func evaluate(
+        hasVisibleCards: Bool,
+        isFiltering: Bool,
+        recurringHiddenCount: Int
+    ) -> BoardEmptiness? {
+        guard !hasVisibleCards else { return nil }
+        if isFiltering { return .filteredAway }
+        return recurringHiddenCount > 0 ? .recurringOnly : .nothingToDo
+    }
+}
 /// Working copy of a reminder's editable content for `TicketEditSheet`.
 /// `notes` has the status hashtag already stripped — the sheet never shows
 /// or lets the user touch that control token.
-struct EditableTicket {
+struct EditableTicket: Equatable {
     var title: String
     var notes: String
     /// The reminder's URL field, as text.

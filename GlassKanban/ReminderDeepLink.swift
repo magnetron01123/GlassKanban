@@ -26,7 +26,7 @@ enum ReminderDeepLink {
     private static let log = Logger(subsystem: "com.davidtrogemann.GlassKanban", category: "deeplink")
 
     static func url(for reminder: EKReminder) -> URL? {
-        guard let uuid = internalUUIDString(of: reminder) else {
+        guard let uuid = uuidString(fromExternalIdentifier: reminder.calendarItemExternalIdentifier) else {
             log.notice("no internal UUID resolved for \(reminder.calendarItemIdentifier, privacy: .private)")
             return nil
         }
@@ -35,20 +35,26 @@ enum ReminderDeepLink {
         return URL(string: "x-apple-reminderkit://REMCDReminder/\(uuid)/details")
     }
 
-    private static func internalUUIDString(of reminder: EKReminder) -> String? {
-        if let external = reminder.calendarItemExternalIdentifier {
-            if let range = external.range(of: "x-apple-reminder://") {
-                log.notice("resolved via external identifier (prefixed)")
-                return String(external[range.upperBound...])
-            }
-            if UUID(uuidString: external) != nil {
-                log.notice("resolved via external identifier (bare UUID)")
-                return external
-            }
-            // `.private`: this identifies one of the user's reminders, and the
-            // unified log is readable well beyond this app.
-            log.notice("external identifier has unexpected format: \(external, privacy: .private)")
+    /// The two shapes `calendarItemExternalIdentifier` is known to take, and
+    /// nothing else. Split out from the EventKit lookup because this is the
+    /// part that can silently start returning nonsense if Apple changes the
+    /// format — the identifier is undocumented, so what is accepted is worth
+    /// pinning down (and testing) explicitly.
+    static func uuidString(fromExternalIdentifier external: String?) -> String? {
+        guard let external else { return nil }
+        if let range = external.range(of: "x-apple-reminder://") {
+            let uuid = String(external[range.upperBound...])
+            guard !uuid.isEmpty else { return nil }
+            log.notice("resolved via external identifier (prefixed)")
+            return uuid
         }
+        if UUID(uuidString: external) != nil {
+            log.notice("resolved via external identifier (bare UUID)")
+            return external
+        }
+        // `.private`: this identifies one of the user's reminders, and the
+        // unified log is readable well beyond this app.
+        log.notice("external identifier has unexpected format: \(external, privacy: .private)")
         return nil
     }
 }
