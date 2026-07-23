@@ -3,8 +3,13 @@ import SwiftUI
 struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.undoManager) private var undoManager
     @State private var showStreak = false
     @State private var showFind = false
+    /// Keyboard focus lives here rather than in each card, because the arrow
+    /// keys move it *between* lanes — a card cannot hand focus to a sibling it
+    /// knows nothing about.
+    @FocusState private var focusedCardID: String?
 
     var body: some View {
         // Wraps the lanes, not the window: the tooltip has to escape the
@@ -19,7 +24,7 @@ struct BoardView: View {
     private var board: some View {
         HStack(alignment: .top, spacing: Board.columnSpacing) {
             ForEach(KanbanStatus.allCases) { status in
-                ColumnView(status: status)
+                ColumnView(status: status, focusedCardID: $focusedCardID)
             }
         }
         // Four wordless empty lanes read as a broken app. Individual lanes stay
@@ -27,9 +32,10 @@ struct BoardView: View {
         // then exactly one, laid over the lanes rather than inside them.
         .overlay {
             if let emptiness = store.emptiness {
-                EmptyBoardNotice(emptiness: emptiness) {
-                    store.resetFilters()
-                }
+                EmptyBoardNotice(
+                    emptiness: emptiness,
+                    onReset: { store.resetFilters() },
+                    onShowRecurring: { store.showRecurringCards() })
             }
         }
         // Lanes flex between ticket-friendly bounds; the whole block sits
@@ -76,7 +82,7 @@ struct BoardView: View {
             // action is the prominent one, carries Return, and — via the
             // cancel role — Escape too. Overloading takes a deliberate click.
             Button("Erst abschließen", role: .cancel) {
-                store.move(cardID: overflow.cardID, to: overflow.origin)
+                store.move(cardID: overflow.cardID, to: overflow.origin, undoManager: undoManager)
             }
             .keyboardShortcut(.defaultAction)
             // "Passt schon" rather than "Trotzdem": the board does not get to

@@ -10,6 +10,7 @@ import SwiftUI
 /// - minimal (Erledigt): the title alone.
 struct CardView: View {
     let card: KanbanCard
+    @FocusState.Binding var focusedCardID: String?
 
     private var density: CardDensity { card.status.cardDensity }
 
@@ -18,13 +19,17 @@ struct CardView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.undoManager) private var undoManager
 
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
     @State private var settleFlash = false
     @State private var isRenaming = false
     @State private var renameText = ""
-    @FocusState private var isFocused: Bool
+    /// The title the edit started from — the *stored* one, which is not what
+    /// the card displays. Kept so the commit can tell a real change from a
+    /// no-op (see `TicketRename`).
+    @State private var renameOriginal = ""
     @FocusState private var isRenameFieldFocused: Bool
 
     /// Lanes this card can be sent to — everything except where it already is.
@@ -61,11 +66,12 @@ struct CardView: View {
         .animation(reduceMotion ? nil : Board.hoverAnimation, value: store.draggingCardID)
         .contentShape(Board.cardShape)
         .focusable()
-        // The default system ring is what we just removed our own overlay
-        // for — .focusable() draws its own underneath regardless. Keyboard
-        // focus (Tab, then Return to open) still works without it.
+        // The system's own ring is suppressed in favour of the contour below,
+        // which is drawn in the board's own vocabulary. Suppressing it without
+        // replacing it — which is what this did while Tab was the only way to
+        // move focus — leaves the keyboard navigating an invisible cursor.
         .focusEffectDisabled()
-        .focused($isFocused)
+        .focused($focusedCardID, equals: card.id)
         // Return matches what a single click does, so the keyboard path is
         // not a lesser version of the pointer one. Renaming already owns
         // Return — the TextField's own `onSubmit` — so this steps aside.
@@ -73,6 +79,16 @@ struct CardView: View {
             guard !isRenaming else { return .ignored }
             openInReminders()
             return .handled
+        }
+        // Arrow keys walk the board itself, so the keyboard is not stuck with
+        // Tab's single chain through every card in every lane. Focus is held
+        // by the board (see `BoardView.focusedCardID`) because moving left or
+        // right lands on a card this one knows nothing about.
+        .onMoveCommand { direction in
+            guard !isRenaming, let direction = BoardNavigation.Direction(direction) else { return }
+            if let target = store.navigationTarget(from: card.id, direction: direction) {
+                focusedCardID = target
+            }
         }
         .onHover { hovering in
             withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
@@ -96,12 +112,19 @@ struct CardView: View {
             // question fires either way.
             Menu("Verschieben nach") {
                 ForEach(moveTargets) { target in
-                    Button(target.displayName) { store.move(cardID: card.id, to: target) }
+                    Button(target.displayName) {
+                        store.move(cardID: card.id, to: target, undoManager: undoManager)
+                    }
                 }
             }
             Divider()
             Button("Umbenennen") { beginRename() }
-            Button("Löschen", role: .destructive) { store.deleteTicket(cardID: card.id) }
+            // No confirmation sheet: deleting registers an undo, and ⌘Z is
+            // both what a Mac user reaches for and cheaper than a dialog that
+            // taxes every deletion to catch the rare wrong one.
+            Button("Löschen", role: .destructive) {
+                store.deleteTicket(cardID: card.id, undoManager: undoManager)
+            }
         }
         .boardTooltip(helpText)
         .accessibilityElement(children: .combine)
@@ -115,17 +138,23 @@ struct CardView: View {
         .accessibilityActions {
             ForEach(moveTargets) { target in
                 Button("Verschieben nach \(target.displayName)") {
-                    store.move(cardID: card.id, to: target)
+                    store.move(cardID: card.id, to: target, undoManager: undoManager)
                 }
             }
             Button("Umbenennen") { beginRename() }
-            Button("Löschen") { store.deleteTicket(cardID: card.id) }
+            Button("Löschen") { store.deleteTicket(cardID: card.id, undoManager: undoManager) }
         }
         // Losing focus commits, same as clicking away from a Finder rename —
         // Escape (`onExitCommand` on the field itself) is the only way out
         // that discards instead.
         .onChange(of: isRenameFieldFocused) { _, focused in
             if !focused { commitRename() }
+        }
+        // A click on bare board, or an edit starting on another card, ends this
+        // one. Focus alone cannot carry that: the click lands in a view that
+        // has no way to reach this one.
+        .onChange(of: store.activeEdit) { _, edit in
+            if isRenaming, edit != .renaming(cardID: card.id) { commitRename() }
         }
         .onAppear {
             // The completed card appears fresh in Erledigt with the flag
@@ -278,7 +307,10 @@ struct CardView: View {
                 .focused($isRenameFieldFocused)
                 .onAppear { isRenameFieldFocused = true }
                 .onSubmit { commitRename() }
-                .onExitCommand { isRenaming = false }
+                .onExitCommand {
+                    isRenaming = false
+                    endBoardEdit()
+                }
         } else {
             titleText.font(font)
         }
@@ -385,8 +417,18 @@ struct CardView: View {
             : Board.cardFill(colorScheme, isDone: card.status == .done)
     }
 
+    private var isFocused: Bool { focusedCardID == card.id }
+
+    /// The card's edge, and — when it holds keyboard focus — the board's only
+    /// cursor. Accent-coloured and a hair thicker, the same way a lane marks
+    /// itself as a drop target: one visual language for "this is the thing
+    /// you are pointing at", whether the pointer is a mouse or the arrow keys.
     private var contour: some View {
-        Board.cardShape.strokeBorder(Board.cardBorder(contrast))
+        Board.cardShape
+            .strokeBorder(
+                isFocused ? Color.accentColor : Board.cardBorder(contrast),
+                lineWidth: isFocused ? 2 : 1)
+            .animation(reduceMotion ? nil : Board.hoverAnimation, value: isFocused)
     }
 
     /// Light catching the top edge. Only in dark mode: on white paper a white
@@ -511,18 +553,50 @@ struct CardView: View {
         store.openRemindersApp()
     }
 
-    /// Pre-fills with the real title, not `displayTitle` — "Ohne Titel" is a
-    /// placeholder for display, never something to actually type as a title.
+    /// Starts from the title as *stored in Reminders*, not from the one on the
+    /// card. The card shows the sanitized form with URLs stripped, so opening
+    /// the field on `card.title` and letting it commit — which a click
+    /// elsewhere does on its own — would write the stripped text back and
+    /// delete the link for good. ("Ohne Titel" is likewise a display
+    /// placeholder, never something to hand the user to type over.)
     private func beginRename() {
-        renameText = card.title
+        renameOriginal = store.storedTitle(forCardID: card.id) ?? card.title
+        renameText = renameOriginal
         isRenaming = true
+        store.activeEdit = .renaming(cardID: card.id)
     }
 
-    /// Guarded so the focus-loss path (`onChange` above) and a manual Return
-    /// can't both fire for the same edit.
+    /// Guarded so the three paths that can end an edit — Return, focus loss,
+    /// and a click elsewhere on the board — cannot all fire for the same one.
     private func commitRename() {
         guard isRenaming else { return }
         isRenaming = false
-        store.renameTicket(cardID: card.id, title: renameText)
+        endBoardEdit()
+        guard case let .save(title) = TicketRename.outcome(
+            original: renameOriginal, edited: renameText) else { return }
+        store.renameTicket(cardID: card.id, title: title, undoManager: undoManager)
+    }
+
+    /// Only clears the board's edit if it is still ours — another card may
+    /// already have claimed it, which is what ended this one.
+    private func endBoardEdit() {
+        if store.activeEdit == .renaming(cardID: card.id) {
+            store.activeEdit = nil
+        }
+    }
+}
+
+extension BoardNavigation.Direction {
+    /// SwiftUI's own direction type, mapped onto the board's. Kept here rather
+    /// than in `BoardNavigation` so the navigation rules stay free of SwiftUI
+    /// and can be tested on their own.
+    init?(_ direction: MoveCommandDirection) {
+        switch direction {
+        case .up: self = .up
+        case .down: self = .down
+        case .left: self = .left
+        case .right: self = .right
+        @unknown default: return nil
+        }
     }
 }

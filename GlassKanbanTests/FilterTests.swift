@@ -52,10 +52,78 @@ final class FilterTests: XCTestCase {
         XCTAssertFalse(DueFilter.thisWeek.matches(date(2026, 7, 12), calendar: calendar, now: now))
     }
 
+    /// "Diese Woche" compares week-of-year, which repeats every January — so
+    /// without the year being part of the comparison, a card due next New
+    /// Year's Eve would show up in the first week of this one. `isDate(_:
+    /// equalTo:toGranularity: .weekOfYear)` compares the era down to the week,
+    /// so it does not; this pins that down.
+    func testThisWeekDoesNotMatchTheSameWeekInAnotherYear() {
+        let now = date(2026, 1, 7) // Wednesday of week 2, 2026
+        XCTAssertTrue(DueFilter.thisWeek.matches(date(2026, 1, 8), calendar: calendar, now: now))
+        XCTAssertFalse(DueFilter.thisWeek.matches(date(2027, 1, 7), calendar: calendar, now: now))
+        XCTAssertFalse(DueFilter.thisWeek.matches(date(2025, 1, 8), calendar: calendar, now: now))
+    }
+
+    /// Turn of the year inside one week: 2025-12-29 (Mon) to 2026-01-04 (Sun)
+    /// is a single week that spans two years.
+    func testThisWeekSpansTheTurnOfTheYear() {
+        let now = date(2025, 12, 30)
+        XCTAssertTrue(DueFilter.thisWeek.matches(date(2026, 1, 2), calendar: calendar, now: now))
+        XCTAssertFalse(DueFilter.thisWeek.matches(date(2026, 1, 5), calendar: calendar, now: now))
+    }
+
     func testNoDateMatchesOnlyNil() {
         let now = date(2026, 7, 17)
         XCTAssertTrue(DueFilter.noDate.matches(nil, calendar: calendar, now: now))
         XCTAssertFalse(DueFilter.noDate.matches(now, calendar: calendar, now: now))
+    }
+
+    // MARK: - Search
+
+    private func searchCard(title: String, notes: String = "") -> KanbanCard {
+        KanbanCard(
+            id: title,
+            title: title,
+            notesPreview: notes,
+            notesExcerpt: notes,
+            dueDate: nil,
+            priority: 0,
+            status: .backlog,
+            listName: "Test",
+            listColor: .accentColor,
+            completionDate: nil,
+            isRecurring: false,
+            lastModifiedDate: nil)
+    }
+
+    func testEmptySearchMatchesEverything() {
+        let card = searchCard(title: "Steuererklärung")
+        XCTAssertTrue(card.matches(search: ""))
+        XCTAssertTrue(card.matches(search: "   "))
+    }
+
+    func testSearchLooksAtTitleAndNotes() {
+        let card = searchCard(title: "Angebot prüfen", notes: "Rückmeldung an Kollegin")
+        XCTAssertTrue(card.matches(search: "angebot"))
+        XCTAssertTrue(card.matches(search: "kollegin"))
+        XCTAssertFalse(card.matches(search: "rechnung"))
+    }
+
+    /// The same forgiveness the Reminders app itself shows: case and
+    /// diacritics are ignored, so "uber" finds "Überweisung".
+    func testSearchIgnoresCaseAndDiacritics() {
+        let card = searchCard(title: "Überweisung an Müller")
+        XCTAssertTrue(card.matches(search: "uberweisung"))
+        XCTAssertTrue(card.matches(search: "MÜLLER"))
+    }
+
+    /// Every word has to appear somewhere, but not as one contiguous phrase —
+    /// typing the two words you remember should not depend on their order.
+    func testSearchWordsMayAppearInAnyOrderAndAcrossFields() {
+        let card = searchCard(title: "Angebot prüfen", notes: "für das Gartenhaus")
+        XCTAssertTrue(card.matches(search: "prüfen angebot"))
+        XCTAssertTrue(card.matches(search: "angebot gartenhaus"))
+        XCTAssertFalse(card.matches(search: "angebot dachterrasse"))
     }
 
     // MARK: - Recurring (reference "now": Friday, 2026-07-17, week Mon 13 – Sun 19)

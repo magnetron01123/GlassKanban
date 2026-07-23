@@ -30,21 +30,34 @@ enum ReminderDeepLink {
     }
 
     private static func internalUUIDString(of reminder: EKReminder) -> String? {
-        if let external = reminder.calendarItemExternalIdentifier {
-            if let range = external.range(of: "x-apple-reminder://") {
-                log.notice("resolved via external identifier (prefixed)")
-                return String(external[range.upperBound...])
-            }
-            if UUID(uuidString: external) != nil {
-                log.notice("resolved via external identifier (bare UUID)")
-                return external
-            }
-            log.notice("external identifier has unexpected format: \(external, privacy: .public)")
+        if let uuid = uuidString(fromExternalIdentifier: reminder.calendarItemExternalIdentifier) {
+            return uuid
         }
         if let uuid = backingUUID(of: reminder) {
             log.notice("resolved via private backing object")
             return uuid.uuidString
         }
+        return nil
+    }
+
+    /// The two shapes `calendarItemExternalIdentifier` is known to take, and
+    /// nothing else. Split out from the EventKit lookup because this is the
+    /// part that can silently start returning nonsense if Apple changes the
+    /// format — the identifier is not documented, so it is worth pinning down
+    /// exactly what is accepted.
+    static func uuidString(fromExternalIdentifier external: String?) -> String? {
+        guard let external else { return nil }
+        if let range = external.range(of: "x-apple-reminder://") {
+            let uuid = String(external[range.upperBound...])
+            guard !uuid.isEmpty else { return nil }
+            log.notice("resolved via external identifier (prefixed)")
+            return uuid
+        }
+        if UUID(uuidString: external) != nil {
+            log.notice("resolved via external identifier (bare UUID)")
+            return external
+        }
+        log.notice("external identifier has unexpected format: \(external, privacy: .public)")
         return nil
     }
 

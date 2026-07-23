@@ -8,13 +8,22 @@ import AppKit
 final class AppAppearanceTests: XCTestCase {
 
     private var savedValue: Any?
+    private var savedSelection: AppAppearance?
 
     override func setUp() {
         super.setUp()
         savedValue = UserDefaults.standard.object(forKey: AppAppearance.storageKey)
+        savedSelection = AppearanceController.shared.selection
     }
 
+    /// Restores the controller as well as the defaults key. These tests write
+    /// through a shared singleton into the real user defaults — the only way to
+    /// test that assignment persists, but it means the developer's own setting
+    /// is on the line every time the suite runs.
     override func tearDown() {
+        if let savedSelection {
+            AppearanceController.shared.selection = savedSelection
+        }
         if let savedValue {
             UserDefaults.standard.set(savedValue, forKey: AppAppearance.storageKey)
         } else {

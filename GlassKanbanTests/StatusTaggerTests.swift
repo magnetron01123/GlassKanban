@@ -91,6 +91,53 @@ final class StatusTaggerTests: XCTestCase {
         XCTAssertEqual(StatusTagger.rewrittenNotes(notes, for: .backlog), notes)
     }
 
+    /// Blank lines are how people separate paragraphs. An earlier version ran
+    /// a "collapse runs of blank lines" pass over the *whole* note on every
+    /// single move, so dragging a card quietly rewrote text the tag never
+    /// touched — and did it again for every card, every move.
+    func testRewriteKeepsBlankLinesTheUserPutThere() {
+        let notes = "Absatz eins\n\n\nAbsatz zwei"
+        XCTAssertEqual(StatusTagger.rewrittenNotes(notes, for: .backlog), notes)
+        XCTAssertEqual(
+            StatusTagger.rewrittenNotes(notes, for: .next),
+            "Absatz eins\n\n\nAbsatz zwei\n#alsnächstes")
+    }
+
+    /// The tag's own line goes with it, rather than leaving a blank one where
+    /// it stood — that is the tidying the blanket pass was there for.
+    func testRewriteDropsTheLineTheTagOccupied() {
+        XCTAssertEqual(
+            StatusTagger.rewrittenNotes("Notiz\n\n#inbearbeitung", for: .backlog),
+            "Notiz")
+        XCTAssertEqual(
+            StatusTagger.rewrittenNotes("Erste\n#inbearbeitung\nLetzte", for: .backlog),
+            "Erste\nLetzte")
+    }
+
+    /// Writing a tag repeatedly has to land on the same text every time, or
+    /// each save would trigger another change notification and another save.
+    func testRewriteIsIdempotent() {
+        let once = StatusTagger.rewrittenNotes("Notiz", for: .inProgress)
+        XCTAssertEqual(StatusTagger.rewrittenNotes(once, for: .inProgress), once)
+    }
+
+    // MARK: - Hygiene rule
+
+    func testNeedsHygieneOnlyWhenSomethingIsActuallyWrong() {
+        // The normal cases: nothing to clean up.
+        XCTAssertFalse(StatusTagger.needsHygiene(notes: nil, isCompleted: false))
+        XCTAssertFalse(StatusTagger.needsHygiene(notes: "Notiz", isCompleted: false))
+        XCTAssertFalse(StatusTagger.needsHygiene(notes: "Notiz\n#alsnächstes", isCompleted: false))
+        XCTAssertFalse(StatusTagger.needsHygiene(notes: "Notiz", isCompleted: true))
+
+        // Ticked off in Reminders, so the old status line is now stale.
+        XCTAssertTrue(StatusTagger.needsHygiene(notes: "Notiz\n#inbearbeitung", isCompleted: true))
+        // Two tags at once, e.g. one typed by hand on the phone.
+        XCTAssertTrue(StatusTagger.needsHygiene(notes: "#alsnächstes\n#inbearbeitung", isCompleted: false))
+        // Written by an older build.
+        XCTAssertTrue(StatusTagger.needsHygiene(notes: "Notiz\n#progress", isCompleted: false))
+    }
+
     // MARK: - Legacy tag migration (#next/#progress and #nächstes/#bearbeitung)
 
     func testLegacyEnglishTagsAreRecognizedWhenReading() {

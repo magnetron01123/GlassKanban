@@ -60,6 +60,9 @@ targets:
       - path: GlassKanban/TextSanitizer.swift
       - path: GlassKanban/StreakCalculator.swift
       - path: GlassKanban/BacklogTicketTargeting.swift
+      - path: GlassKanban/TicketRename.swift
+      - path: GlassKanban/BoardNavigation.swift
+      - path: GlassKanban/ReminderDeepLink.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanbanTests

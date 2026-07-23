@@ -13,7 +13,7 @@ Begründung, warum später (oder warum grundsätzlich nicht).
 - **Eigene Hashtags aus den Notizen als Tag auf der Karte anzeigen** — wer Erinnerungen schon
   mit eigenen Hashtags kategorisiert (z. B. `#projektx`), sieht die aktuell nur als rohen Text
   in der Notizen-Vorschau, sofern es nicht zufällig der Status-Hashtag ist (der schon
-  herausgefiltert wird, siehe MVP.md). Vorschlag: eigene Hashtags erkennen und als kleine
+  herausgefiltert wird, siehe SPEC.md). Vorschlag: eigene Hashtags erkennen und als kleine
   Tag-Chips auf der Karte anzeigen statt/zusätzlich zur reinen Notizen-Vorschau. Bewusst nicht
   im MVP: Karte soll reduziert bleiben, und Hashtag-Erkennung im Notiztext ist bereits fürs
   interne Status-Tag reserviert — Kollision/Abgrenzung zwischen Status-Hashtag und
@@ -28,11 +28,11 @@ Begründung, warum später (oder warum grundsätzlich nicht).
 
 ## Board-Struktur
 
-- **WIP-Limit für "In Bearbeitung"** — passt thematisch zur Personal-Kanban-Philosophie,
-  aber zusätzlicher Konfigurations- und UI-Aufwand fürs Erst-Release. Gedachte Umsetzung:
-  ab n Karten färbt sich die Zähler-Kapsel der Spalte dezent amber, kein Blocken, kein
-  Text — nur ein leises "zu viel offen". Offene Frage: fester Wert oder in den
-  Einstellungen konfigurierbar.
+- ~~**WIP-Limit für "In Bearbeitung"**~~ — umgesetzt, siehe SPEC.md und
+  [design/wip-limit-concept.md](design/wip-limit-concept.md). Anders als hier gedacht in
+  den Einstellungen konfigurierbar, teal statt amber (amber liegt zu nah an der
+  Dringlichkeitsfarbe), und "In Bearbeitung" fragt beim Überschreiten einmal nach, statt
+  nur die Farbe zu wechseln.
 - **Swimlane-Trennung im Backlog ("Heute-Absatz")** — dringliche Karten (überfällig/heute)
   schwimmen bereits nach oben, gehen aber nahtlos in den Rest über. Eine einzige feine
   Trennlinie unter der letzten dringlichen Karte würde den Backlog in zwei stille Absätze
@@ -68,7 +68,7 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   (Das ↻-Icon auf der Karte, das eine Wiederholung überhaupt erst sichtbar macht, gibt es
   bereits — `CardView.repeatIcon` — hier geht es nur noch um das Verhalten beim Abhaken.)
 - ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt, siehe
-  MVP.md (Filterleiste, Zeile "Wiederkehrende").
+  SPEC.md (Filterleiste, Zeile "Wiederkehrende").
 
 ## Fensterverhalten
 
@@ -98,10 +98,17 @@ nicht möglich)
 
 ## Aufgaben-Bearbeitung in der App
 
-- **Aufgaben anlegen/inhaltlich bearbeiten (Titel, Notizen, Fälligkeit, Priorität) in Glass
-  Kanban** — bewusste Grundsatzentscheidung, nicht nur Zeitmangel: Inhalte werden
-  ausschließlich in der nativen Reminders-App gepflegt, Glass Kanban bleibt überwiegend
-  read-only (einzige Ausnahme: Drag & Drop).
+- **Notizen, Fälligkeit, Priorität und Wiederholung in Glass Kanban bearbeiten** — bleibt
+  bewusste Grundsatzentscheidung, nicht Zeitmangel: Das sind Felder mit eigener UI
+  (Datumsauswahl, Wiederholungsregeln, mehrzeiliger Text), die Reminders bereits gut löst
+  und die das Board zu einem Formular machen würden. Ein Klick auf die Karte öffnet die
+  Aufgabe dort.
+- ~~**Titel anlegen und umbenennen**~~ — umgesetzt (siehe SPEC.md, Abschnitt Interaktion).
+  Bewusste Abweichung von der ursprünglichen Grundsatzentscheidung, weil der Titel der
+  Sonderfall unter den Feldern ist: einzeilig, ohne Formatierung, ohne eigene UI. Der
+  Umweg über die Reminders-App kostete für eine Zeile Text einen App-Wechsel — und in der
+  ersten Umsetzung (leere Erinnerung anlegen, dann rüberspringen) ließ ein Abbruch
+  regelmäßig namenlose Karteileichen zurück.
 
 ## Spätere Apple-/Mac-Ausbaustufen
 
@@ -128,7 +135,7 @@ nicht möglich)
 
 - **Begleitende iOS-App (iPhone + iPad)** — eigene Glass-Kanban-Ansicht auf iPhone/iPad statt
   nur über die native Reminders-App unterwegs Hashtags zu setzen (das funktioniert schon jetzt
-  ohne eigene App, siehe Bonus-Hinweis in MVP.md). Eigenes Xcode-Multiplatform-Target, eigene
+  ohne eigene App, siehe Bonus-Hinweis in SPEC.md). Eigenes Xcode-Multiplatform-Target, eigene
   UI-Anpassung für kleinere Bildschirme/Touch-Bedienung, eigene App-Store-Überlegungen — klare
   Plattformerweiterung nach dem Mac-MVP, nicht Teil davon.
 
@@ -139,3 +146,16 @@ nicht möglich)
   Minimal-Desk-Setup-Vibe der App.
 - **Punkte/Levels/Badges/Bestenlisten** — zu viel Komplexität ohne echten Mehrwert für ein
   Einzelnutzer-Ambient-Board.
+- **Täglich wechselnder Motivationssatz** — war ursprünglich als zweites
+  Motivationselement neben dem Streak-Zähler geplant (~20 lokale Sätze, Auswahl nach
+  Kalendertag) und hat sich in der Praxis als unpraktikabel erwiesen. Ein fest stehender
+  Satz auf einem Board, das den ganzen Tag offen liegt, wird nach zwei Tagen weggefiltert
+  wie eine Bannerwerbung und kostet trotzdem dauerhaft Fläche — dasselbe Muster, das
+  bereits das pulsierende Pull-Signal gekostet hat (siehe CONCEPT.md): Aufmerksamkeit
+  gehört Dingen, die gerade passiert sind, nicht Dauerzuständen. Aus derselben Überlegung
+  ist das Motivierende dorthin gewandert, wo es an ein Ereignis gekoppelt ist: die sich
+  füllende Streak-Flamme und der Settle-Moment beim Erledigen.
+- **Bestätigungsdialog vor dem Löschen** — abgelöst durch Undo (⌘Z). Eine Rückfrage
+  besteuert jede Löschung, um die seltene falsche abzufangen; ein Undo kostet nur die
+  Person etwas, die sich tatsächlich vertan hat, und ist das, wonach ein Mac-Nutzer
+  ohnehin greift.

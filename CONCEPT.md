@@ -1,8 +1,13 @@
 # Glass Kanban für macOS-Erinnerungen — Konzept & Begründung
 
-> **Hinweis:** Der verbindliche, umsetzungsfertige Funktionsumfang steht in [MVP.md](MVP.md),
-> verschobene/abgelehnte Ideen in [BACKLOG.md](BACKLOG.md). Dieses Dokument liefert die
-> Herleitung und Begründung der Entscheidungen — bei Widersprüchen gilt MVP.md.
+> **Hinweis:** Was die App heute tatsächlich tut, steht in [SPEC.md](SPEC.md), verschobene
+> und abgelehnte Ideen in [BACKLOG.md](BACKLOG.md). Dieses Dokument liefert die Herleitung
+> und Begründung der Entscheidungen — bei Widersprüchen gilt SPEC.md.
+>
+> Teile dieses Dokuments beschreiben den Planungsstand vor der Umsetzung (erkennbar an
+> Formulierungen wie „im MVP" oder „bewusst außerhalb des MVP"). Sie bleiben als Begründung
+> stehen, auch wo die App inzwischen weiter ist — die Argumente gelten weiterhin, nur der
+> Umfang hat sich verschoben. Maßgeblich für den Ist-Stand ist immer SPEC.md.
 
 App-Name: **Glass Kanban** — der Name benennt direkt die beiden Kerneigenschaften der App:
 das Liquid-Glass-Design und das Kanban-Prinzip. Inhaltlich bleibt das Buch *Personal Kanban:
