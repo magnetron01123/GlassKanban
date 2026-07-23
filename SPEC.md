@@ -217,9 +217,9 @@ Einblenden).
 
 - **Streak-Zähler:** Tage in Folge mit mindestens einer erledigten Aufgabe, rein lesend aus
   `completionDate` berechnet (Blickfenster: 400 Tage). Die Flamme füllt sich mit dem
-  Tagesfortschritt; Klick öffnet ein Popover mit Wochenstrip und Statistik. Die Pille ist
-  **immer sichtbar**, auch bei Serie 0 — sie ist der einzige Zugang zur Statistik und darf
-  nicht verschwinden, gerade wenn eine Serie gerissen ist (Entscheidung in BACKLOG.md)
+  Tagesfortschritt; Klick öffnet ein Popover mit Wochenstrip und Statistik (heute erledigt,
+  diese Woche, längste Folge). Die Pille erscheint **nur ab Serie 1** — eine „0" neben den
+  Fensterknöpfen sieht kaputt aus. Feste Entscheidung, siehe BACKLOG.md
 - **Kein täglich wechselnder Motivationssatz** — war im ursprünglichen MVP vorgesehen und
   hat sich als unpraktikabel erwiesen (siehe BACKLOG.md)
 - Ausdrücklich **keine** Punkte/Levels/Badges/Bestenlisten

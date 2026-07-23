@@ -173,10 +173,14 @@ nicht möglich)
   einen Klick entfernt in Reminders. Tooltips bleiben dem Chrome vorbehalten
   (Spaltenkopf, „+"-Button), wo sie Regeln erklären statt Inhalte zu doppeln. Die
   Inhalte bleiben für VoiceOver als Label/Hint erhalten.
-- **Streak-Pille bei Serie 0 ausblenden** — so war es eine Zeit lang gebaut („eine 0
-  neben den Fensterknöpfen sieht kaputt aus") und es hat sich als Fehler erwiesen: Die
-  Pille ist der einzige Zugang zum Statistik-Popover (Wochenstrip, heute/diese Woche,
-  längste Folge), und genau nach einem Serienriss verschwand der ganze Zugang — was wie
-  ein gelöschtes Feature wirkt, nicht wie Zurückhaltung. Die Pille ist jetzt immer
-  sichtbar; ein sichtbarer Nullstand ist der ehrlichere Zustand. Ein bekanntes Bedienelement
-  darf nicht situationsabhängig verschwinden.
+- **Streak-Pille dauerhaft anzeigen (auch bei Serie 0)** — abgelehnt. Die Pille erscheint
+  nur, wenn es eine Folge gibt; eine „0" neben den Fensterknöpfen sieht kaputt aus, und
+  mit ihr käme auch der graue Nullzustand des Popovers („Keine Folge", leere Wochenpunkte)
+  aufs Board — genau das visuelle Rauschen, das die Regel verhindert. Ursprünglich
+  entschieden am 18.07.2026 (Commit `90634bc`).
+  **Einmal versehentlich revidiert und wieder zurückgenommen (23.07.2026):** Das Argument
+  war, die Pille sei der einzige Zugang zum Statistik-Popover, das nach einem Serienriss
+  damit unerreichbar wird. Das Argument stimmt sachlich, wiegt aber die Optik nicht auf —
+  und die Entscheidung stand längst. Nicht erneut ändern, ohne dass David es ausdrücklich
+  verlangt. Falls der Zugang bei Serie 0 doch einmal gewünscht ist, gehört er in das
+  Board-Menü (unsichtbar bis zum Öffnen), nicht in die Toolbar.

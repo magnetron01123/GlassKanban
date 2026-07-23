@@ -41,15 +41,20 @@ struct BoardView: View {
         .frame(minWidth: Board.boardMinWidth, minHeight: 560)
         .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
         .toolbar {
-            // Always present, streak or not. An earlier pass hid the pill at
-            // zero ("a 0 next to the window controls looks broken") — but the
-            // pill is also the only door to the statistics popover, so hiding
-            // it removed the week strip and the counts exactly when a run had
-            // just broken. A control the user knows disappearing reads as the
-            // app having lost a feature, not as tact. Decision recorded in
-            // BACKLOG.md: the pill stays.
-            ToolbarItem(placement: .navigation) {
-                streakPill
+            // Only shown once there is a streak — a "0" pill next to the
+            // window controls just looks broken.
+            //
+            // Settled decision (90634bc, July 2026). It was overridden once on
+            // the reasoning that the pill is the only way into the statistics
+            // popover; that reasoning is real but does not outweigh what it
+            // costs, because the state it exposes is the grey zero-state of
+            // both the pill and the popover — precisely what this line exists
+            // to keep off the board. Do not change again without being asked.
+            // See BACKLOG.md, "Explizit abgelehnt".
+            if store.streakStats.current > 0 {
+                ToolbarItem(placement: .navigation) {
+                    streakPill
+                }
             }
             // Two separate glass groups, not one: narrowing the view down and
             // leaving for Reminders are different jobs, and sharing a capsule
