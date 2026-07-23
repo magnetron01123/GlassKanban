@@ -12,6 +12,7 @@ struct ColumnView: View {
     @State private var isTargeted = false
     @State private var expanded = false
     @State private var moreHovered = false
+    @State private var addHovered = false
     /// Height of a real card in this lane, so the drop placeholder can match
     /// it exactly instead of guessing at a constant.
     @State private var cardHeight: CGFloat?
@@ -412,8 +413,22 @@ struct ColumnView: View {
                     .foregroundStyle(.secondary)
                     .frame(width: 35, height: 35)
                     .modifier(AddButtonGlass(reduceTransparency: reduceTransparency, contrast: contrast))
+                    // On hover the button lifts exactly like a card — same
+                    // -1pt rise, same shadow, same animation — so the board
+                    // speaks one depth language: flat at rest beneath the
+                    // paper, and anything you are about to pick up comes to
+                    // the same height. Without this the cards rose on hover
+                    // and the button stayed pinned, which read as broken.
+                    .shadow(
+                        color: Board.cardShadowHover.color.opacity(addHovered ? 1 : 0),
+                        radius: Board.cardShadowHover.radius,
+                        y: Board.cardShadowHover.y)
+                    .offset(y: addHovered && !reduceMotion ? -1 : 0)
             }
             .buttonStyle(.plain)
+            .onHover { hovering in
+                withAnimation(reduceMotion ? nil : Board.hoverAnimation) { addHovered = hovering }
+            }
             .accessibilityLabel("Neue Karte anlegen")
             .boardTooltip("Neue Karte anlegen")
             Spacer()
