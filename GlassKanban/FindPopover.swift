@@ -74,7 +74,10 @@ struct FindPopover: View {
                 .help("Suche löschen")
             }
         }
-        .font(.system(size: 13))
+        // Matches the filter rows directly below it — same popover, same
+        // scale. It sat one point larger before, an inline size that had
+        // drifted from the token rather than a deliberate distinction.
+        .font(BoardText.body)
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
         // Same recessed wash as a chip, but deliberately not `Board.chipShape`:

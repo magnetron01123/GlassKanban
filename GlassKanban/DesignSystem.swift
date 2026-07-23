@@ -287,6 +287,11 @@ enum BoardText {
     /// Field captions in the opened card ("Titel", "Fälligkeit"). Semibold
     /// for the same reason `chip` is: small text that has to stay legible.
     static let editorCaption = Font.system(size: 12, weight: .semibold)
+    /// The one inline symbol at editor scale — the "open in Reminders" corner
+    /// mark beside the 17pt title. `glyph` (9pt) is sized for the 11–12pt
+    /// text elsewhere on the board; scaled to match this larger companion
+    /// the same way, an icon reads smaller than the letterform beside it.
+    static let editorGlyph = Font.system(size: 13, weight: .regular)
 
     /// The streak row — flame, count and "Tage in Folge" — set as one
     /// uniform line rather than a hero number with a caption trailing it.

@@ -182,7 +182,7 @@ struct TicketEditSheet: View {
             onClose()
         } label: {
             Image(systemName: "arrow.up.forward.app")
-                .font(.system(size: 15))
+                .font(BoardText.editorGlyph)
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
