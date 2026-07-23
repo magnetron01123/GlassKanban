@@ -181,11 +181,13 @@ struct ColumnView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            // Secondary, and that is the hierarchy: the header sat at 13pt
-            // semibold in the primary colour while card titles sit at 14pt
-            // semibold in the same colour — one point apart, so the label of
-            // a group competed with the content inside it. Size alone was
-            // never going to carry that distinction; colour does.
+            // Secondary, and that is the hierarchy: the header once sat at
+            // 13pt semibold in the primary colour, one point from the card
+            // titles and in the same colour, so the label of a group competed
+            // with the content inside it. Colour is what settled it. The
+            // titles have since moved to 15pt (see `BoardText`), which widens
+            // the gap as well — but the colour is still what carries it, and
+            // is what the header must keep.
             Text(status.displayName)
                 .font(BoardText.header)
                 .foregroundStyle(.secondary)

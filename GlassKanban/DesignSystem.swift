@@ -31,10 +31,10 @@ enum Board {
     /// Working-lane cards hold this much height even when nearly empty, so
     /// they read as sticky notes with a body instead of flat title bars.
     static let fullCardMinHeight: CGFloat = 118
-    /// One-line rows in the storage lanes: 13pt text plus 9pt padding above
+    /// One-line rows in the storage lanes: 15pt text plus 9pt padding above
     /// and below. Only used for the drop placeholder in an empty lane —
     /// once a lane holds a card, its real height is measured instead.
-    static let compactCardHeight: CGFloat = 34
+    static let compactCardHeight: CGFloat = 38
     /// A card only reports its dwell time once it has lingered this long —
     /// below it, sitting in a column is simply normal.
     static let agingThresholdDays = 3
@@ -234,14 +234,30 @@ enum Board {
 /// at its call site. That is how the lane header and the card title ended up
 /// 13pt and 14pt at the same weight and the same colour — a difference too
 /// small to read as hierarchy, so the two competed instead of ranking.
-/// Separation now comes from weight and colour (see `Board.headerStyle`),
-/// not from a single point of size.
+/// Separation comes from weight and colour (see `ColumnView.header`), not
+/// from a single point of size.
+///
+/// The two card titles below are the same rule applied a second time: one
+/// size, two weights.
 enum BoardText {
+    // One size for every card title, in two weights. 15 rather than the
+    // original 14 for glanceability on a board that is looked at from across
+    // the room — and the same 15 in the storage lanes, because a card that
+    // changes lane is the same card: its name must not resize under the
+    // cursor while it is being dragged. What the lane decides is how much of
+    // a card is shown (notes, dates, dwell time — see
+    // `KanbanStatus.cardDensity`), never how loud its name is.
+    //
+    // Two sizes here meant the title jumped 13 → 15 plus a weight step on
+    // every move, which read as the card being replaced rather than
+    // relocated. Weight alone carries "working lane" now, and the 13pt lane
+    // header sits further from both than it did from either before.
+
     /// Card title in the working lanes — the board's primary content.
-    static let title = Font.system(size: 14, weight: .semibold)
+    static let title = Font.system(size: 15, weight: .semibold)
     /// Card title in the single-line lanes, where a row is a list entry
-    /// rather than a ticket.
-    static let titleCompact = Font.system(size: 13, weight: .medium)
+    /// rather than a ticket. Same size, one weight lighter.
+    static let titleCompact = Font.system(size: 15, weight: .medium)
     /// Lane header. Always paired with the secondary foreground: a header
     /// labels content, it is not content.
     static let header = Font.system(size: 13, weight: .semibold)

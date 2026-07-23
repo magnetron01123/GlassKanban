@@ -252,6 +252,13 @@ Einblenden).
 
 - Liquid Glass auf der Chrome-Ebene (Fensterrücken, Toolbar, Popover); Spalten sind
   eingelassene Mulden, Karten deckendes Papier — siehe CONCEPT.md, Abschnitt Design-Anspruch
+- **Spalten füllen immer die volle Fensterhöhe** — bewusste Entscheidung, siehe BACKLOG.md
+  („Explizit abgelehnt": Spalten enden mit dem Inhalt). Weniger Leerfläche = Fenster kleiner
+  ziehen
+- **Ein Titelmaß für alle Karten: 15pt** — Arbeitsspalten semibold, Backlog und Erledigt
+  medium. Beim Verschieben ändert sich die Titelgröße dadurch nie; was sich ändert, ist der
+  Detailgrad der Karte. Die 15 statt der früheren 14 für Lesbarkeit auf Distanz; der Rest
+  der Skala bleibt unverändert (Spaltenkopf 13pt, sichtbar kleiner als beide Titel)
 - Typografie/Abstände nach Apple HIG (SF Pro), Tokens in `DesignSystem.swift`
 - Bewegung wird für Dinge ausgegeben, die *gerade passiert sind* (Karte rastet in „Erledigt"
   ein), nie für stehende Einladungen
