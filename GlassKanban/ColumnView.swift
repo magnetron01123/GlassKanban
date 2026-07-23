@@ -361,29 +361,19 @@ struct ColumnView: View {
                 }
             } label: {
                 Image(systemName: "plus")
-                    // Sized to the toolbar's own controls (find, streak), not
-                    // to the board's chip scale: this is chrome, and every
-                    // control the user reaches for should read at one size.
-                    .font(.system(size: 14, weight: .semibold))
-                    // `.primary` is the one foreground guaranteed to read in
-                    // both appearances (same reasoning as `Board.columnBorder`).
-                    .foregroundStyle(.primary)
-                    .frame(width: 30, height: 30)
-                    .background {
-                        // Filled with the window's own glass — the same
-                        // material visible in the gaps beside the columns —
-                        // instead of a new surface, so the circle still reads
-                        // as a distinct, tappable button without competing
-                        // with the lane's own recessed fill.
-                        if reduceTransparency {
-                            Circle().fill(Color(nsColor: .windowBackgroundColor))
-                        } else {
-                            HUDGlassMaterial().clipShape(Circle())
-                        }
-                    }
-                    .overlay {
-                        Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1)
-                    }
+                    // A touch larger than the toolbar's controls: this is the
+                    // one creating gesture on the board, and at the foot of a
+                    // lane it has to be found without hunting. Presence through
+                    // size, not colour.
+                    .font(.system(size: 16, weight: .semibold))
+                    // Secondary, not a flat black glyph: on the earlier
+                    // hand-built material the `.primary` plus sat on top of the
+                    // glass instead of in it and read as pasted on. The native
+                    // glass effect below composites the symbol into the surface
+                    // with its own vibrancy, so a softer weight is all it needs.
+                    .foregroundStyle(.secondary)
+                    .frame(width: 35, height: 35)
+                    .modifier(AddButtonGlass(reduceTransparency: reduceTransparency, contrast: contrast))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Neue Karte anlegen")
@@ -458,5 +448,30 @@ struct ColumnView: View {
         reduceTransparency
             ? Color(nsColor: .underPageBackgroundColor)
             : Board.columnFill(colorScheme)
+    }
+}
+
+/// The circular Liquid Glass surface behind the Backlog add button.
+///
+/// The system's own `glassEffect` rather than a hand-assembled material:
+/// it bends and reflects the board behind it and pulls the "+" into the
+/// surface with real vibrancy, where the previous `HUDGlassMaterial` +
+/// stroked border + flat `.primary` glyph only stacked a frosted disc under
+/// a pasted-on symbol. `.interactive()` gives the press and hover reaction
+/// for free. When "Transparenz reduzieren" is on, it degrades to the same
+/// solid disc the rest of the board uses in that mode.
+private struct AddButtonGlass: ViewModifier {
+    let reduceTransparency: Bool
+    let contrast: ColorSchemeContrast
+
+    func body(content: Content) -> some View {
+        if reduceTransparency {
+            content
+                .background { Circle().fill(Color(nsColor: .windowBackgroundColor)) }
+                .overlay { Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1) }
+        } else {
+            content
+                .glassEffect(.regular.interactive(), in: .circle)
+        }
     }
 }
