@@ -543,8 +543,27 @@ final class RemindersStore: ObservableObject {
             && ticket.url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && ticket.dueDate == nil
             && ticket.priority == 0
-        guard isEmpty,
-              let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
+        guard isEmpty else { return }
+        removeNewTicket(cardID: cardID)
+    }
+
+    /// Called instead of `finalizeNewTicket` when the editor was left with
+    /// Escape. Cancelling the edit of a ticket the "+" just made cancels the
+    /// creation itself: whatever was typed was never written (the editor
+    /// skips its save on this route), so the reminder is still the empty
+    /// placeholder creation left behind — it goes, regardless of what stood in
+    /// the fields. For every other card this does nothing: discarding is
+    /// simply not saving, and there is nothing to undo.
+    func cancelNewTicket(cardID: String) {
+        guard newlyCreatedCardID == cardID else { return }
+        newlyCreatedCardID = nil
+        removeNewTicket(cardID: cardID)
+    }
+
+    /// Takes back a creation, silently and with no undo entry — there is
+    /// nothing to restore that the user ever put in.
+    private func removeNewTicket(cardID: String) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         try? eventStore.remove(reminder, commit: true)
         cards.removeAll { $0.id == cardID }
         scheduleRefresh()

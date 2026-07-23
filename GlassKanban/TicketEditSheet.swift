@@ -11,28 +11,26 @@ import AppKit
 /// something is typed, which left the user guessing what a filled field
 /// actually meant; a caption stays.
 ///
-/// No Sichern/Abbrechen — like Reminders.app's own quick-look popover, every
-/// change is live and closing is what persists it (`save()` runs in
-/// `.onDisappear`, regardless of how it closes).
+/// No Sichern/Abbrechen *buttons* — like Reminders.app's own quick-look
+/// popover, every change is live and closing is what persists it (`save()`
+/// runs in `.onDisappear`). The two answers a card can be given are on the
+/// keyboard instead, in the words the board already uses for its inline
+/// rename: **Return übernimmt, Escape verwirft.** A click on the board behind
+/// it counts as Return — putting the note back on the wall keeps what is
+/// written on it.
+///
+/// Escape is what this editor was missing rather than a convenience: a card
+/// opened by accident, typed into by accident, had no way back at all.
+/// Cancelling a ticket the "+" has just made cancels the creation with it
+/// (`RemindersStore.cancelNewTicket`) — nothing typed here was ever written,
+/// so there is nothing to keep.
 ///
 /// Presented by the board, centred, over a dimmed backdrop (see
 /// `BoardView.editorOverlay`) — not anchored to the card that opened it. An
 /// anchored panel put its own position at the mercy of where that card
 /// happened to sit: a ticket near the top pushed it over the title bar, one
 /// in the last lane pushed it off to the side. Centred, it is in the same
-/// place every time. A click on the backdrop closes it, as do "Fertig" and
-/// Return.
-///
-/// **Escape does not close it, and that is a known defect.** AppKit gives the
-/// title field first responder as the editor opens, and a focused
-/// NSTextField consumes the key for its own "abort editing" instead of
-/// letting it travel up. Measured, not assumed: Return reaches "Fertig" from
-/// the same focused field, so key equivalents do arrive — Escape specifically
-/// is eaten. `.onExitCommand`, a local `NSEvent` monitor, a hidden button
-/// carrying `.keyboardShortcut(.cancelAction)`, and removing
-/// `FirstResponderNeutralizer` altogether were all tried against the previous
-/// popover presentation and all failed; the last of those rules the
-/// neutralizer out as the cause.
+/// place every time.
 struct TicketEditSheet: View {
     let card: KanbanCard
 
@@ -63,6 +61,11 @@ struct TicketEditSheet: View {
     /// without it, an instant close-before-load would overwrite the reminder
     /// with blank fields.
     @State private var isLoaded = false
+    /// Escape was pressed: this close discards instead of saving. Read in
+    /// `.onDisappear` the same way `opensRemindersOnClose` is — the close
+    /// runs an animation out, so the decision has to survive until the view
+    /// is actually gone.
+    @State private var isCancelled = false
     /// What was loaded, verbatim — the reference a close compares against.
     /// Without it every glance at a card wrote every field back on close,
     /// which bumped `lastModifiedDate` (resetting the card's dwell-time
@@ -121,8 +124,24 @@ struct TicketEditSheet: View {
         // rather than landing — silently, permanently, this editor has no
         // Cancel — in the title field.
         .background(FirstResponderNeutralizer())
+        // Return and Escape, for whichever field is being typed in — or none.
+        // Switched off while the date popover is up: that is a window of its
+        // own, and both keys belong to it while it stands.
+        .background(
+            EditorKeyCommands(
+                isEnabled: !isDuePopoverPresented,
+                onCommit: onClose,
+                onCancel: cancel))
         .task { load() }
         .onDisappear {
+            // Escape: write nothing, and take back a creation that was
+            // cancelled rather than finished. Everything the fields hold is
+            // still local state at this point — discarding is literally not
+            // saving, which is why there is nothing else to undo here.
+            if isCancelled {
+                store.cancelNewTicket(cardID: card.id)
+                return
+            }
             save()
             if opensRemindersOnClose {
                 store.openInReminders(cardID: card.id)
@@ -133,6 +152,14 @@ struct TicketEditSheet: View {
             // the user is clearly on the way to fill it in over there.
             store.finalizeNewTicket(cardID: card.id, keep: opensRemindersOnClose)
         }
+    }
+
+    /// Escape: mark the close as a discard, then close on the same path
+    /// everything else does, so the card goes back with the same animation
+    /// whichever answer it was given.
+    private func cancel() {
+        isCancelled = true
+        onClose()
     }
 
     /// The card carries no buttons.
@@ -146,7 +173,7 @@ struct TicketEditSheet: View {
     /// a real ticket carries its reference number.
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: Board.editorCaptionSpacing) {
                 fieldCaption("Titel")
                 // Empty placeholder: the caption above already names the
                 // field, and a second "Titel" inside it just said the same
@@ -191,7 +218,7 @@ struct TicketEditSheet: View {
     }
 
     private var notesZone: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: Board.editorCaptionSpacing) {
             fieldCaption("Notizen")
             // A `TextEditor`, not a vertical-axis `TextField`.
             //
@@ -246,7 +273,7 @@ struct TicketEditSheet: View {
     /// sharing the notes' zone left the two reading as one block whose
     /// second half happened to be labelled.
     private var urlZone: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: Board.editorCaptionSpacing) {
             fieldCaption("URL")
             TextField("", text: $url)
                 .font(BoardText.editorBody)
@@ -618,22 +645,138 @@ private extension View {
     }
 }
 
+/// The opened card's two keyboard answers: Return keeps what is written,
+/// Escape throws it away.
+///
+/// A local key monitor rather than SwiftUI's own `.onSubmit`,
+/// `.onExitCommand` or a hidden `.keyboardShortcut(.cancelAction)` button.
+/// All three are delivered through whatever holds first responder, and a
+/// focused `NSTextField` is edited through the window's field editor, which
+/// takes Escape for its own "abort editing" and passes nothing on: all three
+/// were tried against this editor's earlier popover presentation and all
+/// three failed there. A monitor does not ask the responder chain — it sees
+/// the key event before the window is handed it at all, which is the one
+/// place both keys are reachable whichever field, or no field at all (see
+/// `FirstResponderNeutralizer`), has focus.
+///
+/// A monitor stood on that list of failures too, and the guard below is the
+/// likeliest reason why: a popover is a window of its own, so key events
+/// aimed at it never match the *board's* window. The editor is an overlay
+/// inside the board's window now, and does match.
+///
+/// That guard is deliberately narrow, because a local monitor is otherwise
+/// app-wide: only events aimed at this view's own window are touched, so the
+/// date popover, an open picker menu and the settings window all keep their
+/// own Return and Escape.
+private struct EditorKeyCommands: NSViewRepresentable {
+    /// False while the card has a popover of its own open.
+    var isEnabled: Bool
+    var onCommit: () -> Void
+    var onCancel: () -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = MonitoringView()
+        apply(to: view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        guard let view = nsView as? MonitoringView else { return }
+        apply(to: view)
+    }
+
+    private func apply(to view: MonitoringView) {
+        view.isEnabled = isEnabled
+        view.onCommit = onCommit
+        view.onCancel = onCancel
+    }
+
+    final class MonitoringView: NSView {
+        var isEnabled = true
+        var onCommit: () -> Void = {}
+        var onCancel: () -> Void = {}
+        private var monitor: Any?
+        /// Set the moment this card has been given its answer.
+        ///
+        /// A closed card takes a third of a second to animate off the board
+        /// and is still in the window — this monitor with it — for all of it.
+        /// Without this, a Return and an Escape typed fast one after the
+        /// other would let the second overturn the first: the edit was
+        /// already confirmed, and Escape would still throw it away, taking a
+        /// just-created ticket with it. First answer wins.
+        private var hasAnswered = false
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard window != nil else { return removeMonitor() }
+            guard monitor == nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard let self else { return event }
+                return self.handle(event)
+            }
+        }
+
+        deinit { removeMonitor() }
+
+        private func removeMonitor() {
+            monitor.map(NSEvent.removeMonitor)
+            monitor = nil
+        }
+
+        /// Returns nil to swallow the key, the event itself to let it travel
+        /// on to whatever would normally receive it. Which of the two it is
+        /// comes from `EditorKeyCommand`; this view only supplies the state
+        /// that question needs and carries out the answer.
+        private func handle(_ event: NSEvent) -> NSEvent? {
+            guard isEnabled, !hasAnswered, let window, event.window === window else { return event }
+            let command = EditorKeyCommand.forKey(
+                code: event.keyCode,
+                holdsCommand: event.modifierFlags.contains(.command),
+                isEditingMultilineText: Self.isEditingMultilineText(in: window))
+            switch command {
+            case .commit:
+                hasAnswered = true
+                onCommit()
+                return nil
+            case .cancel:
+                hasAnswered = true
+                onCancel()
+                return nil
+            case .passThrough:
+                return event
+            }
+        }
+
+        /// True while the notes field has the cursor.
+        ///
+        /// A focused `TextField` is edited through the window's *field
+        /// editor*, which is an `NSTextView` as well; `isFieldEditor` is what
+        /// tells the one-line fields apart from the real multi-line one.
+        private static func isEditingMultilineText(in window: NSWindow) -> Bool {
+            guard let textView = window.firstResponder as? NSTextView else { return false }
+            return !textView.isFieldEditor
+        }
+    }
+}
+
 /// A zero-size view whose only job is to take first responder away from
 /// whatever AppKit assigned it by default, the moment its window has one.
 /// `viewDidMoveToWindow` is not late enough by itself — the window can still
 /// be in the middle of becoming key — so `didBecomeKeyNotification` backs it
 /// up.
 ///
+/// The keys are `EditorKeyCommands`' business, not this view's: a local
+/// monitor sees them before the responder chain does, so nothing here can
+/// take Return or Escape away. What is left is this view's actual job —
+/// keeping a stray keystroke from landing in the title of a card that was
+/// only opened to be read.
+///
 /// Targets `window.contentView` (the SwiftUI hosting view), not the window
-/// itself: an earlier version handed responder status to the window
-/// directly, which did stop stray characters from landing in the title
-/// field, but also silently broke Escape-to-dismiss — the sheet's own
-/// cancel handling apparently routes through the hosting view, and a bare
-/// `NSWindow` first responder doesn't forward into it. The hosting view is
-/// the neutral default this sheet would already have if AppKit didn't treat
-/// a fresh sheet's first text field as a special case; restoring that
-/// default, rather than replacing it with something else entirely, is what
-/// keeps Escape and Return both working.
+/// itself. The hosting view is the neutral default this editor would already
+/// have if AppKit didn't treat a freshly presented panel's first text field
+/// as a special case; restoring that default is a smaller intervention than
+/// parking responder status on the window, which took it out of the SwiftUI
+/// hierarchy altogether and broke view-level key handling with it.
 private struct FirstResponderNeutralizer: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         NeutralizingView()

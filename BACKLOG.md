@@ -103,6 +103,17 @@ nicht möglich)
   Drag & Drop" ist damit bewusst und schrittweise revidiert worden — erst der Titel
   (einzeilig, ohne eigene UI), dann die restlichen Felder, als der Umweg über die
   Reminders-App für jede Kleinigkeit einen App-Wechsel kostete.
+- ~~**Return/Escape im Karten-Editor**~~ — **umgesetzt** (23.07.2026). Der Editor hatte
+  keine Cancel-Geste: Escape wurde vom fokussierten Textfeld für sein eigenes „Bearbeitung
+  abbrechen" geschluckt, und geschlossen wurde nur per Klick aufs Board — was speichert. Wer
+  eine Karte versehentlich öffnete und hineintippte, kam nicht mehr heraus, ohne den Tippfehler
+  zu speichern. Jetzt gilt im Editor dieselbe Regel wie beim Umbenennen: **Return übernimmt,
+  Escape verwirft**, bei einer Neuanlage bricht Escape die Anlage ganz ab. Umgesetzt über
+  einen lokalen Key-Monitor (`EditorKeyCommands`), der die Taste sieht, bevor die
+  Responder-Kette sie bekommt; die Entscheidung selbst liegt testbar in `EditorKeyCommand`.
+  Bewusst *nicht* gewählt: eine Rückfrage „Änderungen verwerfen?" — sie wäre der einzige
+  modale Dialog des Boards, für einen Verlust, der bis zum Schließen ohnehin nur lokaler
+  Formularzustand ist.
 - **Wiederholungsregeln bearbeiten** — bleibt draußen: eigene, komplexe UI
   (täglich/wöchentlich/benutzerdefiniert…), die Reminders bereits gut löst. Der ↗-Knopf im
   Editor führt genau dafür in die native App.
