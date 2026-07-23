@@ -7,13 +7,19 @@ import SwiftUI
 /// like a failure rather than a state. One line, no icon, no explanation —
 /// same register as the empty slot's "Fertig werden beginnt hier".
 ///
-/// It sits on paper, not on nothing. Laid bare over the lanes, the sentence
-/// landed wherever the board's centre happened to be — usually straddling the
-/// gap between two lanes, half over a recessed well and half over window
-/// glass, with a tinted link floating beneath it. That reads as text which
-/// lost its container, not as the board speaking. This board's own vocabulary
-/// for "something is written here" is a paper note, so the notice takes one:
-/// the same fill, contour and shadow a card gets, in the place cards would be.
+/// It gets a surface, and that surface is glass. Laid bare over the lanes the
+/// sentence landed on whatever was behind the board's middle — usually
+/// straddling the gap between two lanes, half over a recessed well and half
+/// over window glass, reading as text that had lost its container.
+///
+/// Glass, not the paper a card is made of: this is the board *saying*
+/// something about its own state, not a ticket. Paper is the content plane
+/// and belongs to things that hold work; a transient message floating above
+/// the lanes is chrome, and chrome is where Liquid Glass lives. It therefore
+/// borrows the tooltip's treatment wholesale — same material, same shape
+/// family, same lifted shadow pair, same hairline — because a tooltip is the
+/// one thing in this app that already answers "a panel the board puts in
+/// front of its own content, briefly".
 struct EmptyBoardNotice: View {
     let emptiness: BoardEmptiness
     let onReset: () -> Void
@@ -45,44 +51,75 @@ struct EmptyBoardNotice: View {
                     .font(BoardText.body)
             }
         }
-        .padding(.horizontal, 28)
-        .padding(.vertical, 22)
-        .background { Board.cardShape.fill(paper) }
-        .overlay { Board.cardShape.strokeBorder(Board.cardBorder(contrast)) }
-        // Both card shadows, so the note sits at the same height above the
-        // lanes as a real one does — the depth order stays readable.
+        .padding(.horizontal, 26)
+        .padding(.vertical, 20)
+        .background { surface }
+        .overlay { edge }
+        .overlay { topHighlight }
+        // The tooltip's shadow pair: a tight contact shadow to keep the edge
+        // readable wherever it lands, and a wide ambient one that says the
+        // panel is floating above the board rather than lying on it.
         .shadow(
-            color: Board.cardShadowResting.color,
-            radius: Board.cardShadowResting.radius,
-            y: Board.cardShadowResting.y)
+            color: Board.tooltipShadowContact.color,
+            radius: Board.tooltipShadowContact.radius,
+            y: Board.tooltipShadowContact.y)
         .shadow(
-            color: Board.cardShadowAmbient.color,
-            radius: Board.cardShadowAmbient.radius,
-            y: Board.cardShadowAmbient.y)
+            color: Board.tooltipShadowAmbient.color,
+            radius: Board.tooltipShadowAmbient.radius,
+            y: Board.tooltipShadowAmbient.y)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // The lanes stay visible behind it: the board never disappears, it
         // just has nothing on it right now.
         .allowsHitTesting(action != nil)
     }
 
-    /// The same opaque paper a card is made of — see `CardView.cardFill` for
-    /// why translucency is wrong on this plane.
-    private var paper: Color {
-        reduceTransparency
-            ? Color(nsColor: .controlBackgroundColor)
-            : Board.cardFill(colorScheme)
+    @ViewBuilder
+    private var surface: some View {
+        if reduceTransparency {
+            Board.tooltipShape.fill(Color(nsColor: .controlBackgroundColor))
+        } else {
+            // `.withinWindow`: this floats above the board's own content, so
+            // it frosts the lanes behind it rather than punching through to
+            // the desktop.
+            HUDGlassMaterial(blending: .withinWindow)
+                .clipShape(Board.tooltipShape)
+        }
     }
 
-    /// All three lines carry the comma rhythm the board already uses in the WIP
-    /// dialog ("Weniger gleichzeitig, mehr fertig"), and each names a payoff
-    /// rather than describing a lack: an empty board is the point of the
-    /// method, an empty search result is not lost data, and a board holding
-    /// nothing but future chores is a quiet day rather than a broken app.
+    /// Half a point, like the tooltip's — at this scale a full hairline is
+    /// what makes a glass panel read as a bordered box.
+    private var edge: some View {
+        Board.tooltipShape
+            .strokeBorder(Board.cardBorder(contrast), lineWidth: 0.5)
+    }
+
+    /// The lit top edge every glass surface here carries, dark mode only:
+    /// on a light surface a white highlight is invisible and pure render cost.
+    @ViewBuilder
+    private var topHighlight: some View {
+        if colorScheme == .dark {
+            Board.tooltipShape
+                .strokeBorder(
+                    LinearGradient(colors: [Board.cardTopHighlight, .clear], startPoint: .top, endPoint: .center),
+                    lineWidth: 1)
+                .blendMode(.plusLighter)
+                .allowsHitTesting(false)
+        }
+    }
+
+    /// Plain statements of what is the case.
+    ///
+    /// These were three comma-rhythm phrases that each turned the state into
+    /// a small consolation ("Kein Treffer, nichts verloren"). Read once they
+    /// are charming; met every time the board runs dry they are a wink from
+    /// software that was asked to be quiet, and the second half of each one
+    /// says nothing the first half did not. A calm app is allowed to simply
+    /// name the state and stop.
     private var line: String {
         switch emptiness {
-        case .nothingToDo: "Board leer, Kopf frei"
-        case .filteredAway: "Kein Treffer, nichts verloren"
-        case .recurringOnly: "Nichts fällig, Wiederkehrendes wartet"
+        case .nothingToDo: "Nichts zu tun"
+        case .filteredAway: "Keine Treffer"
+        case .recurringOnly: "Nichts fällig"
         }
     }
 
