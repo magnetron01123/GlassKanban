@@ -14,6 +14,7 @@
 		1903C02128FB6F5CEF1379DD /* EditorKeyCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A5342367B7E44D3B673B801 /* EditorKeyCommandTests.swift */; };
 		1ABE592DFEEBDBCBD8A4CCAC /* ColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC1A968F6964BFEE0832A01A /* ColumnView.swift */; };
 		1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */; };
+		1C935DD642D093603F984D32 /* DoneWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F5E78BBEDCE103828E3C64 /* DoneWindowTests.swift */; };
 		1E7F6ED58D7DBA4FB4175DE6 /* AppAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885796666D14CA49747DB258 /* AppAppearance.swift */; };
 		262B9D2A64B3478DC0B7D42F /* BoardTooltip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */; };
 		3A14FF729609BD536B4851BE /* BoardEmptinessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CE58D9AEFF55A2F7A8F53B /* BoardEmptinessTests.swift */; };
@@ -82,6 +83,7 @@
 		9A5342367B7E44D3B673B801 /* EditorKeyCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorKeyCommandTests.swift; sourceTree = "<group>"; };
 		9AD1B4A61352C1461953925D /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklogTicketTargeting.swift; sourceTree = "<group>"; };
+		B1F5E78BBEDCE103828E3C64 /* DoneWindowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoneWindowTests.swift; sourceTree = "<group>"; };
 		BD0CD245EE900300AA1B6709 /* FindPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindPopover.swift; sourceTree = "<group>"; };
 		C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassKanbanApp.swift; sourceTree = "<group>"; };
 		C48CB5158B3D021C846E9BDE /* AppAppearanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearanceTests.swift; sourceTree = "<group>"; };
@@ -121,6 +123,7 @@
 				D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */,
 				D7CE58D9AEFF55A2F7A8F53B /* BoardEmptinessTests.swift */,
 				DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */,
+				B1F5E78BBEDCE103828E3C64 /* DoneWindowTests.swift */,
 				9A5342367B7E44D3B673B801 /* EditorKeyCommandTests.swift */,
 				4F5178AE744F393F737442A5 /* FilterTests.swift */,
 				57D665E92128A470288652C9 /* ReminderDeepLinkTests.swift */,
@@ -304,6 +307,7 @@
 				73526449E43A7458F4BA2C81 /* BacklogTicketTargeting.swift in Sources */,
 				3A14FF729609BD536B4851BE /* BoardEmptinessTests.swift in Sources */,
 				D5D9047BF7E12AD928F47F76 /* CardSortingTests.swift in Sources */,
+				1C935DD642D093603F984D32 /* DoneWindowTests.swift in Sources */,
 				3B0C7B14654C8CB9B6C8E973 /* EditorKeyCommand.swift in Sources */,
 				1903C02128FB6F5CEF1379DD /* EditorKeyCommandTests.swift in Sources */,
 				875104CDC32ECDEB5C2494F0 /* FilterTests.swift in Sources */,

@@ -198,8 +198,15 @@ frühestes Fälligkeitsdatum (Karten ohne Datum zuletzt) → Titel. Der Titel al
 Kriterium sorgt dafür, dass die Reihenfolge zwischen zwei Refreshes nicht springt.
 „Erledigt" sortiert nach Erledigt-Datum, neueste zuerst.
 
-**Erledigt zeigt die letzten 14 Tage.** Lang genug, dass die Arbeit einer Woche als Nachweis
-stehen bleibt, kurz genug, dass die Spalte kein Archiv wird.
+**Erledigt zeigt die letzten 7 Tage** — die Arbeit einer Woche als Nachweis, kein Archiv.
+Liegen ältere erledigte Karten vor, steht unter der Spalte „N ältere anzeigen" (dasselbe
+Muster wie beim Backlog): ein Klick holt **die letzten 30 Tage** zurück, für die laufende
+Sitzung. Bewusst begrenzt statt „alles laden" — eine Liste, die kurz genug zum Überfliegen
+bleibt, braucht keine Datums-Überschriften, Gruppen oder eigene Archiv-Ansicht. Alles
+Ältere liegt in der Reminders-App, dem eigentlichen Speicher; darauf weist der
+Spalten-Tooltip im aufgeklappten Zustand hin. Die Zähler-Kapsel benennt immer die
+angezeigte Menge und wächst beim Aufklappen mit; was sie ausblendet, meldet der Tooltip
+(„N ältere Karten") — dieselbe Regel wie bei den wiederkehrenden Karten.
 
 ## Finden (Suche + Filter)
 

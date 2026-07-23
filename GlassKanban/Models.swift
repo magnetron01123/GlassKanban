@@ -195,6 +195,45 @@ struct KanbanCard: Identifiable, Equatable {
     }
 }
 
+/// The Erledigt lane's two time horizons. At rest the lane shows the last
+/// `recentDays` — a week of work standing as evidence, not an archive. One
+/// click ("N ältere anzeigen") widens it to `keptDays`, and that is where it
+/// ends: anything older is the Reminders app's job, which is the actual
+/// store of record and already has search and completion dates. Bounding the
+/// look back is what lets the lane stay a flat, headingless stack — a list
+/// short enough to scan needs no structure.
+enum DoneWindow {
+    /// Days shown at rest: today plus the previous seven full days.
+    static let recentDays = 7
+    /// Days one click can bring back.
+    static let keptDays = 30
+
+    /// Start of the resting window.
+    static func recentCutoff(calendar: Calendar = .current, now: Date = .now) -> Date {
+        cutoff(days: recentDays, calendar: calendar, now: now)
+    }
+
+    /// Start of the widened window; also how far back `RemindersStore`
+    /// builds cards for completed reminders at all.
+    static func keptCutoff(calendar: Calendar = .current, now: Date = .now) -> Date {
+        cutoff(days: keptDays, calendar: calendar, now: now)
+    }
+
+    /// The cards the lane shows at rest.
+    static func recent(
+        _ cards: [KanbanCard],
+        calendar: Calendar = .current,
+        now: Date = .now
+    ) -> [KanbanCard] {
+        let cutoff = recentCutoff(calendar: calendar, now: now)
+        return cards.filter { ($0.completionDate ?? .distantPast) >= cutoff }
+    }
+
+    private static func cutoff(days: Int, calendar: Calendar, now: Date) -> Date {
+        calendar.date(byAdding: .day, value: -days, to: calendar.startOfDay(for: now))!
+    }
+}
+
 /// What is being typed on the board right now — a card's title, or the
 /// new-ticket row at the foot of Backlog.
 ///

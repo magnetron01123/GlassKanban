@@ -18,12 +18,21 @@ struct ColumnView: View {
     private var cards: [KanbanCard] { store.cards(for: status) }
     private var singleLine: Bool { status.cardDensity.isSingleLine }
 
-    /// Backlog can be huge, so it shows a capped stack with "N weitere".
+    /// The two stack lanes fold away what the resting board does not need:
+    /// Backlog caps a huge pile at a count, Erledigt rests at the last week
+    /// and brings back a month on request (see `DoneWindow`). Same gesture,
+    /// different cut — one is "there is more of the same", the other is
+    /// "there is a past".
     private var displayedCards: [KanbanCard] {
-        guard status == .backlog, !expanded, cards.count > Board.backlogCollapsedLimit else {
+        guard !expanded else { return cards }
+        switch status {
+        case .backlog where cards.count > Board.backlogCollapsedLimit:
+            return Array(cards.prefix(Board.backlogCollapsedLimit))
+        case .done:
+            return DoneWindow.recent(cards)
+        default:
             return cards
         }
-        return Array(cards.prefix(Board.backlogCollapsedLimit))
     }
 
     private var hiddenCount: Int { cards.count - displayedCards.count }
@@ -133,7 +142,7 @@ struct ColumnView: View {
             }
             .mask(scrollFade)
 
-            if status == .backlog, hiddenCount > 0, !expanded {
+            if hiddenCount > 0, !expanded {
                 moreButton
             }
         }
@@ -236,13 +245,21 @@ struct ColumnView: View {
     private var wipLimit: Int? { store.wipLimit(for: status) }
     private var isOverLimit: Bool { wipLimit.map { cards.count > $0 } ?? false }
 
+    /// What the capsule counts. Erledigt's membership is defined by its time
+    /// window, so the capsule states what the lane shows and grows when the
+    /// look back opens. Backlog's cap is a pure display crop — every card is
+    /// genuinely in the lane — so its count stays the full pile.
+    private var shownCount: Int {
+        status == .done ? displayedCards.count : cards.count
+    }
+
     /// The rule belongs on the board, not just in Settings ("make policies
     /// explicit"), so the limit rides along in the count itself.
     private var countLabel: String {
         if let wipLimit {
             return "\(cards.count) / \(wipLimit)"
         }
-        return "\(cards.count)"
+        return "\(shownCount)"
     }
 
     /// One shape for all four lanes: a lead line stating what the lane holds,
@@ -259,7 +276,7 @@ struct ColumnView: View {
 
     /// Every lane opens the same way, so the four read as one family.
     private var countSummary: String {
-        guard let wipLimit else { return "\(cards.count) Karten" }
+        guard let wipLimit else { return "\(shownCount) Karten" }
         return "\(cards.count) von \(wipLimit) Karten"
     }
 
@@ -267,6 +284,17 @@ struct ColumnView: View {
         var details: [String] = []
         if status == .done, todayCount > 0 {
             details.append("\(todayCount) heute erledigt")
+        }
+        // Same reasoning as `recurringHint`: a lane that shows less than it
+        // could must be able to say so. Once the look back is open, the one
+        // thing still missing lives in the Reminders app — named here, at
+        // the exact moment someone is digging for it.
+        if status == .done {
+            if !expanded, hiddenCount > 0 {
+                details.append("\(hiddenCount) ältere Karten")
+            } else if expanded {
+                details.append("Älteres liegt in Erinnerungen")
+            }
         }
         if isOverLimit {
             details.append("Limit überschritten")
@@ -400,7 +428,12 @@ struct ColumnView: View {
             // gating on Reduce Motion.
             withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded = true }
         } label: {
-            Text("\(hiddenCount) weitere anzeigen")
+            // "weitere" for Backlog (more of the same pile), "ältere" for
+            // Erledigt (a look into the past) — the word carries what the
+            // click will do.
+            Text(status == .done
+                ? "\(hiddenCount) ältere anzeigen"
+                : "\(hiddenCount) weitere anzeigen")
                 .font(BoardText.meta)
                 // One weight up from meta's regular: the only clickable line
                 // at this scale, and it has to read as a link, not as the

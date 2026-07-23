@@ -137,10 +137,6 @@ final class RemindersStore: ObservableObject {
     private static let wipLimitsKey = "wipLimits"
     private static let hideRecurringKey = "hideRecurringUntilDue"
 
-    /// Completed reminders are shown in "Erledigt" for this many days. Long
-    /// enough that a week's work stays visible as evidence, short enough that
-    /// the lane never becomes an archive nobody reads.
-    private static let doneWindowDays = 14
     /// How far back completions are fetched for the streak calculation. A
     /// streak longer than this would be reported short — deliberately far
     /// beyond any plausible run for a personal board, and the cost of asking
@@ -366,8 +362,9 @@ final class RemindersStore: ObservableObject {
         streakStats = StreakCalculator.stats(completionDates: completionRecords.map(\.date))
         wrappedStats = WrappedStats.stats(records: completionRecords)
 
-        let doneWindowStart = calendar.date(
-            byAdding: .day, value: -Self.doneWindowDays, to: calendar.startOfDay(for: .now))!
+        // Cards exist for the widened window; the lane itself rests at the
+        // last week and only shows the rest on request (see `DoneWindow`).
+        let doneWindowStart = DoneWindow.keptCutoff(calendar: calendar)
         let visibleCompleted = completed.filter { ($0.completionDate ?? .distantPast) >= doneWindowStart }
 
         let refreshed = (incomplete + visibleCompleted).compactMap(Self.card(from:))
