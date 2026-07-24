@@ -321,7 +321,17 @@ Einblenden).
     Transit + Marge), bis Reflow und Einfaden gelandet sind — erst ankommen, dann
     reagieren. Ohne diese Phase spielte das Wackeln mitten im Einfaden, eine Belohnung im
     Flug für eine Ankunft, die sichtbar noch nicht passiert war
-  - **Settle-Animationen:** Erledigen = Squish + grüner Blitz (bestand schon); Pull nach
+  - **Settle-Animationen:** Erledigen = Squish + **gezogener Durchstrich**: Die Karte
+    drückt sich kurz ins Papier, und während sie zurückfedert, zieht sich die
+    Durchstreich-Linie in ~0,5 s von links nach rechts über den Titel — der Stift, der die
+    Aufgabe abhakt. Ersetzt den früheren grünen Blitz (Juli 2026): Der Blitz war eine
+    Farbfläche *über* dem Papier — genau die Art Farbwäsche, die Karten auf diesem Board
+    nie tragen —, der Strich ist die Abschlussgeste *im* Inhalt, dasselbe Zeichen, das die
+    Karte ohnehin für immer trägt, nur beim Entstehen beobachtet. Technisch ist der
+    Durchstrich erledigter Karten deshalb eine vom Board gezeichnete Linie
+    (`CardView.strikeLine`), kein `Text.strikethrough` — auf ruhenden Karten von der
+    Textauszeichnung nicht zu unterscheiden, bei „Bewegung reduzieren" steht er sofort
+    vollständig; Pull nach
     „In Bearbeitung" = **kurzes Wackeln mit Pop**: die Karte platzt eine Spur zu groß
     herein (Scale-Pop ~1,08 nach *oben*) und eine locker gedämpfte Feder schwingt einen
     ~4°-Kipp ein paarmal durch die Null zurück — sie „zappelt vor Tatendrang" in ihren
@@ -340,8 +350,8 @@ Einblenden).
     `CardView.playSettleIfFlagged`): Start- und Zielwert einer Animation im selben
     Runloop-Tick zu setzen lässt SwiftUI beide zu einer Transaktion verschmelzen — der
     Startwert wird nie gerendert und es passiert sichtbar nichts; der Startzustand muss
-    erst einen Frame stehen. Ohne Farbe — der Farbmoment bleibt dem Fertigwerden
-    vorbehalten. Nur lokale Pulls
+    erst einen Frame stehen. Ohne Durchstrich — die Abschlussgeste bleibt dem
+    Fertigwerden vorbehalten. Nur lokale Pulls
   - **Flammen-Nicken:** die Toolbar-Flamme macht bei jeder erledigten Aufgabe einen kleinen
     Bounce (auch wenn sich ihr Füllstand nicht ändert) — die kleinstmögliche Quittung, dass
     das Board es gesehen hat. Alles respektiert „Bewegung reduzieren"
