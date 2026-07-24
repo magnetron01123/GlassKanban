@@ -299,51 +299,35 @@ struct TicketEditSheet: View {
     /// the board speaks one vocabulary throughout.
     private var factsZone: some View {
         VStack(spacing: 8) {
+            // The creation date leads because the zone's own order demands
+            // it: rows run from the most stable property to the most
+            // volatile, and this one never changes at all. Leading also
+            // parks it as far as possible from "Fälligkeit", so the card's
+            // two dates can never read as one stacked pair.
+            //
+            // It is here because the open lanes sort by age (see
+            // `KanbanCard.openLaneOrder`): a card's position carries a rule
+            // the board never spells out, and Kanban's "make policies
+            // explicit" asks that such a rule be findable — the same reason
+            // the WIP limit rides along in the lane counter. The editor is
+            // where it costs nothing: the ambient board stays untouched.
+            if let created = card.creationDate {
+                factRow("Angelegt") {
+                    // Bare secondary text where the other rows carry
+                    // controls: no bezel, no chevron — the stillness is
+                    // what says "fact, not setting". The row itself is the
+                    // shape Finder's own info panel gives an uneditable
+                    // date sitting among editable fields.
+                    Text(created.formatted(date: .long, time: .omitted))
+                        .font(BoardText.editorBody)
+                        .foregroundStyle(.secondary)
+                }
+            }
             factRow("Liste") { listControl }
             factRow("Dringlichkeit") { priorityControl }
             factRow("Fälligkeit") { dueDateControl }
-            createdFootnote
         }
         .padding(EdgeInsets(top: 14, leading: Board.openCardInset, bottom: 16, trailing: Board.openCardInset))
-    }
-
-    /// When this ticket was made — the one fact on the card nobody can edit.
-    ///
-    /// It is here because the open lanes now sort by age (see
-    /// `KanbanCard.openLaneOrder`): a card's position carries a rule the
-    /// board never spells out, and Kanban's "make policies explicit" asks
-    /// that such a rule be findable — the same reason the WIP limit rides
-    /// along in the lane counter. The editor is where it costs nothing,
-    /// because the ambient board stays untouched.
-    ///
-    /// Deliberately *not* a fourth `factRow`: those are controls, and every
-    /// one of them can be changed. This is a footnote to them — inside the
-    /// same zone (a fourth hairline would break the card's three-zone
-    /// anatomy), set in `meta` rather than a caption weight, and one step
-    /// quieter in colour, exactly like the "Seit …" note under the stats
-    /// window's ranked group.
-    ///
-    /// Silent on a ticket made today: the board's standing rule is that a
-    /// signal appears only when it has something to report — the dwell-time
-    /// chip waits for `agingThresholdDays`, the recurring hint for a hidden
-    /// card — and "created today" is not news on a card just made with "+".
-    @ViewBuilder
-    private var createdFootnote: some View {
-        if let created = card.creationDate, !Calendar.current.isDateInToday(created) {
-            Text("Angelegt am \(created.formatted(date: .long, time: .omitted))")
-                .font(BoardText.meta)
-                // Tertiary is already near the contrast floor; under Increase
-                // Contrast it steps up rather than being the first thing to
-                // disappear for the people who asked for more of it.
-                .foregroundStyle(contrast == .increased
-                    ? AnyShapeStyle(.secondary)
-                    : AnyShapeStyle(.tertiary))
-                // The rows above are full-width HStacks; this one is not, so
-                // it states its own alignment rather than inheriting the
-                // stack's centring.
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 2)
-        }
     }
 
     private func factRow<Control: View>(
