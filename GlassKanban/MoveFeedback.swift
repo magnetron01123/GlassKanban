@@ -27,11 +27,23 @@ import AppKit
 ///   "Tink" was tried and read as a warning, not a reward. This one is two
 ///   soft glass notes a fifth apart, rising, because rising says done-and-
 ///   good where a single percussive hit says look-here.
+/// Every physical channel lives here, in one file — the drop used to carry
+/// its own second `.levelChange` from an older `Haptics` helper on top of
+/// this one's, which knocked twice for one landing. Not gated behind Reduce
+/// Motion: haptics are physical feedback, not visual animation, matching how
+/// the system itself (Finder, sliders) behaves.
 enum MoveFeedback {
 
     /// Quiet enough to read as the board itself, not as a notification.
     /// The sample is already mastered soft; this trims it into ambience.
     private static let volume: Float = 0.6
+
+    /// The drag crossing into a lane that would accept it — an affordance
+    /// tick while the card is still in the hand, distinct from the landing
+    /// feedback below.
+    static func dragEnteredTarget() {
+        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+    }
 
     static func play(completed: Bool, pulled: Bool = false, soundEnabled: Bool) {
         NSHapticFeedbackManager.defaultPerformer.perform(

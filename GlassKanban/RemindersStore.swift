@@ -484,13 +484,20 @@ final class RemindersStore: ObservableObject {
     /// Moves a card to another column. Returns the column it came from if
     /// anything actually changed, so the UI can give feedback (haptics) only
     /// on a real move — and can offer to put the card back.
+    ///
+    /// `feedback` is false only when the move replays through undo/redo:
+    /// sound and haptics belong to the hand on the card, not to ⌘Z — an
+    /// undone completion chiming like a fresh one read as the board
+    /// celebrating a correction. The *visual* settles stay either way: they
+    /// mark where the card went, which is wayfinding, and remote moves get
+    /// them too.
     @discardableResult
-    func move(cardID: String, to status: KanbanStatus, undoManager: UndoManager? = nil) -> KanbanStatus? {
+    func move(cardID: String, to status: KanbanStatus, undoManager: UndoManager? = nil, feedback: Bool = true) -> KanbanStatus? {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
         guard origin != status else { return nil }
         register(undoManager, name: "Verschieben") { store in
-            store.move(cardID: cardID, to: origin, undoManager: undoManager)
+            store.move(cardID: cardID, to: origin, undoManager: undoManager, feedback: false)
         }
 
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
@@ -515,13 +522,16 @@ final class RemindersStore: ObservableObject {
             flagRecentlyPulled([cardID])
         }
         // Feedback lives here, at the single point every route into a move
-        // converges — drag & drop, context menu, VoiceOver action, undo —
-        // because a reward that only fires for mouse users is as broken as
-        // a limit that only applies to them (see `pendingOverflow` above).
-        MoveFeedback.play(
-            completed: status == .done,
-            pulled: status == .inProgress,
-            soundEnabled: completionSoundEnabled)
+        // converges — drag & drop, context menu, VoiceOver action — because
+        // a reward that only fires for mouse users is as broken as a limit
+        // that only applies to them (see `pendingOverflow` above). Undo and
+        // redo pass through this same point silently (see `feedback` above).
+        if feedback {
+            MoveFeedback.play(
+                completed: status == .done,
+                pulled: status == .inProgress,
+                soundEnabled: completionSoundEnabled)
+        }
         // Asked after the move, never before it: the board does not block a
         // drop, it lets the work land and then offers to put it back.
         if status.asksBeforeExceedingLimit, isOverWIPLimit(status) {

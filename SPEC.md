@@ -295,7 +295,14 @@ Einblenden).
     EventKit-Abfrage, keine eigene Speicherung. Der Meilenstein ist die eine bewusste
     Lockerung der „keine Badges"-Regel: nur ein Moment, nie dauerhaft (siehe CONCEPT.md)
 - **Sensorisches Feedback beim Verschieben** (`MoveFeedback`, alles am einen `move()`-Pfad,
-  damit Maus, Kontextmenü, VoiceOver und Undo gleich behandelt werden):
+  damit Maus, Kontextmenü und VoiceOver gleich behandelt werden; sämtliche physischen
+  Kanäle — auch der Affordanz-Tick beim Überfahren einer Ziel-Lane — wohnen in dieser einen
+  Datei, nachdem ein älterer `Haptics`-Helfer am Drop-Pfad jede Landung doppelt klopfen
+  ließ):
+  - **Undo/Redo bleibt stumm:** Klang und Haptik gehören der Hand auf der Karte, nicht ⌘Z —
+    ein rückgängig gemachtes Erledigen, das wie ein frisches klingt, feiert eine Korrektur.
+    Die *visuellen* Settles bleiben auch bei Undo/Redo: Sie zeigen, wohin die Karte ging
+    (Wegweiser), und Remote-Änderungen bekommen sie ebenso
   - **Haptik** bei jedem echten Spaltenwechsel (Trackpad; `.alignment`, beim Erledigen
     `.levelChange`) — das Einrasten der Karte unter dem Finger. Der Pull nach „In
     Bearbeitung" ist ein schneller **Doppel-Tick** (zweimal `.alignment`, 80 ms Abstand):
@@ -320,7 +327,11 @@ Einblenden).
     nirgends nutzt (Karten skalieren, faden, verschieben sich — nichts kippt je), also kann
     das Wackeln nicht von der Einfüge-Transition der Lane geschluckt werden — zwei rein
     skalierungsbasierte Vorgänger gingen genau darin unter (eine Landung von oben mit
-    Schatten wurde gebaut und als unpassend verworfen). Technische Lehre dahinter (siehe
+    Schatten wurde gebaut und als unpassend verworfen). „In Bearbeitung" und „Erledigt"
+    sind deshalb von der generischen Einfüge-Transition der Lanes (Scale 0,93 + Fade)
+    ausgenommen und faden nur: Wer ein eigenes Settle spielt, bekommt keinen zweiten Scale
+    darunter — beim Pull zogen Einfüge-Scale (aufwärts) und Pop (abwärts) sogar
+    gegeneinander. Technische Lehre dahinter (siehe
     `CardView.playSettleIfFlagged`): Start- und Zielwert einer Animation im selben
     Runloop-Tick zu setzen lässt SwiftUI beide zu einer Transaktion verschmelzen — der
     Startwert wird nie gerendert und es passiert sichtbar nichts; der Startzustand muss

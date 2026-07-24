@@ -126,11 +126,15 @@ struct ColumnView: View {
                             // A card arriving in a lane settles into place
                             // instead of blinking on: it grows the last few
                             // percent into the shape this lane gives it.
-                            // Erledigt is the exception — a completed card
-                            // plays its own settle animation, and running both
-                            // scales at once made the arrival stutter.
+                            // Erledigt and In Bearbeitung are the exceptions,
+                            // both for the same reason: a card arriving there
+                            // plays its own settle (the completion squish, the
+                            // pull shake-and-pop), and a second scale running
+                            // underneath it made the arrival stutter — for the
+                            // pull, the generic scale-in and the pop even pull
+                            // in opposite directions and partly cancel.
                             .transition(.asymmetric(
-                                insertion: status == .done
+                                insertion: status == .done || status == .inProgress
                                     ? .opacity
                                     : .scale(scale: 0.93).combined(with: .opacity),
                                 removal: .opacity))
@@ -182,13 +186,14 @@ struct ColumnView: View {
             guard let id = ids.first else { return false }
             // A drop destination has to answer synchronously, so the move
             // always goes through first and the WIP question — raised by the
-            // store, for every move route — follows it.
-            guard store.move(cardID: id, to: status, undoManager: undoManager) != nil else { return false }
-            Haptics.drop()
-            return true
+            // store, for every move route — follows it. No haptic here: the
+            // move itself answers the hand (see `MoveFeedback`, inside
+            // `move`), and a second thud from the drop site on top of it
+            // was a double knock for one landing.
+            return store.move(cardID: id, to: status, undoManager: undoManager) != nil
         } isTargeted: { targeted in
             // No tick for the lane the card came from — nothing snaps there.
-            if targeted && !isTargeted && !isDragSource { Haptics.alignmentTick() }
+            if targeted && !isTargeted && !isDragSource { MoveFeedback.dragEnteredTarget() }
             isTargeted = targeted
         }
         // A lane that empties must forget its last card's height, or the

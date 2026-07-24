@@ -332,16 +332,3 @@ enum BoardText {
     static let tooltipLead = Font(tooltipLeadFont)
     static let tooltipDetail = Font(tooltipDetailFont)
 }
-
-/// Subtle trackpad haptics — a sensory reward for moving and completing work.
-/// Not gated behind Reduce Motion: these are physical feedback, not visual
-/// animation, and match how the system itself (Finder, sliders) behaves.
-enum Haptics {
-    static func alignmentTick() {
-        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
-    }
-
-    static func drop() {
-        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
-    }
-}
