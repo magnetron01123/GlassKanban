@@ -26,7 +26,10 @@ import AppKit
 ///   /System/Library/Sounds doubles as an *alert* somewhere on macOS —
 ///   "Tink" was tried and read as a warning, not a reward. This one is two
 ///   soft glass notes a fifth apart, rising, because rising says done-and-
-///   good where a single percussive hit says look-here.
+///   good where a single percussive hit says look-here. Its length (~0.44s)
+///   is matched to the completion gesture on screen — once the board's
+///   motion was quickened, a longer chime trailed the card after it had
+///   already settled.
 /// Every physical channel lives here, in one file — the drop used to carry
 /// its own second `.levelChange` from an older `Haptics` helper on top of
 /// this one's, which knocked twice for one landing. Not gated behind Reduce
