@@ -202,10 +202,15 @@ struct StatsPopover: View {
                     // of things right now — what is done today, what is open,
                     // how long that will take. A year's total is a look back,
                     // and the tab next door is called exactly that.
+                    // The law is named in the tooltip, not the row: the
+                    // board's rule is that chrome explains its quiet Kanban
+                    // rules on hover (see CONCEPT.md, Hover-Tipps), and
+                    // "Little's Law" in a row label would be jargon standing
+                    // where an answer belongs.
                     if let days = forecastDays {
                         row("Bis fertig",
                             Self.daysEstimate(days),
-                            help: "Schätzung: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten \(WrappedStats.trendWindowDays) Tage.")
+                            help: "Little’s Law: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten \(WrappedStats.trendWindowDays) Tage — eine Schätzung, kein Versprechen.")
                     }
                 }
             }
@@ -378,12 +383,12 @@ struct StatsPopover: View {
                     if let weekly = weeklyThroughput {
                         row("Pro Woche",
                             Self.tasks(weekly),
-                            help: "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten \(WrappedStats.trendWindowDays) Tage.")
+                            help: "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten \(WrappedStats.trendWindowDays) Tage — das Tempo in Little’s Law.")
                     }
                     if let lead = wrapped.medianLeadTimeDays {
                         row("Durchlaufzeit",
                             Self.daysEstimate(lead),
-                            help: "Median von „angelegt“ bis „erledigt“ bei einmaligen Aufgaben der letzten \(WrappedStats.trendWindowDays) Tage.")
+                            help: "Median von „angelegt“ bis „erledigt“ bei einmaligen Aufgaben der letzten \(WrappedStats.trendWindowDays) Tage — mit Auslastung und Tempo die dritte Größe in Little’s Law.")
                     }
                 }
             }

@@ -505,23 +505,35 @@ struct CardView: View {
     /// an animation snapped the card 6% instantly before the spring took over,
     /// which read as a glitch rather than a reward.
     ///
-    /// A pull into "In Bearbeitung" gets the same settle at half depth and
-    /// without the flash: starting work is a commitment worth feeling — the
-    /// card snaps into the slot the empty lane promised — but the colour
-    /// moment stays reserved for finishing. Two events, one motion language,
-    /// two volumes.
+    /// A pull into "In Bearbeitung" snaps instead: the card starts small and
+    /// springs to size with a visible overshoot — the click of a ticket
+    /// dropping into the slot the empty lane promised. It cannot reuse the
+    /// completion's squish-first shape, and not for taste reasons: every
+    /// card *arriving* in a lane already plays the lane's insertion
+    /// transition (a 0.93 scale-in, see `ColumnView`), and a 3% squish on
+    /// top of that vanished inside it — measured on the real board, not
+    /// guessed. Starting visibly *under* the insertion scale and riding the
+    /// bouncy spring is what makes the pull read at all. No flash: the
+    /// colour moment stays reserved for finishing.
     private func playSettleIfFlagged() {
         guard !reduceMotion else { return }
         let completed = store.recentlyCompletedIDs.contains(card.id)
         guard completed || store.recentlyPulledIDs.contains(card.id) else { return }
         Task { @MainActor in
-            withAnimation(.easeOut(duration: 0.09)) {
-                settleScale = completed ? 0.94 : 0.97
-                settleFlash = completed
+            if completed {
+                withAnimation(.easeOut(duration: 0.09)) {
+                    settleScale = 0.94
+                    settleFlash = true
+                }
+                try? await Task.sleep(for: .milliseconds(90))
+                withAnimation(Board.settleAnimation) { settleScale = 1 }
+                withAnimation(.easeOut(duration: 0.55)) { settleFlash = false }
+            } else {
+                // Instant, not animated: the view is appearing this frame,
+                // so there is nothing on screen yet to snap visibly.
+                settleScale = 0.90
+                withAnimation(Board.settleAnimation) { settleScale = 1 }
             }
-            try? await Task.sleep(for: .milliseconds(90))
-            withAnimation(Board.settleAnimation) { settleScale = 1 }
-            withAnimation(.easeOut(duration: 0.55)) { settleFlash = false }
         }
     }
 

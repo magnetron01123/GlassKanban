@@ -34,6 +34,7 @@
 		877D22FD67BA79DE7C4C65F1 /* HUDGlassMaterial.swift in Sources */ = {isa = PBXBuildFile; fileRef = EABE4A8869EFB12034A075AB /* HUDGlassMaterial.swift */; };
 		87F6C7D48E963E894A84F46C /* WrappedStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E1A9343D54C7091C20BBDE /* WrappedStats.swift */; };
 		8935EE20B247C64B80C071A6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BD228B20A88109D18DAA5 /* Models.swift */; };
+		90DAC564A495A35F79208319 /* CompletionChime.wav in Resources */ = {isa = PBXBuildFile; fileRef = 67AD6D2BADC416DFB80C4A38 /* CompletionChime.wav */; };
 		9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD1B4A61352C1461953925D /* BoardView.swift */; };
 		9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
 		9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
@@ -76,6 +77,7 @@
 		61E1A9343D54C7091C20BBDE /* WrappedStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrappedStats.swift; sourceTree = "<group>"; };
 		61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculator.swift; sourceTree = "<group>"; };
 		63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardTooltip.swift; sourceTree = "<group>"; };
+		67AD6D2BADC416DFB80C4A38 /* CompletionChime.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = CompletionChime.wav; sourceTree = "<group>"; };
 		6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassKanban.entitlements; sourceTree = "<group>"; };
 		73CAB35E9902F258F00D82A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyBoardNotice.swift; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 				9AD1B4A61352C1461953925D /* BoardView.swift */,
 				E363E5F11832E63EE2539D70 /* CardView.swift */,
 				EC1A968F6964BFEE0832A01A /* ColumnView.swift */,
+				67AD6D2BADC416DFB80C4A38 /* CompletionChime.wav */,
 				EE77523ACBD14B219E0031C5 /* ContentView.swift */,
 				F5DCA4E02A36CF7D719EC339 /* DesignSystem.swift */,
 				11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */,
@@ -262,6 +265,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */,
+				90DAC564A495A35F79208319 /* CompletionChime.wav in Resources */,
 				C7D82269F67091F5AE0E8870 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

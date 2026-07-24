@@ -278,8 +278,11 @@ Einblenden).
     **Durchlaufzeit** (Median von „angelegt" bis „erledigt", nur einmalige Aufgaben, nur
     Erledigungen der letzten 30 Tage). Zusammen mit „In Bearbeitung" im anderen Register
     stehen damit alle drei Größen von Little's Law im Fenster — die Prognose ist
-    nachrechenbar statt Orakel. Darunter die Rangliste (bester Tag, stärkster Wochentag,
-    häufigste Liste) über die ganze Historie, mit „Seit …"-Fußnote
+    nachrechenbar statt Orakel. **Little's Law wird in den Hover-Tipps beim Namen genannt**
+    (an „Bis fertig", „Pro Woche" und „Durchlaufzeit"): das Chrome erklärt seine stillen
+    Kanban-Regeln beim Überfahren, im Zeilen-Label wäre der Name Jargon. Darunter die
+    Rangliste (bester Tag, stärkster Wochentag, häufigste Liste) über die ganze Historie,
+    mit „Seit …"-Fußnote
   - **Durchlaufzeit bewusst gefenstert und ohne Wiederkehrer:** erledigte Instanzen
     wiederkehrender Erinnerungen tragen in EventKit das Anlegedatum der *Serie* (ggf. Jahre
     alt) und keine `hasRecurrenceRules` mehr — erkannt werden sie über den Titel der noch
@@ -293,12 +296,20 @@ Einblenden).
   damit Maus, Kontextmenü, VoiceOver und Undo gleich behandelt werden):
   - **Haptik** bei jedem echten Spaltenwechsel (Trackpad; `.alignment`, beim Erledigen
     `.levelChange`) — das Einrasten der Karte unter dem Finger
-  - **Leiser Ton beim Erledigen** („Tink", Lautstärke 0,3) — abschaltbar in den
-    Einstellungen („Ton beim Erledigen", Standard: an). Nur beim Erledigen, nie bei anderen
-    Moves: Fertigwerden ist der eine Moment, den Personal Kanban feiert
+  - **Leiser Klang beim Erledigen** — ein eigener, für die App synthetisierter Zweiklang
+    (`CompletionChime.wav`: zwei weiche Glastöne, aufsteigende Quinte F#5→C#6). Bewusst
+    **kein Systemklang**: jeder Klang aus /System/Library/Sounds dient irgendwo in macOS
+    als Warn-/Hinweiston („Tink" wurde probiert und las sich als Warnung, nicht als
+    Belohnung); Aufsteigen sagt „geschafft", ein einzelner Schlag sagt „schau her".
+    Abschaltbar in den Einstellungen („Ton beim Erledigen", Standard: an). Nur beim
+    Erledigen, nie bei anderen Moves: Fertigwerden ist der eine Moment, den Personal
+    Kanban feiert. Fehlt die Ressource, bleibt es still — kein Rückfall auf Systemklänge
   - **Settle-Animationen:** Erledigen = Squish + grüner Blitz (bestand schon); Pull nach
-    „In Bearbeitung" = derselbe Squish in halber Tiefe, ohne Farbe — Anfangen ist spürbar,
-    aber der Farbmoment bleibt dem Fertigwerden vorbehalten. Nur lokale Pulls
+    „In Bearbeitung" = **Snap**: die Karte startet sichtbar klein und federt mit Overshoot
+    auf ihre Größe — das Einrasten im versprochenen Slot. Kein halber Squish: jede in einer
+    Lane ankommende Karte spielt ohnehin die Einfüge-Transition (Scale 0,93), ein leiser
+    Squish darüber verschwand darin (am echten Board gemessen). Ohne Farbe — der Farbmoment
+    bleibt dem Fertigwerden vorbehalten. Nur lokale Pulls
   - **Flammen-Nicken:** die Toolbar-Flamme macht bei jeder erledigten Aufgabe einen kleinen
     Bounce (auch wenn sich ihr Füllstand nicht ändert) — die kleinstmögliche Quittung, dass
     das Board es gesehen hat. Alles respektiert „Bewegung reduzieren"

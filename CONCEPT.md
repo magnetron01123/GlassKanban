@@ -265,9 +265,11 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
 
 - **Sensorik & Belohnungsmomente:** Trackpad-Haptik bei jedem echten Spaltenwechsel
   (beim Erledigen eine Stufe kräftiger), Settle-Moment beim Erledigen (kurzes Einrasten
-  plus grüner Schimmer) und in halber Tiefe ohne Farbe beim Pull nach „In Bearbeitung" —
+  plus grüner Schimmer) und ein farbloser Einrast-Snap beim Pull nach „In Bearbeitung" —
   Anfangen ist spürbar, der Farbmoment bleibt dem Fertigwerden vorbehalten. Dazu ein
-  leiser Ton beim Erledigen (abschaltbar, Einstellungen), ein kleines Nicken der
+  leiser, eigener Erledigt-Klang (aufsteigende Quinte — Aufsteigen sagt „geschafft";
+  bewusst kein Systemklang, die dienen in macOS als Warntöne; abschaltbar in den
+  Einstellungen), ein kleines Nicken der
   Toolbar-Flamme bei jeder erledigten Aufgabe, die sich mit dem Tagesfortschritt füllende
   Streak-Flamme (Goal-Gradient-Effekt), Tages-/Wochenfortschritt im Statistik-Fenster
   (Endowed Progress/Progress Principle). Leitplanke: Belohnungen bleiben klein und sicher —

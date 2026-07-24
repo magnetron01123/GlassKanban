@@ -18,18 +18,25 @@ import AppKit
 ///   same vocabulary macOS itself uses for "something latched".
 /// - **Sound** only on completion, and only if Settings allows it. Completion
 ///   is the one moment Personal Kanban actually celebrates; a tick on every
-///   move would turn the board into an instrument. "Tink" at low volume is a
-///   glass sound for a glass app — short, bright, gone.
+///   move would turn the board into an instrument. The chime is the app's
+///   own (`CompletionChime.wav`), not a system sound: every sound in
+///   /System/Library/Sounds doubles as an *alert* somewhere on macOS —
+///   "Tink" was tried and read as a warning, not a reward. This one is two
+///   soft glass notes a fifth apart, rising, because rising says done-and-
+///   good where a single percussive hit says look-here.
 enum MoveFeedback {
 
     /// Quiet enough to read as the board itself, not as a notification.
-    private static let volume: Float = 0.3
+    /// The sample is already mastered soft; this trims it into ambience.
+    private static let volume: Float = 0.6
 
     static func play(completed: Bool, soundEnabled: Bool) {
         NSHapticFeedbackManager.defaultPerformer.perform(
             completed ? .levelChange : .alignment,
             performanceTime: .default)
-        guard completed, soundEnabled, let sound = NSSound(named: "Tink") else { return }
+        // No fallback to a system sound if the resource is missing: silence
+        // is closer to the design than an alert noise would be.
+        guard completed, soundEnabled, let sound = NSSound(named: "CompletionChime") else { return }
         sound.volume = volume
         sound.play()
     }
