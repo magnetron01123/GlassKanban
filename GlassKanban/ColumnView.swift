@@ -161,7 +161,25 @@ struct ColumnView: View {
             // below is the board's own "there is more" signal, and scrolling
             // itself is untouched.
             .scrollIndicators(.never)
-            .mask(scrollFade)
+            // "In Bearbeitung" alone gets headroom: the pull shake pops and
+            // tilts the top card a few points past its own row, and the
+            // scroll viewport clipped those corners flat right under the
+            // header — the ticket slid *beneath* the lane's label in the one
+            // moment it is the main event. Unclipped, the shaking card draws
+            // over the hairline and header (the scroll view is the later
+            // sibling), which is the correct depth: paper above chrome. The
+            // other lanes keep their clip — with scrolling content, disabled
+            // clipping would let scrolled-away cards peek out above the
+            // viewport, and no other lane's settle ever leaves its row (the
+            // pen stroke stays inside the card).
+            .scrollClipDisabled(status == .inProgress)
+            .mask {
+                scrollFade.padding(
+                    status == .inProgress
+                        ? EdgeInsets(top: -Self.shakeHeadroom, leading: -Self.shakeHeadroom,
+                                     bottom: 0, trailing: -Self.shakeHeadroom)
+                        : EdgeInsets())
+            }
 
             if foldedCount > 0 {
                 moreButton
@@ -506,6 +524,10 @@ struct ColumnView: View {
         case (_, true): "Weniger anzeigen"
         }
     }
+
+    /// How far the shake may reach past the viewport before the mask cuts
+    /// it: pop (+8% of a card) plus tilted corners (~4°) stay well inside.
+    private static let shakeHeadroom: CGFloat = 20
 
     /// Cards fade out at the bottom edge, hinting there is more to scroll
     /// without a hard cut-off.
