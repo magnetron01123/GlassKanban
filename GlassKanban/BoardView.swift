@@ -220,7 +220,7 @@ struct BoardView: View {
             showStreak.toggle()
         } label: {
             HStack(spacing: 4) {
-                FlameIcon(level: store.streakStats.flameLevel)
+                FlameIcon(level: store.streakStats.flameLevel, beat: store.streakStats.todayCount)
                 // The count disappears at 0 rather than showing one, leaving
                 // the flame as the button. See the toolbar's visibility rule.
                 if store.streakStats.current > 0 {

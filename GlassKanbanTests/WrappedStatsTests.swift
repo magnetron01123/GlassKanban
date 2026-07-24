@@ -206,6 +206,104 @@ final class WrappedStatsTests: XCTestCase {
         XCTAssertEqual(stats.milestone, 50)
     }
 
+    // MARK: - Lead time (Durchlaufzeit)
+
+    private func leadRecord(created: Date, completed: Date) -> CompletionRecord {
+        CompletionRecord(date: completed, created: created, listName: "Arbeit", listColor: .blue)
+    }
+
+    func testMedianLeadTimeOddCount() {
+        let now = date(2026, 7, 17)
+        // Lead times of 1, 2, 3, 4 and 10 days → median 3. The 10 is the
+        // outlier the median exists to ignore.
+        let records = [1, 2, 3, 4, 10].enumerated().map { index, lead in
+            leadRecord(created: date(2026, 7, 1, hour: index + 1),
+                       completed: calendar.date(byAdding: .day, value: lead, to: date(2026, 7, 1, hour: index + 1))!)
+        }
+        let stats = WrappedStats.stats(records: records, calendar: calendar, now: now)
+        XCTAssertEqual(stats.medianLeadTimeDays ?? 0, 3.0, accuracy: 0.0001)
+    }
+
+    func testMedianLeadTimeEvenCountAveragesTheMiddle() {
+        let now = date(2026, 7, 17)
+        let records = [1, 2, 4, 5, 8, 9].enumerated().map { index, lead in
+            leadRecord(created: date(2026, 7, 1, hour: index + 1),
+                       completed: calendar.date(byAdding: .day, value: lead, to: date(2026, 7, 1, hour: index + 1))!)
+        }
+        let stats = WrappedStats.stats(records: records, calendar: calendar, now: now)
+        XCTAssertEqual(stats.medianLeadTimeDays ?? 0, 4.5, accuracy: 0.0001)
+    }
+
+    func testMedianLeadTimeNilBelowMinimumSample() {
+        let now = date(2026, 7, 17)
+        let records = (1...4).map { lead in
+            leadRecord(created: date(2026, 7, 1, hour: lead),
+                       completed: calendar.date(byAdding: .day, value: lead, to: date(2026, 7, 1, hour: lead))!)
+        }
+        let stats = WrappedStats.stats(records: records, calendar: calendar, now: now)
+        XCTAssertNil(stats.medianLeadTimeDays)
+    }
+
+    func testMedianLeadTimeIgnoresRecordsWithoutCreationDate() {
+        let now = date(2026, 7, 17)
+        // Five records, only four with a creation date → below the gate.
+        var records = (1...4).map { lead in
+            leadRecord(created: date(2026, 7, 1, hour: lead),
+                       completed: calendar.date(byAdding: .day, value: lead, to: date(2026, 7, 1, hour: lead))!)
+        }
+        records.append(record(date(2026, 7, 10)))
+        let stats = WrappedStats.stats(records: records, calendar: calendar, now: now)
+        XCTAssertNil(stats.medianLeadTimeDays)
+    }
+
+    func testMedianLeadTimeOnlyCountsCompletionsInTrendWindow() {
+        let now = date(2026, 7, 17)
+        // Five recent one-offs with leads 1...5 (median 3) plus five ancient
+        // completions with huge leads, all finished well before the window —
+        // the legacy backlog must not write the answer.
+        var records = [1, 2, 3, 4, 5].enumerated().map { index, lead in
+            leadRecord(created: date(2026, 7, 1, hour: index + 1),
+                       completed: calendar.date(byAdding: .day, value: lead, to: date(2026, 7, 1, hour: index + 1))!)
+        }
+        records += (1...5).map { offset in
+            leadRecord(created: date(2024, 1, offset), completed: date(2026, 1, offset))
+        }
+        let stats = WrappedStats.stats(records: records, calendar: calendar, now: now)
+        XCTAssertEqual(stats.medianLeadTimeDays ?? 0, 3.0, accuracy: 0.0001)
+    }
+
+    func testMedianLeadTimeExcludesRecurringReminders() {
+        let now = date(2026, 7, 17)
+        // Five clean one-offs with leads 1...5 (median 3) plus a recurring
+        // chore whose series was created two years ago — the series date
+        // must not count as a lead time.
+        var records = [1, 2, 3, 4, 5].enumerated().map { index, lead in
+            leadRecord(created: date(2026, 7, 1, hour: index + 1),
+                       completed: calendar.date(byAdding: .day, value: lead, to: date(2026, 7, 1, hour: index + 1))!)
+        }
+        records.append(CompletionRecord(
+            date: date(2026, 7, 10),
+            created: date(2024, 7, 10),
+            isRecurring: true,
+            listName: "Arbeit",
+            listColor: .blue))
+        let stats = WrappedStats.stats(records: records, calendar: calendar, now: now)
+        XCTAssertEqual(stats.medianLeadTimeDays ?? 0, 3.0, accuracy: 0.0001)
+    }
+
+    func testMedianLeadTimeDropsNegativeIntervals() {
+        let now = date(2026, 7, 17)
+        // One record completed "before" it was created (clock drift) plus
+        // five clean ones — the drifted record must not shift the median.
+        var records = [1, 2, 3, 4, 5].enumerated().map { index, lead in
+            leadRecord(created: date(2026, 7, 1, hour: index + 1),
+                       completed: calendar.date(byAdding: .day, value: lead, to: date(2026, 7, 1, hour: index + 1))!)
+        }
+        records.append(leadRecord(created: date(2026, 7, 10), completed: date(2026, 7, 8)))
+        let stats = WrappedStats.stats(records: records, calendar: calendar, now: now)
+        XCTAssertEqual(stats.medianLeadTimeDays ?? 0, 3.0, accuracy: 0.0001)
+    }
+
     // MARK: - Forecast (Little's Law)
 
     func testForecastNilWithoutWork() {

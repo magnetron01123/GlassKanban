@@ -19,7 +19,7 @@ import ServiceManagement
 enum SettingsMetrics {
     static let width: CGFloat = 420
     static let listsHeight: CGFloat = 260
-    static let generalHeight: CGFloat = 415
+    static let generalHeight: CGFloat = 447
 }
 
 struct SettingsView: View {
@@ -118,6 +118,12 @@ struct GeneralSettingsView: View {
                         syncLaunchAtLogin()
                     }
                 }
+
+            // The one sound the app makes (see `MoveFeedback`). It ships on —
+            // the completion tick is part of the reward the board is built
+            // around — but an app that lives on screen all day owes the off
+            // switch a first-class place.
+            Toggle("Ton beim Erledigen", isOn: $store.completionSoundEnabled)
 
             // The board's resting state for recurring cards. Set here rather
             // than only in the find popover, where every launch would start

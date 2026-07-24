@@ -1,11 +1,21 @@
 import SwiftUI
 
 /// One completed reminder, reduced to what the stats view reads: when it was
-/// finished and which Reminders list it came from. Captured in
-/// `RemindersStore.refresh()` from the completed-reminders fetch that already
-/// happens for the streak — no second EventKit query exists for statistics.
+/// finished, when it was created, and which Reminders list it came from.
+/// Captured in `RemindersStore.refresh()` from the completed-reminders fetch
+/// that already happens for the streak — no second EventKit query exists for
+/// statistics.
 struct CompletionRecord: Equatable {
     let date: Date
+    /// When the reminder was created — EventKit's own record, so the lead
+    /// time below needs nothing stored by this app. Optional because
+    /// EventKit does not guarantee it on every reminder.
+    var created: Date?
+    /// Whether the reminder repeats. Recurring reminders carry the creation
+    /// date of the *series*, not of this instance — a weekly chore set up
+    /// two years ago would report a two-year lead time — so the lead-time
+    /// median skips them entirely.
+    var isRecurring: Bool = false
     let listName: String
     let listColor: Color
 }
@@ -60,6 +70,21 @@ struct WrappedStats: Equatable {
     var mostActiveWeekday: WeekdayRank?
     var bestDay: DayRecord?
     var mostUsedList: ListRank?
+
+    /// Median days from a reminder's creation to its completion — Personal
+    /// Kanban's lead time, the number that makes commitments honest ("things
+    /// I start take about N days"). A median, not a mean: one ticket that
+    /// sat in the backlog for a year must not move the answer. One-off
+    /// tasks only (see `CompletionRecord.isRecurring`), and only
+    /// completions inside the trend window — the same 30 days every pace
+    /// figure here uses. Measured over all history instead, the number was
+    /// dominated by legacy backlog items finished years after they were
+    /// jotted down: an honest 462 days, and exactly the kind of standing
+    /// accusation this board's reward-never-punish rule exists to keep off
+    /// the glass. Windowed, it describes current behavior and improves as
+    /// the behavior does. Gated by the same sample floor as the rankings;
+    /// nil below it.
+    var medianLeadTimeDays: Double?
 
     /// A round number crossed within the last week, or nil. Deliberately
     /// *recent* rather than "highest ever reached": a badge that shows on
@@ -150,7 +175,26 @@ struct WrappedStats: Equatable {
             mostActiveWeekday: ranked ? topWeekday.map { WeekdayRank(weekday: $0.key, count: $0.value) } : nil,
             bestDay: ranked ? topDay.map { DayRecord(date: $0.key, count: $0.value) } : nil,
             mostUsedList: ranked ? topList.map { ListRank(name: $0.key, count: $0.value.count, color: $0.value.color) } : nil,
+            medianLeadTimeDays: medianLeadTime(records: records, since: last30.first?.date),
             milestone: recentMilestone(dates: dates, yearStart: yearStart, calendar: calendar, now: now))
+    }
+
+    /// See `medianLeadTimeDays`. Recurring reminders, completions before
+    /// the window, records without a creation date, and the odd record
+    /// whose completion predates its creation (clock drift on a synced
+    /// device) simply drop out rather than poisoning the median.
+    private static func medianLeadTime(records: [CompletionRecord], since windowStart: Date?) -> Double? {
+        guard let windowStart else { return nil }
+        let leads = records
+            .filter { !$0.isRecurring && $0.date >= windowStart }
+            .compactMap { record in
+                record.created.map { record.date.timeIntervalSince($0) / 86_400 }
+            }
+            .filter { $0 >= 0 }
+            .sorted()
+        guard leads.count >= minSampleForRankings else { return nil }
+        let mid = leads.count / 2
+        return leads.count.isMultiple(of: 2) ? (leads[mid - 1] + leads[mid]) / 2 : leads[mid]
     }
 
     /// The highest round number the year's total crossed within the last week.

@@ -264,15 +264,44 @@ Einblenden).
   sich als Rüge, aber der Zugang zur Statistik darf nach einem Serienriss nicht verschwinden
   (siehe BACKLOG.md)
 - **Statistik-Fenster** (Klick auf die Flamme, `StatsPopover`): zwei Ansichten über
-  Textumschalter, damit ein Blick nie zur Navigation wird —
-  - **Jetzt:** Folge als Schlagzeile, heute erledigte Aufgaben, aktuelle Auslastung gegen
-    das WIP-Limit, Durchlaufzeit-Schätzung nach Little's Law (Bestand ÷ Tempo, bewusst als
-    Schätzung beschriftet), 30-Tage-Verlauf als Balken
-  - **Rückblick:** dieses Jahr, längste Folge, bester Tag, stärkster Wochentag, häufigste
-    Liste, Meilenstein bei einer runden Zahl innerhalb der letzten 7 Tage
+  Textumschalter, damit ein Blick nie zur Navigation wird. Beide Register teilen dieselbe
+  Silhouette — eine Hero-Zahl auf dem Glas, darunter eine Well mit Kennzahlen, darunter
+  eine zweite Well —, sodass beim Umschalten die große Zahl ihre Bedeutung wechselt, nicht
+  ihre Position:
+  - **Jetzt:** Folge als Hero (Flamme + Zahl + optionale Belohnungszeile), heute erledigte
+    Aufgaben, aktuelle Auslastung gegen das WIP-Limit, „Bis fertig"-Schätzung nach Little's
+    Law (Bestand ÷ Tempo, bewusst als Schätzung beschriftet), 30-Tage-Verlauf als Balken in
+    fester, großzügiger Höhe (das Diagramm ist die zweite Blickfläche des Registers)
+  - **Rückblick:** Jahreszahl als Hero (Meilenstein bei einer runden Zahl innerhalb der
+    letzten 7 Tage erscheint als Belohnungszeile darunter), dann längste Folge und die zwei
+    **Personal-Kanban-Flusskennzahlen** — **Pro Woche** (Durchsatz, Ø letzte 30 Tage) und
+    **Durchlaufzeit** (Median von „angelegt" bis „erledigt", nur einmalige Aufgaben, nur
+    Erledigungen der letzten 30 Tage). Zusammen mit „In Bearbeitung" im anderen Register
+    stehen damit alle drei Größen von Little's Law im Fenster — die Prognose ist
+    nachrechenbar statt Orakel. Darunter die Rangliste (bester Tag, stärkster Wochentag,
+    häufigste Liste) über die ganze Historie, mit „Seit …"-Fußnote
+  - **Durchlaufzeit bewusst gefenstert und ohne Wiederkehrer:** erledigte Instanzen
+    wiederkehrender Erinnerungen tragen in EventKit das Anlegedatum der *Serie* (ggf. Jahre
+    alt) und keine `hasRecurrenceRules` mehr — erkannt werden sie über den Titel der noch
+    offenen Serie. Und über die ganze Historie gemessen dominierten Backlog-Altlasten den
+    Median (ehrlich, aber eine dauerhafte Anklage — Regel „belohnen, nie bestrafen"). Im
+    30-Tage-Fenster beschreibt die Zahl das aktuelle Verhalten und verbessert sich mit ihm
   - Alles aus den Erinnerungen abgeleitet, die die App ohnehin lädt — keine zweite
     EventKit-Abfrage, keine eigene Speicherung. Der Meilenstein ist die eine bewusste
     Lockerung der „keine Badges"-Regel: nur ein Moment, nie dauerhaft (siehe CONCEPT.md)
+- **Sensorisches Feedback beim Verschieben** (`MoveFeedback`, alles am einen `move()`-Pfad,
+  damit Maus, Kontextmenü, VoiceOver und Undo gleich behandelt werden):
+  - **Haptik** bei jedem echten Spaltenwechsel (Trackpad; `.alignment`, beim Erledigen
+    `.levelChange`) — das Einrasten der Karte unter dem Finger
+  - **Leiser Ton beim Erledigen** („Tink", Lautstärke 0,3) — abschaltbar in den
+    Einstellungen („Ton beim Erledigen", Standard: an). Nur beim Erledigen, nie bei anderen
+    Moves: Fertigwerden ist der eine Moment, den Personal Kanban feiert
+  - **Settle-Animationen:** Erledigen = Squish + grüner Blitz (bestand schon); Pull nach
+    „In Bearbeitung" = derselbe Squish in halber Tiefe, ohne Farbe — Anfangen ist spürbar,
+    aber der Farbmoment bleibt dem Fertigwerden vorbehalten. Nur lokale Pulls
+  - **Flammen-Nicken:** die Toolbar-Flamme macht bei jeder erledigten Aufgabe einen kleinen
+    Bounce (auch wenn sich ihr Füllstand nicht ändert) — die kleinstmögliche Quittung, dass
+    das Board es gesehen hat. Alles respektiert „Bewegung reduzieren"
 - **Kein täglich wechselnder Motivationssatz** — war im ursprünglichen MVP vorgesehen und
   hat sich als unpraktikabel erwiesen (siehe BACKLOG.md)
 - Ausdrücklich **keine** Punkte/Levels/Badges/Bestenlisten

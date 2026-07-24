@@ -9,6 +9,12 @@ struct FlameIcon: View {
     /// the toolbar and beside a 52pt number in the popover, and a glyph that
     /// ignores its companion text reads as misaligned in one of the two.
     var size: CGFloat = 12
+    /// A counter that ticks on every completion (today's count). Each tick
+    /// nods the flame — the smallest possible acknowledgement that the board
+    /// noticed, on the element whose whole job is to notice. Zero by default
+    /// so contexts that only show state (Settings previews, tests) stay
+    /// still.
+    var beat: Int = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -22,8 +28,12 @@ struct FlameIcon: View {
             // the bounce is motion and has to go. Feeding it a value that
             // never changes is how it is switched off without a second code
             // path drifting out of sync with this one.
+            //
+            // `level + beat` only ever increases within a day, so every
+            // completion bounces exactly once — whether or not it also
+            // changed the flame's fill.
             .contentTransition(.symbolEffect(.replace))
-            .symbolEffect(.bounce, value: reduceMotion ? 0 : level)
+            .symbolEffect(.bounce, value: reduceMotion ? 0 : level + beat)
             // The button around it carries the spoken label.
             .accessibilityHidden(true)
     }
@@ -86,8 +96,6 @@ struct StatsPopover: View {
     }
 
     @State private var tab: Tab = .now
-    /// Height of the values well, so the trend well beneath can match it.
-    @State private var rowsWellHeight: CGFloat?
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.colorScheme) private var scheme
 
@@ -196,20 +204,21 @@ struct StatsPopover: View {
                     // and the tab next door is called exactly that.
                     if let days = forecastDays {
                         row("Bis fertig",
-                            "\(days.formatted(.number.precision(.fractionLength(days < 10 ? 1 : 0)))) \(days == 1 ? "Tag" : "Tage")",
+                            Self.daysEstimate(days),
                             help: "Schätzung: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten \(WrappedStats.trendWindowDays) Tage.")
                     }
                 }
             }
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { rowsWellHeight = $0 }
-            // Matched to the well above rather than left at its natural size.
-            // Two stacked groups of nearly-but-not-quite the same height read
-            // as a layout that missed, not as a pair — and the difference was
-            // only ever the accident of how many rows the list happened to
-            // hold. Measured rather than guessed, because that row count
-            // varies: the forecast drops out whenever nothing is in progress.
+            // Deliberately taller than the rows well above, not matched to
+            // it. The two were height-matched for a while, which kept them
+            // from the nearly-equal trap but capped the bars at whatever
+            // three rows of text happen to measure — a chart read at arm's
+            // length was the shortest thing in the window. A fixed, roomier
+            // height makes the trend the tab's second focal area and keeps
+            // the popover from breathing when the forecast row comes and
+            // goes; clearly-different heights read as intent, only near
+            // misses read as accidents.
             well { trendSection }
-                .frame(height: rowsWellHeight)
         }
     }
 
@@ -251,7 +260,7 @@ struct StatsPopover: View {
             // uniform, nothing here outranks anything else, and the flame's
             // own colour is the one thing left to carry emphasis.
             HStack(alignment: .center, spacing: 8) {
-                FlameIcon(level: streak.flameLevel, size: BoardText.heroUnitSize)
+                FlameIcon(level: streak.flameLevel, size: BoardText.heroUnitSize, beat: streak.todayCount)
                 Text("\(streak.current)")
                     .font(BoardText.heroUnit)
                     .monospacedDigit()
@@ -333,17 +342,22 @@ struct StatsPopover: View {
 
     // MARK: - Rückblick
 
-    /// Two sections, not one list of five — because the five rows were never
-    /// one kind of figure. "Dieses Jahr" and "Längste Folge" are running
-    /// tallies: a board with a single completed reminder can already show
-    /// both, one by counting and the other from `StreakCalculator` alone.
-    /// "Bester Tag", "Stärkster Wochentag" and "Häufigste Liste" are
-    /// rankings — a claim that something is *the most* of anything needs
-    /// enough history to carry it, which is exactly what
-    /// `WrappedStats.minSampleForRankings` gates: the three either all exist
-    /// or none do. That gate is the split. It also means the second section
-    /// can simply be absent on a young board rather than showing three
-    /// confident-looking dashes.
+    /// The same silhouette as "Jetzt", on purpose: one hero figure on the
+    /// glass, then a well of running figures, then a second well the history
+    /// has to earn. Switching tabs keeps the reader's eye where it was — the
+    /// big number changes meaning, not position. The year total is the hero
+    /// because it is this tab's counterpart to the streak: the one figure
+    /// that needs no label beyond its unit phrase, and the one the
+    /// milestones celebrate.
+    ///
+    /// The split between the wells is the period: everything in the first
+    /// well states its own — the streak by nature, the two flow figures on
+    /// the same 30-day window as every pace number in this popover — while
+    /// the second well ranks the whole history and shares the "Seit …"
+    /// footnote. Each flow row hides behind its own sample guard, so the
+    /// section can simply thin out on a young board rather than showing
+    /// confident-looking dashes; the ranked well disappears whole, gated by
+    /// `WrappedStats.minSampleForRankings`.
     ///
     /// No heading on either well: a caption on one and not the other read as
     /// an accident, and a caption on both was tried and read as clutter this
@@ -351,19 +365,26 @@ struct StatsPopover: View {
     /// are two groups", and every row still names itself.
     private var pastTab: some View {
         VStack(alignment: .leading, spacing: 14) {
+            yearHero
             well {
                 rows {
-                    // Carries its own period in its label, which is why the
-                    // footnote below can go on describing the ranked section
-                    // without contradicting it.
-                    row("Dieses Jahr",
-                        "\(wrapped.yearCount)",
-                        mark: wrapped.milestone != nil ? "flag.fill" : nil,
-                        help: wrapped.milestone.map {
-                            "Meilenstein erreicht: \($0) erledigte Aufgaben in diesem Jahr."
-                        })
-
                     row("Längste Folge", Self.days(streak.best))
+
+                    // The two flow figures, side by side and on the same
+                    // 30-day window — with "In Bearbeitung" on the other
+                    // tab, all three variables of Little's Law are on the
+                    // board: the "Bis fertig" forecast stops being an
+                    // oracle and becomes arithmetic the reader can check.
+                    if let weekly = weeklyThroughput {
+                        row("Pro Woche",
+                            Self.tasks(weekly),
+                            help: "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten \(WrappedStats.trendWindowDays) Tage.")
+                    }
+                    if let lead = wrapped.medianLeadTimeDays {
+                        row("Durchlaufzeit",
+                            Self.daysEstimate(lead),
+                            help: "Median von „angelegt“ bis „erledigt“ bei einmaligen Aufgaben der letzten \(WrappedStats.trendWindowDays) Tage.")
+                    }
                 }
             }
             if hasRankings {
@@ -429,6 +450,49 @@ struct StatsPopover: View {
         return "Seit \(start.formatted(.dateTime.month(.wide).year()))"
     }
 
+    /// The year total, set exactly like the streak hero next door — same
+    /// row, same type, same optional note line beneath. No glyph where the
+    /// flame sits: the flame is a state (empty, started, full) and earns its
+    /// place by changing; a permanent trophy beside the year count would be
+    /// furniture. The reward moment this hero owns is the milestone, and it
+    /// appears as the note — the same slot where "Jetzt" celebrates the
+    /// record.
+    private var yearHero: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 8) {
+                Text("\(wrapped.yearCount)")
+                    .font(BoardText.heroUnit)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .foregroundStyle(wrapped.yearCount == 0 ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+                Text(wrapped.yearCount == 1 ? "Aufgabe dieses Jahr" : "Aufgaben dieses Jahr")
+                    .font(BoardText.heroUnit)
+                    .foregroundStyle(.secondary)
+            }
+            if let milestone = wrapped.milestone {
+                // Reward styling, like the record line on "Jetzt": a fact
+                // about the count, at reading size, in the primary colour.
+                Text("Meilenstein erreicht: \(milestone) erledigte Aufgaben")
+                    .font(BoardText.body)
+                    .fontWeight(.semibold)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.horizontal, 4)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            "\(Self.tasks(wrapped.yearCount)) dieses Jahr erledigt."
+                + (wrapped.milestone.map { " Meilenstein erreicht: \($0)." } ?? ""))
+    }
+
+    /// Completions per week over the trend window, behind the same sample
+    /// guard as the forecast — the two describe the same pace and must not
+    /// disagree about when the data is thin.
+    private var weeklyThroughput: Int? {
+        guard wrapped.throughputSampleCount >= WrappedStats.minSampleForForecast else { return nil }
+        return max(1, Int((wrapped.throughputPerDay * 7).rounded()))
+    }
+
     // MARK: - Trend
 
     /// The last 30 days as a shape, under a label that says so. The bars once
@@ -440,17 +504,18 @@ struct StatsPopover: View {
             sectionHeading("Letzte 30 Tage")
             trendRow
         }
-        // Takes whatever the matched well height leaves after the label, so
-        // the chart grows into the space rather than sitting at the bottom
-        // of a half-empty box.
-        .frame(maxHeight: .infinity, alignment: .top)
     }
 
+    /// How much room the bars get. Tall enough that the difference between a
+    /// two-task day and a five-task day is legible across the desk — the
+    /// whole reason the chart exists — while the well stays clearly a
+    /// supporting panel under the hero, not a second hero.
+    private static let trendBarsHeight: CGFloat = 72
+
     private var trendRow: some View {
-        // The bars are sized against the height they are actually given, not
-        // against a constant. Once the well matches the one above it, that
-        // height depends on how many rows the list holds — a fixed 24pt row
-        // would leave the difference as dead space.
+        // The bars still size against the height they are given rather than
+        // hard-coding it twice: the constant above owns the number, the
+        // geometry reads it back.
         GeometryReader { proxy in
             HStack(alignment: .bottom, spacing: 2) {
                 ForEach(wrapped.last30) { day in
@@ -462,7 +527,7 @@ struct StatsPopover: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
-        .frame(minHeight: 24)
+        .frame(height: Self.trendBarsHeight)
         // Otherwise this is 30 VoiceOver stops that each say nothing.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
@@ -547,6 +612,18 @@ struct StatsPopover: View {
 
     private static func tasks(_ count: Int) -> String {
         count == 1 ? "1 Aufgabe" : "\(count) Aufgaben"
+    }
+
+    /// A duration in days, one decimal while it is small enough for the
+    /// fraction to matter — but never a decorative one: "1,0 Tage" is a
+    /// machine talking, "1 Tag" is the answer. Shared by the forecast and
+    /// the lead time so the window never says "3,4 Tage" in one row and
+    /// "3 Tage" in the next for the same kind of figure.
+    private static func daysEstimate(_ days: Double) -> String {
+        let rounded = (days * 10).rounded() / 10
+        let wantsFraction = days < 10 && rounded != rounded.rounded()
+        let formatted = rounded.formatted(.number.precision(.fractionLength(wantsFraction ? 1 : 0)))
+        return "\(formatted) \(rounded == 1 ? "Tag" : "Tage")"
     }
 }
 

@@ -246,9 +246,15 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
   „Rückblick"), rein lesend aus denselben `completionDate`-Werten plus dem Listennamen der
   erledigten Erinnerung. Enthält neben Streak und Tagesfortschritt die Personal-Kanban-Sicht
   auf das eigene System: aktuelle Auslastung („In Bearbeitung" gegen das eigene WIP-Limit)
-  und eine Durchlaufzeit-Schätzung nach Little's Law (Auslastung ÷ Tempo). Bewusst als
+  und eine „Bis fertig"-Schätzung nach Little's Law (Auslastung ÷ Tempo). Bewusst als
   *Schätzung* beschriftet — der Wert steigt, sobald mehr gleichzeitig begonnen wird, und
-  genau das ist die Aussage eines WIP-Limits.
+  genau das ist die Aussage eines WIP-Limits. Im Rückblick stehen seit Juli 2026 zusätzlich
+  die beiden Flusskennzahlen, aus denen diese Schätzung besteht — **Durchsatz** („Pro
+  Woche") und **Durchlaufzeit** (Median angelegt→erledigt, nur einmalige Aufgaben, nur die
+  letzten 30 Tage: über die ganze Historie gemessen dominieren Backlog-Altlasten den Wert,
+  und eine dauerhaft riesige Zahl wäre eine stehende Anklage; gefenstert beschreibt die
+  Zahl das aktuelle Verhalten und verbessert sich mit ihm). Mit allen drei
+  Little's-Law-Größen im Fenster ist die Schätzung nachrechenbar statt Orakel.
   **Die eine bewusste Ausnahme von der Abzeichen-Regel:** ein Meilenstein-Hinweis bei runden
   Zahlen (50/100/250/…) — aber nur, wenn die Schwelle in den letzten sieben Tagen
   überschritten wurde. Er wird jedes Mal neu aus der Historie abgeleitet, nichts wird
@@ -257,10 +263,16 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
 
 **Weitere, an anderer Stelle bereits ausgearbeitete Anwendungen desselben Grundsatzes:**
 
-- **Sensorik & Belohnungsmomente:** Trackpad-Haptik beim Andocken und Ablegen,
-  Settle-Moment beim Erledigen (kurzes Einrasten plus grüner Schimmer), die sich mit dem
-  Tagesfortschritt füllende Streak-Flamme (Goal-Gradient-Effekt), Tages-/Wochenfortschritt
-  im Statistik-Fenster (Endowed Progress/Progress Principle).
+- **Sensorik & Belohnungsmomente:** Trackpad-Haptik bei jedem echten Spaltenwechsel
+  (beim Erledigen eine Stufe kräftiger), Settle-Moment beim Erledigen (kurzes Einrasten
+  plus grüner Schimmer) und in halber Tiefe ohne Farbe beim Pull nach „In Bearbeitung" —
+  Anfangen ist spürbar, der Farbmoment bleibt dem Fertigwerden vorbehalten. Dazu ein
+  leiser Ton beim Erledigen (abschaltbar, Einstellungen), ein kleines Nicken der
+  Toolbar-Flamme bei jeder erledigten Aufgabe, die sich mit dem Tagesfortschritt füllende
+  Streak-Flamme (Goal-Gradient-Effekt), Tages-/Wochenfortschritt im Statistik-Fenster
+  (Endowed Progress/Progress Principle). Leitplanke: Belohnungen bleiben klein und sicher —
+  keine Fanfare, keine Eskalation; eine große Belohnung ließe die hundertste Erledigung
+  kleiner wirken als die erste.
 - **Grenze, die sich daraus ergibt:** Bewegung gehört Dingen, die *gerade passiert sind* —
   nie einer stehenden Einladung. Eine Dauer-Animation wird binnen Tagen weggefiltert und
   entwertet dabei die Momente, die sich Aufmerksamkeit verdient haben. Deshalb wurde das

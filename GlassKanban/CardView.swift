@@ -504,12 +504,20 @@ struct CardView: View {
     /// One timeline: the squish is animated too. Setting `settleScale` without
     /// an animation snapped the card 6% instantly before the spring took over,
     /// which read as a glitch rather than a reward.
+    ///
+    /// A pull into "In Bearbeitung" gets the same settle at half depth and
+    /// without the flash: starting work is a commitment worth feeling — the
+    /// card snaps into the slot the empty lane promised — but the colour
+    /// moment stays reserved for finishing. Two events, one motion language,
+    /// two volumes.
     private func playSettleIfFlagged() {
-        guard store.recentlyCompletedIDs.contains(card.id), !reduceMotion else { return }
+        guard !reduceMotion else { return }
+        let completed = store.recentlyCompletedIDs.contains(card.id)
+        guard completed || store.recentlyPulledIDs.contains(card.id) else { return }
         Task { @MainActor in
             withAnimation(.easeOut(duration: 0.09)) {
-                settleScale = 0.94
-                settleFlash = true
+                settleScale = completed ? 0.94 : 0.97
+                settleFlash = completed
             }
             try? await Task.sleep(for: .milliseconds(90))
             withAnimation(Board.settleAnimation) { settleScale = 1 }
