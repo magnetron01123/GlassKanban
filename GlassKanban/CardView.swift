@@ -525,16 +525,19 @@ struct CardView: View {
 
     // MARK: - Motivation animations
 
-    /// Completion is a squish and a pen stroke: the card presses down and
-    /// in, and as it springs back the strike line sweeps across the title
-    /// (see `strikeLine`). The stroke replaced a green flash — the flash
-    /// was a colour laid *over* the paper, and colour washes are exactly
-    /// what this board's cards never do; the strike is the completion
-    /// gesture *in* the content, the same mark the card will carry from
-    /// now on, simply watched being made. One timeline: the squish is
-    /// animated too — setting `settleScale` without an animation snapped
-    /// the card 6% instantly before the spring took over, which read as a
-    /// glitch rather than a reward.
+    /// Completion is a pen stroke, and nothing else: the card lies down,
+    /// a breath passes, then the strike line draws across the title (see
+    /// `strikeLine`). The beat between landing and stroke is the point —
+    /// it is what a hand does at a real board (place the card, *then*
+    /// cross it off), and it lets each phase read singly where drawing
+    /// during the arrival made neither legible. The card holds perfectly
+    /// still while the line moves: one event, one gesture. Two earlier
+    /// companions were removed for that rule — a green flash (a colour
+    /// wash over paper, which these cards never wear) and the squish that
+    /// had carried it (once the pen is the reward, a press-and-spring
+    /// before it was just noise in front of the gesture). `easeInOut`,
+    /// not `easeOut`: a pen sets down deliberately, sweeps, and lifts —
+    /// full speed from a standstill is a swipe.
     ///
     /// A pull into "In Bearbeitung" *shakes* instead — the card pops a
     /// touch oversized and a low-damped spring swings a tilt back through
@@ -544,11 +547,11 @@ struct CardView: View {
     /// uses anywhere else (cards scale, fade and translate, but nothing ever
     /// *tilts*), so it cannot be absorbed by the lane's other motion — and a
     /// quick scale pop *upward* is the punch that makes it read across the
-    /// desk. Upward on purpose: completion settles down and in (a squish),
-    /// starting bursts up and out, so the two rewards never feel like the
-    /// same gesture. A big first swing that settles in ~0.4 s: loud enough
-    /// to read, gone before it can slow the hand. No stroke here — the
-    /// finishing mark stays reserved for finishing.
+    /// desk. Loud on purpose where completion is calm: finishing is the
+    /// quiet pen stroke, starting bursts up and out, so the two rewards
+    /// never feel like the same gesture. A big first swing that settles in
+    /// ~0.4 s: loud enough to read, gone before it can slow the hand. No
+    /// stroke here — the finishing mark stays reserved for finishing.
     ///
     /// Both settles share one clock and one shape. The clock: they hold for
     /// `Board.settleDelay` first, because `onAppear` fires when the card
@@ -574,12 +577,13 @@ struct CardView: View {
         Task { @MainActor in
             try? await Task.sleep(for: Board.settleDelay)
             if completed {
-                withAnimation(.easeOut(duration: 0.09)) { settleScale = 0.94 }
-                try? await Task.sleep(for: .milliseconds(90))
-                withAnimation(Board.settleAnimation) { settleScale = 1 }
-                // The pen: unhurried on purpose — the sweep *is* the reward,
-                // and a stroke over in a blink is a checkbox, not a pen.
-                withAnimation(.easeOut(duration: 0.5)) { strikeProgress = 1 }
+                // The breath between landing and pen — anticipation is half
+                // the reward, and a stroke that starts while the card is
+                // still arriving reads as neither arriving nor striking.
+                try? await Task.sleep(for: .milliseconds(300))
+                // Unhurried on purpose: the sweep *is* the reward, and a
+                // stroke over in a blink is a checkbox, not a pen.
+                withAnimation(.easeInOut(duration: 0.45)) { strikeProgress = 1 }
             } else {
                 withAnimation(.easeOut(duration: 0.07)) {
                     settleTilt = 4

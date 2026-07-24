@@ -321,22 +321,28 @@ Einblenden).
     Transit + Marge), bis Reflow und Einfaden gelandet sind — erst ankommen, dann
     reagieren. Ohne diese Phase spielte das Wackeln mitten im Einfaden, eine Belohnung im
     Flug für eine Ankunft, die sichtbar noch nicht passiert war
-  - **Settle-Animationen:** Erledigen = Squish + **gezogener Durchstrich**: Die Karte
-    drückt sich kurz ins Papier, und während sie zurückfedert, zieht sich die
-    Durchstreich-Linie in ~0,5 s von links nach rechts über den Titel — der Stift, der die
-    Aufgabe abhakt. Ersetzt den früheren grünen Blitz (Juli 2026): Der Blitz war eine
-    Farbfläche *über* dem Papier — genau die Art Farbwäsche, die Karten auf diesem Board
-    nie tragen —, der Strich ist die Abschlussgeste *im* Inhalt, dasselbe Zeichen, das die
-    Karte ohnehin für immer trägt, nur beim Entstehen beobachtet. Technisch ist der
-    Durchstrich erledigter Karten deshalb eine vom Board gezeichnete Linie
-    (`CardView.strikeLine`), kein `Text.strikethrough` — auf ruhenden Karten von der
-    Textauszeichnung nicht zu unterscheiden, bei „Bewegung reduzieren" steht er sofort
-    vollständig; Pull nach
+  - **Settle-Animationen:** Erledigen = **nur der gezogene Durchstrich**: Die Karte legt
+    sich ab, ein kurzer Atemzug (~0,3 s), dann zieht sich die Durchstreich-Linie in
+    ~0,45 s (`easeInOut` — ein Stift setzt an, zieht durch und hebt ab; volle
+    Geschwindigkeit aus dem Stand wäre ein Wisch) von links nach rechts über den Titel.
+    Die Karte liegt dabei vollkommen still — ein Ereignis, eine Geste. Die Pause ist der
+    Punkt: So macht es die Hand am echten Board (Karte ablegen, *dann* abhaken), und
+    Vorfreude ist die halbe Belohnung; ein Strich, der schon während der Ankunft zeichnet,
+    liest sich weder als Ankunft noch als Strich. Zwei frühere Begleiter wurden nach
+    dieser Regel entfernt (Juli 2026): der grüne Blitz (eine Farbfläche *über* dem
+    Papier — genau die Farbwäsche, die Karten auf diesem Board nie tragen) und der
+    Squish, der ihn trug (sobald der Stift die Belohnung ist, war das Eindrücken davor
+    nur Lärm vor der Geste). Der Strich ist die Abschlussgeste *im* Inhalt, dasselbe
+    Zeichen, das die Karte ohnehin für immer trägt, nur beim Entstehen beobachtet.
+    Technisch ist der Durchstrich erledigter Karten deshalb eine vom Board gezeichnete
+    Linie (`CardView.strikeLine`), kein `Text.strikethrough` — auf ruhenden Karten von
+    der Textauszeichnung nicht zu unterscheiden, bei „Bewegung reduzieren" steht er
+    sofort vollständig; Pull nach
     „In Bearbeitung" = **kurzes Wackeln mit Pop**: die Karte platzt eine Spur zu groß
     herein (Scale-Pop ~1,08 nach *oben*) und eine locker gedämpfte Feder schwingt einen
     ~4°-Kipp ein paarmal durch die Null zurück — sie „zappelt vor Tatendrang" in ihren
     Slot, gedämpft in ~0,4 s (lauter als die frühere 2°-Version, aber weg, bevor es die
-    Hand bremst). Pop bewusst nach *oben*: Erledigen setzt sich nach innen/unten (Squish),
+    Hand bremst). Pop bewusst nach *oben*: Erledigen ist der ruhige Stiftstrich,
     Anfangen platzt nach außen/oben — die zwei Belohnungen fühlen sich nie gleich an.
     Rotation trägt die Lesbarkeit: Es ist der eine Bewegungskanal, den das Board sonst
     nirgends nutzt (Karten skalieren, faden, verschieben sich — nichts kippt je), also kann

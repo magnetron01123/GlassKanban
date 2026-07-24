@@ -128,11 +128,12 @@ struct ColumnView: View {
                             // percent into the shape this lane gives it.
                             // Erledigt and In Bearbeitung are the exceptions,
                             // both for the same reason: a card arriving there
-                            // plays its own settle (the completion squish, the
-                            // pull shake-and-pop), and a second scale running
-                            // underneath it made the arrival stutter — for the
-                            // pull, the generic scale-in and the pop even pull
-                            // in opposite directions and partly cancel.
+                            // plays its own settle (the completion pen stroke,
+                            // the pull shake-and-pop), and a second scale
+                            // running underneath it made the arrival stutter —
+                            // for the pull, the generic scale-in and the pop
+                            // even pull in opposite directions and partly
+                            // cancel.
                             .transition(.asymmetric(
                                 insertion: status == .done || status == .inProgress
                                     ? .opacity
