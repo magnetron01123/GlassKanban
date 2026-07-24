@@ -265,8 +265,8 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
 
 - **Sensorik & Belohnungsmomente:** Trackpad-Haptik bei jedem echten Spaltenwechsel
   (beim Erledigen eine Stufe kräftiger), Settle-Moment beim Erledigen (kurzes Einrasten
-  plus grüner Schimmer) und ein kurzes, farbloses Wackeln plus Haptik-Doppeltick beim Pull
-  nach „In Bearbeitung" (die Karte „zappelt vor Tatendrang") —
+  plus grüner Schimmer) und ein kurzes, farbloses Wackeln mit Größen-Pop plus
+  Haptik-Doppeltick beim Pull nach „In Bearbeitung" (die Karte „zappelt vor Tatendrang") —
   Anfangen ist spürbar, der Farbmoment bleibt dem Fertigwerden vorbehalten. Dazu ein
   leiser, eigener Erledigt-Klang (aufsteigende Quinte — Aufsteigen sagt „geschafft";
   bewusst kein Systemklang, die dienen in macOS als Warntöne; abschaltbar in den

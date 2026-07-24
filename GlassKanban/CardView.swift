@@ -508,21 +508,26 @@ struct CardView: View {
     /// an animation snapped the card 6% instantly before the spring took over,
     /// which read as a glitch rather than a reward.
     ///
-    /// A pull into "In Bearbeitung" *shakes* instead — a small tilt that a
-    /// loose spring swings back through zero a few times, the card
-    /// shimmying itself into the slot with somewhere to be. Eagerness, not
-    /// arrival. Rotation on purpose, and not for its looks: it is the one
-    /// motion channel this board never uses anywhere else — cards scale,
-    /// fade and translate, but nothing ever *tilts* — so even two degrees
-    /// of it cannot be absorbed by the lane's insertion transition the way
-    /// both scale-based attempts before it were. No flash: the colour
-    /// moment stays reserved for finishing.
+    /// A pull into "In Bearbeitung" *shakes* instead — the card bursts in a
+    /// touch oversized and a low-damped spring swings a tilt back through
+    /// zero a couple of times, the card shimmying itself into the slot with
+    /// somewhere to be. Eagerness, not arrival. Two coupled channels: the
+    /// rotation carries legibility — it is the one motion this board never
+    /// uses anywhere else (cards scale, fade and translate, but nothing ever
+    /// *tilts*), so it cannot be absorbed by the lane's insertion transition
+    /// the way both earlier scale-only attempts were — and a quick scale pop
+    /// *upward* is the punch that makes it read across the desk. Upward on
+    /// purpose: completion settles down and in (a squish), starting bursts
+    /// up and out, so the two rewards never feel like the same gesture. A
+    /// big first swing that settles in ~0.4 s: louder than the earlier 2°,
+    /// gone before it can slow the hand. No flash — the colour moment stays
+    /// reserved for finishing.
     ///
-    /// The tilt is set *synchronously* in `onAppear` and the spring fires
-    /// one frame later. Both halves matter: setting the start and the
+    /// The start state is set *synchronously* in `onAppear` and the springs
+    /// fire one frame later. Both halves matter: setting the start and the
     /// target in the same run-loop tick lets SwiftUI coalesce them into one
     /// transaction — the start value never renders, the "animation" runs
-    /// from 0 to 0, and nothing visibly happens (the first version of this
+    /// from 0 to 0, and nothing visibly happens (an early version of this
     /// settle died exactly that death). The completion branch keeps its
     /// original shape, where the squish is itself animated from the
     /// rendered card.
@@ -541,16 +546,20 @@ struct CardView: View {
                 withAnimation(.easeOut(duration: 0.55)) { settleFlash = false }
             }
         } else {
-            settleTilt = 2.2
+            settleTilt = 4
+            settleScale = 1.08
             Task { @MainActor in
-                // One frame, so the tilted card is actually on screen
-                // before the shake animates away from it.
+                // One frame, so the tilted, popped card is actually on
+                // screen before the springs animate away from it.
                 try? await Task.sleep(for: .milliseconds(16))
-                // Damped far below critical: the spring crosses zero
-                // several times on its way home — that crossing *is* the
-                // vibration.
-                withAnimation(.spring(response: 0.28, dampingFraction: 0.22)) {
+                // Damped below critical: the tilt crosses zero a couple of
+                // times — that crossing *is* the shake — and is home in
+                // ~0.4 s. The pop returns with a single gentle overshoot.
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.3)) {
                     settleTilt = 0
+                }
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.55)) {
+                    settleScale = 1
                 }
             }
         }

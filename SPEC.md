@@ -310,12 +310,16 @@ Einblenden).
     Erledigen, nie bei anderen Moves: Fertigwerden ist der eine Moment, den Personal
     Kanban feiert. Fehlt die Ressource, bleibt es still — kein Rückfall auf Systemklänge
   - **Settle-Animationen:** Erledigen = Squish + grüner Blitz (bestand schon); Pull nach
-    „In Bearbeitung" = **kurzes Wackeln**: die Karte kippt ~2° und eine locker gedämpfte
-    Feder schwingt sie mehrfach durch die Null zurück — sie „zappelt vor Tatendrang" in
-    ihren Slot. Rotation mit Absicht: Es ist der eine Bewegungskanal, den das Board sonst
+    „In Bearbeitung" = **kurzes Wackeln mit Pop**: die Karte platzt eine Spur zu groß
+    herein (Scale-Pop ~1,08 nach *oben*) und eine locker gedämpfte Feder schwingt einen
+    ~4°-Kipp ein paarmal durch die Null zurück — sie „zappelt vor Tatendrang" in ihren
+    Slot, gedämpft in ~0,4 s (lauter als die frühere 2°-Version, aber weg, bevor es die
+    Hand bremst). Pop bewusst nach *oben*: Erledigen setzt sich nach innen/unten (Squish),
+    Anfangen platzt nach außen/oben — die zwei Belohnungen fühlen sich nie gleich an.
+    Rotation trägt die Lesbarkeit: Es ist der eine Bewegungskanal, den das Board sonst
     nirgends nutzt (Karten skalieren, faden, verschieben sich — nichts kippt je), also kann
-    selbst ein kleines Wackeln nicht von der Einfüge-Transition der Lane geschluckt werden —
-    zwei skalierungsbasierte Vorgänger gingen genau darin unter (eine Landung von oben mit
+    das Wackeln nicht von der Einfüge-Transition der Lane geschluckt werden — zwei rein
+    skalierungsbasierte Vorgänger gingen genau darin unter (eine Landung von oben mit
     Schatten wurde gebaut und als unpassend verworfen). Technische Lehre dahinter (siehe
     `CardView.playSettleIfFlagged`): Start- und Zielwert einer Animation im selben
     Runloop-Tick zu setzen lässt SwiftUI beide zu einer Transaktion verschmelzen — der
