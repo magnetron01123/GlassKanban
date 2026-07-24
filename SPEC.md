@@ -316,6 +316,11 @@ Einblenden).
     Abschaltbar in den Einstellungen („Ton beim Erledigen", Standard: an). Nur beim
     Erledigen, nie bei anderen Moves: Fertigwerden ist der eine Moment, den Personal
     Kanban feiert. Fehlt die Ressource, bleibt es still — kein Rückfall auf Systemklänge
+  - **Zwei Uhren:** Haptik und Klang antworten der *Hand* und feuern sofort beim Drop;
+    die visuellen Settles antworten dem *Board* und warten `Board.settleDelay` (~240 ms =
+    Transit + Marge), bis Reflow und Einfaden gelandet sind — erst ankommen, dann
+    reagieren. Ohne diese Phase spielte das Wackeln mitten im Einfaden, eine Belohnung im
+    Flug für eine Ankunft, die sichtbar noch nicht passiert war
   - **Settle-Animationen:** Erledigen = Squish + grüner Blitz (bestand schon); Pull nach
     „In Bearbeitung" = **kurzes Wackeln mit Pop**: die Karte platzt eine Spur zu groß
     herein (Scale-Pop ~1,08 nach *oben*) und eine locker gedämpfte Feder schwingt einen

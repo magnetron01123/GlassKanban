@@ -222,6 +222,17 @@ enum Board {
     /// read as reactive rather than as a slow slide. It was a flat 0.35s
     /// spring, which left every move feeling a beat behind the drop.
     static let cardMoveAnimation: Animation = .spring(duration: 0.22, bounce: 0.18)
+
+    /// How long a just-arrived card waits before its settle plays — the
+    /// transit above plus a small margin. The board's feedback runs on two
+    /// clocks: the *hand's* (haptics and the chime, immediate at the drop —
+    /// the hand acted now and its answer must not lag) and the *board's*
+    /// (the visual settles — shake, squish, flash — which react to the card
+    /// being *there*, so they hold until the reflow and fade-in have landed).
+    /// Without this delay the shake began while the card was still fading
+    /// in, a reward playing mid-flight for an arrival that had not happened
+    /// yet — which read as broken, not as eager.
+    static let settleDelay: Duration = .milliseconds(240)
     /// Taking a ticket off the board, and putting it back.
     ///
     /// A spring, because every panel macOS opens is sprung — but damped

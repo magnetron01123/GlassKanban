@@ -508,35 +508,37 @@ struct CardView: View {
     /// an animation snapped the card 6% instantly before the spring took over,
     /// which read as a glitch rather than a reward.
     ///
-    /// A pull into "In Bearbeitung" *shakes* instead — the card bursts in a
+    /// A pull into "In Bearbeitung" *shakes* instead — the card pops a
     /// touch oversized and a low-damped spring swings a tilt back through
     /// zero a couple of times, the card shimmying itself into the slot with
     /// somewhere to be. Eagerness, not arrival. Two coupled channels: the
     /// rotation carries legibility — it is the one motion this board never
     /// uses anywhere else (cards scale, fade and translate, but nothing ever
-    /// *tilts*), so it cannot be absorbed by the lane's insertion transition
-    /// the way both earlier scale-only attempts were — and a quick scale pop
-    /// *upward* is the punch that makes it read across the desk. Upward on
-    /// purpose: completion settles down and in (a squish), starting bursts
-    /// up and out, so the two rewards never feel like the same gesture. A
-    /// big first swing that settles in ~0.4 s: louder than the earlier 2°,
-    /// gone before it can slow the hand. No flash — the colour moment stays
-    /// reserved for finishing.
+    /// *tilts*), so it cannot be absorbed by the lane's other motion — and a
+    /// quick scale pop *upward* is the punch that makes it read across the
+    /// desk. Upward on purpose: completion settles down and in (a squish),
+    /// starting bursts up and out, so the two rewards never feel like the
+    /// same gesture. A big first swing that settles in ~0.4 s: loud enough
+    /// to read, gone before it can slow the hand. No flash — the colour
+    /// moment stays reserved for finishing.
     ///
-    /// The start state is set *synchronously* in `onAppear` and the springs
-    /// fire one frame later. Both halves matter: setting the start and the
-    /// target in the same run-loop tick lets SwiftUI coalesce them into one
-    /// transaction — the start value never renders, the "animation" runs
-    /// from 0 to 0, and nothing visibly happens (an early version of this
-    /// settle died exactly that death). The completion branch keeps its
-    /// original shape, where the squish is itself animated from the
-    /// rendered card.
+    /// Both settles share one clock and one shape. The clock: they hold for
+    /// `Board.settleDelay` first, because `onAppear` fires when the card
+    /// *starts* fading into the lane, not when it lies there — a settle
+    /// launched immediately played mid-flight, a reward for an arrival that
+    /// had not visibly happened yet. (Haptics and the chime deliberately do
+    /// not wait: they answer the hand, which acted at the drop — see
+    /// `Board.settleDelay`.) The shape: a short ease *into* the displaced
+    /// state, then springs home — animating into the start state is also
+    /// what sidesteps SwiftUI coalescing a same-tick set-then-animate into
+    /// nothing, which silently killed an earlier version of the shake.
     private func playSettleIfFlagged() {
         guard !reduceMotion else { return }
         let completed = store.recentlyCompletedIDs.contains(card.id)
         guard completed || store.recentlyPulledIDs.contains(card.id) else { return }
-        if completed {
-            Task { @MainActor in
+        Task { @MainActor in
+            try? await Task.sleep(for: Board.settleDelay)
+            if completed {
                 withAnimation(.easeOut(duration: 0.09)) {
                     settleScale = 0.94
                     settleFlash = true
@@ -544,14 +546,12 @@ struct CardView: View {
                 try? await Task.sleep(for: .milliseconds(90))
                 withAnimation(Board.settleAnimation) { settleScale = 1 }
                 withAnimation(.easeOut(duration: 0.55)) { settleFlash = false }
-            }
-        } else {
-            settleTilt = 4
-            settleScale = 1.08
-            Task { @MainActor in
-                // One frame, so the tilted, popped card is actually on
-                // screen before the springs animate away from it.
-                try? await Task.sleep(for: .milliseconds(16))
+            } else {
+                withAnimation(.easeOut(duration: 0.07)) {
+                    settleTilt = 4
+                    settleScale = 1.08
+                }
+                try? await Task.sleep(for: .milliseconds(70))
                 // Damped below critical: the tilt crosses zero a couple of
                 // times — that crossing *is* the shake — and is home in
                 // ~0.4 s. The pop returns with a single gentle overshoot.
