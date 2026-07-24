@@ -102,9 +102,25 @@ struct StatsPopover: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             tabBar
-            switch tab {
-            case .now: nowTab
-            case .past: pastTab
+            // Both tabs are always laid out, stacked, and the panel takes the
+            // height of the taller one — so switching between "Jetzt" and
+            // "Rückblick" never resizes the popover. This is a standing design
+            // rule, not an incidental layout (see SPEC.md, Design → "Beide
+            // Register immer gleich hoch"): the two are peers a click apart,
+            // and a panel that jumps taller or shorter as you flick between
+            // them reads as two different windows rather than one instrument
+            // with two faces. The inactive tab is fully inert — invisible,
+            // untappable, and silent to VoiceOver — so it contributes its
+            // height and nothing else.
+            ZStack(alignment: .top) {
+                nowTab
+                    .opacity(tab == .now ? 1 : 0)
+                    .allowsHitTesting(tab == .now)
+                    .accessibilityHidden(tab != .now)
+                pastTab
+                    .opacity(tab == .past ? 1 : 0)
+                    .allowsHitTesting(tab == .past)
+                    .accessibilityHidden(tab != .past)
             }
         }
         // 16 all round: the standard macOS popover inset, and the value the
@@ -115,8 +131,8 @@ struct StatsPopover: View {
         // one line at full size, with air left between them. 330 fitted them
         // exactly, which is not the same as comfortably.
         .frame(width: 400, alignment: .leading)
-        // The two tabs are different heights; without this the popover would
-        // adopt whatever SwiftUI proposes rather than its content's own size.
+        // Take the content's own size (the taller tab) rather than whatever
+        // the popover would otherwise propose.
         .fixedSize(horizontal: false, vertical: true)
     }
 

@@ -268,6 +268,13 @@ Einblenden).
   Silhouette — eine Hero-Zahl auf dem Glas, darunter eine Well mit Kennzahlen, darunter
   eine zweite Well —, sodass beim Umschalten die große Zahl ihre Bedeutung wechselt, nicht
   ihre Position:
+  - **Beide Register immer exakt gleich hoch — feste Regel, nicht verhandelbar.** Das
+    Popover nimmt die Höhe des höheren Registers (beide werden gelayoutet, das inaktive
+    unsichtbar und inert per `ZStack`); Umschalten darf die Fenstergröße **nie** ändern.
+    Zwei Ansichten, die einen Klick auseinanderliegen und beim Wechsel höher/niedriger
+    springen, lesen sich als zwei verschiedene Fenster statt als *ein* Instrument mit zwei
+    Seiten. Diese Regel wurde mehrfach versehentlich wieder entfernt — bei jeder Änderung
+    an `StatsPopover` prüfen, dass sie erhalten bleibt.
   - **Jetzt:** Folge als Hero (Flamme + Zahl + optionale Belohnungszeile), heute erledigte
     Aufgaben, aktuelle Auslastung gegen das WIP-Limit, „Bis fertig"-Schätzung nach Little's
     Law (Bestand ÷ Tempo, bewusst als Schätzung beschriftet), 30-Tage-Verlauf als Balken in
