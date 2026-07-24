@@ -281,6 +281,14 @@ Einblenden).
 
 - Liquid Glass auf der Chrome-Ebene (Fensterrücken, Toolbar, Popover); Spalten sind
   eingelassene Mulden, Karten deckendes Papier — siehe CONCEPT.md, Abschnitt Design-Anspruch
+- **Immer-aktives Erscheinungsbild** — die App tritt nicht zurück, wenn das Fenster den
+  Fokus verliert. Da das Board dauerhaft auf einem Zweitschirm offen und damit fast immer
+  inaktiv ist, wird alles Glas über `WindowGlass`/`HUDGlassMaterial` mit `state = .active`
+  gepinnt — auch die Scheibe hinter dem „+"-Knopf. Der Knopf nutzte kurzzeitig SwiftUIs
+  natives `.glassEffect`, das sich aber nicht auf „aktiv" festhalten lässt und beim
+  Fokusverlust aufhellte; damit war er das einzige Element, das in den Hintergrund trat.
+  Regel: kein Element weicht zurück, nur weil das Fenster inaktiv ist — siehe CONCEPT.md,
+  Design-Anspruch („Immer-aktiv")
 - **Spalten füllen immer die volle Fensterhöhe** — bewusste Entscheidung, siehe BACKLOG.md
   („Explizit abgelehnt": Spalten enden mit dem Inhalt). Weniger Leerfläche = Fenster kleiner
   ziehen

@@ -305,6 +305,26 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   koppeln ihre Helligkeit an das Wallpaper und kehren dadurch die Tiefenordnung um
   (Karten wirken dunkler als die Mulde, in der sie liegen). Das ist zugleich Apples
   eigenes Liquid-Glass-Modell — Glas ist Chrome, nie Inhalt.
+- **Immer-aktiv: das Board sieht fokussiert aus, auch ohne Fokus.** macOS lässt
+  inaktive Fenster bewusst zurücktreten — vibrierendes Glas graut aus, Materialien
+  flachen ab, `.secondary`-Text hellt auf. Dieses Verhalten ist für Fenster gedacht,
+  in denen man *arbeitet* und die zurückweichen sollen, während man woanders hinsieht.
+  Dieses Board ist das Gegenteil: Es steht dauerhaft offen auf einem Zweitschirm, ist
+  also fast immer inaktiv, und soll trotzdem durchgehend gleich aussehen — dem
+  Fensterzustand zu folgen würde das Glas, für das die App benannt ist, nur in den
+  seltenen Fokus-Momenten zeigen. Deshalb wird die gesamte App an ihr aktives
+  Erscheinungsbild gepinnt: Fensterrücken, Tooltip und Empty-Notice sind allesamt
+  `HUDGlassMaterial` mit `state = .active` (siehe `ContentView.WindowGlass`,
+  `HUDGlassMaterial`). Der „+"-Knopf zum Anlegen einer Karte lief zunächst über SwiftUIs
+  natives `.glassEffect` (mehr Vibrancy, das „+" ins Glas komponiert) — aber genau dieses
+  native Glas folgt dem Fensterzustand und lässt sich **nicht** pinnen (auch ein
+  gesetztes `controlActiveState = .key` wirkt darauf nicht): beim Fokusverlust hellten
+  Scheibe und Glyph auf und der Knopf war als einziges Element in den Hintergrund
+  getreten, während ringsum nichts sich rührte. Deshalb nutzt auch er jetzt dasselbe
+  gepinnte `HUDGlassMaterial` wie der Rest der App. **Regel dahinter: Kein Element tritt
+  zurück, nur weil das Fenster den Fokus verliert.** Neue Glasflächen sind entsprechend
+  über `HUDGlassMaterial` (`state = .active`) zu bauen, nicht über native
+  `.glassEffect`-Controls, solange Apple dafür keinen Aktivzustand-Pin anbietet.
 - Sauberes Typografie- und Abstandssystem nach Apple HIG (SF Pro, klare Hierarchie)
 - Dezente Bewegung: sanfte Animationen beim Spaltenwechsel (Drag & Drop), beim
   Live-Update aus Reminders (z. B. Karte erscheint/verschwindet mit Fade/Slide)

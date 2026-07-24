@@ -547,33 +547,38 @@ struct ColumnView: View {
     }
 }
 
-/// The circular Liquid Glass surface behind the Backlog add button.
+/// The circular glass surface behind the Backlog add button.
 ///
-/// The system's own `glassEffect` rather than a hand-assembled material:
-/// it bends and reflects the board behind it and pulls the "+" into the
-/// surface with real vibrancy, where the previous `HUDGlassMaterial` +
-/// stroked border + flat `.primary` glyph only stacked a frosted disc under
-/// a pasted-on symbol. `.interactive()` gives the press and hover reaction
-/// for free. When "Transparenz reduzieren" is on, it degrades to the same
-/// solid disc the rest of the board uses in that mode.
+/// `HUDGlassMaterial`, not SwiftUI's native `.glassEffect`. The native effect
+/// composites the "+" into the surface with more vibrancy, but it follows the
+/// window's active state and offers no way to pin it: the moment the board
+/// loses focus — which, on a second screen, is nearly always — the disc and
+/// the glyph on it flatten and brighten, and this button became the one element
+/// that receded while nothing around it did. Every other glass surface in the
+/// app is already this same `HUDGlassMaterial` pinned to `state = .active`
+/// (window back, tooltip, empty notice), so reusing it here keeps the button's
+/// focused look whether or not the app is frontmost — the board's rule that no
+/// element retreats just because the window is inactive (see CONCEPT.md,
+/// "Immer-aktiv"). The trade is the native effect's press/hover vibrancy; the
+/// hover lift on the button itself (a -1pt rise with a card shadow) carries the
+/// press affordance instead. When "Transparenz reduzieren" is on it degrades to
+/// the same solid disc the rest of the board uses in that mode.
 private struct AddButtonGlass: ViewModifier {
     let reduceTransparency: Bool
     let contrast: ColorSchemeContrast
 
     func body(content: Content) -> some View {
+        content
+            .background(disc)
+            .overlay { Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1) }
+    }
+
+    @ViewBuilder
+    private var disc: some View {
         if reduceTransparency {
-            content
-                .background { Circle().fill(Color(nsColor: .windowBackgroundColor)) }
-                .overlay { Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1) }
+            Circle().fill(Color(nsColor: .windowBackgroundColor))
         } else {
-            // `.clear`, not `.regular`: the thinner glass sits lower. The
-            // regular material raised the button above the cards — a control
-            // popping out further than the paper it serves inverts the
-            // board's depth order (cards are the content, chrome stays
-            // beneath them). Interactivity still lifts it on hover, so the
-            // press response is where the prominence lives, not the rest state.
-            content
-                .glassEffect(.clear.interactive(), in: .circle)
+            HUDGlassMaterial().clipShape(.circle)
         }
     }
 }
