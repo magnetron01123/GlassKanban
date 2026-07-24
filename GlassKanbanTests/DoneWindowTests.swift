@@ -34,7 +34,8 @@ final class DoneWindowTests: XCTestCase {
             listColor: .accentColor,
             completionDate: completed,
             isRecurring: false,
-            lastModifiedDate: nil)
+            lastModifiedDate: nil,
+            creationDate: nil)
     }
 
     private func recentTitles(_ cards: [KanbanCard]) -> [String] {

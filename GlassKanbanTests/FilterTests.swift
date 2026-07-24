@@ -93,7 +93,8 @@ final class FilterTests: XCTestCase {
             listColor: .accentColor,
             completionDate: nil,
             isRecurring: false,
-            lastModifiedDate: nil)
+            lastModifiedDate: nil,
+            creationDate: nil)
     }
 
     func testEmptySearchMatchesEverything() {
@@ -145,7 +146,8 @@ final class FilterTests: XCTestCase {
             listColor: .accentColor,
             completionDate: nil,
             isRecurring: recurring,
-            lastModifiedDate: nil)
+            lastModifiedDate: nil,
+            creationDate: nil)
     }
 
     private func isVisible(

@@ -21,7 +21,8 @@ final class CardSortingTests: XCTestCase {
         _ title: String,
         priority: Int = 0,
         due: Date? = nil,
-        modified: Date? = nil
+        modified: Date? = nil,
+        created: Date? = nil
     ) -> KanbanCard {
         KanbanCard(
             id: title,
@@ -35,7 +36,8 @@ final class CardSortingTests: XCTestCase {
             listColor: .accentColor,
             completionDate: nil,
             isRecurring: false,
-            lastModifiedDate: modified)
+            lastModifiedDate: modified,
+            creationDate: created)
     }
 
     private func sortedTitles(_ cards: [KanbanCard]) -> [String] {
@@ -148,5 +150,51 @@ final class CardSortingTests: XCTestCase {
             card("Mango", priority: 5, due: due),
         ]
         XCTAssertEqual(sortedTitles(cards), ["apple", "Mango", "Zebra"])
+    }
+
+    // MARK: - Age (creation date)
+
+    func testOldestTicketWinsAmongOtherwiseEqualCards() {
+        // Alphabetically this order would be exactly reversed — age has to
+        // outrank the title, or the pile buries whatever was added first.
+        let cards = [
+            card("apple", priority: 5, created: date(2026, 7, 10)),
+            card("Mango", priority: 5, created: date(2026, 7, 3)),
+            card("Zebra", priority: 5, created: date(2026, 6, 1)),
+        ]
+        XCTAssertEqual(sortedTitles(cards), ["Zebra", "Mango", "apple"])
+    }
+
+    func testAgeOnlyBreaksTiesWithinTheSamePriorityAndDueDate() {
+        // The old card is unprioritized: age must not lift it over
+        // higher-priority work, it only orders peers.
+        let cards = [
+            card("old but unprioritized", priority: 0, created: date(2020, 1, 1)),
+            card("new but high", priority: 1, created: date(2026, 7, 18)),
+        ]
+        XCTAssertEqual(sortedTitles(cards), ["new but high", "old but unprioritized"])
+    }
+
+    func testAgeOrdersDatedCardsSharingADueDate() {
+        let due = date(2026, 8, 1)
+        let cards = [
+            card("added later", priority: 5, due: due, created: date(2026, 7, 15)),
+            card("added first", priority: 5, due: due, created: date(2026, 7, 1)),
+        ]
+        XCTAssertEqual(sortedTitles(cards), ["added first", "added later"])
+    }
+
+    func testTitleStillDecidesWhenCreationDatesAreMissingOrEqual() {
+        let created = date(2026, 7, 5)
+        let sameInstant = [
+            card("Zebra", priority: 5, created: created),
+            card("apple", priority: 5, created: created),
+        ]
+        XCTAssertEqual(sortedTitles(sameInstant), ["apple", "Zebra"])
+
+        // EventKit does not guarantee a creation date; a card without one
+        // must still land somewhere deterministic rather than jittering.
+        let noDates = [card("Zebra", priority: 5), card("apple", priority: 5)]
+        XCTAssertEqual(sortedTitles(noDates), ["apple", "Zebra"])
     }
 }

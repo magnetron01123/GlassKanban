@@ -194,8 +194,16 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   Spaltenkopf (Zähler/Regeln) und „+"-Button
 
 **Sortierung** in den offenen Spalten: Dringlichkeit (überfällig/heute zuerst) → Priorität →
-frühestes Fälligkeitsdatum (Karten ohne Datum zuletzt) → Titel. Der Titel als letztes
-Kriterium sorgt dafür, dass die Reihenfolge zwischen zwei Refreshes nicht springt.
+frühestes Fälligkeitsdatum (Karten ohne Datum zuletzt) → **Erstellungsdatum (älteste
+zuerst)** → Titel. Das Alter vor dem Titel, weil alphabetisch nie eine *Bedeutung* war,
+sondern nur Stabilität herstellte: Bei gleicher Priorität und Fälligkeit geht die Karte
+vor, die am längsten im Stapel wartet (FIFO — die faire Warteschlangen-Regel, und das,
+was ein altes Ticket davor bewahrt, unter allem Später-Hinzugefügten begraben zu werden).
+Bewusst das **Erstellungs**- und nicht das Änderungsdatum: Letzteres wird von jedem
+Verschieben und jeder Bearbeitung neu gesetzt und würde die Spalte als Nebenwirkung des
+Anfassens umsortieren. Der Titel bleibt das letzte Wort — für Karten ohne Erstellungsdatum
+(EventKit garantiert es nicht) oder mit demselben —, damit die Reihenfolge zwischen zwei
+Refreshes nie springt.
 „Erledigt" sortiert nach Erledigt-Datum, neueste zuerst.
 
 **Erledigt zeigt die letzten 7 Tage** — die Arbeit einer Woche als Nachweis, kein Archiv.
