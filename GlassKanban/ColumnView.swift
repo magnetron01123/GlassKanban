@@ -26,6 +26,15 @@ struct ColumnView: View {
     /// different cut — one is "there is more of the same", the other is
     /// "there is a past".
     private var restingCards: [KanbanCard] {
+        Self.restingCut(cards, for: status)
+    }
+
+    /// The resting cut as a function, because two places must agree on it:
+    /// the lane's own rendering above, and the keep-in-sight check after an
+    /// editor closes (see `onChange(of: store.editingCardID)`), which has to
+    /// re-derive the cut from *fresh* store data rather than from this
+    /// view's captured inputs.
+    private static func restingCut(_ cards: [KanbanCard], for status: KanbanStatus) -> [KanbanCard] {
         switch status {
         case .backlog where cards.count > Board.backlogCollapsedLimit:
             return Array(cards.prefix(Board.backlogCollapsedLimit))
@@ -221,6 +230,37 @@ struct ColumnView: View {
             if isEmpty {
                 cardHeight = nil
                 if status == .next { store.nextTopCardHeight = nil }
+            }
+        }
+        // Closing an edit must never hide the card that was just in hand.
+        // A ticket the "+" just made sorts by the lane's own order — dateless
+        // and unprioritized, that is the *end* of the pile, which on a full
+        // Backlog lies inside the fold: the editor would close and the new
+        // ticket simply would not be there. The same holds for an edit that
+        // *moves* a card into the fold (say, its due date was removed). If
+        // the card an editor just released exists in this lane but not in
+        // its resting cut, the lane opens the fold so the card stays in
+        // sight — the fold line flips to "Weniger anzeigen", which also
+        // *says* what just happened.
+        //
+        // The check waits out the editor's close: an *abandoned* creation is
+        // only taken back in the editor's `onDisappear`, which fires when
+        // the close animation (`Board.cardOpenAnimation`, ~0.3s) finishes —
+        // checking immediately would see the doomed empty ticket still in
+        // the lane and unfold for a card about to vanish. It also reads the
+        // store afresh instead of this view's captured inputs, which are a
+        // render old by then.
+        .onChange(of: store.editingCardID) { previous, current in
+            guard current == nil, let closed = previous,
+                  status == .backlog || status == .done else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(450))
+                let laneCards = store.cards(for: status)
+                guard !expanded,
+                      laneCards.contains(where: { $0.id == closed }),
+                      !Self.restingCut(laneCards, for: status).contains(where: { $0.id == closed })
+                else { return }
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded = true }
             }
         }
         // Without this a card announces its title and nothing about where it
