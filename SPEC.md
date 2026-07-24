@@ -355,6 +355,11 @@ Einblenden).
 - Typografie/Abstände nach Apple HIG (SF Pro), Tokens in `DesignSystem.swift`
 - Bewegung wird für Dinge ausgegeben, die *gerade passiert sind* (Karte rastet in „Erledigt"
   ein), nie für stehende Einladungen
+- **Tempo des Boards:** Der Spaltenwechsel jeder Karte (Verlassen, Ankommen, Nachrücken)
+  läuft über *eine* Kurve — `Board.cardMoveAnimation`, eine kurze, leicht federnde Spring
+  (0,22 s). Da das die häufigste Bewegung ist, bestimmt dieser eine Wert, wie reaktiv sich
+  das ganze Board anfühlt; die frühere flache 0,35-s-Spring ließ jeden Zug einen Takt hinter
+  dem Drop wirken
 - Erscheinungsbild: Nach System / Hell / Dunkel, in den Einstellungen wählbar
 - Eigene Hover-Tooltips statt `.help(...)`, mit eigenen VoiceOver-Labels/Hints — nur am
   Chrome (Spaltenkopf, „+"-Button), nie auf Karten

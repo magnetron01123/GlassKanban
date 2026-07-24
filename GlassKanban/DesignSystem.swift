@@ -213,6 +213,15 @@ enum Board {
     // Motion
     static let hoverAnimation: Animation = .easeOut(duration: 0.16)
     static let dropTargetAnimation: Animation = .easeOut(duration: 0.15)
+    /// A card changing lanes — the board's single most common movement, so
+    /// its speed *is* the board's sense of pace: this one curve drives every
+    /// reflow when `store.cards` changes (a card leaving one lane, arriving
+    /// in another, the rest closing the gap — see `BoardView`), and the
+    /// arrival scale-in rides it too. Short and lightly sprung on purpose —
+    /// quick enough to stay under a fast hand, with just enough bounce to
+    /// read as reactive rather than as a slow slide. It was a flat 0.35s
+    /// spring, which left every move feeling a beat behind the drop.
+    static let cardMoveAnimation: Animation = .spring(duration: 0.22, bounce: 0.18)
     /// Taking a ticket off the board, and putting it back.
     ///
     /// A spring, because every panel macOS opens is sprung — but damped
