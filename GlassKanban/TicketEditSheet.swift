@@ -311,8 +311,14 @@ struct TicketEditSheet: View {
             // explicit" asks that such a rule be findable — the same reason
             // the WIP limit rides along in the lane counter. The editor is
             // where it costs nothing: the ambient board stays untouched.
+            // "Erfasst", not "Angelegt": Personal Kanban's own word for the
+            // act the "+" performs — capturing work out of the head and
+            // onto the board (Benson's capture step). "Angelegt" is file-
+            // system German; this board speaks Kanban in its chrome
+            // ("Fertig werden beginnt hier"), and the date names when the
+            // commitment was captured, not when a record was created.
             if let created = card.creationDate {
-                factRow("Angelegt") {
+                factRow("Erfasst") {
                     // Bare secondary text where the other rows carry
                     // controls: no bezel, no chevron — the stillness is
                     // what says "fact, not setting". The row itself is the

@@ -404,7 +404,7 @@ struct StatsPopover: View {
                     if let lead = wrapped.medianLeadTimeDays {
                         row("Durchlaufzeit",
                             Self.daysEstimate(lead),
-                            help: "Median von „angelegt“ bis „erledigt“ bei einmaligen Aufgaben der letzten \(WrappedStats.trendWindowDays) Tage — mit Auslastung und Tempo die dritte Größe in Little’s Law.")
+                            help: "Median von „erfasst“ bis „erledigt“ bei einmaligen Aufgaben der letzten \(WrappedStats.trendWindowDays) Tage — mit Auslastung und Tempo die dritte Größe in Little’s Law.")
                     }
                 }
             }

@@ -250,7 +250,7 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
   *Schätzung* beschriftet — der Wert steigt, sobald mehr gleichzeitig begonnen wird, und
   genau das ist die Aussage eines WIP-Limits. Im Rückblick stehen seit Juli 2026 zusätzlich
   die beiden Flusskennzahlen, aus denen diese Schätzung besteht — **Durchsatz** („Pro
-  Woche") und **Durchlaufzeit** (Median angelegt→erledigt, nur einmalige Aufgaben, nur die
+  Woche") und **Durchlaufzeit** (Median erfasst→erledigt, nur einmalige Aufgaben, nur die
   letzten 30 Tage: über die ganze Historie gemessen dominieren Backlog-Altlasten den Wert,
   und eine dauerhaft riesige Zahl wäre eine stehende Anklage; gefenstert beschreibt die
   Zahl das aktuelle Verhalten und verbessert sich mit ihm). Mit allen drei

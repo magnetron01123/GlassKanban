@@ -120,7 +120,9 @@ auslässt. Der Status-Hashtag ist im Notizen-Feld nie sichtbar und wird beim Spe
 die aktuelle Spalte wieder angehängt — ein Inhalts-Edit kann eine Karte nie verschieben.
 Ein Listenwechsel bietet nur beschreibbare, nicht ausgeblendete Listen an.
 
-**„Angelegt" als erste Fakten-Zeile** — die einzige nicht editierbare Angabe im Editor und
+**„Erfasst" als erste Fakten-Zeile** — Personal Kanbans eigenes Wort für den Akt, den das
+„+" ausführt (Bensons Capture-Schritt: Arbeit aus dem Kopf aufs Board holen; „Angelegt"
+wäre Dateisystem-Deutsch) — die einzige nicht editierbare Angabe im Editor und
 der einzige Ort, an dem das Erstellungsdatum überhaupt erscheint. Sie existiert, weil die
 offenen Spalten seit Juli 2026 **nach Alter sortieren**: Die Position einer Karte trägt
 damit eine Regel, die das Board sonst nirgends ausspricht, und Kanbans *„make policies
@@ -313,7 +315,7 @@ Einblenden).
     Glyphe + Zahl + Einheit; der Meilenstein bei einer runden Zahl innerhalb der letzten
     7 Tage erscheint als Belohnungszeile darunter), dann längste Folge und die zwei
     **Personal-Kanban-Flusskennzahlen** — **Pro Woche** (Durchsatz, Ø letzte 30 Tage) und
-    **Durchlaufzeit** (Median von „angelegt" bis „erledigt", nur einmalige Aufgaben, nur
+    **Durchlaufzeit** (Median von „erfasst" bis „erledigt", nur einmalige Aufgaben, nur
     Erledigungen der letzten 30 Tage). Zusammen mit „In Bearbeitung" im anderen Register
     stehen damit alle drei Größen von Little's Law im Fenster — die Prognose ist
     nachrechenbar statt Orakel. **Little's Law wird in den Hover-Tipps beim Namen genannt**
