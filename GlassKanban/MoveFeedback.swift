@@ -15,7 +15,10 @@ import AppKit
 ///   clicking into a slot, it is silent, and it only exists under the finger
 ///   that made the move (Force-Touch trackpads; a mouse simply feels
 ///   nothing). Completing steps up from `.alignment` to `.levelChange` — the
-///   same vocabulary macOS itself uses for "something latched".
+///   same vocabulary macOS itself uses for "something latched". Pulling into
+///   "In Bearbeitung" is a quick *double* tick, the finger's version of the
+///   card's on-screen shake: work starting has a little more pulse than a
+///   filing move, without borrowing completion's firmer thud.
 /// - **Sound** only on completion, and only if Settings allows it. Completion
 ///   is the one moment Personal Kanban actually celebrates; a tick on every
 ///   move would turn the board into an instrument. The chime is the app's
@@ -30,10 +33,16 @@ enum MoveFeedback {
     /// The sample is already mastered soft; this trims it into ambience.
     private static let volume: Float = 0.6
 
-    static func play(completed: Bool, soundEnabled: Bool) {
+    static func play(completed: Bool, pulled: Bool = false, soundEnabled: Bool) {
         NSHapticFeedbackManager.defaultPerformer.perform(
             completed ? .levelChange : .alignment,
             performanceTime: .default)
+        if pulled, !completed {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(80))
+                NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
+            }
+        }
         // No fallback to a system sound if the resource is missing: silence
         // is closer to the design than an alert noise would be.
         guard completed, soundEnabled, let sound = NSSound(named: "CompletionChime") else { return }

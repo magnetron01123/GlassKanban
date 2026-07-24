@@ -23,9 +23,8 @@ struct CardView: View {
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
     @State private var settleFlash = false
-    /// True while a pulled card is still "in the air" — carries the landing
-    /// shadow that fades as the card settles onto the board.
-    @State private var settleLift = false
+    /// Degrees of tilt while a pulled card shakes itself into place.
+    @State private var settleTilt: Double = 0
     @State private var isRenaming = false
     @State private var renameText = ""
     /// The title the edit started from — the *stored* one, not the sanitized
@@ -59,14 +58,8 @@ struct CardView: View {
             color: card.status == .done ? .clear : Board.cardShadowAmbient.color,
             radius: Board.cardShadowAmbient.radius,
             y: Board.cardShadowAmbient.y)
-        // The landing shadow, only while a pulled card settles: the same
-        // hover vocabulary as everywhere else on the board — anything held
-        // above the paper casts this — fading as the card touches down.
-        .shadow(
-            color: Board.cardShadowHover.color.opacity(settleLift ? 1 : 0),
-            radius: Board.cardShadowHover.radius,
-            y: Board.cardShadowHover.y)
         .scaleEffect(settleScale)
+        .rotationEffect(.degrees(settleTilt))
         .offset(y: isHovered && !reduceMotion ? -1 : 0)
         // The card being dragged stays visible in its source lane, which reads
         // as "it is still here" while the cursor carries a copy of it. Ghosting
@@ -515,20 +508,21 @@ struct CardView: View {
     /// an animation snapped the card 6% instantly before the spring took over,
     /// which read as a glitch rather than a reward.
     ///
-    /// A pull into "In Bearbeitung" *lands* instead: the card starts a
-    /// touch large with the board's hover shadow under it — held above the
-    /// paper, exactly the way the drag was carrying it — and settles flat
-    /// onto the board. Landing runs *against* the lane's own insertion
-    /// transition (a 0.93 scale-in, see `ColumnView`), so the two can never
-    /// blur into one movement; an earlier squish variant scaled the same
-    /// way the insertion did and disappeared inside it. No flash: the
-    /// colour moment stays reserved for finishing.
+    /// A pull into "In Bearbeitung" *shakes* instead — a small tilt that a
+    /// loose spring swings back through zero a few times, the card
+    /// shimmying itself into the slot with somewhere to be. Eagerness, not
+    /// arrival. Rotation on purpose, and not for its looks: it is the one
+    /// motion channel this board never uses anywhere else — cards scale,
+    /// fade and translate, but nothing ever *tilts* — so even two degrees
+    /// of it cannot be absorbed by the lane's insertion transition the way
+    /// both scale-based attempts before it were. No flash: the colour
+    /// moment stays reserved for finishing.
     ///
-    /// The start state is set *synchronously* in `onAppear` and the spring
-    /// fires one frame later. Both halves matter: setting the start and the
+    /// The tilt is set *synchronously* in `onAppear` and the spring fires
+    /// one frame later. Both halves matter: setting the start and the
     /// target in the same run-loop tick lets SwiftUI coalesce them into one
     /// transaction — the start value never renders, the "animation" runs
-    /// from 1 to 1, and nothing visibly happens (the first version of this
+    /// from 0 to 0, and nothing visibly happens (the first version of this
     /// settle died exactly that death). The completion branch keeps its
     /// original shape, where the squish is itself animated from the
     /// rendered card.
@@ -547,14 +541,17 @@ struct CardView: View {
                 withAnimation(.easeOut(duration: 0.55)) { settleFlash = false }
             }
         } else {
-            settleScale = 1.07
-            settleLift = true
+            settleTilt = 2.2
             Task { @MainActor in
-                // One frame, so the raised card is actually on screen
-                // before the landing animates away from it.
+                // One frame, so the tilted card is actually on screen
+                // before the shake animates away from it.
                 try? await Task.sleep(for: .milliseconds(16))
-                withAnimation(Board.settleAnimation) { settleScale = 1 }
-                withAnimation(.easeOut(duration: 0.4)) { settleLift = false }
+                // Damped far below critical: the spring crosses zero
+                // several times on its way home — that crossing *is* the
+                // vibration.
+                withAnimation(.spring(response: 0.28, dampingFraction: 0.22)) {
+                    settleTilt = 0
+                }
             }
         }
     }

@@ -297,7 +297,10 @@ Einblenden).
 - **Sensorisches Feedback beim Verschieben** (`MoveFeedback`, alles am einen `move()`-Pfad,
   damit Maus, Kontextmenü, VoiceOver und Undo gleich behandelt werden):
   - **Haptik** bei jedem echten Spaltenwechsel (Trackpad; `.alignment`, beim Erledigen
-    `.levelChange`) — das Einrasten der Karte unter dem Finger
+    `.levelChange`) — das Einrasten der Karte unter dem Finger. Der Pull nach „In
+    Bearbeitung" ist ein schneller **Doppel-Tick** (zweimal `.alignment`, 80 ms Abstand):
+    Arbeitsbeginn hat mehr Puls als ein Ablage-Move, ohne den festeren Erledigt-Schlag
+    zu borgen
   - **Leiser Klang beim Erledigen** — ein eigener, für die App synthetisierter Zweiklang
     (`CompletionChime.wav`: zwei weiche Glastöne, aufsteigende Quinte F#5→C#6). Bewusst
     **kein Systemklang**: jeder Klang aus /System/Library/Sounds dient irgendwo in macOS
@@ -307,11 +310,13 @@ Einblenden).
     Erledigen, nie bei anderen Moves: Fertigwerden ist der eine Moment, den Personal
     Kanban feiert. Fehlt die Ressource, bleibt es still — kein Rückfall auf Systemklänge
   - **Settle-Animationen:** Erledigen = Squish + grüner Blitz (bestand schon); Pull nach
-    „In Bearbeitung" = **Landung**: die Karte erscheint eine Spur größer mit dem
-    Hover-Schatten des Boards darunter — gehalten über dem Papier, wie der Drag sie trug —
-    und setzt federnd flach auf. Bewusst die *Gegenrichtung* zur Einfüge-Transition der
-    Lane (Scale 0,93 aufwärts), damit beide nie zu einer Bewegung verschwimmen; ein leiser
-    Squish in dieselbe Richtung ging darin unter. Technische Lehre dahinter (siehe
+    „In Bearbeitung" = **kurzes Wackeln**: die Karte kippt ~2° und eine locker gedämpfte
+    Feder schwingt sie mehrfach durch die Null zurück — sie „zappelt vor Tatendrang" in
+    ihren Slot. Rotation mit Absicht: Es ist der eine Bewegungskanal, den das Board sonst
+    nirgends nutzt (Karten skalieren, faden, verschieben sich — nichts kippt je), also kann
+    selbst ein kleines Wackeln nicht von der Einfüge-Transition der Lane geschluckt werden —
+    zwei skalierungsbasierte Vorgänger gingen genau darin unter (eine Landung von oben mit
+    Schatten wurde gebaut und als unpassend verworfen). Technische Lehre dahinter (siehe
     `CardView.playSettleIfFlagged`): Start- und Zielwert einer Animation im selben
     Runloop-Tick zu setzen lässt SwiftUI beide zu einer Transaktion verschmelzen — der
     Startwert wird nie gerendert und es passiert sichtbar nichts; der Startzustand muss

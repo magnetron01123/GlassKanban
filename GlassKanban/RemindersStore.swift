@@ -520,6 +520,7 @@ final class RemindersStore: ObservableObject {
         // a limit that only applies to them (see `pendingOverflow` above).
         MoveFeedback.play(
             completed: status == .done,
+            pulled: status == .inProgress,
             soundEnabled: completionSoundEnabled)
         // Asked after the move, never before it: the board does not block a
         // drop, it lets the work land and then offers to put it back.
