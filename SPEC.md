@@ -120,6 +120,20 @@ auslässt. Der Status-Hashtag ist im Notizen-Feld nie sichtbar und wird beim Spe
 die aktuelle Spalte wieder angehängt — ein Inhalts-Edit kann eine Karte nie verschieben.
 Ein Listenwechsel bietet nur beschreibbare, nicht ausgeblendete Listen an.
 
+**„Angelegt am …" als stille Fußnote** unter den Fakten — die einzige nicht editierbare
+Angabe im Editor und der einzige Ort, an dem das Erstellungsdatum überhaupt erscheint. Sie
+existiert, weil die offenen Spalten seit Juli 2026 **nach Alter sortieren**: Die Position
+einer Karte trägt damit eine Regel, die das Board sonst nirgends ausspricht, und Kanbans
+*„make policies explicit"* verlangt, dass so eine Regel auffindbar ist (dieselbe Begründung
+wie beim WIP-Limit im Spaltenzähler). Bewusst **keine vierte Fakten-Zeile** — die sind
+Bedienelemente, das hier ist eine Fußnote dazu: innerhalb derselben Zone (eine vierte
+Haarlinie bräche die Drei-Zonen-Anatomie der Karte), im `meta`-Grad und eine Stufe leiser
+gefärbt, genau wie die „Seit …"-Notiz im Statistik-Fenster. **Auf der Karte selbst
+erscheint das Datum nicht** — dort sagen Verweildauer-Chip und Sortier-Position schon
+alles, und ein drittes Datum würde die Regel „Kopf = Prozess, Fuß = Aufgaben-Fakten"
+brechen. Bei einem heute angelegten Ticket bleibt die Zeile stumm: Signale erscheinen nur,
+wenn sie etwas zu melden haben (wie der Verweildauer-Chip ab 3 Tagen).
+
 **Der Editor hat keine Sichern-/Abbrechen-Knöpfe — die beiden Antworten liegen auf der
 Tastatur, in denselben Worten wie beim Umbenennen: Return übernimmt, Escape verwirft.** Ein
 Klick aufs Board zählt als Return (die Notiz wird zurück an die Wand gehängt, mit dem, was
