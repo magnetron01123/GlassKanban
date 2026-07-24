@@ -199,10 +199,11 @@ Kriterium sorgt dafür, dass die Reihenfolge zwischen zwei Refreshes nicht sprin
 „Erledigt" sortiert nach Erledigt-Datum, neueste zuerst.
 
 **Erledigt zeigt die letzten 7 Tage** — die Arbeit einer Woche als Nachweis, kein Archiv.
-Liegen ältere erledigte Karten vor, steht unter der Spalte „N ältere anzeigen" (dasselbe
-Muster wie beim Backlog): ein Klick holt **die letzten 30 Tage** zurück. Dieselbe Zeile
-schließt den Blick zurück wieder („Ältere ausblenden", im Backlog „Weniger anzeigen") —
-der Weg zurück sitzt dort, wo der Weg hinein war; ein Neustart klappt ohnehin wieder ein.
+Liegen ältere erledigte Karten vor, steht **direkt unter der letzten Karte** „N ältere
+anzeigen ˅" (dasselbe Muster wie beim Backlog): ein Klick holt **die letzten 30 Tage**
+zurück. Dieselbe Zeile schließt den Blick zurück wieder („Ältere ausblenden ˄", im
+Backlog „Weniger anzeigen") — sie sitzt dann am Ende der aufgeklappten Liste, wo man zu
+Ende gelesen hat; ein Neustart klappt ohnehin wieder ein.
 Bewusst begrenzt statt „alles laden" — eine Liste, die kurz genug zum Überfliegen
 bleibt, braucht keine Datums-Überschriften, Gruppen oder eigene Archiv-Ansicht. Alles
 Ältere liegt in der Reminders-App, dem eigentlichen Speicher; darauf weist der
@@ -210,9 +211,13 @@ Spalten-Tooltip im aufgeklappten Zustand hin. Die Zähler-Kapsel benennt immer d
 angezeigte Menge und wächst beim Aufklappen mit; was sie ausblendet, meldet der Tooltip
 („N ältere Karten") — dieselbe Regel wie bei den wiederkehrenden Karten.
 
-Die Fußzeile ist eine **blanke Textzeile** (Meta-Schriftgrad, sekundär, bei Hover primär),
-kein Glas-Button: Glas gehört dem Chrome, nie der Inhaltsebene — in der Mulde wäre eine
-Glasplatte eine aufgesetzte Fläche im falschen Stockwerk. Aus demselben Grund zeigen die
+Die Fold-Zeile ist eine **blanke Textzeile** (Body-Schriftgrad medium + Chevron, sekundär,
+bei Hover primär), kein Glas-Button: Glas gehört dem Chrome, nie der Inhaltsebene — in der
+Mulde wäre eine Glasplatte eine aufgesetzte Fläche im falschen Stockwerk. Sie steht **im
+Inhalt, nicht am Spaltenfuß**: Die Lanes sind immer fensterhoch, und am Fuß hing die Zeile
+bei kurzem Stapel hunderte Punkte unter der letzten Karte im toten Raum — dort las sie
+sich als Fenster-Chrome statt als Fortsetzung der Liste (Usability-Feedback Juli 2026;
+Position am Fuß nicht wieder vorschlagen). Aus demselben Chrome-Grund zeigen die
 Spalten **keine Scrollbalken**: Der System-Overlay-Balken läge als einziges Element *über*
 den Karten; das „da ist mehr"-Signal ist der Fade am unteren Spaltenrand, gescrollt wird
 unverändert.

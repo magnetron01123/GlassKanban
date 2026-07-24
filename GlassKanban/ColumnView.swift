@@ -141,6 +141,10 @@ struct ColumnView: View {
                                 removal: .opacity))
                     }
 
+                    if foldedCount > 0 {
+                        moreButton
+                    }
+
                     if status == .backlog {
                         addTicketButton
                     }
@@ -179,10 +183,6 @@ struct ColumnView: View {
                         ? EdgeInsets(top: -Self.shakeHeadroom, leading: -Self.shakeHeadroom,
                                      bottom: 0, trailing: -Self.shakeHeadroom)
                         : EdgeInsets())
-            }
-
-            if foldedCount > 0 {
-                moreButton
             }
         }
         .frame(
@@ -478,16 +478,27 @@ struct ColumnView: View {
         .padding(.vertical, 4)
     }
 
-    /// The fold line at the foot of a stack lane, and the way back out.
+    /// The fold line of a stack lane, and the way back out.
+    ///
+    /// It sits *inside* the scroll content, directly under the last card —
+    /// not pinned to the lane's foot, where it lived for a while. The lanes
+    /// are always full window height, so the foot-of-lane position left the
+    /// link orphaned hundreds of points below a short pile, in dead space no
+    /// eye crosses after scanning the cards; it read as window chrome, not
+    /// as the list continuing. Under the last card it is exactly where the
+    /// scan stops, and where "older" and "more" physically live on a stack:
+    /// beneath the pile. The collapse line then sits at the end of what it
+    /// folds away — you finish reading the older cards and close the fold
+    /// right there.
     ///
     /// A bare text line, not a plated button: the board's own rule is that
     /// glass belongs to the chrome and never to the content plane (see
     /// CONCEPT.md, Design-Anspruch) — the earlier `.glass` footer sat inside
-    /// the recessed well as a raised plate and broke exactly that. At meta
-    /// scale in secondary it reads as the lane's last, quiet line; hover
-    /// lifts it to primary, which is all the affordance a link this local
-    /// needs. The same line closes the fold again ("Ältere ausblenden"), so
-    /// the way back sits precisely where the way in was.
+    /// the recessed well as a raised plate and broke exactly that. Body
+    /// scale, one step up from the meta it once was, with a chevron carrying
+    /// the "there is more" affordance — the quietest mark that says
+    /// *control* at first glance; hover still lifts it to primary. Any
+    /// louder and it would outrank the cards it serves.
     private var moreButton: some View {
         Button {
             // Folding 15+ cards in or out at once is the largest layout
@@ -495,23 +506,25 @@ struct ColumnView: View {
             // Reduce Motion.
             withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded.toggle() }
         } label: {
-            Text(moreLabel)
-                .font(BoardText.meta)
-                // One weight up from meta's regular: the only clickable line
-                // at this scale, and it has to read as a link, not as the
-                // passive metadata `meta` sets everywhere else.
-                .fontWeight(.medium)
-                .foregroundStyle(moreHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 7)
-                .contentShape(Rectangle())
+            HStack(spacing: 5) {
+                Text(moreLabel)
+                    .font(BoardText.body)
+                    // One weight up from body's regular: the only clickable
+                    // line at this scale, and it has to read as a link, not
+                    // as running text.
+                    .fontWeight(.medium)
+                Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                    .font(BoardText.glyph)
+            }
+            .foregroundStyle(moreHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 7)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) { moreHovered = hovering }
         }
-        .padding(.horizontal, Board.laneMargin)
-        .padding(.bottom, 6)
     }
 
     /// "weitere" for Backlog (more of the same pile), "ältere" for Erledigt
