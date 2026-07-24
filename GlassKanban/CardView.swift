@@ -23,6 +23,9 @@ struct CardView: View {
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
     @State private var settleFlash = false
+    /// True while a pulled card is still "in the air" — carries the landing
+    /// shadow that fades as the card settles onto the board.
+    @State private var settleLift = false
     @State private var isRenaming = false
     @State private var renameText = ""
     /// The title the edit started from — the *stored* one, not the sanitized
@@ -56,6 +59,13 @@ struct CardView: View {
             color: card.status == .done ? .clear : Board.cardShadowAmbient.color,
             radius: Board.cardShadowAmbient.radius,
             y: Board.cardShadowAmbient.y)
+        // The landing shadow, only while a pulled card settles: the same
+        // hover vocabulary as everywhere else on the board — anything held
+        // above the paper casts this — fading as the card touches down.
+        .shadow(
+            color: Board.cardShadowHover.color.opacity(settleLift ? 1 : 0),
+            radius: Board.cardShadowHover.radius,
+            y: Board.cardShadowHover.y)
         .scaleEffect(settleScale)
         .offset(y: isHovered && !reduceMotion ? -1 : 0)
         // The card being dragged stays visible in its source lane, which reads
@@ -505,22 +515,29 @@ struct CardView: View {
     /// an animation snapped the card 6% instantly before the spring took over,
     /// which read as a glitch rather than a reward.
     ///
-    /// A pull into "In Bearbeitung" snaps instead: the card starts small and
-    /// springs to size with a visible overshoot — the click of a ticket
-    /// dropping into the slot the empty lane promised. It cannot reuse the
-    /// completion's squish-first shape, and not for taste reasons: every
-    /// card *arriving* in a lane already plays the lane's insertion
-    /// transition (a 0.93 scale-in, see `ColumnView`), and a 3% squish on
-    /// top of that vanished inside it — measured on the real board, not
-    /// guessed. Starting visibly *under* the insertion scale and riding the
-    /// bouncy spring is what makes the pull read at all. No flash: the
+    /// A pull into "In Bearbeitung" *lands* instead: the card starts a
+    /// touch large with the board's hover shadow under it — held above the
+    /// paper, exactly the way the drag was carrying it — and settles flat
+    /// onto the board. Landing runs *against* the lane's own insertion
+    /// transition (a 0.93 scale-in, see `ColumnView`), so the two can never
+    /// blur into one movement; an earlier squish variant scaled the same
+    /// way the insertion did and disappeared inside it. No flash: the
     /// colour moment stays reserved for finishing.
+    ///
+    /// The start state is set *synchronously* in `onAppear` and the spring
+    /// fires one frame later. Both halves matter: setting the start and the
+    /// target in the same run-loop tick lets SwiftUI coalesce them into one
+    /// transaction — the start value never renders, the "animation" runs
+    /// from 1 to 1, and nothing visibly happens (the first version of this
+    /// settle died exactly that death). The completion branch keeps its
+    /// original shape, where the squish is itself animated from the
+    /// rendered card.
     private func playSettleIfFlagged() {
         guard !reduceMotion else { return }
         let completed = store.recentlyCompletedIDs.contains(card.id)
         guard completed || store.recentlyPulledIDs.contains(card.id) else { return }
-        Task { @MainActor in
-            if completed {
+        if completed {
+            Task { @MainActor in
                 withAnimation(.easeOut(duration: 0.09)) {
                     settleScale = 0.94
                     settleFlash = true
@@ -528,11 +545,16 @@ struct CardView: View {
                 try? await Task.sleep(for: .milliseconds(90))
                 withAnimation(Board.settleAnimation) { settleScale = 1 }
                 withAnimation(.easeOut(duration: 0.55)) { settleFlash = false }
-            } else {
-                // Instant, not animated: the view is appearing this frame,
-                // so there is nothing on screen yet to snap visibly.
-                settleScale = 0.90
+            }
+        } else {
+            settleScale = 1.07
+            settleLift = true
+            Task { @MainActor in
+                // One frame, so the raised card is actually on screen
+                // before the landing animates away from it.
+                try? await Task.sleep(for: .milliseconds(16))
                 withAnimation(Board.settleAnimation) { settleScale = 1 }
+                withAnimation(.easeOut(duration: 0.4)) { settleLift = false }
             }
         }
     }

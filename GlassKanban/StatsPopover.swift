@@ -456,15 +456,24 @@ struct StatsPopover: View {
     }
 
     /// The year total, set exactly like the streak hero next door — same
-    /// row, same type, same optional note line beneath. No glyph where the
-    /// flame sits: the flame is a state (empty, started, full) and earns its
-    /// place by changing; a permanent trophy beside the year count would be
-    /// furniture. The reward moment this hero owns is the milestone, and it
-    /// appears as the note — the same slot where "Jetzt" celebrates the
-    /// record.
+    /// row, same type, same optional note line beneath, and a glyph where
+    /// the flame sits. The first cut left the glyph out (a permanent trophy
+    /// beside a tally read as furniture), and the tabs immediately stopped
+    /// rhyming: one hero opened with a symbol, the other with a bare digit,
+    /// which is exactly the kind of near-miss the shared silhouette exists
+    /// to prevent. The seal follows the flame's own rules rather than
+    /// standing decoration: outline and secondary while the year is empty,
+    /// filled and warm once it is not — a state, not a trophy.
     private var yearHero: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .center, spacing: 8) {
+                Image(systemName: wrapped.yearCount == 0 ? "checkmark.seal" : "checkmark.seal.fill")
+                    .font(.system(size: BoardText.heroUnitSize))
+                    .foregroundStyle(wrapped.yearCount == 0
+                        ? AnyShapeStyle(.secondary)
+                        : AnyShapeStyle(Color.orange.gradient))
+                    // The hero's combined label speaks for the whole block.
+                    .accessibilityHidden(true)
                 Text("\(wrapped.yearCount)")
                     .font(BoardText.heroUnit)
                     .monospacedDigit()

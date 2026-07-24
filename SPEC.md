@@ -272,8 +272,10 @@ Einblenden).
     Aufgaben, aktuelle Auslastung gegen das WIP-Limit, „Bis fertig"-Schätzung nach Little's
     Law (Bestand ÷ Tempo, bewusst als Schätzung beschriftet), 30-Tage-Verlauf als Balken in
     fester, großzügiger Höhe (das Diagramm ist die zweite Blickfläche des Registers)
-  - **Rückblick:** Jahreszahl als Hero (Meilenstein bei einer runden Zahl innerhalb der
-    letzten 7 Tage erscheint als Belohnungszeile darunter), dann längste Folge und die zwei
+  - **Rückblick:** Jahreszahl als Hero mit Siegel-Glyphe (`checkmark.seal`, den Regeln der
+    Flamme folgend: Umriss/grau bei 0, gefüllt/orange sonst — beide Heroes öffnen mit
+    Glyphe + Zahl + Einheit; der Meilenstein bei einer runden Zahl innerhalb der letzten
+    7 Tage erscheint als Belohnungszeile darunter), dann längste Folge und die zwei
     **Personal-Kanban-Flusskennzahlen** — **Pro Woche** (Durchsatz, Ø letzte 30 Tage) und
     **Durchlaufzeit** (Median von „angelegt" bis „erledigt", nur einmalige Aufgaben, nur
     Erledigungen der letzten 30 Tage). Zusammen mit „In Bearbeitung" im anderen Register
@@ -305,11 +307,16 @@ Einblenden).
     Erledigen, nie bei anderen Moves: Fertigwerden ist der eine Moment, den Personal
     Kanban feiert. Fehlt die Ressource, bleibt es still — kein Rückfall auf Systemklänge
   - **Settle-Animationen:** Erledigen = Squish + grüner Blitz (bestand schon); Pull nach
-    „In Bearbeitung" = **Snap**: die Karte startet sichtbar klein und federt mit Overshoot
-    auf ihre Größe — das Einrasten im versprochenen Slot. Kein halber Squish: jede in einer
-    Lane ankommende Karte spielt ohnehin die Einfüge-Transition (Scale 0,93), ein leiser
-    Squish darüber verschwand darin (am echten Board gemessen). Ohne Farbe — der Farbmoment
-    bleibt dem Fertigwerden vorbehalten. Nur lokale Pulls
+    „In Bearbeitung" = **Landung**: die Karte erscheint eine Spur größer mit dem
+    Hover-Schatten des Boards darunter — gehalten über dem Papier, wie der Drag sie trug —
+    und setzt federnd flach auf. Bewusst die *Gegenrichtung* zur Einfüge-Transition der
+    Lane (Scale 0,93 aufwärts), damit beide nie zu einer Bewegung verschwimmen; ein leiser
+    Squish in dieselbe Richtung ging darin unter. Technische Lehre dahinter (siehe
+    `CardView.playSettleIfFlagged`): Start- und Zielwert einer Animation im selben
+    Runloop-Tick zu setzen lässt SwiftUI beide zu einer Transaktion verschmelzen — der
+    Startwert wird nie gerendert und es passiert sichtbar nichts; der Startzustand muss
+    erst einen Frame stehen. Ohne Farbe — der Farbmoment bleibt dem Fertigwerden
+    vorbehalten. Nur lokale Pulls
   - **Flammen-Nicken:** die Toolbar-Flamme macht bei jeder erledigten Aufgabe einen kleinen
     Bounce (auch wenn sich ihr Füllstand nicht ändert) — die kleinstmögliche Quittung, dass
     das Board es gesehen hat. Alles respektiert „Bewegung reduzieren"
