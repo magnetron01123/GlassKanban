@@ -29,6 +29,11 @@ final class RemindersStore: ObservableObject {
     /// whether completed here or elsewhere (a shared list on someone else's
     /// device). Cleared automatically shortly after.
     @Published private(set) var recentlyCompletedIDs: Set<String> = []
+    /// Cards just pulled into "In Bearbeitung" — the quieter cousin of
+    /// `recentlyCompletedIDs`, for the small snap-into-the-slot settle.
+    /// Local pulls only: completing is *the* event and echoes even from
+    /// other devices, but a pull is feedback on this hand's own gesture.
+    @Published private(set) var recentlyPulledIDs: Set<String> = []
     /// Card currently being dragged. Observed alongside the drag — the drop
     /// payload is not readable while merely hovering — so a lane can tell
     /// whether a drop would actually move anything.
@@ -141,9 +146,20 @@ final class RemindersStore: ObservableObject {
         hideRecurringUntilDue ? .hiddenUntilDue : .alwaysVisible
     }
 
+    /// Whether completing a task makes the quiet tick (see `MoveFeedback`).
+    /// On by default — it is the reward the completion moment is for — and
+    /// switchable in Settings, because an ambient board that suddenly makes
+    /// noise must offer the off switch in the obvious place.
+    @Published var completionSoundEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(completionSoundEnabled, forKey: Self.completionSoundKey)
+        }
+    }
+
     private static let excludedKey = "excludedCalendarIDs"
     private static let wipLimitsKey = "wipLimits"
     private static let hideRecurringKey = "hideRecurringUntilDue"
+    private static let completionSoundKey = "completionSoundEnabled"
 
     /// How far back completions are fetched for the streak calculation. A
     /// streak longer than this would be reported short — deliberately far
@@ -185,6 +201,7 @@ final class RemindersStore: ObservableObject {
         // Assigning in init does not fire the didSet, so seed the session filter
         // here rather than relying on the property's declared placeholder.
         hideRecurringUntilDue = UserDefaults.standard.object(forKey: Self.hideRecurringKey) as? Bool ?? true
+        completionSoundEnabled = UserDefaults.standard.object(forKey: Self.completionSoundKey) as? Bool ?? true
         recurringFilter = hideRecurringUntilDue ? .hiddenUntilDue : .alwaysVisible
     }
 
@@ -360,10 +377,24 @@ final class RemindersStore: ObservableObject {
         // The list a finished task came from is thrown away everywhere else —
         // a completed card only needs its title. The stats view is the one
         // place that reads it, so it is captured here rather than fetched again.
+        //
+        // Recurrence needs a detour, measured on a real board: completing a
+        // repeating reminder detaches the finished occurrence from its
+        // series, so `hasRecurrenceRules` is false on exactly the records
+        // fetched here — while `creationDate` still points at the day the
+        // *series* was set up, years ago for a standing chore. The series
+        // itself, though, lives on in the incomplete fetch. A completed
+        // reminder whose title matches a live recurring series is treated
+        // as one of its occurrences, which is what keeps those series
+        // creation dates out of the lead-time median (see
+        // `CompletionRecord.isRecurring`).
+        let recurringTitles = Set(incomplete.filter(\.hasRecurrenceRules).map(\.title))
         let completionRecords: [CompletionRecord] = completed.compactMap { reminder in
             guard let date = reminder.completionDate, let calendar = reminder.calendar else { return nil }
             return CompletionRecord(
                 date: date,
+                created: reminder.creationDate,
+                isRecurring: reminder.hasRecurrenceRules || recurringTitles.contains(reminder.title),
                 listName: calendar.title,
                 listColor: Color(nsColor: calendar.color ?? .controlAccentColor))
         }
@@ -424,7 +455,8 @@ final class RemindersStore: ObservableObject {
             listColor: Color(nsColor: calendar.color ?? .controlAccentColor),
             completionDate: reminder.completionDate,
             isRecurring: reminder.hasRecurrenceRules,
-            lastModifiedDate: reminder.lastModifiedDate)
+            lastModifiedDate: reminder.lastModifiedDate,
+            creationDate: reminder.creationDate)
     }
 
     /// Data hygiene from the spec: completed reminders keep no stale status
@@ -453,13 +485,20 @@ final class RemindersStore: ObservableObject {
     /// Moves a card to another column. Returns the column it came from if
     /// anything actually changed, so the UI can give feedback (haptics) only
     /// on a real move — and can offer to put the card back.
+    ///
+    /// `feedback` is false only when the move replays through undo/redo:
+    /// sound and haptics belong to the hand on the card, not to ⌘Z — an
+    /// undone completion chiming like a fresh one read as the board
+    /// celebrating a correction. The *visual* settles stay either way: they
+    /// mark where the card went, which is wayfinding, and remote moves get
+    /// them too.
     @discardableResult
-    func move(cardID: String, to status: KanbanStatus, undoManager: UndoManager? = nil) -> KanbanStatus? {
+    func move(cardID: String, to status: KanbanStatus, undoManager: UndoManager? = nil, feedback: Bool = true) -> KanbanStatus? {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
         guard origin != status else { return nil }
         register(undoManager, name: "Verschieben") { store in
-            store.move(cardID: cardID, to: origin, undoManager: undoManager)
+            store.move(cardID: cardID, to: origin, undoManager: undoManager, feedback: false)
         }
 
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
@@ -479,6 +518,20 @@ final class RemindersStore: ObservableObject {
         }
         if status == .done {
             flagRecentlyCompleted([cardID])
+        }
+        if status == .inProgress {
+            flagRecentlyPulled([cardID])
+        }
+        // Feedback lives here, at the single point every route into a move
+        // converges — drag & drop, context menu, VoiceOver action — because
+        // a reward that only fires for mouse users is as broken as a limit
+        // that only applies to them (see `pendingOverflow` above). Undo and
+        // redo pass through this same point silently (see `feedback` above).
+        if feedback {
+            MoveFeedback.play(
+                completed: status == .done,
+                pulled: status == .inProgress,
+                soundEnabled: completionSoundEnabled)
         }
         // Asked after the move, never before it: the board does not block a
         // drop, it lets the work land and then offers to put it back.
@@ -855,6 +908,15 @@ final class RemindersStore: ObservableObject {
         Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(700))
             self?.recentlyCompletedIDs.subtract(ids)
+        }
+    }
+
+    private func flagRecentlyPulled(_ ids: Set<String>) {
+        guard !ids.isEmpty else { return }
+        recentlyPulledIDs.formUnion(ids)
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(700))
+            self?.recentlyPulledIDs.subtract(ids)
         }
     }
 

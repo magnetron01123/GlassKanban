@@ -246,9 +246,15 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
   „Rückblick"), rein lesend aus denselben `completionDate`-Werten plus dem Listennamen der
   erledigten Erinnerung. Enthält neben Streak und Tagesfortschritt die Personal-Kanban-Sicht
   auf das eigene System: aktuelle Auslastung („In Bearbeitung" gegen das eigene WIP-Limit)
-  und eine Durchlaufzeit-Schätzung nach Little's Law (Auslastung ÷ Tempo). Bewusst als
+  und eine „Bis fertig"-Schätzung nach Little's Law (Auslastung ÷ Tempo). Bewusst als
   *Schätzung* beschriftet — der Wert steigt, sobald mehr gleichzeitig begonnen wird, und
-  genau das ist die Aussage eines WIP-Limits.
+  genau das ist die Aussage eines WIP-Limits. Im Rückblick stehen seit Juli 2026 zusätzlich
+  die beiden Flusskennzahlen, aus denen diese Schätzung besteht — **Durchsatz** („Pro
+  Woche") und **Durchlaufzeit** (Median erfasst→erledigt, nur einmalige Aufgaben, nur die
+  letzten 30 Tage: über die ganze Historie gemessen dominieren Backlog-Altlasten den Wert,
+  und eine dauerhaft riesige Zahl wäre eine stehende Anklage; gefenstert beschreibt die
+  Zahl das aktuelle Verhalten und verbessert sich mit ihm). Mit allen drei
+  Little's-Law-Größen im Fenster ist die Schätzung nachrechenbar statt Orakel.
   **Die eine bewusste Ausnahme von der Abzeichen-Regel:** ein Meilenstein-Hinweis bei runden
   Zahlen (50/100/250/…) — aber nur, wenn die Schwelle in den letzten sieben Tagen
   überschritten wurde. Er wird jedes Mal neu aus der Historie abgeleitet, nichts wird
@@ -257,10 +263,22 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
 
 **Weitere, an anderer Stelle bereits ausgearbeitete Anwendungen desselben Grundsatzes:**
 
-- **Sensorik & Belohnungsmomente:** Trackpad-Haptik beim Andocken und Ablegen,
-  Settle-Moment beim Erledigen (kurzes Einrasten plus grüner Schimmer), die sich mit dem
-  Tagesfortschritt füllende Streak-Flamme (Goal-Gradient-Effekt), Tages-/Wochenfortschritt
-  im Statistik-Fenster (Endowed Progress/Progress Principle).
+- **Sensorik & Belohnungsmomente:** Trackpad-Haptik bei jedem echten Spaltenwechsel
+  (beim Erledigen eine Stufe kräftiger), Settle-Moment beim Erledigen (Karte legt sich ab,
+  ein kurzer Atemzug, dann zieht sich der Durchstrich sichtbar über den Titel — der Stift,
+  der abhakt; ersetzte im Juli 2026 einen grünen Schimmer samt Squish, die als Farbfläche
+  über dem Papier bzw. Lärm vor der Geste der Kartenregel widersprachen) und ein kurzes,
+  farbloses Wackeln mit Größen-Pop plus
+  Haptik-Doppeltick beim Pull nach „In Bearbeitung" (die Karte „zappelt vor Tatendrang") —
+  Anfangen ist spürbar, die Abschlussgeste bleibt dem Fertigwerden vorbehalten. Dazu ein
+  leiser, eigener Erledigt-Klang (aufsteigende Quinte — Aufsteigen sagt „geschafft";
+  bewusst kein Systemklang, die dienen in macOS als Warntöne; abschaltbar in den
+  Einstellungen), ein kleines Nicken der
+  Toolbar-Flamme bei jeder erledigten Aufgabe, die sich mit dem Tagesfortschritt füllende
+  Streak-Flamme (Goal-Gradient-Effekt), Tages-/Wochenfortschritt im Statistik-Fenster
+  (Endowed Progress/Progress Principle). Leitplanke: Belohnungen bleiben klein und sicher —
+  keine Fanfare, keine Eskalation; eine große Belohnung ließe die hundertste Erledigung
+  kleiner wirken als die erste.
 - **Grenze, die sich daraus ergibt:** Bewegung gehört Dingen, die *gerade passiert sind* —
   nie einer stehenden Einladung. Eine Dauer-Animation wird binnen Tagen weggefiltert und
   entwertet dabei die Momente, die sich Aufmerksamkeit verdient haben. Deshalb wurde das
@@ -305,6 +323,26 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   koppeln ihre Helligkeit an das Wallpaper und kehren dadurch die Tiefenordnung um
   (Karten wirken dunkler als die Mulde, in der sie liegen). Das ist zugleich Apples
   eigenes Liquid-Glass-Modell — Glas ist Chrome, nie Inhalt.
+- **Immer-aktiv: das Board sieht fokussiert aus, auch ohne Fokus.** macOS lässt
+  inaktive Fenster bewusst zurücktreten — vibrierendes Glas graut aus, Materialien
+  flachen ab, `.secondary`-Text hellt auf. Dieses Verhalten ist für Fenster gedacht,
+  in denen man *arbeitet* und die zurückweichen sollen, während man woanders hinsieht.
+  Dieses Board ist das Gegenteil: Es steht dauerhaft offen auf einem Zweitschirm, ist
+  also fast immer inaktiv, und soll trotzdem durchgehend gleich aussehen — dem
+  Fensterzustand zu folgen würde das Glas, für das die App benannt ist, nur in den
+  seltenen Fokus-Momenten zeigen. Deshalb wird die gesamte App an ihr aktives
+  Erscheinungsbild gepinnt: Fensterrücken, Tooltip und Empty-Notice sind allesamt
+  `HUDGlassMaterial` mit `state = .active` (siehe `ContentView.WindowGlass`,
+  `HUDGlassMaterial`). Der „+"-Knopf zum Anlegen einer Karte lief zunächst über SwiftUIs
+  natives `.glassEffect` (mehr Vibrancy, das „+" ins Glas komponiert) — aber genau dieses
+  native Glas folgt dem Fensterzustand und lässt sich **nicht** pinnen (auch ein
+  gesetztes `controlActiveState = .key` wirkt darauf nicht): beim Fokusverlust hellten
+  Scheibe und Glyph auf und der Knopf war als einziges Element in den Hintergrund
+  getreten, während ringsum nichts sich rührte. Deshalb nutzt auch er jetzt dasselbe
+  gepinnte `HUDGlassMaterial` wie der Rest der App. **Regel dahinter: Kein Element tritt
+  zurück, nur weil das Fenster den Fokus verliert.** Neue Glasflächen sind entsprechend
+  über `HUDGlassMaterial` (`state = .active`) zu bauen, nicht über native
+  `.glassEffect`-Controls, solange Apple dafür keinen Aktivzustand-Pin anbietet.
 - Sauberes Typografie- und Abstandssystem nach Apple HIG (SF Pro, klare Hierarchie)
 - Dezente Bewegung: sanfte Animationen beim Spaltenwechsel (Drag & Drop), beim
   Live-Update aus Reminders (z. B. Karte erscheint/verschwindet mit Fade/Slide)

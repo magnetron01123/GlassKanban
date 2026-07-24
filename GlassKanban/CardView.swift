@@ -22,7 +22,12 @@ struct CardView: View {
 
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
-    @State private var settleFlash = false
+    /// Degrees of tilt while a pulled card shakes itself into place.
+    @State private var settleTilt: Double = 0
+    /// How much of the done title's strike line is drawn, 0...1. Rests at 1:
+    /// every settled done card carries its full line. Only a card that just
+    /// completed starts at 0 and draws it (see `playSettleIfFlagged`).
+    @State private var strikeProgress: CGFloat = 1
     @State private var isRenaming = false
     @State private var renameText = ""
     /// The title the edit started from — the *stored* one, not the sanitized
@@ -48,7 +53,6 @@ struct CardView: View {
         .overlay(alignment: .leading) { listStripe }
         .overlay { contour }
         .overlay { topHighlight }
-        .overlay { flashOverlay }
         .shadow(color: contactShadow.color, radius: contactShadow.radius, y: contactShadow.y)
         // Finished work sits flatter: it keeps the contact shadow but loses
         // the ambient one, so it recedes without losing its paper edge.
@@ -57,6 +61,7 @@ struct CardView: View {
             radius: Board.cardShadowAmbient.radius,
             y: Board.cardShadowAmbient.y)
         .scaleEffect(settleScale)
+        .rotationEffect(.degrees(settleTilt))
         .offset(y: isHovered && !reduceMotion ? -1 : 0)
         // The card being dragged stays visible in its source lane, which reads
         // as "it is still here" while the cursor carries a copy of it. Ghosting
@@ -262,8 +267,32 @@ struct CardView: View {
     private var minimalBody: some View {
         titleOrField(font: BoardText.titleCompact)
             .lineLimit(1)
+            // The overlay sits on the text itself, before the padding and
+            // the width expansion, so the line spans exactly the words —
+            // a strike across the whole row would cross empty paper.
+            .overlay(alignment: .leading) { strikeLine }
             .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The done title's strike, drawn by the board instead of by
+    /// `Text.strikethrough` — because the completion reward *is* this line
+    /// being drawn. On a settled card it simply sits there at full width,
+    /// indistinguishable from the text attribute it replaces; on a card that
+    /// just completed it starts at zero and sweeps left to right (see
+    /// `playSettleIfFlagged`), the pen crossing the task off. Scaled rather
+    /// than measured: `scaleEffect(x:anchor:)` animates the sweep without a
+    /// GeometryReader, and a 1pt line has no content to distort.
+    @ViewBuilder
+    private var strikeLine: some View {
+        if card.status == .done, !isRenaming {
+            Rectangle()
+                .fill(.secondary)
+                .frame(height: 1)
+                .scaleEffect(x: strikeProgress, anchor: .leading)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
     }
 
     /// Title with Reminders-style priority marks ("!!") in front. The marks
@@ -271,9 +300,10 @@ struct CardView: View {
     /// colouring them would spend orange — which on this board means "due
     /// today" — on a second, unrelated meaning.
     private var titleText: Text {
+        // No `.strikethrough` here: the done title's line is `strikeLine`,
+        // drawn by the board so that completing can animate it.
         let base = Text(displayTitle)
             .foregroundStyle(card.status == .done ? HierarchicalShapeStyle.secondary : .primary)
-            .strikethrough(card.status == .done)
         guard let marks = card.priorityMarks, card.status != .done else { return base }
         // Interpolation rather than `+`: concatenating Text is deprecated as
         // of macOS 26 and each run keeps its own styling this way.
@@ -422,11 +452,6 @@ struct CardView: View {
         }
     }
 
-    private var flashOverlay: some View {
-        Board.cardShape
-            .fill(Color.green.opacity(settleFlash ? 0.18 : 0))
-            .allowsHitTesting(false)
-    }
 
     private var contactShadow: (color: Color, radius: CGFloat, y: CGFloat) {
         isHovered ? Board.cardShadowHover : Board.cardShadowResting
@@ -500,20 +525,81 @@ struct CardView: View {
 
     // MARK: - Motivation animations
 
-    /// Brief squish-and-settle plus a green flash when this card completes.
-    /// One timeline: the squish is animated too. Setting `settleScale` without
-    /// an animation snapped the card 6% instantly before the spring took over,
-    /// which read as a glitch rather than a reward.
+    /// Completion is a pen stroke, and nothing else: the card lies down,
+    /// a breath passes, then the strike line draws across the title (see
+    /// `strikeLine`). The beat between landing and stroke is the point —
+    /// it is what a hand does at a real board (place the card, *then*
+    /// cross it off), and it lets each phase read singly where drawing
+    /// during the arrival made neither legible. The card holds perfectly
+    /// still while the line moves: one event, one gesture. Two earlier
+    /// companions were removed for that rule — a green flash (a colour
+    /// wash over paper, which these cards never wear) and the squish that
+    /// had carried it (once the pen is the reward, a press-and-spring
+    /// before it was just noise in front of the gesture). `easeInOut`,
+    /// not `easeOut`: a pen sets down deliberately, sweeps, and lifts —
+    /// full speed from a standstill is a swipe.
+    ///
+    /// A pull into "In Bearbeitung" *shakes* instead — the card pops a
+    /// touch oversized and a low-damped spring swings a tilt back through
+    /// zero a couple of times, the card shimmying itself into the slot with
+    /// somewhere to be. Eagerness, not arrival. Two coupled channels: the
+    /// rotation carries legibility — it is the one motion this board never
+    /// uses anywhere else (cards scale, fade and translate, but nothing ever
+    /// *tilts*), so it cannot be absorbed by the lane's other motion — and a
+    /// quick scale pop *upward* is the punch that makes it read across the
+    /// desk. Loud on purpose where completion is calm: finishing is the
+    /// quiet pen stroke, starting bursts up and out, so the two rewards
+    /// never feel like the same gesture. A big first swing that settles in
+    /// ~0.4 s: loud enough to read, gone before it can slow the hand. No
+    /// stroke here — the finishing mark stays reserved for finishing.
+    ///
+    /// Both settles share one clock and one shape. The clock: they hold for
+    /// `Board.settleDelay` first, because `onAppear` fires when the card
+    /// *starts* fading into the lane, not when it lies there — a settle
+    /// launched immediately played mid-flight, a reward for an arrival that
+    /// had not visibly happened yet. (Haptics and the chime deliberately do
+    /// not wait: they answer the hand, which acted at the drop — see
+    /// `Board.settleDelay`.) The shape: a short ease *into* the displaced
+    /// state, then springs home — animating into the start state is also
+    /// what sidesteps SwiftUI coalescing a same-tick set-then-animate into
+    /// nothing, which silently killed an earlier version of the shake.
     private func playSettleIfFlagged() {
-        guard store.recentlyCompletedIDs.contains(card.id), !reduceMotion else { return }
+        guard !reduceMotion else { return }
+        let completed = store.recentlyCompletedIDs.contains(card.id)
+        guard completed || store.recentlyPulledIDs.contains(card.id) else { return }
+        if completed {
+            // Synchronously, before the first frame: the just-completed
+            // title appears bare, so the stroke below has a line to draw.
+            // Under Reduce Motion this is never reached and the line simply
+            // stands complete, like on every settled card.
+            strikeProgress = 0
+        }
         Task { @MainActor in
-            withAnimation(.easeOut(duration: 0.09)) {
-                settleScale = 0.94
-                settleFlash = true
+            try? await Task.sleep(for: Board.settleDelay)
+            if completed {
+                // The breath between landing and pen — anticipation is half
+                // the reward, and a stroke that starts while the card is
+                // still arriving reads as neither arriving nor striking.
+                try? await Task.sleep(for: .milliseconds(300))
+                // Unhurried on purpose: the sweep *is* the reward, and a
+                // stroke over in a blink is a checkbox, not a pen.
+                withAnimation(.easeInOut(duration: 0.45)) { strikeProgress = 1 }
+            } else {
+                withAnimation(.easeOut(duration: 0.07)) {
+                    settleTilt = 4
+                    settleScale = 1.08
+                }
+                try? await Task.sleep(for: .milliseconds(70))
+                // Damped below critical: the tilt crosses zero a couple of
+                // times — that crossing *is* the shake — and is home in
+                // ~0.4 s. The pop returns with a single gentle overshoot.
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.3)) {
+                    settleTilt = 0
+                }
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.55)) {
+                    settleScale = 1
+                }
             }
-            try? await Task.sleep(for: .milliseconds(90))
-            withAnimation(Board.settleAnimation) { settleScale = 1 }
-            withAnimation(.easeOut(duration: 0.55)) { settleFlash = false }
         }
     }
 

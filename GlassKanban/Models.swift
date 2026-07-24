@@ -107,6 +107,10 @@ struct KanbanCard: Identifiable, Equatable {
     /// notes, which bumps this date. Content edits reset it too — an
     /// accepted trade-off for an ambient board.
     let lastModifiedDate: Date?
+    /// EventKit's creation timestamp — when the ticket was first made, and
+    /// unlike `lastModifiedDate` it never moves. Used as the stable, fair
+    /// tie-breaker in the open lanes (oldest-waiting first) before the title.
+    let creationDate: Date?
 
     /// Everything the search looks at, in one place: the title plus whatever
     /// notes the board itself would show. Built once per card rather than
@@ -166,8 +170,19 @@ struct KanbanCard: Identifiable, Equatable {
     }
 
     /// Order for the open lanes: urgency first, then priority, then the
-    /// earliest due date (undated cards last), then title so the order
-    /// never jitters between refreshes.
+    /// earliest due date (undated cards last), then the oldest ticket, and
+    /// finally the title so the order never jitters between refreshes.
+    ///
+    /// Age before title, because alphabetical was never a *meaning* — it was
+    /// only ever there to keep equal cards from swapping places between
+    /// refreshes. Among cards of the same priority and due date, the one
+    /// that has waited in the pile longest goes first: a queue's fair
+    /// default (FIFO), and the thing that stops an old ticket from being
+    /// quietly buried under everything added after it. Deliberately the
+    /// *creation* date and not `lastModifiedDate` — the latter is bumped by
+    /// every move and every edit, so it would reshuffle the lane as a side
+    /// effect of touching a card. The title stays as the last word, for
+    /// cards that share a creation instant or carry no date at all.
     static func openLaneOrder(
         calendar: Calendar = .current,
         now: Date = .now
@@ -189,6 +204,9 @@ struct KanbanCard: Identifiable, Equatable {
             case (nil, .some):
                 return false
             default:
+                if let l = lhs.creationDate, let r = rhs.creationDate, l != r {
+                    return l < r
+                }
                 return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
             }
         }

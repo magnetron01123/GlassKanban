@@ -213,10 +213,34 @@ enum Board {
     // Motion
     static let hoverAnimation: Animation = .easeOut(duration: 0.16)
     static let dropTargetAnimation: Animation = .easeOut(duration: 0.15)
+    /// A card changing lanes — the board's single most common movement, so
+    /// its speed *is* the board's sense of pace: this one curve drives every
+    /// reflow when `store.cards` changes (a card leaving one lane, arriving
+    /// in another, the rest closing the gap — see `BoardView`), and the
+    /// arrival scale-in rides it too. Short and lightly sprung on purpose —
+    /// quick enough to stay under a fast hand, with just enough bounce to
+    /// read as reactive rather than as a slow slide. It was a flat 0.35s
+    /// spring, which left every move feeling a beat behind the drop.
+    static let cardMoveAnimation: Animation = .spring(duration: 0.22, bounce: 0.18)
+
+    /// How long a just-arrived card waits before its settle plays — the
+    /// transit above plus a small margin. The board's feedback runs on two
+    /// clocks: the *hand's* (haptics and the chime, immediate at the drop —
+    /// the hand acted now and its answer must not lag) and the *board's*
+    /// (the visual settles — the pull shake, the completion pen stroke —
+    /// which react to the card being *there*, so they hold until the reflow
+    /// and fade-in have landed). Without this delay the shake began while
+    /// the card was still fading in, a reward playing mid-flight for an
+    /// arrival that had not happened yet — which read as broken, not as
+    /// eager. Motion is spent on things that just happened, never on a
+    /// standing invitation: an empty lane is its own pull signal — Kanban's
+    /// answer to "what should I start next" has always been the free slot
+    /// on the board, not an effect layered over it.
+    static let settleDelay: Duration = .milliseconds(240)
     /// Taking a ticket off the board, and putting it back.
     ///
     /// A spring, because every panel macOS opens is sprung — but damped
-    /// almost flat. The settle below bounces on purpose; this must not. A
+    /// almost flat. The pull shake bounces on purpose; this must not. A
     /// card you are about to read should arrive and stop, and an overshoot
     /// at this size reads as a wobble rather than as life.
     ///
@@ -228,13 +252,6 @@ enum Board {
     /// How far under full size the card starts. Small on purpose — enough to
     /// read as arriving, not so much that it flies in.
     static let cardOpenScale: CGFloat = 0.92
-
-    /// Card "settling" into Erledigt — a small reward on completion.
-    /// The board's only recurring animation: motion is spent on things that
-    /// just happened, never on a standing invitation. An empty lane is its own
-    /// pull signal — Kanban's answer to "what should I start next" has always
-    /// been the free slot on the board, not an effect layered over it.
-    static let settleAnimation: Animation = .spring(response: 0.32, dampingFraction: 0.5)
 }
 
 /// The board's type scale.
@@ -322,17 +339,4 @@ enum BoardText {
     static let tooltipDetailFont = NSFont.systemFont(ofSize: 11)
     static let tooltipLead = Font(tooltipLeadFont)
     static let tooltipDetail = Font(tooltipDetailFont)
-}
-
-/// Subtle trackpad haptics — a sensory reward for moving and completing work.
-/// Not gated behind Reduce Motion: these are physical feedback, not visual
-/// animation, and match how the system itself (Finder, sliders) behaves.
-enum Haptics {
-    static func alignmentTick() {
-        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
-    }
-
-    static func drop() {
-        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
-    }
 }

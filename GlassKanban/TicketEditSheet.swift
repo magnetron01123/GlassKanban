@@ -299,6 +299,36 @@ struct TicketEditSheet: View {
     /// the board speaks one vocabulary throughout.
     private var factsZone: some View {
         VStack(spacing: 8) {
+            // The creation date leads because the zone's own order demands
+            // it: rows run from the most stable property to the most
+            // volatile, and this one never changes at all. Leading also
+            // parks it as far as possible from "Fälligkeit", so the card's
+            // two dates can never read as one stacked pair.
+            //
+            // It is here because the open lanes sort by age (see
+            // `KanbanCard.openLaneOrder`): a card's position carries a rule
+            // the board never spells out, and Kanban's "make policies
+            // explicit" asks that such a rule be findable — the same reason
+            // the WIP limit rides along in the lane counter. The editor is
+            // where it costs nothing: the ambient board stays untouched.
+            // "Erfasst", not "Angelegt": Personal Kanban's own word for the
+            // act the "+" performs — capturing work out of the head and
+            // onto the board (Benson's capture step). "Angelegt" is file-
+            // system German; this board speaks Kanban in its chrome
+            // ("Fertig werden beginnt hier"), and the date names when the
+            // commitment was captured, not when a record was created.
+            if let created = card.creationDate {
+                factRow("Erfasst") {
+                    // Bare secondary text where the other rows carry
+                    // controls: no bezel, no chevron — the stillness is
+                    // what says "fact, not setting". The row itself is the
+                    // shape Finder's own info panel gives an uneditable
+                    // date sitting among editable fields.
+                    Text(created.formatted(date: .long, time: .omitted))
+                        .font(BoardText.editorBody)
+                        .foregroundStyle(.secondary)
+                }
+            }
             factRow("Liste") { listControl }
             factRow("Dringlichkeit") { priorityControl }
             factRow("Fälligkeit") { dueDateControl }

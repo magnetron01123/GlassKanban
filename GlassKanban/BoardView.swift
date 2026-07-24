@@ -51,7 +51,7 @@ struct BoardView: View {
         // own arrival rather than running a second, nearly-identical curve
         // beside it.
         .blur(radius: store.editingCardID == nil ? 0 : (reduceTransparency ? 0 : 7))
-        .animation(reduceMotion ? nil : .spring(duration: 0.35), value: store.cards)
+        .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: store.cards)
         .toolbar {
             // Shown as soon as there is any history at all — not just during
             // a live streak. The pill is the only way into the statistics, and
@@ -220,7 +220,7 @@ struct BoardView: View {
             showStreak.toggle()
         } label: {
             HStack(spacing: 4) {
-                FlameIcon(level: store.streakStats.flameLevel)
+                FlameIcon(level: store.streakStats.flameLevel, beat: store.streakStats.todayCount)
                 // The count disappears at 0 rather than showing one, leaving
                 // the flame as the button. See the toolbar's visibility rule.
                 if store.streakStats.current > 0 {

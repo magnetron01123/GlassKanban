@@ -120,6 +120,24 @@ auslässt. Der Status-Hashtag ist im Notizen-Feld nie sichtbar und wird beim Spe
 die aktuelle Spalte wieder angehängt — ein Inhalts-Edit kann eine Karte nie verschieben.
 Ein Listenwechsel bietet nur beschreibbare, nicht ausgeblendete Listen an.
 
+**„Erfasst" als erste Fakten-Zeile** — Personal Kanbans eigenes Wort für den Akt, den das
+„+" ausführt (Bensons Capture-Schritt: Arbeit aus dem Kopf aufs Board holen; „Angelegt"
+wäre Dateisystem-Deutsch) — die einzige nicht editierbare Angabe im Editor und
+der einzige Ort, an dem das Erstellungsdatum überhaupt erscheint. Sie existiert, weil die
+offenen Spalten seit Juli 2026 **nach Alter sortieren**: Die Position einer Karte trägt
+damit eine Regel, die das Board sonst nirgends ausspricht, und Kanbans *„make policies
+explicit"* verlangt, dass so eine Regel auffindbar ist (dieselbe Begründung wie beim
+WIP-Limit im Spaltenzähler). **An der Spitze des Rasters**, weil die Zone ihre Zeilen von
+der stabilsten zur flüchtigsten Eigenschaft ordnet — und das Erstellungsdatum ändert sich
+nie; ganz oben liegt es zudem maximal weit von „Fälligkeit", sodass die zwei Daten der
+Karte nie als gestapeltes Paar gelesen werden können. Der Wert steht als **nackter
+Sekundär-Text ohne Bedienelement-Rahmen** — die Stille sagt „Tatsache, kein Regler"; das
+Muster ist Finders eigenes Info-Panel („Erstellt: …" zwischen editierbaren Feldern). Eine
+Fußnoten-Variante unter dem Raster wurde gebaut und verworfen: Sie führte eine neue Form
+ein, wo das vorhandene Raster die Angabe tragen kann. **Auf der Karte selbst erscheint das
+Datum nicht** — dort sagen Verweildauer-Chip und Sortier-Position schon alles, und ein
+drittes Datum würde die Regel „Kopf = Prozess, Fuß = Aufgaben-Fakten" brechen.
+
 **Der Editor hat keine Sichern-/Abbrechen-Knöpfe — die beiden Antworten liegen auf der
 Tastatur, in denselben Worten wie beim Umbenennen: Return übernimmt, Escape verwirft.** Ein
 Klick aufs Board zählt als Return (die Notiz wird zurück an die Wand gehängt, mit dem, was
@@ -194,15 +212,24 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   Spaltenkopf (Zähler/Regeln) und „+"-Button
 
 **Sortierung** in den offenen Spalten: Dringlichkeit (überfällig/heute zuerst) → Priorität →
-frühestes Fälligkeitsdatum (Karten ohne Datum zuletzt) → Titel. Der Titel als letztes
-Kriterium sorgt dafür, dass die Reihenfolge zwischen zwei Refreshes nicht springt.
+frühestes Fälligkeitsdatum (Karten ohne Datum zuletzt) → **Erstellungsdatum (älteste
+zuerst)** → Titel. Das Alter vor dem Titel, weil alphabetisch nie eine *Bedeutung* war,
+sondern nur Stabilität herstellte: Bei gleicher Priorität und Fälligkeit geht die Karte
+vor, die am längsten im Stapel wartet (FIFO — die faire Warteschlangen-Regel, und das,
+was ein altes Ticket davor bewahrt, unter allem Später-Hinzugefügten begraben zu werden).
+Bewusst das **Erstellungs**- und nicht das Änderungsdatum: Letzteres wird von jedem
+Verschieben und jeder Bearbeitung neu gesetzt und würde die Spalte als Nebenwirkung des
+Anfassens umsortieren. Der Titel bleibt das letzte Wort — für Karten ohne Erstellungsdatum
+(EventKit garantiert es nicht) oder mit demselben —, damit die Reihenfolge zwischen zwei
+Refreshes nie springt.
 „Erledigt" sortiert nach Erledigt-Datum, neueste zuerst.
 
 **Erledigt zeigt die letzten 7 Tage** — die Arbeit einer Woche als Nachweis, kein Archiv.
-Liegen ältere erledigte Karten vor, steht unter der Spalte „N ältere anzeigen" (dasselbe
-Muster wie beim Backlog): ein Klick holt **die letzten 30 Tage** zurück. Dieselbe Zeile
-schließt den Blick zurück wieder („Ältere ausblenden", im Backlog „Weniger anzeigen") —
-der Weg zurück sitzt dort, wo der Weg hinein war; ein Neustart klappt ohnehin wieder ein.
+Liegen ältere erledigte Karten vor, steht **direkt unter der letzten Karte** „N ältere
+anzeigen ˅" (dasselbe Muster wie beim Backlog): ein Klick holt **die letzten 30 Tage**
+zurück. Dieselbe Zeile schließt den Blick zurück wieder („Ältere ausblenden ˄", im
+Backlog „Weniger anzeigen") — sie sitzt dann am Ende der aufgeklappten Liste, wo man zu
+Ende gelesen hat; ein Neustart klappt ohnehin wieder ein.
 Bewusst begrenzt statt „alles laden" — eine Liste, die kurz genug zum Überfliegen
 bleibt, braucht keine Datums-Überschriften, Gruppen oder eigene Archiv-Ansicht. Alles
 Ältere liegt in der Reminders-App, dem eigentlichen Speicher; darauf weist der
@@ -210,9 +237,13 @@ Spalten-Tooltip im aufgeklappten Zustand hin. Die Zähler-Kapsel benennt immer d
 angezeigte Menge und wächst beim Aufklappen mit; was sie ausblendet, meldet der Tooltip
 („N ältere Karten") — dieselbe Regel wie bei den wiederkehrenden Karten.
 
-Die Fußzeile ist eine **blanke Textzeile** (Meta-Schriftgrad, sekundär, bei Hover primär),
-kein Glas-Button: Glas gehört dem Chrome, nie der Inhaltsebene — in der Mulde wäre eine
-Glasplatte eine aufgesetzte Fläche im falschen Stockwerk. Aus demselben Grund zeigen die
+Die Fold-Zeile ist eine **blanke Textzeile** (Body-Schriftgrad medium + Chevron, sekundär,
+bei Hover primär), kein Glas-Button: Glas gehört dem Chrome, nie der Inhaltsebene — in der
+Mulde wäre eine Glasplatte eine aufgesetzte Fläche im falschen Stockwerk. Sie steht **im
+Inhalt, nicht am Spaltenfuß**: Die Lanes sind immer fensterhoch, und am Fuß hing die Zeile
+bei kurzem Stapel hunderte Punkte unter der letzten Karte im toten Raum — dort las sie
+sich als Fenster-Chrome statt als Fortsetzung der Liste (Usability-Feedback Juli 2026;
+Position am Fuß nicht wieder vorschlagen). Aus demselben Chrome-Grund zeigen die
 Spalten **keine Scrollbalken**: Der System-Overlay-Balken läge als einziges Element *über*
 den Karten; das „da ist mehr"-Signal ist der Fade am unteren Spaltenrand, gescrollt wird
 unverändert.
@@ -264,15 +295,110 @@ Einblenden).
   sich als Rüge, aber der Zugang zur Statistik darf nach einem Serienriss nicht verschwinden
   (siehe BACKLOG.md)
 - **Statistik-Fenster** (Klick auf die Flamme, `StatsPopover`): zwei Ansichten über
-  Textumschalter, damit ein Blick nie zur Navigation wird —
-  - **Jetzt:** Folge als Schlagzeile, heute erledigte Aufgaben, aktuelle Auslastung gegen
-    das WIP-Limit, Durchlaufzeit-Schätzung nach Little's Law (Bestand ÷ Tempo, bewusst als
-    Schätzung beschriftet), 30-Tage-Verlauf als Balken
-  - **Rückblick:** dieses Jahr, längste Folge, bester Tag, stärkster Wochentag, häufigste
-    Liste, Meilenstein bei einer runden Zahl innerhalb der letzten 7 Tage
+  Textumschalter, damit ein Blick nie zur Navigation wird. Beide Register teilen dieselbe
+  Silhouette — eine Hero-Zahl auf dem Glas, darunter eine Well mit Kennzahlen, darunter
+  eine zweite Well —, sodass beim Umschalten die große Zahl ihre Bedeutung wechselt, nicht
+  ihre Position:
+  - **Beide Register immer exakt gleich hoch — feste Regel, nicht verhandelbar.** Das
+    Popover nimmt die Höhe des höheren Registers (beide werden gelayoutet, das inaktive
+    unsichtbar und inert per `ZStack`); Umschalten darf die Fenstergröße **nie** ändern.
+    Zwei Ansichten, die einen Klick auseinanderliegen und beim Wechsel höher/niedriger
+    springen, lesen sich als zwei verschiedene Fenster statt als *ein* Instrument mit zwei
+    Seiten. Diese Regel wurde mehrfach versehentlich wieder entfernt — bei jeder Änderung
+    an `StatsPopover` prüfen, dass sie erhalten bleibt.
+  - **Jetzt:** Folge als Hero (Flamme + Zahl + optionale Belohnungszeile), heute erledigte
+    Aufgaben, aktuelle Auslastung gegen das WIP-Limit, „Bis fertig"-Schätzung nach Little's
+    Law (Bestand ÷ Tempo, bewusst als Schätzung beschriftet), 30-Tage-Verlauf als Balken in
+    fester, großzügiger Höhe (das Diagramm ist die zweite Blickfläche des Registers)
+  - **Rückblick:** Jahreszahl als Hero mit Siegel-Glyphe (`checkmark.seal`, den Regeln der
+    Flamme folgend: Umriss/grau bei 0, gefüllt/orange sonst — beide Heroes öffnen mit
+    Glyphe + Zahl + Einheit; der Meilenstein bei einer runden Zahl innerhalb der letzten
+    7 Tage erscheint als Belohnungszeile darunter), dann längste Folge und die zwei
+    **Personal-Kanban-Flusskennzahlen** — **Pro Woche** (Durchsatz, Ø letzte 30 Tage) und
+    **Durchlaufzeit** (Median von „erfasst" bis „erledigt", nur einmalige Aufgaben, nur
+    Erledigungen der letzten 30 Tage). Zusammen mit „In Bearbeitung" im anderen Register
+    stehen damit alle drei Größen von Little's Law im Fenster — die Prognose ist
+    nachrechenbar statt Orakel. **Little's Law wird in den Hover-Tipps beim Namen genannt**
+    (an „Bis fertig", „Pro Woche" und „Durchlaufzeit"): das Chrome erklärt seine stillen
+    Kanban-Regeln beim Überfahren, im Zeilen-Label wäre der Name Jargon. Darunter die
+    Rangliste (bester Tag, stärkster Wochentag, häufigste Liste) über die ganze Historie,
+    mit „Seit …"-Fußnote
+  - **Durchlaufzeit bewusst gefenstert und ohne Wiederkehrer:** erledigte Instanzen
+    wiederkehrender Erinnerungen tragen in EventKit das Anlegedatum der *Serie* (ggf. Jahre
+    alt) und keine `hasRecurrenceRules` mehr — erkannt werden sie über den Titel der noch
+    offenen Serie. Und über die ganze Historie gemessen dominierten Backlog-Altlasten den
+    Median (ehrlich, aber eine dauerhafte Anklage — Regel „belohnen, nie bestrafen"). Im
+    30-Tage-Fenster beschreibt die Zahl das aktuelle Verhalten und verbessert sich mit ihm
   - Alles aus den Erinnerungen abgeleitet, die die App ohnehin lädt — keine zweite
     EventKit-Abfrage, keine eigene Speicherung. Der Meilenstein ist die eine bewusste
     Lockerung der „keine Badges"-Regel: nur ein Moment, nie dauerhaft (siehe CONCEPT.md)
+- **Sensorisches Feedback beim Verschieben** (`MoveFeedback`, alles am einen `move()`-Pfad,
+  damit Maus, Kontextmenü und VoiceOver gleich behandelt werden; sämtliche physischen
+  Kanäle — auch der Affordanz-Tick beim Überfahren einer Ziel-Lane — wohnen in dieser einen
+  Datei, nachdem ein älterer `Haptics`-Helfer am Drop-Pfad jede Landung doppelt klopfen
+  ließ):
+  - **Undo/Redo bleibt stumm:** Klang und Haptik gehören der Hand auf der Karte, nicht ⌘Z —
+    ein rückgängig gemachtes Erledigen, das wie ein frisches klingt, feiert eine Korrektur.
+    Die *visuellen* Settles bleiben auch bei Undo/Redo: Sie zeigen, wohin die Karte ging
+    (Wegweiser), und Remote-Änderungen bekommen sie ebenso
+  - **Haptik** bei jedem echten Spaltenwechsel (Trackpad; `.alignment`, beim Erledigen
+    `.levelChange`) — das Einrasten der Karte unter dem Finger. Der Pull nach „In
+    Bearbeitung" ist ein schneller **Doppel-Tick** (zweimal `.alignment`, 80 ms Abstand):
+    Arbeitsbeginn hat mehr Puls als ein Ablage-Move, ohne den festeren Erledigt-Schlag
+    zu borgen
+  - **Leiser Klang beim Erledigen** — ein eigener, für die App synthetisierter Zweiklang
+    (`CompletionChime.wav`: zwei weiche Glastöne, aufsteigende Quinte F#5→C#6). Bewusst
+    **kein Systemklang**: jeder Klang aus /System/Library/Sounds dient irgendwo in macOS
+    als Warn-/Hinweiston („Tink" wurde probiert und las sich als Warnung, nicht als
+    Belohnung); Aufsteigen sagt „geschafft", ein einzelner Schlag sagt „schau her".
+    Abschaltbar in den Einstellungen („Ton beim Erledigen", Standard: an). Nur beim
+    Erledigen, nie bei anderen Moves: Fertigwerden ist der eine Moment, den Personal
+    Kanban feiert. Fehlt die Ressource, bleibt es still — kein Rückfall auf Systemklänge
+  - **Zwei Uhren:** Haptik und Klang antworten der *Hand* und feuern sofort beim Drop;
+    die visuellen Settles antworten dem *Board* und warten `Board.settleDelay` (~240 ms =
+    Transit + Marge), bis Reflow und Einfaden gelandet sind — erst ankommen, dann
+    reagieren. Ohne diese Phase spielte das Wackeln mitten im Einfaden, eine Belohnung im
+    Flug für eine Ankunft, die sichtbar noch nicht passiert war
+  - **Settle-Animationen:** Erledigen = **nur der gezogene Durchstrich**: Die Karte legt
+    sich ab, ein kurzer Atemzug (~0,3 s), dann zieht sich die Durchstreich-Linie in
+    ~0,45 s (`easeInOut` — ein Stift setzt an, zieht durch und hebt ab; volle
+    Geschwindigkeit aus dem Stand wäre ein Wisch) von links nach rechts über den Titel.
+    Die Karte liegt dabei vollkommen still — ein Ereignis, eine Geste. Die Pause ist der
+    Punkt: So macht es die Hand am echten Board (Karte ablegen, *dann* abhaken), und
+    Vorfreude ist die halbe Belohnung; ein Strich, der schon während der Ankunft zeichnet,
+    liest sich weder als Ankunft noch als Strich. Zwei frühere Begleiter wurden nach
+    dieser Regel entfernt (Juli 2026): der grüne Blitz (eine Farbfläche *über* dem
+    Papier — genau die Farbwäsche, die Karten auf diesem Board nie tragen) und der
+    Squish, der ihn trug (sobald der Stift die Belohnung ist, war das Eindrücken davor
+    nur Lärm vor der Geste). Der Strich ist die Abschlussgeste *im* Inhalt, dasselbe
+    Zeichen, das die Karte ohnehin für immer trägt, nur beim Entstehen beobachtet.
+    Technisch ist der Durchstrich erledigter Karten deshalb eine vom Board gezeichnete
+    Linie (`CardView.strikeLine`), kein `Text.strikethrough` — auf ruhenden Karten von
+    der Textauszeichnung nicht zu unterscheiden, bei „Bewegung reduzieren" steht er
+    sofort vollständig; Pull nach
+    „In Bearbeitung" = **kurzes Wackeln mit Pop**: die Karte platzt eine Spur zu groß
+    herein (Scale-Pop ~1,08 nach *oben*) und eine locker gedämpfte Feder schwingt einen
+    ~4°-Kipp ein paarmal durch die Null zurück — sie „zappelt vor Tatendrang" in ihren
+    Slot, gedämpft in ~0,4 s (lauter als die frühere 2°-Version, aber weg, bevor es die
+    Hand bremst). Pop bewusst nach *oben*: Erledigen ist der ruhige Stiftstrich,
+    Anfangen platzt nach außen/oben — die zwei Belohnungen fühlen sich nie gleich an.
+    Rotation trägt die Lesbarkeit: Es ist der eine Bewegungskanal, den das Board sonst
+    nirgends nutzt (Karten skalieren, faden, verschieben sich — nichts kippt je), also kann
+    das Wackeln nicht von der Einfüge-Transition der Lane geschluckt werden — zwei rein
+    skalierungsbasierte Vorgänger gingen genau darin unter (eine Landung von oben mit
+    Schatten wurde gebaut und als unpassend verworfen). „In Bearbeitung" und „Erledigt"
+    sind deshalb von der generischen Einfüge-Transition der Lanes (Scale 0,93 + Fade)
+    ausgenommen und faden nur: Wer ein eigenes Settle spielt, bekommt keinen zweiten Scale
+    darunter — beim Pull zogen Einfüge-Scale (aufwärts) und Pop (abwärts) sogar
+    gegeneinander. Technische Lehre dahinter (siehe
+    `CardView.playSettleIfFlagged`): Start- und Zielwert einer Animation im selben
+    Runloop-Tick zu setzen lässt SwiftUI beide zu einer Transaktion verschmelzen — der
+    Startwert wird nie gerendert und es passiert sichtbar nichts; der Startzustand muss
+    erst einen Frame stehen. Ohne Durchstrich — die Abschlussgeste bleibt dem
+    Fertigwerden vorbehalten. Nur lokale Pulls
+  - **Flammen-Nicken:** die Toolbar-Flamme macht bei jeder erledigten Aufgabe einen kleinen
+    Bounce (auch wenn sich ihr Füllstand nicht ändert) — die kleinstmögliche Quittung, dass
+    das Board es gesehen hat. Alles respektiert „Bewegung reduzieren"
 - **Kein täglich wechselnder Motivationssatz** — war im ursprünglichen MVP vorgesehen und
   hat sich als unpraktikabel erwiesen (siehe BACKLOG.md)
 - Ausdrücklich **keine** Punkte/Levels/Badges/Bestenlisten
@@ -281,6 +407,14 @@ Einblenden).
 
 - Liquid Glass auf der Chrome-Ebene (Fensterrücken, Toolbar, Popover); Spalten sind
   eingelassene Mulden, Karten deckendes Papier — siehe CONCEPT.md, Abschnitt Design-Anspruch
+- **Immer-aktives Erscheinungsbild** — die App tritt nicht zurück, wenn das Fenster den
+  Fokus verliert. Da das Board dauerhaft auf einem Zweitschirm offen und damit fast immer
+  inaktiv ist, wird alles Glas über `WindowGlass`/`HUDGlassMaterial` mit `state = .active`
+  gepinnt — auch die Scheibe hinter dem „+"-Knopf. Der Knopf nutzte kurzzeitig SwiftUIs
+  natives `.glassEffect`, das sich aber nicht auf „aktiv" festhalten lässt und beim
+  Fokusverlust aufhellte; damit war er das einzige Element, das in den Hintergrund trat.
+  Regel: kein Element weicht zurück, nur weil das Fenster inaktiv ist — siehe CONCEPT.md,
+  Design-Anspruch („Immer-aktiv")
 - **Spalten füllen immer die volle Fensterhöhe** — bewusste Entscheidung, siehe BACKLOG.md
   („Explizit abgelehnt": Spalten enden mit dem Inhalt). Weniger Leerfläche = Fenster kleiner
   ziehen
@@ -291,6 +425,11 @@ Einblenden).
 - Typografie/Abstände nach Apple HIG (SF Pro), Tokens in `DesignSystem.swift`
 - Bewegung wird für Dinge ausgegeben, die *gerade passiert sind* (Karte rastet in „Erledigt"
   ein), nie für stehende Einladungen
+- **Tempo des Boards:** Der Spaltenwechsel jeder Karte (Verlassen, Ankommen, Nachrücken)
+  läuft über *eine* Kurve — `Board.cardMoveAnimation`, eine kurze, leicht federnde Spring
+  (0,22 s). Da das die häufigste Bewegung ist, bestimmt dieser eine Wert, wie reaktiv sich
+  das ganze Board anfühlt; die frühere flache 0,35-s-Spring ließ jeden Zug einen Takt hinter
+  dem Drop wirken
 - Erscheinungsbild: Nach System / Hell / Dunkel, in den Einstellungen wählbar
 - Eigene Hover-Tooltips statt `.help(...)`, mit eigenen VoiceOver-Labels/Hints — nur am
   Chrome (Spaltenkopf, „+"-Button), nie auf Karten

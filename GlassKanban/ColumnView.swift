@@ -26,6 +26,15 @@ struct ColumnView: View {
     /// different cut — one is "there is more of the same", the other is
     /// "there is a past".
     private var restingCards: [KanbanCard] {
+        Self.restingCut(cards, for: status)
+    }
+
+    /// The resting cut as a function, because two places must agree on it:
+    /// the lane's own rendering above, and the keep-in-sight check after an
+    /// editor closes (see `onChange(of: store.editingCardID)`), which has to
+    /// re-derive the cut from *fresh* store data rather than from this
+    /// view's captured inputs.
+    private static func restingCut(_ cards: [KanbanCard], for status: KanbanStatus) -> [KanbanCard] {
         switch status {
         case .backlog where cards.count > Board.backlogCollapsedLimit:
             return Array(cards.prefix(Board.backlogCollapsedLimit))
@@ -126,14 +135,23 @@ struct ColumnView: View {
                             // A card arriving in a lane settles into place
                             // instead of blinking on: it grows the last few
                             // percent into the shape this lane gives it.
-                            // Erledigt is the exception — a completed card
-                            // plays its own settle animation, and running both
-                            // scales at once made the arrival stutter.
+                            // Erledigt and In Bearbeitung are the exceptions,
+                            // both for the same reason: a card arriving there
+                            // plays its own settle (the completion pen stroke,
+                            // the pull shake-and-pop), and a second scale
+                            // running underneath it made the arrival stutter —
+                            // for the pull, the generic scale-in and the pop
+                            // even pull in opposite directions and partly
+                            // cancel.
                             .transition(.asymmetric(
-                                insertion: status == .done
+                                insertion: status == .done || status == .inProgress
                                     ? .opacity
                                     : .scale(scale: 0.93).combined(with: .opacity),
                                 removal: .opacity))
+                    }
+
+                    if foldedCount > 0 {
+                        moreButton
                     }
 
                     if status == .backlog {
@@ -156,10 +174,24 @@ struct ColumnView: View {
             // below is the board's own "there is more" signal, and scrolling
             // itself is untouched.
             .scrollIndicators(.never)
-            .mask(scrollFade)
-
-            if foldedCount > 0 {
-                moreButton
+            // "In Bearbeitung" alone gets headroom: the pull shake pops and
+            // tilts the top card a few points past its own row, and the
+            // scroll viewport clipped those corners flat right under the
+            // header — the ticket slid *beneath* the lane's label in the one
+            // moment it is the main event. Unclipped, the shaking card draws
+            // over the hairline and header (the scroll view is the later
+            // sibling), which is the correct depth: paper above chrome. The
+            // other lanes keep their clip — with scrolling content, disabled
+            // clipping would let scrolled-away cards peek out above the
+            // viewport, and no other lane's settle ever leaves its row (the
+            // pen stroke stays inside the card).
+            .scrollClipDisabled(status == .inProgress)
+            .mask {
+                scrollFade.padding(
+                    status == .inProgress
+                        ? EdgeInsets(top: -Self.shakeHeadroom, leading: -Self.shakeHeadroom,
+                                     bottom: 0, trailing: -Self.shakeHeadroom)
+                        : EdgeInsets())
             }
         }
         .frame(
@@ -182,13 +214,14 @@ struct ColumnView: View {
             guard let id = ids.first else { return false }
             // A drop destination has to answer synchronously, so the move
             // always goes through first and the WIP question — raised by the
-            // store, for every move route — follows it.
-            guard store.move(cardID: id, to: status, undoManager: undoManager) != nil else { return false }
-            Haptics.drop()
-            return true
+            // store, for every move route — follows it. No haptic here: the
+            // move itself answers the hand (see `MoveFeedback`, inside
+            // `move`), and a second thud from the drop site on top of it
+            // was a double knock for one landing.
+            return store.move(cardID: id, to: status, undoManager: undoManager) != nil
         } isTargeted: { targeted in
             // No tick for the lane the card came from — nothing snaps there.
-            if targeted && !isTargeted && !isDragSource { Haptics.alignmentTick() }
+            if targeted && !isTargeted && !isDragSource { MoveFeedback.dragEnteredTarget() }
             isTargeted = targeted
         }
         // A lane that empties must forget its last card's height, or the
@@ -197,6 +230,37 @@ struct ColumnView: View {
             if isEmpty {
                 cardHeight = nil
                 if status == .next { store.nextTopCardHeight = nil }
+            }
+        }
+        // Closing an edit must never hide the card that was just in hand.
+        // A ticket the "+" just made sorts by the lane's own order — dateless
+        // and unprioritized, that is the *end* of the pile, which on a full
+        // Backlog lies inside the fold: the editor would close and the new
+        // ticket simply would not be there. The same holds for an edit that
+        // *moves* a card into the fold (say, its due date was removed). If
+        // the card an editor just released exists in this lane but not in
+        // its resting cut, the lane opens the fold so the card stays in
+        // sight — the fold line flips to "Weniger anzeigen", which also
+        // *says* what just happened.
+        //
+        // The check waits out the editor's close: an *abandoned* creation is
+        // only taken back in the editor's `onDisappear`, which fires when
+        // the close animation (`Board.cardOpenAnimation`, ~0.3s) finishes —
+        // checking immediately would see the doomed empty ticket still in
+        // the lane and unfold for a card about to vanish. It also reads the
+        // store afresh instead of this view's captured inputs, which are a
+        // render old by then.
+        .onChange(of: store.editingCardID) { previous, current in
+            guard current == nil, let closed = previous,
+                  status == .backlog || status == .done else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(450))
+                let laneCards = store.cards(for: status)
+                guard !expanded,
+                      laneCards.contains(where: { $0.id == closed }),
+                      !Self.restingCut(laneCards, for: status).contains(where: { $0.id == closed })
+                else { return }
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded = true }
             }
         }
         // Without this a card announces its title and nothing about where it
@@ -454,16 +518,27 @@ struct ColumnView: View {
         .padding(.vertical, 4)
     }
 
-    /// The fold line at the foot of a stack lane, and the way back out.
+    /// The fold line of a stack lane, and the way back out.
+    ///
+    /// It sits *inside* the scroll content, directly under the last card —
+    /// not pinned to the lane's foot, where it lived for a while. The lanes
+    /// are always full window height, so the foot-of-lane position left the
+    /// link orphaned hundreds of points below a short pile, in dead space no
+    /// eye crosses after scanning the cards; it read as window chrome, not
+    /// as the list continuing. Under the last card it is exactly where the
+    /// scan stops, and where "older" and "more" physically live on a stack:
+    /// beneath the pile. The collapse line then sits at the end of what it
+    /// folds away — you finish reading the older cards and close the fold
+    /// right there.
     ///
     /// A bare text line, not a plated button: the board's own rule is that
     /// glass belongs to the chrome and never to the content plane (see
     /// CONCEPT.md, Design-Anspruch) — the earlier `.glass` footer sat inside
-    /// the recessed well as a raised plate and broke exactly that. At meta
-    /// scale in secondary it reads as the lane's last, quiet line; hover
-    /// lifts it to primary, which is all the affordance a link this local
-    /// needs. The same line closes the fold again ("Ältere ausblenden"), so
-    /// the way back sits precisely where the way in was.
+    /// the recessed well as a raised plate and broke exactly that. Body
+    /// scale, one step up from the meta it once was, with a chevron carrying
+    /// the "there is more" affordance — the quietest mark that says
+    /// *control* at first glance; hover still lifts it to primary. Any
+    /// louder and it would outrank the cards it serves.
     private var moreButton: some View {
         Button {
             // Folding 15+ cards in or out at once is the largest layout
@@ -471,23 +546,25 @@ struct ColumnView: View {
             // Reduce Motion.
             withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded.toggle() }
         } label: {
-            Text(moreLabel)
-                .font(BoardText.meta)
-                // One weight up from meta's regular: the only clickable line
-                // at this scale, and it has to read as a link, not as the
-                // passive metadata `meta` sets everywhere else.
-                .fontWeight(.medium)
-                .foregroundStyle(moreHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 7)
-                .contentShape(Rectangle())
+            HStack(spacing: 5) {
+                Text(moreLabel)
+                    .font(BoardText.body)
+                    // One weight up from body's regular: the only clickable
+                    // line at this scale, and it has to read as a link, not
+                    // as running text.
+                    .fontWeight(.medium)
+                Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                    .font(BoardText.glyph)
+            }
+            .foregroundStyle(moreHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 7)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) { moreHovered = hovering }
         }
-        .padding(.horizontal, Board.laneMargin)
-        .padding(.bottom, 6)
     }
 
     /// "weitere" for Backlog (more of the same pile), "ältere" for Erledigt
@@ -500,6 +577,10 @@ struct ColumnView: View {
         case (_, true): "Weniger anzeigen"
         }
     }
+
+    /// How far the shake may reach past the viewport before the mask cuts
+    /// it: pop (+8% of a card) plus tilted corners (~4°) stay well inside.
+    private static let shakeHeadroom: CGFloat = 20
 
     /// Cards fade out at the bottom edge, hinting there is more to scroll
     /// without a hard cut-off.
@@ -547,33 +628,38 @@ struct ColumnView: View {
     }
 }
 
-/// The circular Liquid Glass surface behind the Backlog add button.
+/// The circular glass surface behind the Backlog add button.
 ///
-/// The system's own `glassEffect` rather than a hand-assembled material:
-/// it bends and reflects the board behind it and pulls the "+" into the
-/// surface with real vibrancy, where the previous `HUDGlassMaterial` +
-/// stroked border + flat `.primary` glyph only stacked a frosted disc under
-/// a pasted-on symbol. `.interactive()` gives the press and hover reaction
-/// for free. When "Transparenz reduzieren" is on, it degrades to the same
-/// solid disc the rest of the board uses in that mode.
+/// `HUDGlassMaterial`, not SwiftUI's native `.glassEffect`. The native effect
+/// composites the "+" into the surface with more vibrancy, but it follows the
+/// window's active state and offers no way to pin it: the moment the board
+/// loses focus — which, on a second screen, is nearly always — the disc and
+/// the glyph on it flatten and brighten, and this button became the one element
+/// that receded while nothing around it did. Every other glass surface in the
+/// app is already this same `HUDGlassMaterial` pinned to `state = .active`
+/// (window back, tooltip, empty notice), so reusing it here keeps the button's
+/// focused look whether or not the app is frontmost — the board's rule that no
+/// element retreats just because the window is inactive (see CONCEPT.md,
+/// "Immer-aktiv"). The trade is the native effect's press/hover vibrancy; the
+/// hover lift on the button itself (a -1pt rise with a card shadow) carries the
+/// press affordance instead. When "Transparenz reduzieren" is on it degrades to
+/// the same solid disc the rest of the board uses in that mode.
 private struct AddButtonGlass: ViewModifier {
     let reduceTransparency: Bool
     let contrast: ColorSchemeContrast
 
     func body(content: Content) -> some View {
+        content
+            .background(disc)
+            .overlay { Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1) }
+    }
+
+    @ViewBuilder
+    private var disc: some View {
         if reduceTransparency {
-            content
-                .background { Circle().fill(Color(nsColor: .windowBackgroundColor)) }
-                .overlay { Circle().strokeBorder(Board.columnBorder(contrast), lineWidth: 1) }
+            Circle().fill(Color(nsColor: .windowBackgroundColor))
         } else {
-            // `.clear`, not `.regular`: the thinner glass sits lower. The
-            // regular material raised the button above the cards — a control
-            // popping out further than the paper it serves inverts the
-            // board's depth order (cards are the content, chrome stays
-            // beneath them). Interactivity still lifts it on hover, so the
-            // press response is where the prominence lives, not the rest state.
-            content
-                .glassEffect(.clear.interactive(), in: .circle)
+            HUDGlassMaterial().clipShape(.circle)
         }
     }
 }

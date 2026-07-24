@@ -19,6 +19,7 @@
 		262B9D2A64B3478DC0B7D42F /* BoardTooltip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */; };
 		3A14FF729609BD536B4851BE /* BoardEmptinessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CE58D9AEFF55A2F7A8F53B /* BoardEmptinessTests.swift */; };
 		3B0C7B14654C8CB9B6C8E973 /* EditorKeyCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */; };
+		3D1BFE85DE013F64E08C7720 /* MoveFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAB79A546CDB1692EDDD28BA /* MoveFeedback.swift */; };
 		4BD67FD6516E1386444BD060 /* TicketRename.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350F062261A839B0E19ADC65 /* TicketRename.swift */; };
 		4DDD94D9BA542BA62B842C25 /* BacklogTicketCreationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */; };
 		5579A24C7243C659DB0C9698 /* TicketRename.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350F062261A839B0E19ADC65 /* TicketRename.swift */; };
@@ -33,6 +34,7 @@
 		877D22FD67BA79DE7C4C65F1 /* HUDGlassMaterial.swift in Sources */ = {isa = PBXBuildFile; fileRef = EABE4A8869EFB12034A075AB /* HUDGlassMaterial.swift */; };
 		87F6C7D48E963E894A84F46C /* WrappedStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E1A9343D54C7091C20BBDE /* WrappedStats.swift */; };
 		8935EE20B247C64B80C071A6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67BD228B20A88109D18DAA5 /* Models.swift */; };
+		90DAC564A495A35F79208319 /* CompletionChime.wav in Resources */ = {isa = PBXBuildFile; fileRef = 67AD6D2BADC416DFB80C4A38 /* CompletionChime.wav */; };
 		9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD1B4A61352C1461953925D /* BoardView.swift */; };
 		9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
 		9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
@@ -75,6 +77,7 @@
 		61E1A9343D54C7091C20BBDE /* WrappedStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrappedStats.swift; sourceTree = "<group>"; };
 		61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculator.swift; sourceTree = "<group>"; };
 		63A39AC9579F00A5EB682BD8 /* BoardTooltip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardTooltip.swift; sourceTree = "<group>"; };
+		67AD6D2BADC416DFB80C4A38 /* CompletionChime.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = CompletionChime.wav; sourceTree = "<group>"; };
 		6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassKanban.entitlements; sourceTree = "<group>"; };
 		73CAB35E9902F258F00D82A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyBoardNotice.swift; sourceTree = "<group>"; };
@@ -91,6 +94,7 @@
 		C67BD228B20A88109D18DAA5 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		C8099603D0D48B34633EB69D /* StatusTagger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusTagger.swift; sourceTree = "<group>"; };
 		C897CD919B8A9F654BB8C2E9 /* StatsPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsPopover.swift; sourceTree = "<group>"; };
+		CAB79A546CDB1692EDDD28BA /* MoveFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveFeedback.swift; sourceTree = "<group>"; };
 		D7CE58D9AEFF55A2F7A8F53B /* BoardEmptinessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardEmptinessTests.swift; sourceTree = "<group>"; };
 		D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklogTicketCreationTests.swift; sourceTree = "<group>"; };
 		DDB24CFDAA5B52F16A72F182 /* CardSortingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardSortingTests.swift; sourceTree = "<group>"; };
@@ -147,6 +151,7 @@
 				9AD1B4A61352C1461953925D /* BoardView.swift */,
 				E363E5F11832E63EE2539D70 /* CardView.swift */,
 				EC1A968F6964BFEE0832A01A /* ColumnView.swift */,
+				67AD6D2BADC416DFB80C4A38 /* CompletionChime.wav */,
 				EE77523ACBD14B219E0031C5 /* ContentView.swift */,
 				F5DCA4E02A36CF7D719EC339 /* DesignSystem.swift */,
 				11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */,
@@ -157,6 +162,7 @@
 				EABE4A8869EFB12034A075AB /* HUDGlassMaterial.swift */,
 				10ECC48E9096FEF7E8FFDCB5 /* Info.plist */,
 				C67BD228B20A88109D18DAA5 /* Models.swift */,
+				CAB79A546CDB1692EDDD28BA /* MoveFeedback.swift */,
 				10C56C38B8A1956F2F2974FE /* PrivacyInfo.xcprivacy */,
 				916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */,
 				E38DFB23226AD6A320E58F33 /* RemindersStore.swift */,
@@ -259,6 +265,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */,
+				90DAC564A495A35F79208319 /* CompletionChime.wav in Resources */,
 				C7D82269F67091F5AE0E8870 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -284,6 +291,7 @@
 				1B53F264815585B5F468F8A2 /* GlassKanbanApp.swift in Sources */,
 				877D22FD67BA79DE7C4C65F1 /* HUDGlassMaterial.swift in Sources */,
 				8935EE20B247C64B80C071A6 /* Models.swift in Sources */,
+				3D1BFE85DE013F64E08C7720 /* MoveFeedback.swift in Sources */,
 				C633F382DEFE9FD32C03C6A7 /* ReminderDeepLink.swift in Sources */,
 				F497DB173B495A88ADCD4821 /* RemindersStore.swift in Sources */,
 				A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */,
