@@ -198,6 +198,31 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
 | Backlog | eine Zeile: Prioritätsmarken, Titel, Wiederholungs-Icon, Fälligkeits-Badge |
 | Erledigt | nur der Titel, durchgestrichen |
 
+- **Karten ohne Notiz zeigen „Keine Notizen"** statt einer leeren Zone — die
+  Notizen-Zone gehört zur Ticket-Anatomie und steht immer, aber ein leerer Streifen
+  zwischen zwei Trennlinien liest sich als Darstellungsfehler, nicht als „hier steht
+  nichts". Reine Anzeige: in EventKit wird nichts geschrieben (Juli 2026)
+
+- **Zwei Textstufen, je eine Bedeutung** (gilt für Board und Karten-Editor, siehe
+  `BoardText`):
+  - **primär** — der Name der Sache: Ticket-Titel, im geöffneten Ticket die Werte,
+    die man tippt
+  - **sekundär** — alles Stützende: Notizen-Auszug, Fußzeilen-Fakten (Listenname,
+    Verweildauer), Feld-Beschriftungen, Spaltenköpfe
+
+  „Keine Notizen", „Keine URL", „Kein Datum" tragen dieselbe Stufe wie der Inhalt, den
+  sie vertreten (sekundär auf der Karte, primär im geöffneten Editor) — eine eigene,
+  gedämpftere Platzhalterfarbe war eine dritte Graustufe zu viel für dieselbe Aussage,
+  die das Wort „Keine …" schon trifft (Juli 2026, nach Feedback korrigiert: erst als
+  eigene tertiäre Stufe gebaut, dann wieder auf die bestehenden zwei Stufen
+  zurückgeführt). Ausnahme: System-Controls (Picker im Editor) behalten ihre eigene
+  Textfarbe
+
+- **Erledigt-Titel in voller (primärer) Textfarbe, nicht gedämpft** — der Durchstrich
+  markiert bereits „fertig"; eine zusätzlich sekundäre Farbe wäre ein zweites Signal für
+  dieselbe Tatsache. Eine frühere Fassung dämpfte den Titel zusätzlich, wurde aber
+  verworfen (Juli 2026)
+
 - **Listenfarbe als Akzent:** `EKCalendar.color` als schmaler Streifen an der linken
   Kartenkante
 - **Verweildauer:** ab 3 Tagen in derselben Spalte zeigt die Karte „N Tage" (approximiert

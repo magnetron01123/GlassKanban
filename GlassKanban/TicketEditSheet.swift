@@ -251,6 +251,17 @@ struct TicketEditSheet: View {
                 // text is a label. Longer notes scroll rather than stretching
                 // the card, which is what keeps its proportion steady.
                 .frame(height: Self.notesHeight)
+                // The lane card's answer for an empty notes zone, carried
+                // into the opened card — same words, same tier. Four blank
+                // lines under a caption pose the same question the blank
+                // strip on the card did.
+                .overlay(alignment: .topLeading) {
+                    emptyValue("Keine Notizen", when: notes.isEmpty)
+                        // TextEditor sets its first line a hair below its own
+                        // top edge; the label follows it rather than the
+                        // frame, so the two sit on one baseline.
+                        .padding(.top, 1)
+                }
                 .editableHint(hoveredField == .notes, scheme: colorScheme)
                 .onHover { hovering in
                     withAnimation(Board.hoverAnimation) {
@@ -282,6 +293,9 @@ struct TicketEditSheet: View {
                 // No autocorrection or capitalisation on an address — the
                 // system would otherwise "fix" a domain into a sentence.
                 .autocorrectionDisabled()
+                .overlay(alignment: .leading) {
+                    emptyValue("Keine URL", when: url.isEmpty)
+                }
                 .editableHint(hoveredField == .url, scheme: colorScheme)
                 .onHover { hovering in
                     withAnimation(Board.hoverAnimation) {
@@ -371,6 +385,31 @@ struct TicketEditSheet: View {
             .foregroundStyle(.secondary)
     }
 
+    /// What a field says while it holds nothing — one wording and one tier
+    /// for all three of them ("Keine Notizen", "Keine URL", "Kein Datum").
+    ///
+    /// This is not the placeholder the captions replaced: that one repeated
+    /// the field's *name* inside it and vanished as soon as anything was
+    /// typed, leaving a filled field with no label. This one carries the
+    /// field's *state*, and the caption above it stands either way.
+    ///
+    /// Same primary tier as the value it stands in for: a field's typed
+    /// content is primary here (see `BoardText`), and a dimmer placeholder
+    /// colour was one more shade for the editor to carry than the two ranks
+    /// — primary value, secondary caption — it otherwise keeps. The wording
+    /// alone says "empty"; the tier doesn't need to say it again.
+    /// Non-interactive, because it lies over the field it describes and a
+    /// click on it belongs to that field.
+    @ViewBuilder
+    private func emptyValue(_ text: String, when isEmpty: Bool) -> some View {
+        if isEmpty {
+            Text(text)
+                .font(BoardText.editorBody)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+    }
+
     private var zoneDivider: some View {
         Rectangle()
             .fill(Board.cardBorder(contrast))
@@ -458,7 +497,9 @@ struct TicketEditSheet: View {
                             Text(Self.dueLabel(for: dueDate, includesTime: hasDueTime))
                                 .monospacedDigit()
                         } else {
-                            Text("Kein Datum").foregroundStyle(.secondary)
+                            // Same tier as the two empty fields above it —
+                            // it says the same thing about the same card.
+                            Text("Kein Datum")
                         }
                     }
                     .font(BoardText.editorBody)

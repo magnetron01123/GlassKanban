@@ -180,20 +180,7 @@ struct CardView: View {
 
             zoneDivider
 
-            Group {
-                if card.notesExcerpt.isEmpty {
-                    Spacer(minLength: 8)
-                } else {
-                    Text(card.notesExcerpt)
-                        .font(BoardText.body)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(3)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 8, trailing: Board.cardInsetTrailing))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                }
-            }
+            notesZone
 
             zoneDivider
 
@@ -205,8 +192,18 @@ struct CardView: View {
                     repeatIcon
                 }
                 Spacer(minLength: 8)
-                // Secondary, not tertiary: on opaque paper the tertiary
-                // style washes out to the point of being unreadable.
+                // Secondary — a supporting fact, like everything else in
+                // this row. It was briefly primary, to set it apart from the
+                // pale "Keine Notizen" one zone above; that separated the
+                // two but put the loudest text on the card's least important
+                // fact (the source list, at 11pt, as dark as the name of the
+                // ticket) and left four ranks of grey stacked in 118pt of
+                // paper. The board's three text ranks each mean one thing —
+                // see `BoardText` — and the separation comes from the
+                // placeholder receding, not from the metadata shouting.
+                // Tertiary is ruled out here for the opposite reason: at
+                // this size it washes out on paper, and the list name is
+                // something you actually read.
                 Text(card.listName)
                     .font(BoardText.meta)
                     .foregroundStyle(.secondary)
@@ -218,6 +215,36 @@ struct CardView: View {
             maxWidth: .infinity,
             minHeight: Board.fullCardMinHeight,
             alignment: .topLeading)
+    }
+
+    /// The ticket's middle zone. It always stands, because the zone is part
+    /// of the card's anatomy — but a card without a note used to leave it
+    /// blank, and an empty strip framed by two hairlines reads as something
+    /// that failed to load rather than as "nothing written here". Saying so
+    /// costs one quiet line and answers the question the gap posed.
+    ///
+    /// Same secondary tier as a real excerpt: a dedicated placeholder shade
+    /// on top of primary/secondary was a third colour for one card to carry,
+    /// and the words already say "empty" — the tier doesn't need to say it
+    /// again. Same font, same insets and the same expanding frame as a real
+    /// excerpt, so a card with a note and a card without one keep identical
+    /// geometry.
+    @ViewBuilder
+    private var notesZone: some View {
+        Group {
+            if card.notesExcerpt.isEmpty {
+                Text("Keine Notizen")
+            } else {
+                Text(card.notesExcerpt)
+            }
+        }
+        .foregroundStyle(.secondary)
+        .font(BoardText.body)
+        .lineLimit(3)
+        .multilineTextAlignment(.leading)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 8, trailing: Board.cardInsetTrailing))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     /// Hairline between ticket zones, inset to the text margin so it reads
@@ -302,8 +329,12 @@ struct CardView: View {
     private var titleText: Text {
         // No `.strikethrough` here: the done title's line is `strikeLine`,
         // drawn by the board so that completing can animate it.
+        //
+        // Full-strength colour even when done: the strike line already
+        // marks completion, so dimming the text on top of it was a second,
+        // redundant signal for the same fact.
         let base = Text(displayTitle)
-            .foregroundStyle(card.status == .done ? HierarchicalShapeStyle.secondary : .primary)
+            .foregroundStyle(.primary)
         guard let marks = card.priorityMarks, card.status != .done else { return base }
         // Interpolation rather than `+`: concatenating Text is deprecated as
         // of macOS 26 and each run keeps its own styling this way.
