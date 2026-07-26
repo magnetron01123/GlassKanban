@@ -28,13 +28,31 @@ enum Board {
     /// sits inside it; the zone hairlines follow the same insets.
     static let cardInsetLeading: CGFloat = 14
     static let cardInsetTrailing: CGFloat = 12
-    /// Working-lane cards hold this much height even when nearly empty, so
-    /// they read as sticky notes with a body instead of flat title bars.
-    static let fullCardMinHeight: CGFloat = 118
-    /// One-line rows in the storage lanes: 15pt text plus 9pt padding above
-    /// and below. Only used for the drop placeholder in an empty lane —
-    /// once a lane holds a card, its real height is measured instead.
+    // Card heights: one grid, two sizes.
+    //
+    // A ticket is one of exactly two heights, and the tall one is four of
+    // the short one. Both were intrinsic before — whatever the content
+    // happened to measure — so a Backlog row grew a point when it carried a
+    // date badge, and a working-lane card ranged from 118 to 133 depending
+    // on how many lines its note and title took. Four columns side by side
+    // then had four different row rhythms, none of them a multiple of the
+    // others, and the board read as slightly out of true without it being
+    // obvious why.
+    //
+    // Fixed rather than minimum, because "same size" has to hold for the
+    // card that has the most to say, not just the emptiest one.
+
+    /// The storage lanes' single-line row: 15pt text plus 9pt above and
+    /// below, rounded up the one point a date badge needs. Also the drop
+    /// placeholder's height — which is finally the truth rather than a
+    /// close guess.
     static let compactCardHeight: CGFloat = 38
+    /// The working lanes' card. Exactly four short rows, which is the
+    /// smallest multiple that still holds the fullest ticket the anatomy
+    /// allows — a three-line title over a three-line note measures 141, and
+    /// three rows would be 114. The slack sits in the notes zone, where the
+    /// card wants air anyway (see `CardView.fullBody`).
+    static let fullCardHeight: CGFloat = compactCardHeight * 4
     /// A card only reports its dwell time once it has lingered this long —
     /// below it, sitting in a column is simply normal.
     static let agingThresholdDays = 3
