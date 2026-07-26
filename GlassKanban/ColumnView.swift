@@ -627,17 +627,6 @@ struct ColumnView: View {
             // board's slowest curve — see there.
             toggleFold()
         } label: {
-            // The line keeps its identity through the fold. It travels the
-            // whole height of the revealed stack (it marks the end of the
-            // pile, so the unrolling cards push it down — that part is
-            // right), and it used to change its text and swap its chevron
-            // glyph in the same instant, mid-flight. Three simultaneous
-            // changes meant the thing that was clicked vanished and a
-            // different thing landed somewhere else — which is what read as
-            // hectic, not the travel. So: one chevron that *turns*, the way
-            // every disclosure on this platform turns, and a label that
-            // cross-fades. One object, pushed down by the cards it just
-            // revealed.
             HStack(spacing: 5) {
                 Text(moreLabel)
                     .font(BoardText.body)
@@ -645,7 +634,6 @@ struct ColumnView: View {
                     // line at this scale, and it has to read as a link, not
                     // as running text.
                     .fontWeight(.medium)
-                    .contentTransition(.opacity)
                 Image(systemName: "chevron.down")
                     .font(BoardText.glyph)
                     .rotationEffect(.degrees(expanded ? -180 : 0))
@@ -656,6 +644,25 @@ struct ColumnView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // The line does not ride the fold — it dissolves.
+        //
+        // It sits under the pile, so unfolding moves its resting place by
+        // the full height of the revealed stack. Animating that as travel
+        // sent a streak of high-contrast text across half the lane in a
+        // third of a second — the fastest-moving thing the board ever drew,
+        // and the eye's own anchor (the line just clicked) was the thing
+        // doing the racing. An earlier fix kept its identity through the
+        // flight (turning chevron, cross-fading label); that made the
+        // streak tidier, not calmer.
+        //
+        // So the platform's distance rule applies: short moves animate,
+        // long moves dissolve. `id(expanded)` makes the collapsed and the
+        // expanded line two views — the old one fades out where it stands,
+        // the new one fades in where it belongs, both on the fold's own
+        // curve, and nothing crosses the screen in between. The cards fade,
+        // the line fades: one quiet gesture.
+        .id(expanded)
+        .transition(.opacity)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) { moreHovered = hovering }
         }
