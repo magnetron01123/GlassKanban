@@ -43,6 +43,10 @@ struct GlassKanbanApp: App {
                     store.resetFilters()
                 }
                 .keyboardShortcut("f", modifiers: [.command, .shift])
+                // The same condition the popover's own reset button uses. A
+                // menu item that is always available but does nothing most of
+                // the time teaches the user to distrust the menu.
+                .disabled(!store.canResetFindSettings)
             }
         }
 

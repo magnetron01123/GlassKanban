@@ -91,6 +91,11 @@ final class RemindersStore: ObservableObject {
 
     struct SaveFailure: Identifiable {
         let cardID: String
+        /// What did not happen, in the user's words — "Nicht verschoben" for
+        /// a refused move, not the blanket "Nicht gespeichert" that only fits
+        /// an edit. A read-only shared list refuses every write the same way;
+        /// the alert has to say which one it was.
+        let title: String
         let message: String
         var id: String { cardID }
     }
@@ -268,9 +273,24 @@ final class RemindersStore: ObservableObject {
             forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let self, self.accessState == .denied else { return }
-                guard EKEventStore.authorizationStatus(for: .reminder) == .fullAccess else { return }
-                await self.evaluateAccess()
+                guard let self else { return }
+                let isAuthorized = EKEventStore.authorizationStatus(for: .reminder) == .fullAccess
+                switch (self.accessState, isAuthorized) {
+                case (.denied, true):
+                    await self.evaluateAccess()
+                case (.granted, false):
+                    // The other direction, which used to be unreachable: the
+                    // guard only ever looked for access being *given*, so a
+                    // permission taken away in System Settings while the app
+                    // ran left `accessState` on `.granted` forever. EventKit
+                    // then simply returned no lists, the board emptied, and it
+                    // announced "Nichts zu tun" — telling someone their work
+                    // is finished because the app was locked out of it.
+                    self.accessState = .denied
+                    self.cards = []
+                default:
+                    break
+                }
             }
         }
         observers.append(observer)
@@ -497,17 +517,26 @@ final class RemindersStore: ObservableObject {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
         guard origin != status else { return nil }
-        register(undoManager, name: "Verschieben") { store in
-            store.move(cardID: cardID, to: origin, undoManager: undoManager, feedback: false)
-        }
 
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
         reminder.isCompleted = (status == .done)
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
+            // Say so. A move that fails leaves the card where it was, which
+            // on a board that animates every real move looks exactly like a
+            // drop that missed — so the user tries again instead of learning
+            // that this list is read-only.
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID, title: "Nicht verschoben", message: error.localizedDescription)
             scheduleRefresh()
             return nil
+        }
+        // Registered after the save, not before: an undo entry for a move
+        // that never happened spends itself doing nothing, and the *next* ⌘Z
+        // then reaches back past it into an edit the user did mean to keep.
+        register(undoManager, name: "Verschieben") { store in
+            store.move(cardID: cardID, to: origin, undoManager: undoManager, feedback: false)
         }
 
         // Optimistic UI update; the EventKit change notification will
@@ -684,6 +713,8 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.remove(reminder, commit: true)
         } catch {
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID, title: "Nicht gelöscht", message: error.localizedDescription)
             scheduleRefresh()
             return
         }
@@ -754,6 +785,8 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID, title: "Nicht umbenannt", message: error.localizedDescription)
             scheduleRefresh()
             return
         }
@@ -808,12 +841,27 @@ final class RemindersStore: ObservableObject {
     /// addresses — "example.com" parses and round-trips unchanged, so a
     /// scheme is not forced onto text the user did not write one into. An
     /// empty field clears the reminder's URL rather than leaving a stale one
-    /// behind. Text that is not an address at all (anything with a space)
-    /// does not parse and therefore is not stored; the field is labelled URL
-    /// and Reminders has nowhere else to put it.
+    /// behind.
+    ///
+    /// The whitespace check is the part that has to be done by hand. This
+    /// comment used to claim that prose "does not parse and therefore is not
+    /// stored" — that stopped being true in macOS 14, where `URL(string:)`
+    /// percent-encodes invalid characters by default. So "Notiz mit
+    /// Leerzeichen" was quietly filed as an address and read back as
+    /// "Notiz%20mit%20Leerzeichen": the user's own words, mangled, in a field
+    /// they could no longer recognise. A space is the one thing no address
+    /// contains, and prose always has one.
+    ///
+    /// What passes may still be normalised — "https://münchen.de" is stored
+    /// as its punycode form and reads back that way. That is a correct,
+    /// resolvable address rather than a mangled sentence, so it is kept;
+    /// rejecting it (`encodingInvalidCharacters: false` returns nil for the
+    /// whole umlaut family) would throw away real links to avoid an unusual
+    /// spelling.
     private static func parsedURL(_ text: String) -> URL? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
+        guard !trimmed.isEmpty,
+              !trimmed.contains(where: \.isWhitespace) else { return nil }
         return URL(string: trimmed)
     }
 
@@ -885,9 +933,19 @@ final class RemindersStore: ObservableObject {
         if urlChanged { reminder.url = Self.parsedURL(edited.url) }
         if dueChanged {
             // Without a time of day the reminder stays all-day, the way
-            // Reminders itself models it (see `EditableTicket.hasDueTime`).
+            // Reminders itself models it (see `EditableTicket.hasDueTime`) —
+            // and all-day is deliberately floating, so no time zone goes with
+            // it: "the 3rd" is the 3rd wherever you are.
+            //
+            // A reminder due at a *time* carries one, because otherwise the
+            // components are read in whatever zone the device happens to be
+            // in. Written without it, "Monday 09:00 Europe/Berlin" became
+            // "Monday 09:00 wherever I am" — six hours adrift after a flight,
+            // for a reminder whose time nobody had touched.
             let dueFields: Set<Foundation.Calendar.Component> =
-                edited.hasDueTime ? [.year, .month, .day, .hour, .minute] : [.year, .month, .day]
+                edited.hasDueTime
+                    ? [.year, .month, .day, .hour, .minute, .timeZone]
+                    : [.year, .month, .day]
             reminder.dueDateComponents = edited.dueDate.map {
                 Foundation.Calendar.current.dateComponents(dueFields, from: $0)
             }
@@ -906,7 +964,8 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
-            pendingSaveFailure = SaveFailure(cardID: cardID, message: error.localizedDescription)
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID, title: "Nicht gespeichert", message: error.localizedDescription)
             scheduleRefresh()
             return
         }
@@ -997,7 +1056,7 @@ final class RemindersStore: ObservableObject {
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
                 && recurringFilter.matches($0)
-                && $0.matches(search: searchText)
+                && $0.matches(search: searchTerm)
         }
         if status == .done {
             // Finished work reads newest first; priority no longer matters.
@@ -1019,7 +1078,7 @@ final class RemindersStore: ObservableObject {
             $0.status == status
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
-                && $0.matches(search: searchText)
+                && $0.matches(search: searchTerm)
                 && !recurringFilter.matches($0)
         }.count
     }
@@ -1043,15 +1102,25 @@ final class RemindersStore: ObservableObject {
     /// find control permanently lit, which is precisely the standing
     /// attention-grab this feature exists to avoid. Its other value shows
     /// *more* than the default and is not a restriction either.
+    /// The trimmed text decides, not the raw field: a stray space is not a
+    /// search. Untrimmed, one accidental keystroke tinted the magnifier,
+    /// raised the badge to 1 and made the board announce itself as filtered
+    /// while every card stayed exactly where it was — `matches(search:)` had
+    /// already decided that a term of nothing but whitespace matches
+    /// everything.
+    var searchTerm: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var isFiltering: Bool {
-        priorityFilter != .all || dueFilter != .all || !searchText.isEmpty
+        priorityFilter != .all || dueFilter != .all || !searchTerm.isEmpty
     }
 
     /// Active restrictions, for the badge on the collapsed find control.
     var activeRestrictionCount: Int {
         (priorityFilter != .all ? 1 : 0)
             + (dueFilter != .all ? 1 : 0)
-            + (searchText.isEmpty ? 0 : 1)
+            + (searchTerm.isEmpty ? 0 : 1)
     }
 
     /// Whether anything in the find popover sits away from its default —
@@ -1069,7 +1138,9 @@ final class RemindersStore: ObservableObject {
         BoardEmptiness.evaluate(
             hasVisibleCards: KanbanStatus.allCases.contains { !cards(for: $0).isEmpty },
             isFiltering: isFiltering,
-            recurringHiddenCount: KanbanStatus.allCases.reduce(0) { $0 + recurringHiddenCount(for: $1) })
+            recurringHiddenCount: KanbanStatus.allCases.reduce(0) { $0 + recurringHiddenCount(for: $1) },
+            hasSelectedLists: !reminderCalendars.isEmpty
+                && !reminderCalendars.allSatisfy { excludedCalendarIDs.contains($0.calendarIdentifier) })
     }
 
     /// Shows the recurring cards the default is holding back — the action the

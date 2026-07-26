@@ -256,7 +256,7 @@ struct TicketEditSheet: View {
                 // lines under a caption pose the same question the blank
                 // strip on the card did.
                 .overlay(alignment: .topLeading) {
-                    emptyValue("Keine Notizen", when: notes.isEmpty)
+                    emptyValue("Keine Notizen", when: Self.normalizedNotes(notes).isEmpty)
                         // TextEditor sets its first line a hair below its own
                         // top edge; the label follows it rather than the
                         // frame, so the two sit on one baseline.
@@ -613,7 +613,15 @@ struct TicketEditSheet: View {
     // MARK: - Persistence
 
     private func load() {
-        guard let ticket = store.loadEditableTicket(cardID: card.id) else { return }
+        guard var ticket = store.loadEditableTicket(cardID: card.id) else { return }
+        // Normalised on the way in, so the baseline is measured the same way
+        // the edit will be. `save` trims the title before comparing; against
+        // an untrimmed baseline a stored "Angebot prüfen " differed from
+        // itself, and merely opening the card and closing it again counted as
+        // a change — a write, a bumped modification date, and a reset dwell
+        // time for a card nobody edited.
+        ticket.title = ticket.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        ticket.notes = Self.normalizedNotes(ticket.notes)
         title = ticket.title
         notes = ticket.notes
         url = ticket.url
@@ -639,11 +647,24 @@ struct TicketEditSheet: View {
     /// it and putting it back must be a read, not a write. An emptied title
     /// falls back to the loaded one: a card whose name was wiped by accident
     /// is not a rename (same rule as `TicketRename` for the inline path).
+    /// A note that holds nothing but blank lines *is* nothing.
+    ///
+    /// Three taps of Return in an empty field left "\n\n\n" behind, which is
+    /// not equal to "" — so closing the card wrote it, and in the two lanes
+    /// that carry no tag (Backlog, Erledigt) nothing ever trimmed it away
+    /// again. The field then looked empty on every later visit while
+    /// "Keine Notizen" stayed hidden, because the placeholder asked
+    /// `isEmpty`. Text with any content at all is passed through untouched:
+    /// paragraph breaks inside a note are the user's, not ours.
+    static func normalizedNotes(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : text
+    }
+
     private func save() {
         guard isLoaded, let loadedTicket else { return }
         var edited = EditableTicket(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-            notes: notes,
+            notes: Self.normalizedNotes(notes),
             url: url,
             dueDate: dueDate,
             hasDueTime: hasDueTime,

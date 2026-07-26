@@ -202,14 +202,14 @@ struct StatsPopover: View {
             well {
                 rows {
                     row("Heute",
-                        Self.tasks(streak.todayCount),
+                        GermanPlural.tasks(streak.todayCount),
                         // Clearing the personal daily average is the reward,
                         // and it is carried by a glyph rather than a coloured
                         // label: the board's badge rule is measured, and
                         // orange at reading size on a light surface lands
                         // under the contrast floor.
                         mark: streak.todayCount >= max(1, streak.dailyTarget) ? "flame.fill" : nil,
-                        help: "Dein Schnitt an aktiven Tagen: \(Self.tasks(max(1, streak.dailyTarget))).")
+                        help: "Dein Schnitt an aktiven Tagen: \(GermanPlural.tasks(max(1, streak.dailyTarget))).")
 
                     row("In Bearbeitung", wipValue, help: wipHelp)
 
@@ -310,7 +310,7 @@ struct StatsPopover: View {
         .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(Self.days(streak.current)) in Folge." + (heroNote.map { " \($0.text)." } ?? ""))
+            "\(GermanPlural.days(streak.current)) in Folge." + (heroNote.map { " \($0.text)." } ?? ""))
     }
 
     /// One line, three jobs, in strict priority — an invitation while today is
@@ -389,7 +389,7 @@ struct StatsPopover: View {
             yearHero
             well {
                 rows {
-                    row("Längste Folge", Self.days(streak.best))
+                    row("Längste Folge", GermanPlural.days(streak.best))
 
                     // The two flow figures, side by side and on the same
                     // 30-day window — with "In Bearbeitung" on the other
@@ -398,7 +398,7 @@ struct StatsPopover: View {
                     // oracle and becomes arithmetic the reader can check.
                     if let weekly = weeklyThroughput {
                         row("Pro Woche",
-                            Self.tasks(weekly),
+                            GermanPlural.tasks(weekly),
                             help: "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten \(WrappedStats.trendWindowDays) Tage — das Tempo in Little’s Law.")
                     }
                     if let lead = wrapped.medianLeadTimeDays {
@@ -414,19 +414,19 @@ struct StatsPopover: View {
                         rows {
                             if let best = wrapped.bestDay {
                                 row("Bester Tag",
-                                    Self.tasks(best.count),
+                                    GermanPlural.tasks(best.count),
                                     help: best.date.formatted(date: .long, time: .omitted))
                             }
                             if let rank = wrapped.mostActiveWeekday {
                                 row("Stärkster Wochentag",
                                     Calendar.current.weekdaySymbols[rank.weekday - 1],
-                                    help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
+                                    help: "\(GermanPlural.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
                             }
                             if let rank = wrapped.mostUsedList {
                                 row("Häufigste Liste",
                                     rank.name,
                                     dot: rank.color,
-                                    help: Self.tasks(rank.count))
+                                    help: GermanPlural.tasks(rank.count))
                             }
                         }
                     }
@@ -511,7 +511,7 @@ struct StatsPopover: View {
         .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(Self.tasks(wrapped.yearCount)) dieses Jahr erledigt."
+            "\(GermanPlural.tasks(wrapped.yearCount)) dieses Jahr erledigt."
                 + (wrapped.milestone.map { " Meilenstein erreicht: \($0)." } ?? ""))
     }
 
@@ -561,7 +561,7 @@ struct StatsPopover: View {
         // Otherwise this is 30 VoiceOver stops that each say nothing.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "Letzte \(WrappedStats.trendWindowDays) Tage: an \(wrapped.consistencyActiveDays) Tagen etwas erledigt.")
+            "Letzte \(WrappedStats.trendWindowDays) Tage: an \(GermanPlural.days(wrapped.consistencyActiveDays)) etwas erledigt.")
     }
 
     /// A day with nothing done keeps a hairline so the row still reads as a
@@ -585,7 +585,7 @@ struct StatsPopover: View {
         } else {
             when = day.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
         }
-        return "\(when): \(Self.tasks(day.count))"
+        return "\(when): \(GermanPlural.tasks(day.count))"
     }
 
     // MARK: - Rows
@@ -635,14 +635,6 @@ struct StatsPopover: View {
         .modifier(OptionalHelp(text: help))
     }
 
-    /// German plurals — "1 Tag" but "2 Tage", "1 Aufgabe" but "2 Aufgaben".
-    private static func days(_ count: Int) -> String {
-        count == 1 ? "1 Tag" : "\(count) Tage"
-    }
-
-    private static func tasks(_ count: Int) -> String {
-        count == 1 ? "1 Aufgabe" : "\(count) Aufgaben"
-    }
 
     /// A duration in days, one decimal while it is small enough for the
     /// fraction to matter — but never a decorative one: "1,0 Tage" is a

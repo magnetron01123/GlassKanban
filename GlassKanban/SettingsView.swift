@@ -43,7 +43,14 @@ struct ListsSettingsView: View {
         Form {
             Section("Diese Listen im Board anzeigen") {
                 if store.reminderCalendars.isEmpty {
-                    Text("Keine Erinnerungslisten gefunden.")
+                    // Two different states looked the same here. Without
+                    // permission EventKit simply returns nothing, so the
+                    // window blamed the user's lists for what is the app's
+                    // missing access — and the one sentence that could have
+                    // explained it said the opposite.
+                    Text(store.accessState == .denied
+                        ? "Kein Zugriff auf Erinnerungen. In den Systemeinstellungen unter „Datenschutz & Sicherheit“ freigeben."
+                        : "Keine Erinnerungslisten gefunden.")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(store.reminderCalendars, id: \.calendarIdentifier) { calendar in

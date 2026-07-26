@@ -359,7 +359,7 @@ struct ColumnView: View {
 
     /// Every lane opens the same way, so the four read as one family.
     private var countSummary: String {
-        guard let wipLimit else { return "\(shownCount) Karten" }
+        guard let wipLimit else { return GermanPlural.cards(shownCount) }
         return "\(cards.count) von \(wipLimit) Karten"
     }
 
@@ -374,7 +374,7 @@ struct ColumnView: View {
         // the exact moment someone is digging for it.
         if status == .done {
             if !expanded, foldedCount > 0 {
-                details.append("\(foldedCount) ältere Karten")
+                details.append(GermanPlural.olderCards(foldedCount))
             } else if expanded {
                 details.append("Älteres liegt in Erinnerungen")
             }

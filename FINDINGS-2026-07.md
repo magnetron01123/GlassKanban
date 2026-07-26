@@ -30,27 +30,27 @@ A1 steht vorn, weil es als einziger Befund Nutzertext ohne Zutun und ohne Undo z
 | V0c | Platzhalter im Editor nicht von Inhalt zu unterscheiden | `TicketEditSheet:388` | Hoch | live |
 | A3 | Undo nach Löschen verliert Unteraufgaben und Anhänge | `RemindersStore:699` | Hoch | gelesen |
 | ~~A4~~ | ~~Edit geht stumm verloren, wenn Karte aus dem Cache fällt~~ — **behoben** | `RemindersStore:846` | ~~Hoch~~ | erledigt |
-| B1 | Zeitzone der Fälligkeit geht bei jedem Speichern verloren | `RemindersStore:877` | Hoch | gemessen |
-| B2 | URL-Feld verstümmelt statt zu verwerfen (Punycode, %20) | `RemindersStore:805` | Hoch | gemessen |
-| B3 | Entzogene Berechtigung wird nie bemerkt → „Nichts zu tun" | `RemindersStore:266` | Hoch | gelesen |
+| ~~B1~~ | ~~Zeitzone der Fälligkeit geht verloren~~ — **behoben** | `RemindersStore:897` | ~~Hoch~~ | erledigt |
+| ~~B2~~ | ~~URL-Feld verstümmelt Fließtext~~ — **behoben** | `RemindersStore:829` | ~~Hoch~~ | erledigt |
+| ~~B3~~ | ~~Entzogene Berechtigung wird nie bemerkt~~ — **behoben** | `RemindersStore:272` | ~~Hoch~~ | erledigt |
 | ~~C1~~ | ~~Dunkelmodus + „Transparenz reduzieren" kippt die Tiefenordnung~~ — **behoben** | `DesignSystem:158` | ~~Hoch~~ | erledigt |
 | V0b | Editor ist nicht modal — Statistik öffnet darüber | `BoardView:156` | Mittel | live |
 | V1 | „Keine Notizen" so laut wie eine echte Notiz — **Entscheidung offen** | `CardView:220` | Mittel | gemessen |
-| A5 | Leerzeilen-Notizen werden dauerhaft geschrieben | `TicketEditSheet:259` | Mittel | gelesen |
-| B4 | Alle Listen abgewählt → Board behauptet „Nichts zu tun" | `RemindersStore:354` | Mittel | gelesen |
-| B5 | Schreibfehler sind bis auf einen Pfad stumm | `RemindersStore:508` | Mittel | gelesen |
-| B6 | Undo-Eintrag vor dem Speichern registriert — **`updateTicket` behoben**, `move` offen | `RemindersStore:500` | Mittel | teilweise |
+| ~~A5~~ | ~~Leerzeilen-Notizen werden dauerhaft geschrieben~~ — **behoben** | `TicketEditSheet:648` | ~~Mittel~~ | erledigt |
+| ~~B4~~ | ~~Alle Listen abgewählt → „Nichts zu tun"~~ — **behoben** | `Models:288` | ~~Mittel~~ | erledigt |
+| ~~B5~~ | ~~Schreibfehler sind bis auf einen Pfad stumm~~ — **behoben** | `RemindersStore:92` | ~~Mittel~~ | erledigt |
+| ~~B6~~ | ~~Undo-Eintrag vor dem Speichern registriert~~ — **behoben** | `RemindersStore:517` | ~~Mittel~~ | erledigt |
 | B8 | Durchsatz teilt immer durch 30 (junges Board rechnet zu niedrig) | `WrappedStats:171` | Mittel | gelesen |
 | B10 | Weckzeiten werden beim Datumswechsel nicht mitgeführt | `RemindersStore:874` | Mittel | offen |
 | C2 | Karten können über den Kopf von „In Bearbeitung" zeichnen | `ColumnView:188` | Mittel | gelesen |
-| C4 | Deutsche Pluralfehler („1 Karten", „1 ältere Karten") | `ColumnView:362` | Mittel | gelesen |
+| ~~C4~~ | ~~Deutsche Pluralfehler („1 Karten")~~ — **behoben** | `Models:GermanPlural` | ~~Mittel~~ | erledigt |
 | C7 | „+" bei aktivem Filter erzeugt eine verschwindende Karte | `RemindersStore:562` | Mittel | gelesen |
 | D1 | Sichtbare Notizen werden VoiceOver nie vorgelesen | `CardView:125` | Mittel | gelesen |
 | D2 | Umbenennen-Feld hat keine eigene Repräsentation | `CardView:350` | Mittel | gelesen |
-| E2 | Leerzeichen-Suche markiert das Board fälschlich als gefiltert | `RemindersStore:1009` | Mittel | live |
+| ~~E2~~ | ~~Leerzeichen-Suche markiert das Board als gefiltert~~ — **behoben** | `RemindersStore:1105` | ~~Mittel~~ | erledigt |
 | E5 | „Beim Anmelden starten" scheitert stumm | `SettingsView:116` | Mittel | gelesen |
 | E7 | Fokusdiebstahl bei jedem Fensterwechsel | `TicketEditSheet:866` | Mittel | gelesen |
-| A6 | Reiner Lesevorgang schreibt bei Randleerzeichen im Titel | `TicketEditSheet:645` | Niedrig | gelesen |
+| ~~A6~~ | ~~Reiner Lesevorgang schreibt bei Randleerzeichen~~ — **behoben** | `TicketEditSheet:615` | ~~Niedrig~~ | erledigt |
 | B7 | Verwaiste Undo-Einträge nach abgebrochener Neuanlage | `RemindersStore:578` | Niedrig | gelesen |
 | B9 | „0 Tage" bei der Durchlaufzeit | `StatsPopover:652` | Niedrig | gelesen |
 | B11 | Undo einer Fertigstellung bei Wiederkehrern | `RemindersStore:382` | Niedrig | offen |
@@ -68,10 +68,10 @@ A1 steht vorn, weil es als einziger Befund Nutzertext ohne Zutun und ohne Undo z
 | V0d | Zähler „Erledigt" springt beim Aufklappen (4 → 15) | `ColumnView:362` | Niedrig | live |
 | D3 | Listenname doppelt für VoiceOver | `CardView:130` | Niedrig | gelesen |
 | D4 | WIP-Zeile erklärt ihre Zahl nicht | `StatsPopover:359` | Niedrig | gelesen |
-| E1 | „Filter zurücksetzen" (⇧⌘F) ist immer aktiv | `GlassKanbanApp:42` | Niedrig | gelesen |
+| ~~E1~~ | ~~„Filter zurücksetzen" ist immer aktiv~~ — **behoben** | `GlassKanbanApp:49` | ~~Niedrig~~ | erledigt |
 | E3 | ⌘N liegt auf „In Erinnerungen öffnen" | `GlassKanbanApp:33` | Niedrig | gelesen |
 | E4 | ⌘F taucht in keinem Menü auf | `BoardView:280` | Niedrig | gelesen |
-| E6 | Einstellungen nennen bei fehlendem Zugriff die falsche Ursache | `SettingsView:46` | Niedrig | gelesen |
+| ~~E6~~ | ~~Einstellungen nennen die falsche Ursache~~ — **behoben** | `SettingsView:51` | ~~Niedrig~~ | erledigt |
 | ~~F1~~ | ~~`updateTicket` schreibt den unsanitisierten Titel~~ — **behoben** | `RemindersStore:924` | ~~Aufräumen~~ | erledigt |
 | F2 | `reminder.calendar` ohne nil-Guard | `RemindersStore:672` | Aufräumen | gelesen |
 | F3 | Farbe der „Häufigsten Liste" nicht deterministisch | `WrappedStats:155` | Aufräumen | gelesen |

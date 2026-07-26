@@ -108,7 +108,11 @@ struct BoardView: View {
         // Board-level for the same reason as the alert above: the failure
         // surfaces from `TicketEditSheet`'s own close, after that sheet is
         // already gone, so nowhere on the sheet itself could show it.
-        .alert("Nicht gespeichert", isPresented: saveFailureBinding, presenting: store.pendingSaveFailure) { _ in
+        .alert(
+            store.pendingSaveFailure?.title ?? "Nicht gespeichert",
+            isPresented: saveFailureBinding,
+            presenting: store.pendingSaveFailure
+        ) { _ in
             Button("OK") {}
         } message: { failure in
             Text(failure.message)
@@ -247,7 +251,7 @@ struct BoardView: View {
 
     private var streakPillLabel: String {
         store.streakStats.current > 0
-            ? "Statistiken. Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe"
+            ? "Statistiken. Folge: \(GermanPlural.days(store.streakStats.current)) nacheinander mit mindestens einer erledigten Aufgabe"
             : "Statistiken. Zurzeit keine Folge"
     }
 
@@ -282,7 +286,7 @@ struct BoardView: View {
         // rather than hidden.
         .tint(store.isFiltering ? Color.accentColor : nil)
         .accessibilityLabel(store.isFiltering
-            ? "Finden, Board ist gefiltert, \(store.activeRestrictionCount) Einschränkungen aktiv"
+            ? "Finden, Board ist gefiltert, \(GermanPlural.restrictions(store.activeRestrictionCount)) aktiv"
             : "Aufgabe finden")
         .help(store.isFiltering
             ? "Board ist gefiltert — \(store.activeRestrictionCount) aktiv (⌘F)"
