@@ -43,7 +43,14 @@ struct ListsSettingsView: View {
         Form {
             Section("Diese Listen im Board anzeigen") {
                 if store.reminderCalendars.isEmpty {
-                    Text("Keine Erinnerungslisten gefunden.")
+                    // Two different states looked the same here. Without
+                    // permission EventKit simply returns nothing, so the
+                    // window blamed the user's lists for what is the app's
+                    // missing access — and the one sentence that could have
+                    // explained it said the opposite.
+                    Text(store.accessState == .denied
+                        ? "Kein Zugriff auf Erinnerungen. In den Systemeinstellungen unter „Datenschutz & Sicherheit“ freigeben."
+                        : "Keine Erinnerungslisten gefunden.")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(store.reminderCalendars, id: \.calendarIdentifier) { calendar in
@@ -87,6 +94,8 @@ struct GeneralSettingsView: View {
     /// service-management daemon, measured at 2–3 ms — cheap enough to do
     /// once here, and it is refreshed on focus for changes made elsewhere.
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    /// Why the switch sprang back, when it did.
+    @State private var launchAtLoginError: String?
     /// Distinguishes the user flipping the switch from us loading its state,
     /// so syncing never re-registers the login item as a side effect.
     @State private var isSyncingLaunchAtLogin = false
@@ -114,9 +123,24 @@ struct GeneralSettingsView: View {
                             try SMAppService.mainApp.unregister()
                         }
                     } catch {
-                        // Revert the toggle if the system rejected the change.
+                        // Revert the toggle if the system rejected the change —
+                        // and say so. Silently springing back looks like a
+                        // broken switch; the usual cause is macOS blocking the
+                        // registration in "Anmeldeobjekte", which the user can
+                        // only act on if they are told.
+                        launchAtLoginError = error.localizedDescription
                         syncLaunchAtLogin()
                     }
+                }
+                .alert(
+                    "Beim Anmelden starten nicht möglich",
+                    isPresented: Binding(
+                        get: { launchAtLoginError != nil },
+                        set: { if !$0 { launchAtLoginError = nil } })
+                ) {
+                    Button("OK") {}
+                } message: {
+                    Text(launchAtLoginError ?? "")
                 }
 
             // The one sound the app makes (see `MoveFeedback`). It ships on —

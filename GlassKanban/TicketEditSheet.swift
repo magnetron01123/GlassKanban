@@ -66,6 +66,8 @@ struct TicketEditSheet: View {
     /// runs an animation out, so the decision has to survive until the view
     /// is actually gone.
     @State private var isCancelled = false
+    /// Guards `closeAndPersist` — see there.
+    @State private var hasClosed = false
     /// What was loaded, verbatim — the reference a close compares against.
     /// Without it every glance at a card wrote every field back on close,
     /// which bumped `lastModifiedDate` (resetting the card's dwell-time
@@ -133,25 +135,44 @@ struct TicketEditSheet: View {
                 onCommit: onClose,
                 onCancel: cancel))
         .task { load() }
-        .onDisappear {
-            // Escape: write nothing, and take back a creation that was
-            // cancelled rather than finished. Everything the fields hold is
-            // still local state at this point — discarding is literally not
-            // saving, which is why there is nothing else to undo here.
-            if isCancelled {
-                store.cancelNewTicket(cardID: card.id)
-                return
-            }
-            save()
-            if opensRemindersOnClose {
-                store.openInReminders(cardID: card.id)
-            }
-            // A ticket the "+" just made, closed without any input, is an
-            // abandoned creation — the store removes it again so no untitled
-            // ghost stays behind. Jumping to Reminders counts as keeping it:
-            // the user is clearly on the way to fill it in over there.
-            store.finalizeNewTicket(cardID: card.id, keep: opensRemindersOnClose)
+        .onDisappear { closeAndPersist() }
+        // Quitting is the one close that does not go through `onDisappear`:
+        // AppKit tears the window down without SwiftUI running a disappear
+        // pass, so ⌘Q with a card open dropped whatever had been typed — and
+        // for a ticket the "+" had just made, left the untitled placeholder
+        // behind in Reminders, which is exactly the ghost
+        // `finalizeNewTicket` exists to prevent. Terminating counts as
+        // closing: the note goes back on the wall with what is written on it.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+            closeAndPersist()
         }
+    }
+
+    /// Everything a close has to do, on either route in. Runs at most once:
+    /// with both routes live, a normal close would otherwise save twice —
+    /// harmless for the write itself (`save` compares against the baseline),
+    /// but `finalizeNewTicket` is not idempotent in spirit and neither is the
+    /// jump to Reminders.
+    private func closeAndPersist() {
+        guard !hasClosed else { return }
+        hasClosed = true
+        // Escape: write nothing, and take back a creation that was
+        // cancelled rather than finished. Everything the fields hold is
+        // still local state at this point — discarding is literally not
+        // saving, which is why there is nothing else to undo here.
+        if isCancelled {
+            store.cancelNewTicket(cardID: card.id, undoManager: undoManager)
+            return
+        }
+        save()
+        if opensRemindersOnClose {
+            store.openInReminders(cardID: card.id)
+        }
+        // A ticket the "+" just made, closed without any input, is an
+        // abandoned creation — the store removes it again so no untitled
+        // ghost stays behind. Jumping to Reminders counts as keeping it:
+        // the user is clearly on the way to fill it in over there.
+        store.finalizeNewTicket(cardID: card.id, keep: opensRemindersOnClose, undoManager: undoManager)
     }
 
     /// Escape: mark the close as a discard, then close on the same path
@@ -213,7 +234,11 @@ struct TicketEditSheet: View {
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
-        .help("In Erinnerungen öffnen")
+        // No `.help` — the card is content, and tooltips on a card are a
+        // settled no (BACKLOG.md, "Explizit abgelehnt"); the opened card is
+        // still a card. `BoardTooltip` says the same thing from the other
+        // side: it replaces `.help()`, never joins it. VoiceOver keeps the
+        // label below.
         .accessibilityLabel("In Erinnerungen öffnen")
     }
 
@@ -251,6 +276,17 @@ struct TicketEditSheet: View {
                 // text is a label. Longer notes scroll rather than stretching
                 // the card, which is what keeps its proportion steady.
                 .frame(height: Self.notesHeight)
+                // The lane card's answer for an empty notes zone, carried
+                // into the opened card — same words, same tier. Four blank
+                // lines under a caption pose the same question the blank
+                // strip on the card did.
+                .overlay(alignment: .topLeading) {
+                    emptyValue("Keine Notizen", when: Self.normalizedNotes(notes).isEmpty)
+                        // TextEditor sets its first line a hair below its own
+                        // top edge; the label follows it rather than the
+                        // frame, so the two sit on one baseline.
+                        .padding(.top, 1)
+                }
                 .editableHint(hoveredField == .notes, scheme: colorScheme)
                 .onHover { hovering in
                     withAnimation(Board.hoverAnimation) {
@@ -282,6 +318,9 @@ struct TicketEditSheet: View {
                 // No autocorrection or capitalisation on an address — the
                 // system would otherwise "fix" a domain into a sentence.
                 .autocorrectionDisabled()
+                .overlay(alignment: .leading) {
+                    emptyValue("Keine URL", when: url.isEmpty)
+                }
                 .editableHint(hoveredField == .url, scheme: colorScheme)
                 .onHover { hovering in
                     withAnimation(Board.hoverAnimation) {
@@ -371,6 +410,36 @@ struct TicketEditSheet: View {
             .foregroundStyle(.secondary)
     }
 
+    /// What a field says while it holds nothing — one wording and one tier
+    /// for all three of them ("Keine Notizen", "Keine URL", "Kein Datum").
+    ///
+    /// This is not the placeholder the captions replaced: that one repeated
+    /// the field's *name* inside it and vanished as soon as anything was
+    /// typed, leaving a filled field with no label. This one carries the
+    /// field's *state*, and the caption above it stands either way.
+    ///
+    /// Secondary, because a placeholder is not a value — it is the app
+    /// saying there isn't one, which is the second tier's whole job (see
+    /// `BoardText`). Set in primary it was indistinguishable from typed
+    /// text: "Keine Notizen" sat in the notes field in the same black as a
+    /// real note, two rows above "Dringlichkeit: Keine", which *is* a value.
+    /// Nothing on screen said which of the two was content. The platform
+    /// makes the same distinction — this window's own search field dims its
+    /// placeholder — and it costs no third shade to follow it.
+    ///
+    /// Non-interactive, because it lies over the field it describes and a
+    /// click on it belongs to that field.
+    @ViewBuilder
+    private func emptyValue(_ text: String, when isEmpty: Bool) -> some View {
+        if isEmpty {
+            Text(text)
+                .font(BoardText.editorBody)
+                .foregroundStyle(.secondary)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+    }
+
     private var zoneDivider: some View {
         Rectangle()
             .fill(Board.cardBorder(contrast))
@@ -379,17 +448,17 @@ struct TicketEditSheet: View {
             .padding(.trailing, Board.openCardInset)
     }
 
+    /// One paper tone whatever the ticket's state. The lanes dim a finished
+    /// card because it is one of many and has to recede among them; held open
+    /// on its own there is nothing for it to recede behind, and a card that
+    /// looks different depending on which lane it came from is two cards.
+    ///
+    /// And one fill in every mode, for the reason `CardView.cardFill` gives:
+    /// a solid colour has nothing for "Transparenz reduzieren" to switch off,
+    /// and the stand-in this used to reach for was darker than the board
+    /// behind it in dark mode.
     private var cardFill: Color {
-        reduceTransparency
-            ? Color(nsColor: .controlBackgroundColor)
-            // The dimmer paper a finished ticket already has in its lane —
-            // the parameter was there, this view just never passed it.
-            // One paper tone whatever the ticket's state. The lanes dim a
-            // finished card because it is one of many and has to recede among
-            // them; held open on its own there is nothing for it to recede
-            // behind, and a card that looks different depending on which lane
-            // it came from is two cards.
-            : Board.cardFill(colorScheme)
+        Board.cardFill(colorScheme)
     }
 
     private var listStripe: some View {
@@ -448,16 +517,27 @@ struct TicketEditSheet: View {
         Button {
             isDuePopoverPresented = true
         } label: {
-            Text(Self.dueWidthTemplate)
-                .monospacedDigit()
-                .font(BoardText.editorBody)
-                .hidden()
+            // A chevron, like the two menu rows above it. The three facts
+            // rows read as one family only if they open the same way — this
+            // one was a bare push button, so the pair with a ⌄ looked like
+            // controls and this one like a label that happened to be raised.
+            HStack(spacing: 4) {
+                Text(Self.dueWidthTemplate)
+                    .monospacedDigit()
+                    .font(BoardText.editorBody)
+                    .hidden()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(BoardText.glyph)
+                    .foregroundStyle(.secondary)
+            }
                 .overlay(alignment: .trailing) {
                     Group {
                         if let dueDate {
                             Text(Self.dueLabel(for: dueDate, includesTime: hasDueTime))
                                 .monospacedDigit()
                         } else {
+                            // Same tier as the two empty fields above it —
+                            // it says the same thing about the same card.
                             Text("Kein Datum").foregroundStyle(.secondary)
                         }
                     }
@@ -478,10 +558,28 @@ struct TicketEditSheet: View {
 
     /// Picking a day in the calendar is what sets the date — opening the
     /// popover on an undated card must not, or merely looking would date it.
+    /// Reads midnight for an undated card, but a *working* hour once a time
+    /// is actually switched on. Switching "Uhrzeit" on used to leave the
+    /// picker at 00:00, so a reminder that had been all-day quietly became
+    /// one due at midnight — and Reminders duly notified at midnight.
     private var dueBinding: Binding<Date> {
         Binding(
             get: { dueDate ?? Foundation.Calendar.current.startOfDay(for: .now) },
             set: { dueDate = $0 })
+    }
+
+    /// The hour a date gets when a time is switched on for the first time.
+    /// Nine in the morning is what Reminders itself defaults to, and it is a
+    /// time someone might have meant.
+    private static let defaultDueHour = 9
+
+    private func dueTimeSwitchedOn() {
+        let calendar = Foundation.Calendar.current
+        let base = dueDate ?? calendar.startOfDay(for: .now)
+        guard calendar.component(.hour, from: base) == 0,
+              calendar.component(.minute, from: base) == 0 else { return }
+        dueDate = calendar.date(
+            bySettingHour: Self.defaultDueHour, minute: 0, second: 0, of: base) ?? base
     }
 
     private var showsTimePicker: Bool { hasDueTime && dueDate != nil }
@@ -498,6 +596,9 @@ struct TicketEditSheet: View {
             HStack {
                 Toggle("Uhrzeit", isOn: $hasDueTime)
                     .disabled(dueDate == nil)
+                    .onChange(of: hasDueTime) { _, isOn in
+                        if isOn { dueTimeSwitchedOn() }
+                    }
                 Spacer(minLength: 8)
                 // Always laid out, only sometimes visible. Inserting the time
                 // field when the switch went on resized the popover under the
@@ -572,7 +673,15 @@ struct TicketEditSheet: View {
     // MARK: - Persistence
 
     private func load() {
-        guard let ticket = store.loadEditableTicket(cardID: card.id) else { return }
+        guard var ticket = store.loadEditableTicket(cardID: card.id) else { return }
+        // Normalised on the way in, so the baseline is measured the same way
+        // the edit will be. `save` trims the title before comparing; against
+        // an untrimmed baseline a stored "Angebot prüfen " differed from
+        // itself, and merely opening the card and closing it again counted as
+        // a change — a write, a bumped modification date, and a reset dwell
+        // time for a card nobody edited.
+        ticket.title = ticket.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        ticket.notes = Self.normalizedNotes(ticket.notes)
         title = ticket.title
         notes = ticket.notes
         url = ticket.url
@@ -598,11 +707,24 @@ struct TicketEditSheet: View {
     /// it and putting it back must be a read, not a write. An emptied title
     /// falls back to the loaded one: a card whose name was wiped by accident
     /// is not a rename (same rule as `TicketRename` for the inline path).
+    /// A note that holds nothing but blank lines *is* nothing.
+    ///
+    /// Three taps of Return in an empty field left "\n\n\n" behind, which is
+    /// not equal to "" — so closing the card wrote it, and in the two lanes
+    /// that carry no tag (Backlog, Erledigt) nothing ever trimmed it away
+    /// again. The field then looked empty on every later visit while
+    /// "Keine Notizen" stayed hidden, because the placeholder asked
+    /// `isEmpty`. Text with any content at all is passed through untouched:
+    /// paragraph breaks inside a note are the user's, not ours.
+    static func normalizedNotes(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : text
+    }
+
     private func save() {
         guard isLoaded, let loadedTicket else { return }
         var edited = EditableTicket(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-            notes: notes,
+            notes: Self.normalizedNotes(notes),
             url: url,
             dueDate: dueDate,
             hasDueTime: hasDueTime,
@@ -612,15 +734,14 @@ struct TicketEditSheet: View {
             edited.title = loadedTicket.title
         }
         guard edited != loadedTicket else { return }
+        // `loadedTicket` travels along as the baseline: it is what this sheet
+        // was opened on, so the store can tell an edited field from one that
+        // only looks unchanged, and leave the latter to whatever the live
+        // reminder holds.
         store.updateTicket(
             cardID: card.id,
-            title: edited.title,
-            notes: edited.notes,
-            url: edited.url,
-            dueDate: edited.dueDate,
-            hasDueTime: edited.hasDueTime,
-            priority: edited.priority,
-            calendarID: edited.calendarID,
+            edited: edited,
+            baseline: loadedTicket,
             undoManager: undoManager)
     }
 }
@@ -816,18 +937,39 @@ private struct FirstResponderNeutralizer: NSViewRepresentable {
 
     final class NeutralizingView: NSView {
         private var observer: NSObjectProtocol?
+        /// The neutralisation is a one-off, and this is what makes it one.
+        ///
+        /// The observer exists because the window may still be becoming key
+        /// when this view lands, so the first attempt can come too early. It
+        /// used to keep firing for as long as the editor was open, which made
+        /// it something else entirely: every return from another app took the
+        /// cursor out of whatever field was being typed in. Worse on a card
+        /// the "+" had just made — the title claims focus 120 ms after
+        /// opening, so one ⌘Tab away and back sent the next keystrokes
+        /// nowhere, and closing then deleted the ticket as "empty".
+        private var hasNeutralized = false
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             observer.map(NotificationCenter.default.removeObserver)
+            observer = nil
+            hasNeutralized = false
             guard let window else { return }
-            window.makeFirstResponder(window.contentView)
+            if window.isKeyWindow {
+                window.makeFirstResponder(window.contentView)
+                hasNeutralized = true
+                return
+            }
             observer = NotificationCenter.default.addObserver(
                 forName: NSWindow.didBecomeKeyNotification,
                 object: window,
                 queue: .main
-            ) { [weak window] _ in
+            ) { [weak self, weak window] _ in
+                guard let self, !self.hasNeutralized else { return }
+                self.hasNeutralized = true
                 window?.makeFirstResponder(window?.contentView)
+                self.observer.map(NotificationCenter.default.removeObserver)
+                self.observer = nil
             }
         }
 

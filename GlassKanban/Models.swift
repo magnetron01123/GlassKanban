@@ -113,8 +113,9 @@ struct KanbanCard: Identifiable, Equatable {
     let creationDate: Date?
 
     /// Everything the search looks at, in one place: the title plus whatever
-    /// notes the board itself would show. Built once per card rather than
-    /// stitched together on every keystroke.
+    /// notes the board itself would show. Computed per call — on a personal
+    /// board that is a handful of string joins per keystroke, and keeping it
+    /// derived means it can never disagree with the fields it comes from.
     var searchHaystack: String { "\(title)\n\(notesExcerpt)" }
 
     /// Whether this card matches a search term. Case- and diacritic-insensitive
@@ -280,14 +281,24 @@ enum BoardEmptiness: Equatable {
     /// (untrue) nor "reset your filters" (the filters are already at rest —
     /// the way out is to *widen* the recurring rule, not to reset it).
     case recurringOnly
+    /// No list is switched on in Settings, so the board has no source at all.
+    /// Distinct from `nothingToDo` for the same reason `recurringOnly` is:
+    /// an empty board that means "you chose no lists" must not be read as
+    /// "you are finished". Excluding every list left the board congratulating
+    /// someone on work it could not see.
+    case noListsSelected
 
-    /// Pure, so the three-way decision can be tested without EventKit.
+    /// Pure, so the four-way decision can be tested without EventKit.
     static func evaluate(
         hasVisibleCards: Bool,
         isFiltering: Bool,
-        recurringHiddenCount: Int
+        recurringHiddenCount: Int,
+        hasSelectedLists: Bool = true
     ) -> BoardEmptiness? {
         guard !hasVisibleCards else { return nil }
+        // Ahead of the filter check: with no source, a filter cannot be what
+        // is hiding anything.
+        if !hasSelectedLists { return .noListsSelected }
         if isFiltering { return .filteredAway }
         return recurringHiddenCount > 0 ? .recurringOnly : .nothingToDo
     }
@@ -450,5 +461,36 @@ enum RecurringFilter: String, CaseIterable, Identifiable {
                 $0.matches(dueDate, calendar: calendar, now: now)
             }
         }
+    }
+}
+
+/// German plurals for the counts the board says out loud.
+///
+/// Every one of these read "1 Karten" until July 2026 — in the lane header's
+/// tooltip, which is where someone goes precisely because they are counting,
+/// and in five VoiceOver labels, where a wrong ending is not a typo you skim
+/// past but a word spoken into your ear. `StatsPopover` had `days`/`tasks`
+/// right all along; they moved here so the three places that need them stop
+/// each having their own idea.
+enum GermanPlural {
+    static func cards(_ count: Int) -> String {
+        count == 1 ? "1 Karte" : "\(count) Karten"
+    }
+
+    static func olderCards(_ count: Int) -> String {
+        count == 1 ? "1 ältere Karte" : "\(count) ältere Karten"
+    }
+
+    static func days(_ count: Int) -> String {
+        count == 1 ? "1 Tag" : "\(count) Tage"
+    }
+
+    static func tasks(_ count: Int) -> String {
+        count == 1 ? "1 Aufgabe" : "\(count) Aufgaben"
+    }
+
+    /// "1 Einschränkung" / "2 Einschränkungen" — the find popover's badge.
+    static func restrictions(_ count: Int) -> String {
+        count == 1 ? "1 Einschränkung" : "\(count) Einschränkungen"
     }
 }

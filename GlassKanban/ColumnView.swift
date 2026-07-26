@@ -11,6 +11,15 @@ struct ColumnView: View {
     @Environment(\.undoManager) private var undoManager
     @State private var isTargeted = false
     @State private var expanded = false
+    /// True for the length of a fold, so the cards it reveals fade in
+    /// instead of playing the arrival scale-in.
+    ///
+    /// A card that grows the last few percent into place is saying *it just
+    /// got here*. The cards a fold uncovers have been in this lane all
+    /// along — the fold only stopped drawing them. Fifteen of them claiming
+    /// an arrival at once was the single loudest moment on the board, and
+    /// it was announcing nothing.
+    @State private var isFolding = false
     @State private var moreHovered = false
     @State private var addHovered = false
     /// Height of a real card in this lane, so the drop placeholder can match
@@ -46,6 +55,22 @@ struct ColumnView: View {
     }
 
     private var displayedCards: [KanbanCard] { expanded ? cards : restingCards }
+
+    /// Whether this lane has more cards than its resting cut shows — i.e.
+    /// whether there is a fold at all. Once there is not, `expanded` has
+    /// nothing left to mean and is dropped (see `onChange` below), so a lane
+    /// opened this morning does not stay open for the rest of the session
+    /// and quietly swallow the fold when one would form again.
+    private var hasFold: Bool { cards.count > restingCards.count }
+
+    /// True when the lane's content can outgrow its viewport. Used by the
+    /// clip exemption below, which is only safe while nothing can scroll.
+    private var canScroll: Bool { displayedCards.count > Self.clipSafeCardCount }
+
+    /// Above this many cards a lane is assumed to scroll at any usable window
+    /// size. Deliberately conservative: guessing too low only costs the pull
+    /// shake its headroom in a lane that is already crowded.
+    private static let clipSafeCardCount = 3
 
     /// How many cards the resting cut folds away right now — the number the
     /// footer offers to bring back, and the reason the footer exists at all.
@@ -144,10 +169,21 @@ struct ColumnView: View {
                             // even pull in opposite directions and partly
                             // cancel.
                             .transition(.asymmetric(
-                                insertion: status == .done || status == .inProgress
+                                insertion: isFolding || status == .done || status == .inProgress
                                     ? .opacity
                                     : .scale(scale: 0.93).combined(with: .opacity),
                                 removal: .opacity))
+                    }
+
+                    // The landing spot belongs to the stack of cards, not
+                    // behind the lane's furniture. Below the fold line and
+                    // the "+" it sat detached from the pile it was promising
+                    // to join — in a folded Backlog with a scrolled lane,
+                    // often out of sight entirely.
+                    if showsDropFeedback {
+                        insertionSlot
+                    } else if showsPullSlot {
+                        pullSlot
                     }
 
                     if foldedCount > 0 {
@@ -156,12 +192,6 @@ struct ColumnView: View {
 
                     if status == .backlog {
                         addTicketButton
-                    }
-
-                    if showsDropFeedback {
-                        insertionSlot
-                    } else if showsPullSlot {
-                        pullSlot
                     }
                 }
                 .padding(.horizontal, Board.laneMargin)
@@ -185,7 +215,14 @@ struct ColumnView: View {
             // clipping would let scrolled-away cards peek out above the
             // viewport, and no other lane's settle ever leaves its row (the
             // pen stroke stays inside the card).
-            .scrollClipDisabled(status == .inProgress)
+            // Only while the lane cannot scroll. The headroom exists for the
+            // pull shake, which lifts the top card a few points past its row
+            // — but unclipped, a lane with more cards than fit also lets the
+            // ones scrolled away draw over the header and its count. That is
+            // exactly the reason the other lanes keep their clip, and "In
+            // Bearbeitung" scrolls as soon as its soft limit is passed
+            // ("Passt schon").
+            .scrollClipDisabled(status == .inProgress && !canScroll)
             .mask {
                 scrollFade.padding(
                     status == .inProgress
@@ -208,7 +245,7 @@ struct ColumnView: View {
         .onTapGesture {
             store.activeEdit = nil
         }
-        .animation(Board.dropTargetAnimation, value: showsDropFeedback)
+        .animation(reduceMotion ? nil : Board.dropTargetAnimation, value: showsDropFeedback)
         .dropDestination(for: String.self) { ids, _ in
             store.endDrag()
             guard let id = ids.first else { return false }
@@ -250,6 +287,19 @@ struct ColumnView: View {
         // the lane and unfold for a card about to vanish. It also reads the
         // store afresh instead of this view's captured inputs, which are a
         // render old by then.
+        // Once there is nothing folded away, "aufgeklappt" has no meaning
+        // left. Without this it survived the rest of the session and ate the
+        // next fold that would have formed.
+        // "Board → Neues Ticket" (⌘N) runs the very same creation the "+"
+        // does, rather than a second path with its own rules. Only the
+        // Backlog lane listens — that is where new work enters the board.
+        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanNewTicket)) { _ in
+            guard status == .backlog else { return }
+            createTicket()
+        }
+        .onChange(of: hasFold) { _, stillHasFold in
+            if !stillHasFold { expanded = false }
+        }
         .onChange(of: store.editingCardID) { previous, current in
             guard current == nil, let closed = previous,
                   status == .backlog || status == .done else { return }
@@ -260,7 +310,7 @@ struct ColumnView: View {
                       laneCards.contains(where: { $0.id == closed }),
                       !Self.restingCut(laneCards, for: status).contains(where: { $0.id == closed })
                 else { return }
-                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded = true }
+                fold { expanded = true }
             }
         }
         // Without this a card announces its title and nothing about where it
@@ -311,7 +361,7 @@ struct ColumnView: View {
                         Board.chipShape.fill(.quaternary.opacity(Board.chipFill))
                     }
                 }
-                .animation(.easeInOut(duration: 0.2), value: isOverLimit)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 // The over-limit signal is otherwise colour alone.
                 .accessibilityValue(countHelp)
         }
@@ -359,7 +409,7 @@ struct ColumnView: View {
 
     /// Every lane opens the same way, so the four read as one family.
     private var countSummary: String {
-        guard let wipLimit else { return "\(shownCount) Karten" }
+        guard let wipLimit else { return GermanPlural.cards(shownCount) }
         return "\(cards.count) von \(wipLimit) Karten"
     }
 
@@ -374,7 +424,7 @@ struct ColumnView: View {
         // the exact moment someone is digging for it.
         if status == .done {
             if !expanded, foldedCount > 0 {
-                details.append("\(foldedCount) ältere Karten")
+                details.append(GermanPlural.olderCards(foldedCount))
             } else if expanded {
                 details.append("Älteres liegt in Erinnerungen")
             }
@@ -472,14 +522,44 @@ struct ColumnView: View {
     /// a name and made every other field a second trip. A creation abandoned
     /// without any input is removed again on close (see
     /// `RemindersStore.finalizeNewTicket`) — no untitled ghosts.
+    /// One fold, one motion — used by the button and by the keep-in-sight
+    /// rule after an editor closes, so a lane never opens two different ways.
+    private func toggleFold() {
+        fold { expanded.toggle() }
+    }
+
+    /// Runs a fold: marks it as one for exactly as long as it lasts, so the
+    /// cards it uncovers fade instead of announcing an arrival.
+    ///
+    /// The flag is cleared by the animation's own completion rather than by
+    /// a timer set to roughly the same length — a duration written down
+    /// twice is a duration that drifts apart.
+    private func fold(_ change: @escaping () -> Void) {
+        guard !reduceMotion else {
+            change()
+            return
+        }
+        isFolding = true
+        withAnimation(Board.foldAnimation, completionCriteria: .removed) {
+            change()
+        } completion: {
+            isFolding = false
+        }
+    }
+
+    /// The board's one creating gesture, shared by the "+" and by ⌘N.
+    private func createTicket() {
+        guard let id = store.createTicketForEditing(undoManager: undoManager) else { return }
+        withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
+            store.editingCardID = id
+        }
+    }
+
     private var addTicketButton: some View {
         HStack {
             Spacer()
             Button {
-                guard let id = store.createTicketForEditing(undoManager: undoManager) else { return }
-                withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
-                    store.editingCardID = id
-                }
+                createTicket()
             } label: {
                 Image(systemName: "plus")
                     // A touch larger than the toolbar's controls: this is the
@@ -543,9 +623,21 @@ struct ColumnView: View {
         Button {
             // Folding 15+ cards in or out at once is the largest layout
             // change the board can make, and the one most worth gating on
-            // Reduce Motion.
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded.toggle() }
+            // Reduce Motion. `Board.foldAnimation` is deliberately the
+            // board's slowest curve — see there.
+            toggleFold()
         } label: {
+            // The line keeps its identity through the fold. It travels the
+            // whole height of the revealed stack (it marks the end of the
+            // pile, so the unrolling cards push it down — that part is
+            // right), and it used to change its text and swap its chevron
+            // glyph in the same instant, mid-flight. Three simultaneous
+            // changes meant the thing that was clicked vanished and a
+            // different thing landed somewhere else — which is what read as
+            // hectic, not the travel. So: one chevron that *turns*, the way
+            // every disclosure on this platform turns, and a label that
+            // cross-fades. One object, pushed down by the cards it just
+            // revealed.
             HStack(spacing: 5) {
                 Text(moreLabel)
                     .font(BoardText.body)
@@ -553,8 +645,10 @@ struct ColumnView: View {
                     // line at this scale, and it has to read as a link, not
                     // as running text.
                     .fontWeight(.medium)
-                Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                    .contentTransition(.opacity)
+                Image(systemName: "chevron.down")
                     .font(BoardText.glyph)
+                    .rotationEffect(.degrees(expanded ? -180 : 0))
             }
             .foregroundStyle(moreHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
             .frame(maxWidth: .infinity)
@@ -607,7 +701,7 @@ struct ColumnView: View {
                 Board.columnShape
                     .inset(by: 0.5)
                     .strokeBorder(
-                        LinearGradient(colors: [Board.columnInnerShadow, .clear], startPoint: .top, endPoint: .center),
+                        LinearGradient(colors: [Board.columnInnerShadow(colorScheme), .clear], startPoint: .top, endPoint: .center),
                         lineWidth: 1.5)
                     .blur(radius: 1.5)
             }
@@ -617,14 +711,16 @@ struct ColumnView: View {
     private var columnContour: some View {
         Board.columnShape
             .strokeBorder(
-                showsDropFeedback ? Color.accentColor.opacity(0.7) : Board.columnBorder(contrast),
+                showsDropFeedback ? Color.accentColor.opacity(contrast == .increased ? 1 : 0.7) : Board.columnBorder(contrast),
                 lineWidth: showsDropFeedback ? 1.5 : 1)
     }
 
+    /// One fill in every mode — the lane is black at a few percent over the
+    /// window's own background, not a material, so there is nothing for
+    /// "Transparenz reduzieren" to switch off. See `Board.opaqueGlassFill`
+    /// for what the old fallback did to the depth order.
     private var columnFill: Color {
-        reduceTransparency
-            ? Color(nsColor: .underPageBackgroundColor)
-            : Board.columnFill(colorScheme)
+        Board.columnFill(colorScheme)
     }
 }
 
@@ -647,6 +743,7 @@ struct ColumnView: View {
 private struct AddButtonGlass: ViewModifier {
     let reduceTransparency: Bool
     let contrast: ColorSchemeContrast
+    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
@@ -657,7 +754,7 @@ private struct AddButtonGlass: ViewModifier {
     @ViewBuilder
     private var disc: some View {
         if reduceTransparency {
-            Circle().fill(Color(nsColor: .windowBackgroundColor))
+            Circle().fill(Board.opaqueGlassFill(colorScheme))
         } else {
             HUDGlassMaterial().clipShape(.circle)
         }

@@ -109,10 +109,11 @@ struct CardView: View {
             }
             Divider()
             Button("Umbenennen") { beginRename() }
-            // The undo manager is what stands in for a confirmation here: the
-            // store registers the inverse write, so ⌘Z brings the card back.
+            // Asks first — see `RemindersStore.requestDelete`. ⌘Z brings
+            // the ticket back, but not its subtasks or attachments, and that
+            // gap has to be named before the deletion, not discovered after.
             Button("Löschen", role: .destructive) {
-                store.deleteTicket(cardID: card.id, undoManager: undoManager)
+                store.requestDelete(cardID: card.id)
             }
         }
         // No tooltip anywhere on a card — body, dwell label or repeat glyph.
@@ -122,22 +123,33 @@ struct CardView: View {
         // Tooltips belong to the chrome (lane header, "+" button), where they
         // explain rules. Reintroduced once by a merge, removed again — check
         // BACKLOG.md before touching this.
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(accessibilityLabel)
+        // While renaming, the card stops being one combined button and lets
+        // the text field speak for itself. Combined, VoiceOver announced the
+        // *old* title and offered "Bearbeiten" — the field the cursor was
+        // actually sitting in, and everything typed into it, did not exist as
+        // far as the screen reader was concerned.
+        .accessibilityElement(children: isRenaming ? .contain : .combine)
+        .accessibilityAddTraits(isRenaming ? [] : .isButton)
+        .accessibilityLabel(isRenaming ? "" : accessibilityLabel)
         // Still spoken, though no longer drawn: VoiceOver has no other route
-        // to a compact row's notes preview.
-        .accessibilityHint(helpText)
-        .accessibilityAction(named: "Bearbeiten") { beginEdit() }
-        .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
+        // to a card's notes.
+        .accessibilityHint(isRenaming ? "" : helpText)
         .accessibilityActions {
-            ForEach(moveTargets) { target in
-                Button("Verschieben nach \(target.displayName)") {
-                    store.move(cardID: card.id, to: target, undoManager: undoManager)
-                }
+            if !isRenaming {
+                Button("Bearbeiten") { beginEdit() }
+                Button("In Erinnerungen öffnen") { openInReminders() }
             }
-            Button("Umbenennen") { beginRename() }
-            Button("Löschen") { store.deleteTicket(cardID: card.id, undoManager: undoManager) }
+        }
+        .accessibilityActions {
+            if !isRenaming {
+                ForEach(moveTargets) { target in
+                    Button("Verschieben nach \(target.displayName)") {
+                        store.move(cardID: card.id, to: target, undoManager: undoManager)
+                    }
+                }
+                Button("Umbenennen") { beginRename() }
+                Button("Löschen") { store.requestDelete(cardID: card.id) }
+            }
         }
         // Losing focus commits, same as clicking away from a Finder rename —
         // Escape (`onExitCommand` on the field itself) is the only way out
@@ -180,20 +192,7 @@ struct CardView: View {
 
             zoneDivider
 
-            Group {
-                if card.notesExcerpt.isEmpty {
-                    Spacer(minLength: 8)
-                } else {
-                    Text(card.notesExcerpt)
-                        .font(BoardText.body)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(3)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 8, trailing: Board.cardInsetTrailing))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                }
-            }
+            notesZone
 
             zoneDivider
 
@@ -205,8 +204,18 @@ struct CardView: View {
                     repeatIcon
                 }
                 Spacer(minLength: 8)
-                // Secondary, not tertiary: on opaque paper the tertiary
-                // style washes out to the point of being unreadable.
+                // Secondary — a supporting fact, like everything else in
+                // this row. It was briefly primary, to set it apart from the
+                // pale "Keine Notizen" one zone above; that separated the
+                // two but put the loudest text on the card's least important
+                // fact (the source list, at 11pt, as dark as the name of the
+                // ticket) and left four ranks of grey stacked in 118pt of
+                // paper. The board's three text ranks each mean one thing —
+                // see `BoardText` — and the separation comes from the
+                // placeholder receding, not from the metadata shouting.
+                // Tertiary is ruled out here for the opposite reason: at
+                // this size it washes out on paper, and the list name is
+                // something you actually read.
                 Text(card.listName)
                     .font(BoardText.meta)
                     .foregroundStyle(.secondary)
@@ -218,6 +227,47 @@ struct CardView: View {
             maxWidth: .infinity,
             minHeight: Board.fullCardMinHeight,
             alignment: .topLeading)
+    }
+
+    /// The ticket's middle zone. It always stands, because the zone is part
+    /// of the card's anatomy — but a card without a note used to leave it
+    /// blank, and an empty strip framed by two hairlines reads as something
+    /// that failed to load rather than as "nothing written here". Saying so
+    /// costs one quiet line and answers the question the gap posed.
+    ///
+    /// Primary, like the note in the opened card: it is the same text on
+    /// both surfaces, and a card that changed colour on the way into the
+    /// editor made one body of writing look like two. Rank inside the card
+    /// is carried by size and weight instead — 15pt semibold title over
+    /// 12pt regular note — which is what separates them in the editor too.
+    ///
+    /// The placeholder is the one thing in this zone that is *not* what the
+    /// ticket says — it is the app describing an absence — so it takes the
+    /// second tier, exactly as the rule reads (see `BoardText`). That is not
+    /// a third shade: the board still has two, and this is the one the
+    /// footer facts already use. It was briefly primary, and on a board
+    /// where most tickets carry no note, four cards announcing "Keine
+    /// Notizen" in full black said nothing four times as loudly as the
+    /// tickets that had something to say. Same font, same insets and the
+    /// same expanding frame as a real excerpt, so a card with a note and a
+    /// card without one keep identical geometry.
+    @ViewBuilder
+    private var notesZone: some View {
+        Group {
+            if card.notesExcerpt.isEmpty {
+                Text("Keine Notizen")
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(card.notesExcerpt)
+                    .foregroundStyle(.primary)
+            }
+        }
+        .font(BoardText.body)
+        .lineLimit(3)
+        .multilineTextAlignment(.leading)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 8, trailing: Board.cardInsetTrailing))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     /// Hairline between ticket zones, inset to the text margin so it reads
@@ -247,16 +297,22 @@ struct CardView: View {
     }
 
     /// Backlog: everything needed to decide what to pull next.
+    ///
+    /// Badge before glyph, the same order the full card's footer uses. The
+    /// two were mirrored — badge-then-glyph there, glyph-then-badge here —
+    /// so a card swapped its two meta marks around as it moved from Backlog
+    /// into a working lane, which reads as the card being rearranged rather
+    /// than relocated.
     private var compactBody: some View {
         HStack(spacing: 8) {
             titleOrField(font: BoardText.titleCompact)
                 .lineLimit(1)
             Spacer(minLength: 0)
-            if card.isRecurring {
-                repeatIcon
-            }
             if let badge = compactBadge {
                 badgeView(badge)
+            }
+            if card.isRecurring {
+                repeatIcon
             }
         }
         .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
@@ -302,8 +358,12 @@ struct CardView: View {
     private var titleText: Text {
         // No `.strikethrough` here: the done title's line is `strikeLine`,
         // drawn by the board so that completing can animate it.
+        //
+        // Full-strength colour even when done: the strike line already
+        // marks completion, so dimming the text on top of it was a second,
+        // redundant signal for the same fact.
         let base = Text(displayTitle)
-            .foregroundStyle(card.status == .done ? HierarchicalShapeStyle.secondary : .primary)
+            .foregroundStyle(.primary)
         guard let marks = card.priorityMarks, card.status != .done else { return base }
         // Interpolation rather than `+`: concatenating Text is deprecated as
         // of macOS 26 and each run keeps its own styling this way.
@@ -321,6 +381,7 @@ struct CardView: View {
             TextField("Titel", text: $renameText)
                 .font(font)
                 .textFieldStyle(.plain)
+                .accessibilityLabel("Titel")
                 .focused($isRenameFieldFocused)
                 .onAppear { isRenameFieldFocused = true }
                 .onSubmit { commitRename() }
@@ -348,14 +409,26 @@ struct CardView: View {
     /// subject and the rest as its qualifiers. Joined with "·" they were one
     /// run-on that wrapped mid-phrase and threw the note, the list and the
     /// gesture hint into a single weight.
+    ///
+    /// The list name is not repeated here: `accessibilityLabel` already says
+    /// it, and VoiceOver reads label and hint back to back, so every card was
+    /// announcing its list twice.
     private var helpText: String {
         var lines: [String] = []
-        if density.isSingleLine && !card.notesPreview.isEmpty {
-            lines.append(card.notesPreview)
+        if !noteForVoiceOver.isEmpty {
+            lines.append(noteForVoiceOver)
         }
-        lines.append(card.listName)
         lines.append("Klick öffnet Bearbeiten")
         return lines.joined(separator: "\n")
+    }
+
+    /// The note as spoken. The hint used to carry it for single-line rows
+    /// only — on the very cards where the excerpt is *drawn*, three lines of
+    /// it, VoiceOver said nothing about it at all: the explicit
+    /// `accessibilityLabel` replaces what `children: .combine` would have
+    /// picked up, and it never included the note.
+    private var noteForVoiceOver: String {
+        density.isSingleLine ? card.notesPreview : card.notesExcerpt
     }
 
     private var displayTitle: String {
@@ -428,10 +501,15 @@ struct CardView: View {
 
     /// Opaque "paper" so cards read as physical objects on the recessed
     /// lanes — independent of whatever wallpaper shines through the window.
+    ///
+    /// One fill in every mode: this is a solid colour, never a material, so
+    /// "Transparenz reduzieren" has nothing to switch off. It used to swap in
+    /// `controlBackgroundColor` there, which in dark mode is darker than the
+    /// lane and dropped the card *below* the surface it lies on — and which
+    /// also lost the dimmer paper a finished ticket carries, because the
+    /// fallback had nowhere to put `isDone`. See `Board.opaqueGlassFill`.
     private var cardFill: Color {
-        reduceTransparency
-            ? Color(nsColor: .controlBackgroundColor)
-            : Board.cardFill(colorScheme, isDone: card.status == .done)
+        Board.cardFill(colorScheme, isDone: card.status == .done)
     }
 
     private var contour: some View {

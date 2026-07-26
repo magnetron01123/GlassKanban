@@ -168,4 +168,63 @@ final class StatusTaggerTests: XCTestCase {
     func testLegacyAndCurrentTagLastOneWins() {
         XCTAssertEqual(StatusTagger.status(fromNotes: "#next\n#inbearbeitung", isCompleted: false), .inProgress)
     }
+
+    // MARK: - A tag has to stand alone
+
+    /// The regressions this rule exists for. Every one of these used to be
+    /// read as a tag, which meant the hygiene pass rewrote the note without
+    /// the user doing anything — the URL fragment came off the link and the
+    /// card jumped lanes.
+    func testTagInsideOtherTextIsNotATag() {
+        let notATag = [
+            "Doku: https://example.com/guide#next",
+            "Siehe https://wiki.intern/roadmap#progress",
+            "Aufgabe fuer #next-steps Meeting",
+            "Thread im Slack: #progress-report lesen",
+            "Kunde: #bearbeitung/2024 Akte",
+            "ABC#NEXT!",
+            "Mail an chef#nächstes.de",
+        ]
+        for notes in notATag {
+            XCTAssertEqual(
+                StatusTagger.status(fromNotes: notes, isCompleted: false), .backlog,
+                "\(notes) darf kein Tag sein")
+            XCTAssertEqual(StatusTagger.tagCount(notes), 0, "\(notes) darf nicht mitgezählt werden")
+            XCTAssertFalse(StatusTagger.hasLegacyTag(notes), "\(notes) ist kein Legacy-Tag")
+            XCTAssertFalse(
+                StatusTagger.needsHygiene(notes: notes, isCompleted: false),
+                "\(notes) darf keine Umschreibung auslösen")
+        }
+    }
+
+    /// The text such a note carries has to survive untouched — that is the
+    /// whole point of the boundary rule.
+    func testTextAroundAFalseTagIsPreservedExactly() {
+        let notes = "Doku: https://example.com/guide#next"
+        XCTAssertEqual(StatusTagger.removingTags(notes), notes)
+        XCTAssertEqual(StatusTagger.rewrittenNotes(notes, for: .backlog), notes)
+    }
+
+    /// The shapes a tag really comes in: on its own line (what the app
+    /// writes), after a space, at the very start, and mid-sentence.
+    func testStandaloneTagIsStillRecognized() {
+        XCTAssertEqual(StatusTagger.status(fromNotes: "#alsnächstes", isCompleted: false), .next)
+        XCTAssertEqual(StatusTagger.status(fromNotes: "Notiz\n#alsnächstes", isCompleted: false), .next)
+        XCTAssertEqual(StatusTagger.status(fromNotes: "Text #inbearbeitung", isCompleted: false), .inProgress)
+        XCTAssertEqual(StatusTagger.status(fromNotes: "#inbearbeitung danach", isCompleted: false), .inProgress)
+        XCTAssertEqual(StatusTagger.status(fromNotes: "vorher #next nachher", isCompleted: false), .next)
+    }
+
+    /// Tabs and hard line breaks are whitespace too.
+    func testTabsAndNewlinesCountAsBoundaries() {
+        XCTAssertEqual(StatusTagger.status(fromNotes: "Text\t#alsnächstes\t", isCompleted: false), .next)
+        XCTAssertEqual(StatusTagger.status(fromNotes: "a\n#inbearbeitung\nb", isCompleted: false), .inProgress)
+    }
+
+    /// Removing a standalone tag still takes its line with it and leaves the
+    /// surrounding text character-for-character.
+    func testStandaloneTagIsStillRemoved() {
+        XCTAssertEqual(StatusTagger.removingTags("Zeile A\n#alsnächstes\nZeile B"), "Zeile A\nZeile B")
+        XCTAssertEqual(StatusTagger.removingTags("Notiz #inbearbeitung"), "Notiz")
+    }
 }

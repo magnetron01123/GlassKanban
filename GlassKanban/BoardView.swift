@@ -61,17 +61,26 @@ struct BoardView: View {
             if store.wrappedStats.totalCompleted > 0 {
                 ToolbarItem(placement: .navigation) {
                     streakPill
+                        .disabled(store.editingCardID != nil)
                 }
             }
             // Two separate glass groups, not one: narrowing the view down and
             // leaving for Reminders are different jobs, and sharing a capsule
             // would dilute the one deliberately prominent button on the board.
+            // Both disabled while a card is held up in front of the board.
+            // The blur says the lanes are behind the card; the toolbar stayed
+            // fully live, so clicking the flame opened the statistics *over*
+            // the open editor and left two panels stacked with no obvious way
+            // back. Chrome stays visible and sharp — it is not content — but
+            // it does not compete with the one thing the user picked up.
             ToolbarItem(placement: .primaryAction) {
                 findButton
+                    .disabled(store.editingCardID != nil)
             }
             ToolbarSpacer(.fixed, placement: .primaryAction)
             ToolbarItem(placement: .primaryAction) {
                 remindersButton
+                    .disabled(store.editingCardID != nil)
             }
         }
         // Deliberately NOT `.toolbarBackgroundVisibility(.hidden, …)`.
@@ -104,11 +113,39 @@ struct BoardView: View {
             // an offer, not an instruction.
             Text("Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?")
         }
+        // Same shape as the limit question above, for the same reason: driven
+        // by the store, so the context menu and the VoiceOver action both
+        // raise it, and the safe answer is the prominent one — it carries
+        // Return and, through the cancel role, Escape. Deleting takes a
+        // deliberate click.
+        .alert(
+            store.pendingDeletion.map { "„\($0.title)“ löschen?" } ?? "",
+            isPresented: deletionBinding,
+            presenting: store.pendingDeletion
+        ) { deletion in
+            Button("Abbrechen", role: .cancel) {}
+                .keyboardShortcut(.defaultAction)
+            Button("Löschen", role: .destructive) {
+                store.deleteTicket(cardID: deletion.cardID, undoManager: undoManager)
+            }
+        } message: { _ in
+            // The whole reason this question exists, said plainly: undo is a
+            // net with a hole in it, and the hole is worth one sentence.
+            Text("⌘Z holt das Ticket zurück — Unteraufgaben und Anhänge aber nicht.")
+        }
         .overlay { editorOverlay }
+        // The "Finden …" menu item cannot reach this view's state directly.
+        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanShowFind)) { _ in
+            showFind = true
+        }
         // Board-level for the same reason as the alert above: the failure
         // surfaces from `TicketEditSheet`'s own close, after that sheet is
         // already gone, so nowhere on the sheet itself could show it.
-        .alert("Nicht gespeichert", isPresented: saveFailureBinding, presenting: store.pendingSaveFailure) { _ in
+        .alert(
+            store.pendingSaveFailure?.title ?? "Nicht gespeichert",
+            isPresented: saveFailureBinding,
+            presenting: store.pendingSaveFailure
+        ) { _ in
             Button("OK") {}
         } message: { failure in
             Text(failure.message)
@@ -193,6 +230,12 @@ struct BoardView: View {
             set: { if !$0 { store.pendingOverflow = nil } })
     }
 
+    private var deletionBinding: Binding<Bool> {
+        Binding(
+            get: { store.pendingDeletion != nil },
+            set: { if !$0 { store.pendingDeletion = nil } })
+    }
+
     private var saveFailureBinding: Binding<Bool> {
         Binding(
             get: { store.pendingSaveFailure != nil },
@@ -247,7 +290,7 @@ struct BoardView: View {
 
     private var streakPillLabel: String {
         store.streakStats.current > 0
-            ? "Statistiken. Folge: \(store.streakStats.current) Tage nacheinander mit mindestens einer erledigten Aufgabe"
+            ? "Statistiken. Folge: \(GermanPlural.days(store.streakStats.current)) nacheinander mit mindestens einer erledigten Aufgabe"
             : "Statistiken. Zurzeit keine Folge"
     }
 
@@ -282,7 +325,7 @@ struct BoardView: View {
         // rather than hidden.
         .tint(store.isFiltering ? Color.accentColor : nil)
         .accessibilityLabel(store.isFiltering
-            ? "Finden, Board ist gefiltert, \(store.activeRestrictionCount) Einschränkungen aktiv"
+            ? "Finden, Board ist gefiltert, \(GermanPlural.restrictions(store.activeRestrictionCount)) aktiv"
             : "Aufgabe finden")
         .help(store.isFiltering
             ? "Board ist gefiltert — \(store.activeRestrictionCount) aktiv (⌘F)"

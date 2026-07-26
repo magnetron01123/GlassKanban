@@ -89,8 +89,18 @@ final class RemindersStore: ObservableObject {
     /// deliberately keeps reachable rather than hiding.
     @Published var pendingSaveFailure: SaveFailure?
 
+    /// Open reminders that carry a recurrence rule, captured by the last
+    /// refresh. Used to recognise the series behind a completed occurrence
+    /// (see `liveRecurringSibling`); not published, because nothing draws it.
+    private var openRecurringReminders: [EKReminder] = []
+
     struct SaveFailure: Identifiable {
         let cardID: String
+        /// What did not happen, in the user's words — "Nicht verschoben" for
+        /// a refused move, not the blanket "Nicht gespeichert" that only fits
+        /// an edit. A read-only shared list refuses every write the same way;
+        /// the alert has to say which one it was.
+        let title: String
         let message: String
         var id: String { cardID }
     }
@@ -268,9 +278,24 @@ final class RemindersStore: ObservableObject {
             forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let self, self.accessState == .denied else { return }
-                guard EKEventStore.authorizationStatus(for: .reminder) == .fullAccess else { return }
-                await self.evaluateAccess()
+                guard let self else { return }
+                let isAuthorized = EKEventStore.authorizationStatus(for: .reminder) == .fullAccess
+                switch (self.accessState, isAuthorized) {
+                case (.denied, true):
+                    await self.evaluateAccess()
+                case (.granted, false):
+                    // The other direction, which used to be unreachable: the
+                    // guard only ever looked for access being *given*, so a
+                    // permission taken away in System Settings while the app
+                    // ran left `accessState` on `.granted` forever. EventKit
+                    // then simply returned no lists, the board emptied, and it
+                    // announced "Nichts zu tun" — telling someone their work
+                    // is finished because the app was locked out of it.
+                    self.accessState = .denied
+                    self.cards = []
+                default:
+                    break
+                }
             }
         }
         observers.append(observer)
@@ -388,7 +413,9 @@ final class RemindersStore: ObservableObject {
         // as one of its occurrences, which is what keeps those series
         // creation dates out of the lead-time median (see
         // `CompletionRecord.isRecurring`).
-        let recurringTitles = Set(incomplete.filter(\.hasRecurrenceRules).map(\.title))
+        let openRecurring = incomplete.filter(\.hasRecurrenceRules)
+        openRecurringReminders = openRecurring
+        let recurringTitles = Set(openRecurring.map(\.title))
         let completionRecords: [CompletionRecord] = completed.compactMap { reminder in
             guard let date = reminder.completionDate, let calendar = reminder.calendar else { return nil }
             return CompletionRecord(
@@ -497,8 +524,22 @@ final class RemindersStore: ObservableObject {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
         guard origin != status else { return nil }
-        register(undoManager, name: "Verschieben") { store in
-            store.move(cardID: cardID, to: origin, undoManager: undoManager, feedback: false)
+        // Un-completing a repeating reminder is the one move EventKit cannot
+        // express. Completing one detaches the finished occurrence and lets
+        // the series carry on (measured on a real board — see `refresh`), so
+        // clearing `isCompleted` here would not rewind anything: it would
+        // revive the occurrence *beside* the instance the series has already
+        // produced, and the board would show the same chore twice with no
+        // hint of which is which. Saying so is better than quietly making a
+        // duplicate the user then has to clean up by hand.
+        if origin == .done, let live = liveRecurringSibling(of: reminder) {
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID,
+                title: "Nicht zurückgeholt",
+                message: "„\(live.title ?? "Diese Aufgabe")“ wiederholt sich, und die Serie läuft "
+                    + "bereits weiter. Die erledigte Ausführung zurückzuholen würde sie doppelt "
+                    + "auf das Board legen.")
+            return nil
         }
 
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
@@ -506,8 +547,20 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
+            // Say so. A move that fails leaves the card where it was, which
+            // on a board that animates every real move looks exactly like a
+            // drop that missed — so the user tries again instead of learning
+            // that this list is read-only.
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID, title: "Nicht verschoben", message: error.localizedDescription)
             scheduleRefresh()
             return nil
+        }
+        // Registered after the save, not before: an undo entry for a move
+        // that never happened spends itself doing nothing, and the *next* ⌘Z
+        // then reaches back past it into an edit the user did mean to keep.
+        register(undoManager, name: "Verschieben") { store in
+            store.move(cardID: cardID, to: origin, undoManager: undoManager, feedback: false)
         }
 
         // Optimistic UI update; the EventKit change notification will
@@ -592,17 +645,42 @@ final class RemindersStore: ObservableObject {
     /// silently, no undo entry: there is nothing to restore. `keep` is passed
     /// when the close is a jump to Reminders, where the user is clearly about
     /// to fill the ticket in over there.
-    func finalizeNewTicket(cardID: String, keep: Bool = false) {
+    func finalizeNewTicket(cardID: String, keep: Bool = false, undoManager: UndoManager? = nil) {
         guard newlyCreatedCardID == cardID else { return }
         newlyCreatedCardID = nil
-        guard !keep, let ticket = loadEditableTicket(cardID: cardID) else { return }
+        guard !keep, let ticket = loadEditableTicket(cardID: cardID) else {
+            keepNewTicketInSight(cardID: cardID)
+            return
+        }
         let isEmpty = ticket.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && ticket.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && ticket.url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && ticket.dueDate == nil
             && ticket.priority == 0
-        guard isEmpty else { return }
-        removeNewTicket(cardID: cardID)
+        guard isEmpty else {
+            keepNewTicketInSight(cardID: cardID)
+            return
+        }
+        removeNewTicket(cardID: cardID, undoManager: undoManager)
+    }
+
+    /// A ticket someone just made has to be on the board they made it on.
+    ///
+    /// The "+" stays available while the find settings are narrowed, and a
+    /// brand-new ticket carries no priority and no date — so almost any
+    /// active restriction hid it the moment the editor closed. The card was
+    /// really there, and it looked like the app had thrown it away.
+    ///
+    /// The find settings lose that argument: they were set before this ticket
+    /// existed, and the lane's own fold already bends the same way to keep a
+    /// just-closed card visible (see `ColumnView.onChange(of:editingCardID)`).
+    private func keepNewTicketInSight(cardID: String) {
+        guard isFiltering else { return }
+        let isVisible = KanbanStatus.allCases.contains { status in
+            cards(for: status).contains { $0.id == cardID }
+        }
+        guard !isVisible else { return }
+        resetFilters()
     }
 
     /// Called instead of `finalizeNewTicket` when the editor was left with
@@ -612,18 +690,24 @@ final class RemindersStore: ObservableObject {
     /// placeholder creation left behind — it goes, regardless of what stood in
     /// the fields. For every other card this does nothing: discarding is
     /// simply not saving, and there is nothing to undo.
-    func cancelNewTicket(cardID: String) {
+    func cancelNewTicket(cardID: String, undoManager: UndoManager? = nil) {
         guard newlyCreatedCardID == cardID else { return }
         newlyCreatedCardID = nil
-        removeNewTicket(cardID: cardID)
+        removeNewTicket(cardID: cardID, undoManager: undoManager)
     }
 
     /// Takes back a creation, silently and with no undo entry — there is
     /// nothing to restore that the user ever put in.
-    private func removeNewTicket(cardID: String) {
+    private func removeNewTicket(cardID: String, undoManager: UndoManager? = nil) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         try? eventStore.remove(reminder, commit: true)
         cards.removeAll { $0.id == cardID }
+        // The "Ticket anlegen" entry the "+" registered describes a creation
+        // that has just been taken back, so its undo would find nothing and
+        // return silently — spending a ⌘Z that then failed to reach the edit
+        // the user actually meant to undo. Removing the reminder is not a
+        // change to undo; it is the change never having happened.
+        undoManager?.removeAllActions(withTarget: self)
         scheduleRefresh()
     }
 
@@ -662,14 +746,44 @@ final class RemindersStore: ObservableObject {
         let alarms: [EKAlarm]?
     }
 
-    /// Deletes a ticket without asking, and registers the undo that puts it
-    /// back. A confirmation sheet would tax every deletion to guard against
-    /// the rare wrong one; ⌘Z charges only the person who actually made the
-    /// mistake, and is what a Mac user reaches for anyway.
+    /// A ticket the user asked to delete, waiting for the answer.
+    struct PendingDeletion: Identifiable {
+        let cardID: String
+        let title: String
+        var id: String { cardID }
+    }
+
+    /// Set by every user-facing route into deleting — context menu and the
+    /// VoiceOver action alike, the same way `pendingOverflow` catches every
+    /// route into a move. A question only the mouse asks is not a question.
+    @Published var pendingDeletion: PendingDeletion?
+
+    /// Asks first. Undo and redo go straight to `deleteTicket`, because
+    /// replaying a decision is not making one.
+    ///
+    /// Deleting used to happen on the spot, on the argument that ⌘Z charges
+    /// only the person who made the mistake. That argument rested on undo
+    /// being able to put the ticket back — and it cannot put all of it back:
+    /// `restoreTicket` creates a *new* reminder from what EventKit exposes,
+    /// so subtasks and attachments do not survive the round trip. A safety
+    /// net with a hole in it has to be announced before the jump, not after.
+    func requestDelete(cardID: String) {
+        guard let card = cards.first(where: { $0.id == cardID }) else { return }
+        pendingDeletion = PendingDeletion(
+            cardID: cardID,
+            title: card.title.isEmpty ? "Ohne Titel" : card.title)
+    }
+
+    /// Deletes a ticket and registers the undo that puts it back. The
+    /// question is asked by `requestDelete`; this is the write itself.
     func deleteTicket(cardID: String, undoManager: UndoManager? = nil) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         let snapshot = DeletedTicket(
-            calendarID: reminder.calendar.calendarIdentifier,
+            // `EKCalendarItem.calendar` is null_unspecified — it arrives as an
+            // implicitly unwrapped optional and is nil for an item that has
+            // not been filed yet. Every other read of it in this file guards;
+            // this one would have trapped.
+            calendarID: reminder.calendar?.calendarIdentifier ?? "",
             title: reminder.title,
             notes: reminder.notes,
             url: reminder.url,
@@ -684,6 +798,8 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.remove(reminder, commit: true)
         } catch {
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID, title: "Nicht gelöscht", message: error.localizedDescription)
             scheduleRefresh()
             return
         }
@@ -754,6 +870,8 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID, title: "Nicht umbenannt", message: error.localizedDescription)
             scheduleRefresh()
             return
         }
@@ -766,6 +884,25 @@ final class RemindersStore: ObservableObject {
             cards[index].title = TextSanitizer.displayTitle(title)
         }
         scheduleRefresh()
+    }
+
+    /// The live series instance behind a completed occurrence, if there is
+    /// one.
+    ///
+    /// Matched on title within the same list — the same rule `refresh` uses
+    /// to keep series creation dates out of the lead-time median, and for the
+    /// same reason: a completed occurrence has already been detached, so
+    /// `hasRecurrenceRules` is false on it and the recurrence is only visible
+    /// on the sibling that is still open.
+    private func liveRecurringSibling(of reminder: EKReminder) -> EKReminder? {
+        guard reminder.isCompleted,
+              let calendarID = reminder.calendar?.calendarIdentifier,
+              let title = reminder.title else { return nil }
+        return openRecurringReminders.first {
+            $0.title == title
+                && $0.calendar?.calendarIdentifier == calendarID
+                && $0.calendarItemIdentifier != reminder.calendarItemIdentifier
+        }
     }
 
     /// Registers the inverse of a write with the window's undo manager.
@@ -802,18 +939,62 @@ final class RemindersStore: ObservableObject {
             calendarID: reminder.calendar?.calendarIdentifier ?? "")
     }
 
+    /// Moves the alarm that was pinned to the old due date along with it.
+    ///
+    /// Reminders.app files a timed reminder with an absolute alarm at its due
+    /// date. Nothing here used to touch `alarms`, so shifting the date left
+    /// the notification at the old time — the reminder said Friday and rang
+    /// on Monday — and clearing the date left an alarm on a reminder that no
+    /// longer had one.
+    ///
+    /// Deliberately narrow: only an absolute alarm sitting exactly on the old
+    /// due date is treated as *its* alarm. Relative offsets, location alarms
+    /// and anything the user set to a different time express an intent this
+    /// code cannot infer, and are left alone. `deleteTicket` already carries
+    /// alarms verbatim through the undo round trip; this is the one write
+    /// that changes what they are anchored to.
+    private static func followDueDate(on reminder: EKReminder, from oldDue: Date?, to newDue: Date?) {
+        guard let oldDue, let alarms = reminder.alarms, !alarms.isEmpty else { return }
+        let pinned = alarms.filter { alarm in
+            guard let absolute = alarm.absoluteDate else { return false }
+            return abs(absolute.timeIntervalSince(oldDue)) < 1
+        }
+        guard !pinned.isEmpty else { return }
+        for alarm in pinned {
+            reminder.removeAlarm(alarm)
+        }
+        // The date was cleared: the alarm it hung on goes with it.
+        guard let newDue else { return }
+        reminder.addAlarm(EKAlarm(absoluteDate: newDue))
+    }
+
     /// Turns what was typed in the URL field into what EventKit stores.
     ///
     /// `URL(string:)` is permissive enough for the way people actually write
     /// addresses — "example.com" parses and round-trips unchanged, so a
     /// scheme is not forced onto text the user did not write one into. An
     /// empty field clears the reminder's URL rather than leaving a stale one
-    /// behind. Text that is not an address at all (anything with a space)
-    /// does not parse and therefore is not stored; the field is labelled URL
-    /// and Reminders has nowhere else to put it.
+    /// behind.
+    ///
+    /// The whitespace check is the part that has to be done by hand. This
+    /// comment used to claim that prose "does not parse and therefore is not
+    /// stored" — that stopped being true in macOS 14, where `URL(string:)`
+    /// percent-encodes invalid characters by default. So "Notiz mit
+    /// Leerzeichen" was quietly filed as an address and read back as
+    /// "Notiz%20mit%20Leerzeichen": the user's own words, mangled, in a field
+    /// they could no longer recognise. A space is the one thing no address
+    /// contains, and prose always has one.
+    ///
+    /// What passes may still be normalised — "https://münchen.de" is stored
+    /// as its punycode form and reads back that way. That is a correct,
+    /// resolvable address rather than a mangled sentence, so it is kept;
+    /// rejecting it (`encodingInvalidCharacters: false` returns nil for the
+    /// whole umlaut family) would throw away real links to avoid an unusual
+    /// spelling.
     private static func parsedURL(_ text: String) -> URL? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
+        guard !trimmed.isEmpty,
+              !trimmed.contains(where: \.isWhitespace) else { return nil }
         return URL(string: trimmed)
     }
 
@@ -830,70 +1011,122 @@ final class RemindersStore: ObservableObject {
     /// status hashtag is reapplied for the card's current column — this
     /// method never changes status, `move` does that — so a content edit
     /// can never accidentally relocate the card.
+    /// Writes only the fields that actually changed, measured against the
+    /// state the editor loaded (`baseline`).
+    ///
+    /// The sheet reads once, when it opens, and can then sit open for as long
+    /// as it likes. Writing every field back would make that stale copy the
+    /// truth: add a line to the same reminder on a phone, change nothing but
+    /// the priority here, and the phone's line is gone — no conflict, no
+    /// warning, and nothing on screen that ever showed it. Comparing against
+    /// the baseline instead means an untouched field is not written at all,
+    /// so a change that arrived from somewhere else survives.
+    ///
+    /// This is the same care `status` below already took, applied to the rest
+    /// of the ticket.
     func updateTicket(
         cardID: String,
-        title: String,
-        notes: String,
-        url: String,
-        dueDate: Date?,
-        hasDueTime: Bool,
-        priority: Int,
-        calendarID: String,
+        edited: EditableTicket,
+        baseline: EditableTicket,
         undoManager: UndoManager? = nil
     ) {
-        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder,
-              let index = cards.firstIndex(where: { $0.id == cardID }) else { return }
-        // The inverse write, captured before anything is touched — the same
-        // shape the editor itself reads, so ⌘Z is one updateTicket back.
-        if let previous = loadEditableTicket(cardID: cardID) {
-            register(undoManager, name: "Bearbeiten") { store in
-                store.updateTicket(
-                    cardID: cardID,
-                    title: previous.title,
-                    notes: previous.notes,
-                    url: previous.url,
-                    dueDate: previous.dueDate,
-                    hasDueTime: previous.hasDueTime,
-                    priority: previous.priority,
-                    calendarID: previous.calendarID,
-                    undoManager: undoManager)
-            }
-        }
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
+        // Not a guard: the index only drives the optimistic redraw below. A
+        // card can leave `cards` while its editor is open — its list gets
+        // excluded in Settings, or it is deleted on another device — and the
+        // edit still has to reach EventKit rather than being dropped on the
+        // floor without a word.
+        let index = cards.firstIndex(where: { $0.id == cardID })
+
         // Read from the reminder itself, not the cached `cards[index].status`:
         // the sheet can sit open long enough for an external change (another
         // device, a direct edit in Reminders.app) to move the card before
         // this save runs. Using the stale cache here would silently reapply
         // the old column's tag over whatever the live state already is.
         let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
-        let rewrittenNotes = StatusTagger.rewrittenNotes(notes, for: status)
-        // Without a time of day the reminder stays all-day, the way Reminders
-        // itself models it (see `EditableTicket.hasDueTime`).
-        let dueFields: Set<Foundation.Calendar.Component> =
-            hasDueTime ? [.year, .month, .day, .hour, .minute] : [.year, .month, .day]
-        let newCalendar = eventStore.calendar(withIdentifier: calendarID)
-        reminder.title = title
-        reminder.notes = rewrittenNotes
-        reminder.url = Self.parsedURL(url)
-        reminder.dueDateComponents = dueDate.map {
-            Foundation.Calendar.current.dateComponents(dueFields, from: $0)
+        let newCalendar = eventStore.calendar(withIdentifier: edited.calendarID)
+
+        let titleChanged = edited.title != baseline.title
+        let notesChanged = edited.notes != baseline.notes
+        let urlChanged = edited.url != baseline.url
+        let dueChanged = edited.dueDate != baseline.dueDate || edited.hasDueTime != baseline.hasDueTime
+        let priorityChanged = edited.priority != baseline.priority
+        let calendarChanged = edited.calendarID != baseline.calendarID
+
+        // Only computed when it is going to be written: leaving the notes
+        // alone also leaves whatever tag they carry, which is exactly the
+        // live status — so an untouched note still cannot relocate the card.
+        var rewrittenNotes: String?
+        if notesChanged {
+            rewrittenNotes = StatusTagger.rewrittenNotes(edited.notes, for: status)
         }
-        reminder.priority = priority
-        if let newCalendar, newCalendar.calendarIdentifier != reminder.calendar?.calendarIdentifier {
+
+        if titleChanged { reminder.title = edited.title }
+        if notesChanged { reminder.notes = rewrittenNotes }
+        if urlChanged { reminder.url = Self.parsedURL(edited.url) }
+        if dueChanged {
+            // Without a time of day the reminder stays all-day, the way
+            // Reminders itself models it (see `EditableTicket.hasDueTime`) —
+            // and all-day is deliberately floating, so no time zone goes with
+            // it: "the 3rd" is the 3rd wherever you are.
+            //
+            // A reminder due at a *time* carries one, because otherwise the
+            // components are read in whatever zone the device happens to be
+            // in. Written without it, "Monday 09:00 Europe/Berlin" became
+            // "Monday 09:00 wherever I am" — six hours adrift after a flight,
+            // for a reminder whose time nobody had touched.
+            let dueFields: Set<Foundation.Calendar.Component> =
+                edited.hasDueTime
+                    ? [.year, .month, .day, .hour, .minute, .timeZone]
+                    : [.year, .month, .day]
+            let previousDue = reminder.dueDateComponents
+                .flatMap { Foundation.Calendar.current.date(from: $0) }
+            reminder.dueDateComponents = edited.dueDate.map {
+                Foundation.Calendar.current.dateComponents(dueFields, from: $0)
+            }
+            Self.followDueDate(on: reminder, from: previousDue, to: edited.dueDate)
+        }
+        if priorityChanged { reminder.priority = edited.priority }
+        if calendarChanged, let newCalendar,
+           newCalendar.calendarIdentifier != reminder.calendar?.calendarIdentifier {
             reminder.calendar = newCalendar
         }
+
+        // Captured before the save but registered after it: an undo entry for
+        // a write that never happened is worse than none, because ⌘Z then
+        // spends itself doing nothing and the *next* ⌘Z undoes something the
+        // user did not mean to reach.
+        let previous = loadEditableTicket(cardID: cardID)
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
-            pendingSaveFailure = SaveFailure(cardID: cardID, message: error.localizedDescription)
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID, title: "Nicht gespeichert", message: error.localizedDescription)
             scheduleRefresh()
             return
         }
-        cards[index].title = title
-        cards[index].notesPreview = TextSanitizer.notesPreview(rewrittenNotes)
-        cards[index].notesExcerpt = TextSanitizer.notesExcerpt(rewrittenNotes)
-        cards[index].dueDate = dueDate
-        cards[index].priority = priority
-        if let newCalendar {
+        // The inverse write: back to `previous`, measured against what was
+        // just written, so undo touches exactly the fields this edit did.
+        if let previous {
+            register(undoManager, name: "Bearbeiten") { store in
+                store.updateTicket(
+                    cardID: cardID, edited: previous, baseline: edited, undoManager: undoManager)
+            }
+        }
+        guard let index else {
+            scheduleRefresh()
+            return
+        }
+        // Only what was written is reflected — a field left alone on the
+        // reminder must not be overwritten on the card either.
+        if titleChanged { cards[index].title = TextSanitizer.displayTitle(edited.title) }
+        if notesChanged {
+            cards[index].notesPreview = TextSanitizer.notesPreview(rewrittenNotes)
+            cards[index].notesExcerpt = TextSanitizer.notesExcerpt(rewrittenNotes)
+        }
+        if dueChanged { cards[index].dueDate = edited.dueDate }
+        if priorityChanged { cards[index].priority = edited.priority }
+        if calendarChanged, let newCalendar {
             cards[index].listName = newCalendar.title
             cards[index].listColor = Color(nsColor: newCalendar.color ?? .controlAccentColor)
         }
@@ -959,7 +1192,7 @@ final class RemindersStore: ObservableObject {
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
                 && recurringFilter.matches($0)
-                && $0.matches(search: searchText)
+                && $0.matches(search: searchTerm)
         }
         if status == .done {
             // Finished work reads newest first; priority no longer matters.
@@ -981,7 +1214,7 @@ final class RemindersStore: ObservableObject {
             $0.status == status
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
-                && $0.matches(search: searchText)
+                && $0.matches(search: searchTerm)
                 && !recurringFilter.matches($0)
         }.count
     }
@@ -1005,15 +1238,25 @@ final class RemindersStore: ObservableObject {
     /// find control permanently lit, which is precisely the standing
     /// attention-grab this feature exists to avoid. Its other value shows
     /// *more* than the default and is not a restriction either.
+    /// The trimmed text decides, not the raw field: a stray space is not a
+    /// search. Untrimmed, one accidental keystroke tinted the magnifier,
+    /// raised the badge to 1 and made the board announce itself as filtered
+    /// while every card stayed exactly where it was — `matches(search:)` had
+    /// already decided that a term of nothing but whitespace matches
+    /// everything.
+    var searchTerm: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var isFiltering: Bool {
-        priorityFilter != .all || dueFilter != .all || !searchText.isEmpty
+        priorityFilter != .all || dueFilter != .all || !searchTerm.isEmpty
     }
 
     /// Active restrictions, for the badge on the collapsed find control.
     var activeRestrictionCount: Int {
         (priorityFilter != .all ? 1 : 0)
             + (dueFilter != .all ? 1 : 0)
-            + (searchText.isEmpty ? 0 : 1)
+            + (searchTerm.isEmpty ? 0 : 1)
     }
 
     /// Whether anything in the find popover sits away from its default —
@@ -1031,7 +1274,9 @@ final class RemindersStore: ObservableObject {
         BoardEmptiness.evaluate(
             hasVisibleCards: KanbanStatus.allCases.contains { !cards(for: $0).isEmpty },
             isFiltering: isFiltering,
-            recurringHiddenCount: KanbanStatus.allCases.reduce(0) { $0 + recurringHiddenCount(for: $1) })
+            recurringHiddenCount: KanbanStatus.allCases.reduce(0) { $0 + recurringHiddenCount(for: $1) },
+            hasSelectedLists: !reminderCalendars.isEmpty
+                && !reminderCalendars.allSatisfy { excludedCalendarIDs.contains($0.calendarIdentifier) })
     }
 
     /// Shows the recurring cards the default is holding back — the action the

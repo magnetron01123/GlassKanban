@@ -202,14 +202,14 @@ struct StatsPopover: View {
             well {
                 rows {
                     row("Heute",
-                        Self.tasks(streak.todayCount),
+                        GermanPlural.tasks(streak.todayCount),
                         // Clearing the personal daily average is the reward,
                         // and it is carried by a glyph rather than a coloured
                         // label: the board's badge rule is measured, and
                         // orange at reading size on a light surface lands
                         // under the contrast floor.
                         mark: streak.todayCount >= max(1, streak.dailyTarget) ? "flame.fill" : nil,
-                        help: "Dein Schnitt an aktiven Tagen: \(Self.tasks(max(1, streak.dailyTarget))).")
+                        help: "Dein Schnitt an aktiven Tagen: \(GermanPlural.tasks(max(1, streak.dailyTarget))).")
 
                     row("In Bearbeitung", wipValue, help: wipHelp)
 
@@ -310,7 +310,7 @@ struct StatsPopover: View {
         .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(Self.days(streak.current)) in Folge." + (heroNote.map { " \($0.text)." } ?? ""))
+            "\(GermanPlural.days(streak.current)) in Folge." + (heroNote.map { " \($0.text)." } ?? ""))
     }
 
     /// One line, three jobs, in strict priority — an invitation while today is
@@ -356,9 +356,15 @@ struct StatsPopover: View {
         return "\(wip) von \(wipLimit)"
     }
 
+    /// Both halves of the number, in that order. With a limit set, this used
+    /// to drop the first half entirely and explain only the limit — so
+    /// VoiceOver read "In Bearbeitung, 3 von 5" and then, as the value,
+    /// "Dein selbst gesetztes Limit": the figure it was announcing went
+    /// unexplained, and only the ceiling got a sentence.
     private var wipHelp: String {
-        guard wipLimit != nil else { return "Aufgaben, die gerade in Bearbeitung sind." }
-        return "Dein selbst gesetztes Limit für „In Bearbeitung“."
+        let load = "\(GermanPlural.tasks(wip)) gerade in Bearbeitung."
+        guard let wipLimit else { return load }
+        return load + " Dein selbst gesetztes Limit: \(wipLimit)."
     }
 
     // MARK: - Rückblick
@@ -389,7 +395,7 @@ struct StatsPopover: View {
             yearHero
             well {
                 rows {
-                    row("Längste Folge", Self.days(streak.best))
+                    row("Längste Folge", GermanPlural.days(streak.best))
 
                     // The two flow figures, side by side and on the same
                     // 30-day window — with "In Bearbeitung" on the other
@@ -398,7 +404,7 @@ struct StatsPopover: View {
                     // oracle and becomes arithmetic the reader can check.
                     if let weekly = weeklyThroughput {
                         row("Pro Woche",
-                            Self.tasks(weekly),
+                            GermanPlural.tasks(weekly),
                             help: "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten \(WrappedStats.trendWindowDays) Tage — das Tempo in Little’s Law.")
                     }
                     if let lead = wrapped.medianLeadTimeDays {
@@ -414,19 +420,19 @@ struct StatsPopover: View {
                         rows {
                             if let best = wrapped.bestDay {
                                 row("Bester Tag",
-                                    Self.tasks(best.count),
+                                    GermanPlural.tasks(best.count),
                                     help: best.date.formatted(date: .long, time: .omitted))
                             }
                             if let rank = wrapped.mostActiveWeekday {
                                 row("Stärkster Wochentag",
                                     Calendar.current.weekdaySymbols[rank.weekday - 1],
-                                    help: "\(Self.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
+                                    help: "\(GermanPlural.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
                             }
                             if let rank = wrapped.mostUsedList {
                                 row("Häufigste Liste",
                                     rank.name,
                                     dot: rank.color,
-                                    help: Self.tasks(rank.count))
+                                    help: GermanPlural.tasks(rank.count))
                             }
                         }
                     }
@@ -441,15 +447,15 @@ struct StatsPopover: View {
                     if let since = historySince {
                         Text(since)
                             .font(BoardText.meta)
-                            // Tertiary on glass is already near the contrast
-                            // floor; under Increase Contrast it has to step
-                            // up, or the one line that says which period
-                            // these numbers cover is the first thing to
-                            // disappear for the people who asked for more
-                            // contrast.
-                            .foregroundStyle(contrast == .increased
-                                ? AnyShapeStyle(.secondary)
-                                : AnyShapeStyle(.tertiary))
+                            // Secondary, like every other caption in this
+                            // window. It was tertiary with a step up under
+                            // Increase Contrast — which conceded the point:
+                            // on glass that shade sat near the contrast
+                            // floor, and the one line saying which period
+                            // these numbers cover was the first to vanish.
+                            // The board has two text tiers (see `BoardText`);
+                            // this was the only place with a third.
+                            .foregroundStyle(.secondary)
                             .padding(.leading, 12)
                     }
                 }
@@ -511,7 +517,7 @@ struct StatsPopover: View {
         .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(Self.tasks(wrapped.yearCount)) dieses Jahr erledigt."
+            "\(GermanPlural.tasks(wrapped.yearCount)) dieses Jahr erledigt."
                 + (wrapped.milestone.map { " Meilenstein erreicht: \($0)." } ?? ""))
     }
 
@@ -531,7 +537,7 @@ struct StatsPopover: View {
     /// unexplained is not. Per-day figures stay in each bar's tooltip.
     private var trendSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeading("Letzte 30 Tage")
+            sectionHeading("Letzte \(WrappedStats.trendWindowDays) Tage")
             trendRow
         }
     }
@@ -561,7 +567,7 @@ struct StatsPopover: View {
         // Otherwise this is 30 VoiceOver stops that each say nothing.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "Letzte \(WrappedStats.trendWindowDays) Tage: an \(wrapped.consistencyActiveDays) Tagen etwas erledigt.")
+            "Letzte \(WrappedStats.trendWindowDays) Tage: an \(GermanPlural.days(wrapped.consistencyActiveDays)) etwas erledigt.")
     }
 
     /// A day with nothing done keeps a hairline so the row still reads as a
@@ -585,7 +591,7 @@ struct StatsPopover: View {
         } else {
             when = day.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
         }
-        return "\(when): \(Self.tasks(day.count))"
+        return "\(when): \(GermanPlural.tasks(day.count))"
     }
 
     // MARK: - Rows
@@ -635,14 +641,6 @@ struct StatsPopover: View {
         .modifier(OptionalHelp(text: help))
     }
 
-    /// German plurals — "1 Tag" but "2 Tage", "1 Aufgabe" but "2 Aufgaben".
-    private static func days(_ count: Int) -> String {
-        count == 1 ? "1 Tag" : "\(count) Tage"
-    }
-
-    private static func tasks(_ count: Int) -> String {
-        count == 1 ? "1 Aufgabe" : "\(count) Aufgaben"
-    }
 
     /// A duration in days, one decimal while it is small enough for the
     /// fraction to matter — but never a decorative one: "1,0 Tage" is a
@@ -651,6 +649,9 @@ struct StatsPopover: View {
     /// "3 Tage" in the next for the same kind of figure.
     private static func daysEstimate(_ days: Double) -> String {
         let rounded = (days * 10).rounded() / 10
+        // Work captured and finished the same day rounds to zero, and
+        // "0 Tage" reads as a missing measurement rather than a fast one.
+        guard rounded > 0 else { return "Am selben Tag" }
         let wantsFraction = days < 10 && rounded != rounded.rounded()
         let formatted = rounded.formatted(.number.precision(.fractionLength(wantsFraction ? 1 : 0)))
         return "\(formatted) \(rounded == 1 ? "Tag" : "Tage")"

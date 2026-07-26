@@ -139,7 +139,34 @@ enum Board {
         return isDone ? Color(white: 0.97) : .white
     }
 
-    static let columnInnerShadow = Color.black.opacity(0.10)
+    /// What a glass surface becomes when "Transparenz reduzieren" is on.
+    ///
+    /// The setting is about seeing *through* the window to the desktop, so it
+    /// only ever concerns real materials — `columnFill` and `cardFill` need no
+    /// stand-in at all: one is black at a few percent over an opaque window
+    /// background, the other is already a solid colour. Both were nonetheless
+    /// swapped for semantic AppKit colours, and those carry their own relative
+    /// order: in dark mode `controlBackgroundColor` (0.118) is *darker* than
+    /// `underPageBackgroundColor` (0.157), so every card sank below the lane
+    /// it lay on and the "+" disc read as a hole. Turning on an accessibility
+    /// setting inverted the one thing the opaque fills exist to guarantee.
+    ///
+    /// So the fallbacks are gone, and what is left is this: one tone for the
+    /// chrome that really is glass — the tooltip, the empty-board notice, the
+    /// "+" disc. It sits *above* paper (0.32 against the card's 0.25 in dark),
+    /// because chrome floats over the board rather than lying on it.
+    static func opaqueGlassFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color(white: 0.32) : .white
+    }
+
+    /// The lane's inner shadow, the last of the well tokens to still be one
+    /// fixed value. `columnFill`, `wellFill` and `editableHoverFill` all
+    /// branch by scheme; black at 10% over the dark lane's own 25% black was
+    /// effectively invisible, so in dark mode the recess was carried by its
+    /// contour alone.
+    static func columnInnerShadow(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.black.opacity(0.35) : Color.black.opacity(0.10)
+    }
 
     /// Grouped content inside a popover — the stats window's wells.
     ///
@@ -223,6 +250,25 @@ enum Board {
     /// spring, which left every move feeling a beat behind the drop.
     static let cardMoveAnimation: Animation = .spring(duration: 0.22, bounce: 0.18)
 
+    /// Unfolding a lane, and folding it back.
+    ///
+    /// The largest layout change the board can make — eleven or more rows
+    /// appearing at once — and for a long time it also had the *fastest*
+    /// curve on the board: a 0.2s ease-out, shorter than a single card
+    /// changing lanes, with every revealed card playing its own arrival
+    /// scale-in on top. Fifteen tickets popping in together inside a fifth
+    /// of a second reads as the lane being thrown open, which is a lot of
+    /// noise for "here is what was already there".
+    ///
+    /// So: slower than a card's move rather than quicker, and a spring with
+    /// no bounce at all. The bigger the change, the more time the eye needs
+    /// to follow it — and nothing here has *happened*, so nothing should
+    /// snap. Motion is spent on events (see `settleDelay`); a fold is a
+    /// disclosure, and a disclosure unrolls.
+    ///
+    /// The revealed cards drop their scale-in for the same reason — see
+    /// `ColumnView.isFolding`.
+    static let foldAnimation: Animation = .spring(duration: 0.36, bounce: 0)
     /// How long a just-arrived card waits before its settle plays — the
     /// transit above plus a small margin. The board's feedback runs on two
     /// clocks: the *hand's* (haptics and the chime, immediate at the drop —
@@ -265,6 +311,33 @@ enum Board {
 ///
 /// The two card titles below are the same rule applied a second time: one
 /// size, two weights.
+///
+/// Colour ranks with it, and there are exactly two — each with one meaning,
+/// so a shade of grey is never just a shade:
+///
+/// - **primary** — what the ticket SAYS: its title and its note, on the card
+///   and in the opened editor alike.
+/// - **secondary** — what merely describes it: the footer facts (list name,
+///   dwell time), field captions, lane headers.
+///
+/// The split is content against annotation, not important against
+/// unimportant — which is why a note keeps its colour when a card is opened.
+/// Ranking it down on the card made the same body of writing look like two
+/// different things on the way into the editor; on the card the title still
+/// leads, carried by size and weight (15pt semibold over 12pt regular), the
+/// same pair that separates them in the editor.
+///
+/// "Keine Notizen", "Keine URL", "Kein Datum" are secondary, and that is the
+/// rule rather than an exception to it: a placeholder is not what the ticket
+/// says, it is the app saying there is nothing — annotation, like a caption.
+/// They were briefly primary, on the argument that the words already say
+/// "empty"; on screen that made "Keine Notizen" indistinguishable from a real
+/// note, and put "Kein Datum" in the same black as a date. There is still no
+/// third shade — this is the second one, doing what it is for.
+///
+/// A one-rank board would have no way to separate a ticket from what
+/// annotates it; a third stopped reading as hierarchy at all — see the list
+/// name in `CardView.fullBody`.
 enum BoardText {
     // One size for every card title, in two weights. 15 rather than the
     // original 14 for glanceability on a board that is looked at from across

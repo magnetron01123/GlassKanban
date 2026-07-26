@@ -25,6 +25,9 @@ struct EmptyBoardNotice: View {
     let onReset: () -> Void
     let onShowRecurring: () -> Void
 
+    /// SwiftUI's own way into the Settings window (macOS 14+), so the one
+    /// state whose way out lives *outside* the board can still offer one.
+    @Environment(\.openSettings) private var openSettings
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
@@ -76,7 +79,7 @@ struct EmptyBoardNotice: View {
     @ViewBuilder
     private var surface: some View {
         if reduceTransparency {
-            Board.tooltipShape.fill(Color(nsColor: .controlBackgroundColor))
+            Board.tooltipShape.fill(Board.opaqueGlassFill(colorScheme))
         } else {
             // `.withinWindow`: this floats above the board's own content, so
             // it frosts the lanes behind it rather than punching through to
@@ -120,6 +123,9 @@ struct EmptyBoardNotice: View {
         case .nothingToDo: "Nichts zu tun"
         case .filteredAway: "Keine Treffer"
         case .recurringOnly: "Nichts fällig"
+        // Not "Nichts zu tun": the board has no source, which is a setting,
+        // not an achievement.
+        case .noListsSelected: "Keine Liste ausgewählt"
         }
     }
 
@@ -131,6 +137,7 @@ struct EmptyBoardNotice: View {
         case .nothingToDo: nil
         case .filteredAway: ("Filter zurücksetzen", onReset)
         case .recurringOnly: ("Wiederkehrende anzeigen", onShowRecurring)
+        case .noListsSelected: ("Listen wählen", { openSettings() })
         }
     }
 }

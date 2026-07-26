@@ -63,11 +63,20 @@ Spaltenwechsel unverändert.
 | Erledigt | `isCompleted = true` setzen, Status-Zeile entfernen |
 
 **Lesen:** Der Hashtag wird an beliebiger Stelle im Notizen-Text gesucht, ohne Rücksicht auf
-Groß-/Kleinschreibung und mit Wortgrenze (`#inbearbeitungszeit` zählt also nicht). Die
+Groß-/Kleinschreibung, aber **nur wo er allein steht** — links und rechts Leerraum oder
+Textgrenze. `#inbearbeitungszeit` zählt damit nicht, und ebenso wenig ein Treffer mitten
+in anderem Text: `https://example.com/guide#next`, `#next-steps`, `#bearbeitung/2024`,
+`ABC#NEXT!`. Die
 umlautfreie Schreibweise `#alsnaechstes` wird beim Lesen akzeptiert (unterwegs ohne Umlaute
 getippt) und beim nächsten Schreiben normalisiert. Stehen mehrere Tags im Text, gewinnt der
 **zuletzt** im Text stehende. Erinnerungen ohne erkannten Hashtag und ohne `isCompleted`
 fallen automatisch in „Backlog".
+
+Die Regel scheitert bewusst **nach innen**: `#alsnächstes.` mit Satzpunkt gilt nicht mehr
+als Tag, die Karte bleibt in „Backlog" und der Text bleibt unangetastet. Ein nicht
+erkanntes Tag kostet einen Zug mit der Maus; ein fälschlich erkanntes kostete bis Juli 2026
+Nutzertext — die Hygiene entfernte den Treffer und hängte einen echten Tag an, ohne Zutun
+und ohne Undo-Eintrag (siehe FINDINGS-2026-07.md, A1).
 
 **Nutzertext bleibt unangetastet:** Beim Schreiben werden ausschließlich Tags entfernt bzw.
 angehängt. Zeilen ohne Tag werden zeichengenau durchgereicht — auch Leerzeilen, die als
@@ -166,27 +175,86 @@ Erinnerung wieder, egal was schon in den Feldern stand — abgebrochen ist abgeb
 der Editor ohne jede Eingabe geschlossen, entfernt die App das Ticket ebenfalls
 rückstandslos; der ↗-Sprung nach Reminders zählt dabei als Behalten.
 
-**Löschen fragt nicht nach, sondern lässt sich rückgängig machen.** Jede Schreib-Aktion der
-App — Verschieben, Umbenennen, Anlegen, Löschen — registriert ihr Gegenteil beim
-Undo-Manager des Fensters und ist mit **⌘Z** widerrufbar, ⇧⌘Z stellt sie wieder her. Beim
-Wiederherstellen einer gelöschten Aufgabe legt die App eine neue Erinnerung mit demselben
-Inhalt an (Titel, Notizen, URL, Ort, Priorität, Datum, Wiederholung, Erinnerungen,
-Erledigt-Status samt ursprünglichem Erledigt-Datum) — EventKit kennt kein echtes
-Wiederherstellen, die Erinnerung bekommt also eine neue interne ID.
+**Das Auf- und Zuklappen einer Spalte ist die langsamste Bewegung der App.** Es ist die
+größte Layout-Änderung, die das Board machen kann — elf oder mehr Zeilen auf einmal — und
+lief bis Juli 2026 auf der *schnellsten* Kurve: 0,2 s Ease-out, kürzer als ein einzelner
+Kartenwechsel, und jede aufgedeckte Karte spielte zusätzlich ihre Ankunfts-Animation
+(Scale-in). Fünfzehn Tickets, die in einer Fünftelsekunde gleichzeitig aufpoppen, lesen
+sich als aufgerissene Spalte — viel Lärm für „hier ist, was ohnehin schon da war".
+
+Jetzt: eine Feder ohne jeden Nachschwung über 0,36 s (`Board.foldAnimation`), und die
+aufgedeckten Karten blenden nur ein, statt anzukommen. Je größer die Änderung, desto mehr
+Zeit braucht das Auge — und es ist nichts *passiert*, also darf nichts schnappen. Bewegung
+gibt die App für Ereignisse aus (siehe „Zwei Uhren"); eine Falte ist kein Ereignis, sondern
+eine Offenlegung, und die rollt sich auf. Gilt für beide faltenden Spalten, Backlog wie
+„Erledigt". Unter „Bewegung reduzieren" schaltet sie sich ganz ab.
+
+**Die Falt-Zeile behält dabei ihre Identität.** Sie wandert beim Aufklappen um die volle
+Höhe des aufgedeckten Stapels nach unten — richtig so, sie markiert dessen Ende und wird
+von den aufrollenden Karten geschoben. Aber Text („… anzeigen" ↔ „… ausblenden") und
+Chevron wechselten im selben Moment hart: drei gleichzeitige Änderungen, und das
+angeklickte Ding verschwand, während ein anderes woanders landete — *das* war das
+Hektische, nicht die Reise. Jetzt **dreht sich ein** Chevron (wie jedes
+Disclosure-Dreieck auf dem Mac, −180°), und der Text **blendet über**
+(`contentTransition(.opacity)`). Ein Objekt, das mitfährt — kein Kontrollwechsel
+(Juli 2026, nach Nutzer-Feedback „viel zu hektisch").
+
+**Wiederkehrende Aufgaben lassen sich nicht aus „Erledigt" zurückholen, solange die
+Serie weiterläuft.** EventKit löst eine abgehakte Ausführung aus ihrer Serie und legt
+die nächste sofort als eigene offene Erinnerung an. `isCompleted` wieder zu löschen
+würde die Ausführung deshalb nicht zurückdrehen, sondern *neben* der laufenden Serie
+wiederbeleben — dieselbe Aufgabe stünde zweimal auf dem Board. Die App sagt das
+stattdessen und ändert nichts.
+
+**Weckzeiten folgen dem Fälligkeitsdatum.** Wird ein Datum im Editor verschoben, wandert
+der Alarm mit, der genau auf dem alten Datum lag; wird das Datum entfernt, geht er mit.
+Bewusst eng: relative Alarme, Ortsalarme und alles, was der Nutzer auf eine andere Zeit
+gestellt hat, bleiben unangetastet — sie tragen eine Absicht, die die App nicht erraten
+kann.
+
+**Löschen fragt nach.** Der Menüpunkt öffnet eine Rückfrage mit dem Namen des Tickets
+(„… löschen?"); „Abbrechen" ist die vorbelegte Antwort und liegt auf Return **und**
+Escape, „Löschen" braucht einen bewussten Klick. Dieselbe Rückfrage für jeden Weg ins
+Löschen, also auch für die VoiceOver-Aktion — sie hängt am Store, nicht an der Maus
+(gleiches Muster wie die WIP-Rückfrage). Undo und Redo fragen nicht: eine Entscheidung
+wiederholen ist keine neue Entscheidung.
+
+Bis Juli 2026 fragte die App nicht und verwies auf ⌘Z. Das Argument trug nicht, weil das
+Netz ein Loch hat: Beim Wiederherstellen legt die App eine **neue** Erinnerung mit
+demselben Inhalt an (Titel, Notizen, URL, Ort, Priorität, Datum, Wiederholung,
+Erinnerungen, Erledigt-Status samt ursprünglichem Erledigt-Datum) — EventKit kennt kein
+echtes Wiederherstellen. Was EventKit nicht herausgibt, kommt damit **nicht** zurück:
+**Unteraufgaben, Anhänge, Reminders-Tags und -Flags**. Genau das sagt die Rückfrage.
+
+Jede Schreib-Aktion der App — Verschieben, Umbenennen, Anlegen, Löschen — registriert ihr
+Gegenteil beim Undo-Manager des Fensters und ist mit **⌘Z** widerrufbar, ⇧⌘Z stellt sie
+wieder her. Die Erinnerung bekommt beim Wiederherstellen eine neue interne ID.
 
 ### Tastaturkürzel
 
 | Kürzel | Wirkung |
 |---|---|
+| ⌘N | Neues Ticket im Backlog (derselbe Weg wie das „+") |
 | ⌘F | Finden-Popover (Suche + Filter) |
 | ⇧⌘F | Filter zurücksetzen |
-| ⌘N | Erinnerungen-App öffnen |
+| ⇧⌘R | Erinnerungen-App öffnen |
 | ⌘R | Board aktualisieren |
 | ⌘Z / ⇧⌘Z | letzte Board-Änderung rückgängig / wiederherstellen |
 | ⌘, | Einstellungen |
 | Return | im Karten-Editor: übernehmen und schließen (legt ein neues Ticket an) |
 | ⌘Return | dasselbe aus dem Notizfeld heraus, wo Return die Zeile umbricht |
 | Escape | im Karten-Editor: verwerfen und schließen (bricht eine Neuanlage ab) |
+
+Jeder dieser Befehle steht auch im Menü „Board" — ein Kurzbefehl, den man nur durch
+Überfahren eines Toolbar-Knopfs findet, ist keiner. ⌘N lag bis Juli 2026 auf
+„Erinnerungen öffnen", während die einzige anlegende Geste der App („+") gar keinen
+Kurzbefehl hatte: der Mac-Reflex erzeugte damit ausgerechnet das, was er nirgends
+bedeutet. „Erinnerungen öffnen" ist auf ⇧⌘R gewandert.
+
+**Bei geöffneter Karte ist die Toolbar deaktiviert.** Das Board tritt hinter die
+hochgehaltene Karte zurück; ein Klick auf die Flamme legte die Statistik vorher *über*
+den offenen Editor. Die Toolbar bleibt sichtbar und scharf — sie ist Chrome, kein Inhalt
+— konkurriert aber nicht mit dem, was gerade in der Hand ist.
 
 ## Karten-Anzeige
 
@@ -197,6 +265,40 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
 | Als Nächstes, In Bearbeitung | Titel, Prioritätsmarken, Notizen-Auszug (bis 3 Zeilen), Fälligkeits-Badge, Wiederholungs-Icon, Listenname, Verweildauer |
 | Backlog | eine Zeile: Prioritätsmarken, Titel, Wiederholungs-Icon, Fälligkeits-Badge |
 | Erledigt | nur der Titel, durchgestrichen |
+
+- **Karten ohne Notiz zeigen „Keine Notizen"** statt einer leeren Zone — die
+  Notizen-Zone gehört zur Ticket-Anatomie und steht immer, aber ein leerer Streifen
+  zwischen zwei Trennlinien liest sich als Darstellungsfehler, nicht als „hier steht
+  nichts". Reine Anzeige: in EventKit wird nichts geschrieben (Juli 2026)
+
+- **Zwei Textstufen, je eine Bedeutung** (gilt für Board und Karten-Editor, siehe
+  `BoardText`):
+  - **primär** — was das Ticket *sagt*: Titel und Notiz, auf der Karte wie im
+    geöffneten Ticket
+  - **sekundär** — was es nur *beschreibt*: Fußzeilen-Fakten (Listenname,
+    Verweildauer), Feld-Beschriftungen, Spaltenköpfe
+
+  Die Trennung verläuft zwischen Inhalt und Beschriftung, nicht zwischen wichtig und
+  unwichtig — deshalb behält die Notiz ihre Farbe, wenn man die Karte öffnet. Eine
+  frühere Fassung setzte den Notizen-Auszug auf der Karte sekundär; derselbe Text
+  wechselte dadurch beim Öffnen die Farbe und wirkte wie zwei verschiedene Dinge
+  (Juli 2026, nach Nutzer-Feedback angeglichen). Auf der Karte führt der Titel
+  weiterhin, getragen von Größe und Gewicht (15 pt semibold über 12 pt regular) —
+  genau dem Paar, das die beiden auch im Editor trennt.
+
+  „Keine Notizen", „Keine URL", „Kein Datum" sind **sekundär** — ein Platzhalter ist
+  nicht, was das Ticket sagt, sondern die App, die sagt, dass da nichts ist. Das ist
+  die Regel, keine Ausnahme davon, und kostet keine dritte Graustufe. Zwei verworfene
+  Zwischenstände (Juli 2026): erst eine eigene tertiäre Stufe (eine Farbe zu viel),
+  dann primär wie der Inhalt — dabei war „Keine Notizen" im Editor nicht mehr von einer
+  echten Notiz zu unterscheiden und stand zwei Zeilen über „Dringlichkeit: Keine", das
+  ein echter Wert ist. Das Suchfeld dämpft seinen Platzhalter ohnehin.
+  Ausnahme: System-Controls (Picker im Editor) behalten ihre eigene Textfarbe
+
+- **Erledigt-Titel in voller (primärer) Textfarbe, nicht gedämpft** — der Durchstrich
+  markiert bereits „fertig"; eine zusätzlich sekundäre Farbe wäre ein zweites Signal für
+  dieselbe Tatsache. Eine frühere Fassung dämpfte den Titel zusätzlich, wurde aber
+  verworfen (Juli 2026)
 
 - **Listenfarbe als Akzent:** `EKCalendar.color` als schmaler Streifen an der linken
   Kartenkante
