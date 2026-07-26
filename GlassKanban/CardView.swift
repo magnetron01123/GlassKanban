@@ -223,12 +223,17 @@ struct CardView: View {
     /// that failed to load rather than as "nothing written here". Saying so
     /// costs one quiet line and answers the question the gap posed.
     ///
-    /// Same secondary tier as a real excerpt: a dedicated placeholder shade
-    /// on top of primary/secondary was a third colour for one card to carry,
-    /// and the words already say "empty" — the tier doesn't need to say it
-    /// again. Same font, same insets and the same expanding frame as a real
-    /// excerpt, so a card with a note and a card without one keep identical
-    /// geometry.
+    /// Primary, like the note in the opened card: it is the same text on
+    /// both surfaces, and a card that changed colour on the way into the
+    /// editor made one body of writing look like two. Rank inside the card
+    /// is carried by size and weight instead — 15pt semibold title over
+    /// 12pt regular note — which is what separates them in the editor too.
+    ///
+    /// The placeholder shares that tier for the reason every empty value
+    /// does here: the words already say "empty", so the colour does not
+    /// have to say it again. Same font, same insets and the same expanding
+    /// frame as a real excerpt, so a card with a note and a card without
+    /// one keep identical geometry.
     @ViewBuilder
     private var notesZone: some View {
         Group {
@@ -238,7 +243,7 @@ struct CardView: View {
                 Text(card.notesExcerpt)
             }
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.primary)
         .font(BoardText.body)
         .lineLimit(3)
         .multilineTextAlignment(.leading)

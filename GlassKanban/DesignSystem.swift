@@ -269,17 +269,23 @@ enum Board {
 /// Colour ranks with it, and there are exactly two — each with one meaning,
 /// so a shade of grey is never just a shade:
 ///
-/// - **primary** — the name of the thing: a ticket's title, and in the
-///   opened card the values you type.
-/// - **secondary** — everything that supports it: the notes preview, the
-///   footer facts, field captions, lane headers.
+/// - **primary** — what the ticket SAYS: its title and its note, on the card
+///   and in the opened editor alike.
+/// - **secondary** — what merely describes it: the footer facts (list name,
+///   dwell time), field captions, lane headers.
 ///
-/// "Keine Notizen", "Keine URL", "Kein Datum" carry the same tier as the
-/// content they stand in for (secondary on a card, primary in the opened
-/// editor) rather than a dedicated placeholder shade — the words already say
-/// "empty"; a third rank said it again. A one-rank board would have no way
-/// to separate a title from what supports it; a third stopped reading as
-/// hierarchy at all — see the list name in `CardView.fullBody`.
+/// The split is content against annotation, not important against
+/// unimportant — which is why a note keeps its colour when a card is opened.
+/// Ranking it down on the card made the same body of writing look like two
+/// different things on the way into the editor; on the card the title still
+/// leads, carried by size and weight (15pt semibold over 12pt regular), the
+/// same pair that separates them in the editor.
+///
+/// "Keine Notizen", "Keine URL", "Kein Datum" carry the tier of the content
+/// they stand in for rather than a dedicated placeholder shade — the words
+/// already say "empty"; a third rank said it again. A one-rank board would
+/// have no way to separate a ticket from what annotates it; a third stopped
+/// reading as hierarchy at all — see the list name in `CardView.fullBody`.
 enum BoardText {
     // One size for every card title, in two weights. 15 rather than the
     // original 14 for glanceability on a board that is looked at from across

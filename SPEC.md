@@ -205,18 +205,25 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
 
 - **Zwei Textstufen, je eine Bedeutung** (gilt für Board und Karten-Editor, siehe
   `BoardText`):
-  - **primär** — der Name der Sache: Ticket-Titel, im geöffneten Ticket die Werte,
-    die man tippt
-  - **sekundär** — alles Stützende: Notizen-Auszug, Fußzeilen-Fakten (Listenname,
+  - **primär** — was das Ticket *sagt*: Titel und Notiz, auf der Karte wie im
+    geöffneten Ticket
+  - **sekundär** — was es nur *beschreibt*: Fußzeilen-Fakten (Listenname,
     Verweildauer), Feld-Beschriftungen, Spaltenköpfe
 
+  Die Trennung verläuft zwischen Inhalt und Beschriftung, nicht zwischen wichtig und
+  unwichtig — deshalb behält die Notiz ihre Farbe, wenn man die Karte öffnet. Eine
+  frühere Fassung setzte den Notizen-Auszug auf der Karte sekundär; derselbe Text
+  wechselte dadurch beim Öffnen die Farbe und wirkte wie zwei verschiedene Dinge
+  (Juli 2026, nach Nutzer-Feedback angeglichen). Auf der Karte führt der Titel
+  weiterhin, getragen von Größe und Gewicht (15 pt semibold über 12 pt regular) —
+  genau dem Paar, das die beiden auch im Editor trennt.
+
   „Keine Notizen", „Keine URL", „Kein Datum" tragen dieselbe Stufe wie der Inhalt, den
-  sie vertreten (sekundär auf der Karte, primär im geöffneten Editor) — eine eigene,
-  gedämpftere Platzhalterfarbe war eine dritte Graustufe zu viel für dieselbe Aussage,
-  die das Wort „Keine …" schon trifft (Juli 2026, nach Feedback korrigiert: erst als
-  eigene tertiäre Stufe gebaut, dann wieder auf die bestehenden zwei Stufen
-  zurückgeführt). Ausnahme: System-Controls (Picker im Editor) behalten ihre eigene
-  Textfarbe
+  sie vertreten — eine eigene, gedämpftere Platzhalterfarbe war eine dritte Graustufe
+  zu viel für dieselbe Aussage, die das Wort „Keine …" schon trifft (Juli 2026, nach
+  Feedback korrigiert: erst als eigene tertiäre Stufe gebaut, dann wieder auf die
+  bestehenden zwei Stufen zurückgeführt). Ausnahme: System-Controls (Picker im Editor)
+  behalten ihre eigene Textfarbe
 
 - **Erledigt-Titel in voller (primärer) Textfarbe, nicht gedämpft** — der Durchstrich
   markiert bereits „fertig"; eine zusätzlich sekundäre Farbe wäre ein zweites Signal für
