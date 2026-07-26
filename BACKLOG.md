@@ -126,8 +126,9 @@ nicht möglich)
   Kennzahlen abfragen.
 - **Fokus-Modi-Integration (Focus Filters)** — Board passt Filter automatisch an aktiven
   macOS-Fokus an (z. B. Arbeit vs. Privat).
-- **App-Icon im neuen Icon-Composer-Format** — Light/Dark/Tinted-Varianten mit
-  Liquid-Glass-Spiegelungen.
+- **App-Icon: Tinted-Variante ergänzen** — Light und Dark sind umgesetzt
+  (`GlassKanban/AppIcon.icon`, Icon-Composer-Dokument); die Tinted-Darstellung für
+  eingefärbte Docks fehlt noch als dritte Appearance.
 
 ## Statistiken / Jahresrückblick
 
@@ -149,6 +150,19 @@ nicht möglich)
   ohne eigene App, siehe Bonus-Hinweis in SPEC.md). Eigenes Xcode-Multiplatform-Target, eigene
   UI-Anpassung für kleinere Bildschirme/Touch-Bedienung, eigene App-Store-Überlegungen — klare
   Plattformerweiterung nach dem Mac-MVP, nicht Teil davon.
+
+## Veröffentlichung (Mac App Store)
+
+Seit dem 26.07.2026 ein aktives Vorhaben mit eigenem Arbeitsdokument:
+**[RELEASE.md](RELEASE.md)** führt Phasen, Status, Entscheidungslog und Verifikation —
+und ist die einzige Wahrheit zum Release (dieser Abschnitt hier bleibt bewusst nur ein
+Verweis, damit nichts doppelt gepflegt wird). Beschlossen dort u. a.: Einmalkauf
+9,99–14,99 €, nur Mac App Store, Deutsch + Englisch mit Englisch als
+Entwicklungssprache, Tag-Migration auf `#next`/`#inprogress`.
+
+Der ältere Branch `feature/backlog-release-readiness` (21.07.) ist damit obsolet;
+sein Inhalt ist in RELEASE.md aufgegangen bzw. inzwischen umgesetzt (private API
+entfernt in `4f83347`).
 
 ## Explizit abgelehnt (kein "später", sondern bewusst ausgeschlossen)
 
