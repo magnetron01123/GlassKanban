@@ -197,6 +197,16 @@ des Auges (die eben geklickte Zeile) war es, das da raste. Ein Zwischenstand erh
 ihre Identität während des Flugs (drehendes Chevron, überblendender Text); das machte
 den Streifen ordentlicher, nicht ruhiger — und wurde verworfen.
 
+Die Kurve ist ein **Ease-in-out über 0,5 s** und ausdrücklich **keine Feder.** Eine Feder
+— auch kritisch gedämpft, auch mit `bounce: 0` — startet mit voller Geschwindigkeit und
+bremst hinein: die Form von etwas, das *ankommt*. Auch bei längerer Dauer blieb das der
+falsche Charakter, es las sich als etwas langsamer aufgerissene Spalte. Ease-in-out
+beginnt aus der Ruhe, der Stapel setzt sich also in Bewegung, statt geworfen zu werden.
+Es ist außerdem die einzige Kurve des Boards ohne physikalische Metapher — richtig für die
+eine Geste, die nichts bewegt: Die Karten waren immer da. Zum Vergleich: 0,22 s für einen
+Kartenwechsel, hier gut die zehnfache Strecke in gut der doppelten Zeit (nicht
+proportional — das wären Sekunden).
+
 Es gilt die Distanzregel der Plattform: **kurze Wege animieren, lange Wege blenden.**
 Die zugeklappte und die aufgeklappte Zeile sind zwei Ansichten (`id(expanded)`): die
 alte löst sich an ihrem Platz auf, die neue erscheint an ihrem, beide auf der Kurve der

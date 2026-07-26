@@ -278,15 +278,30 @@ enum Board {
     /// of a second reads as the lane being thrown open, which is a lot of
     /// noise for "here is what was already there".
     ///
-    /// So: slower than a card's move rather than quicker, and a spring with
-    /// no bounce at all. The bigger the change, the more time the eye needs
-    /// to follow it — and nothing here has *happened*, so nothing should
-    /// snap. Motion is spent on events (see `settleDelay`); a fold is a
-    /// disclosure, and a disclosure unrolls.
+    /// So: slower than a card's move rather than quicker. The bigger the
+    /// change, the more time the eye needs to follow it — and nothing here
+    /// has *happened*, so nothing should snap. Motion is spent on events
+    /// (see `settleDelay`); a fold is a disclosure, and a disclosure
+    /// unrolls.
+    ///
+    /// Ease-in-out, and deliberately **not** a spring. A spring — even
+    /// critically damped, even with `bounce: 0` — leaves at full speed and
+    /// brakes into place: that is the shape of something *arriving*, and it
+    /// was still the wrong character here even at a longer duration. It read
+    /// as the lane being flung open a little more slowly. Ease-in-out starts
+    /// from rest, so the pile begins to move rather than being thrown, and
+    /// settles the same way at the other end. It is also the only curve on
+    /// this board with no physical metaphor at all, which is right for the
+    /// one gesture that moves nothing — the cards were always there.
+    ///
+    /// Half a second, against 0.22 for a card changing lanes: roughly ten
+    /// times the distance travelled, so a little over twice the time. Not
+    /// proportional — that would take seconds — but far enough from the
+    /// board's working pace to read as a different kind of act.
     ///
     /// The revealed cards drop their scale-in for the same reason — see
     /// `ColumnView.isFolding`.
-    static let foldAnimation: Animation = .spring(duration: 0.36, bounce: 0)
+    static let foldAnimation: Animation = .easeInOut(duration: 0.5)
     /// How long a just-arrived card waits before its settle plays — the
     /// transit above plus a small margin. The board's feedback runs on two
     /// clocks: the *hand's* (haptics and the chime, immediate at the drop —
