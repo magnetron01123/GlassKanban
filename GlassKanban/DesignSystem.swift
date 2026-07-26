@@ -28,13 +28,31 @@ enum Board {
     /// sits inside it; the zone hairlines follow the same insets.
     static let cardInsetLeading: CGFloat = 14
     static let cardInsetTrailing: CGFloat = 12
-    /// Working-lane cards hold this much height even when nearly empty, so
-    /// they read as sticky notes with a body instead of flat title bars.
-    static let fullCardMinHeight: CGFloat = 118
-    /// One-line rows in the storage lanes: 15pt text plus 9pt padding above
-    /// and below. Only used for the drop placeholder in an empty lane —
-    /// once a lane holds a card, its real height is measured instead.
+    // Card heights: one grid, two sizes.
+    //
+    // A ticket is one of exactly two heights, and the tall one is four of
+    // the short one. Both were intrinsic before — whatever the content
+    // happened to measure — so a Backlog row grew a point when it carried a
+    // date badge, and a working-lane card ranged from 118 to 133 depending
+    // on how many lines its note and title took. Four columns side by side
+    // then had four different row rhythms, none of them a multiple of the
+    // others, and the board read as slightly out of true without it being
+    // obvious why.
+    //
+    // Fixed rather than minimum, because "same size" has to hold for the
+    // card that has the most to say, not just the emptiest one.
+
+    /// The storage lanes' single-line row: 15pt text plus 9pt above and
+    /// below, rounded up the one point a date badge needs. Also the drop
+    /// placeholder's height — which is finally the truth rather than a
+    /// close guess.
     static let compactCardHeight: CGFloat = 38
+    /// The working lanes' card. Exactly four short rows, which is the
+    /// smallest multiple that still holds the fullest ticket the anatomy
+    /// allows — a three-line title over a three-line note measures 141, and
+    /// three rows would be 114. The slack sits in the notes zone, where the
+    /// card wants air anyway (see `CardView.fullBody`).
+    static let fullCardHeight: CGFloat = compactCardHeight * 4
     /// A card only reports its dwell time once it has lingered this long —
     /// below it, sitting in a column is simply normal.
     static let agingThresholdDays = 3
@@ -260,15 +278,30 @@ enum Board {
     /// of a second reads as the lane being thrown open, which is a lot of
     /// noise for "here is what was already there".
     ///
-    /// So: slower than a card's move rather than quicker, and a spring with
-    /// no bounce at all. The bigger the change, the more time the eye needs
-    /// to follow it — and nothing here has *happened*, so nothing should
-    /// snap. Motion is spent on events (see `settleDelay`); a fold is a
-    /// disclosure, and a disclosure unrolls.
+    /// So: slower than a card's move rather than quicker. The bigger the
+    /// change, the more time the eye needs to follow it — and nothing here
+    /// has *happened*, so nothing should snap. Motion is spent on events
+    /// (see `settleDelay`); a fold is a disclosure, and a disclosure
+    /// unrolls.
+    ///
+    /// Ease-in-out, and deliberately **not** a spring. A spring — even
+    /// critically damped, even with `bounce: 0` — leaves at full speed and
+    /// brakes into place: that is the shape of something *arriving*, and it
+    /// was still the wrong character here even at a longer duration. It read
+    /// as the lane being flung open a little more slowly. Ease-in-out starts
+    /// from rest, so the pile begins to move rather than being thrown, and
+    /// settles the same way at the other end. It is also the only curve on
+    /// this board with no physical metaphor at all, which is right for the
+    /// one gesture that moves nothing — the cards were always there.
+    ///
+    /// Half a second, against 0.22 for a card changing lanes: roughly ten
+    /// times the distance travelled, so a little over twice the time. Not
+    /// proportional — that would take seconds — but far enough from the
+    /// board's working pace to read as a different kind of act.
     ///
     /// The revealed cards drop their scale-in for the same reason — see
     /// `ColumnView.isFolding`.
-    static let foldAnimation: Animation = .spring(duration: 0.36, bounce: 0)
+    static let foldAnimation: Animation = .easeInOut(duration: 0.5)
     /// How long a just-arrived card waits before its settle plays — the
     /// transit above plus a small margin. The board's feedback runs on two
     /// clocks: the *hand's* (haptics and the chime, immediate at the drop —

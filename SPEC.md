@@ -197,6 +197,16 @@ des Auges (die eben geklickte Zeile) war es, das da raste. Ein Zwischenstand erh
 ihre Identität während des Flugs (drehendes Chevron, überblendender Text); das machte
 den Streifen ordentlicher, nicht ruhiger — und wurde verworfen.
 
+Die Kurve ist ein **Ease-in-out über 0,5 s** und ausdrücklich **keine Feder.** Eine Feder
+— auch kritisch gedämpft, auch mit `bounce: 0` — startet mit voller Geschwindigkeit und
+bremst hinein: die Form von etwas, das *ankommt*. Auch bei längerer Dauer blieb das der
+falsche Charakter, es las sich als etwas langsamer aufgerissene Spalte. Ease-in-out
+beginnt aus der Ruhe, der Stapel setzt sich also in Bewegung, statt geworfen zu werden.
+Es ist außerdem die einzige Kurve des Boards ohne physikalische Metapher — richtig für die
+eine Geste, die nichts bewegt: Die Karten waren immer da. Zum Vergleich: 0,22 s für einen
+Kartenwechsel, hier gut die zehnfache Strecke in gut der doppelten Zeit (nicht
+proportional — das wären Sekunden).
+
 Es gilt die Distanzregel der Plattform: **kurze Wege animieren, lange Wege blenden.**
 Die zugeklappte und die aufgeklappte Zeile sind zwei Ansichten (`id(expanded)`): die
 alte löst sich an ihrem Platz auf, die neue erscheint an ihrem, beide auf der Kurve der
@@ -305,6 +315,24 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   markiert bereits „fertig"; eine zusätzlich sekundäre Farbe wäre ein zweites Signal für
   dieselbe Tatsache. Eine frühere Fassung dämpfte den Titel zusätzlich, wurde aber
   verworfen (Juli 2026)
+
+- **Ein Raster, zwei Kartengrößen.** Eine Karte ist entweder **38 pt** hoch (Backlog,
+  Erledigt) oder **152 pt** (Als Nächstes, In Bearbeitung) — die große ist **exakt das
+  Vierfache** der kleinen. Beide Höhen sind fest, nicht Mindestmaß: „gleich groß" muss
+  auch für das Ticket gelten, das am meisten zu sagen hat.
+
+  Vorher ergaben sich beide Höhen aus dem Inhalt, und das ging schief: Eine
+  Backlog-Zeile wurde einen Punkt höher, sobald sie ein Datums-Badge trug (37 → 38), und
+  eine Karte der Arbeitsspalten schwankte je nach Titel- und Notizlänge zwischen 118 und
+  133. Vier Spalten nebeneinander hatten damit vier Zeilenrhythmen, von denen keiner ein
+  Vielfaches der anderen war — das Board wirkte leicht unrund, ohne dass man sagen konnte
+  warum.
+
+  Vier ist das kleinste Vielfache, das noch das vollste Ticket fasst, das die Anatomie
+  zulässt (dreizeiliger Titel über dreizeiliger Notiz misst 141; drei Zeilen wären
+  114). Der Rest ist Luft in der Notizen-Zone, wo die Karte sie ohnehin will. Gemessen
+  am laufenden Board: Zeilenabstand Backlog/Erledigt 43 pt (38 + 5), Arbeitsspalten
+  160 pt (152 + 8) — 152 ÷ 38 = 4,000 (Juli 2026)
 
 - **Listenfarbe als Akzent:** `EKCalendar.color` als schmaler Streifen an der linken
   Kartenkante

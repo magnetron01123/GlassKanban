@@ -499,7 +499,7 @@ struct ColumnView: View {
     /// Matches a real card in this lane; falls back to the lane's own card
     /// metrics while the lane is still empty.
     private var slotHeight: CGFloat {
-        cardHeight ?? (singleLine ? Board.compactCardHeight : Board.fullCardMinHeight)
+        cardHeight ?? (singleLine ? Board.compactCardHeight : Board.fullCardHeight)
     }
 
     /// The pull slot's height: exactly the ticket it is inviting. The top

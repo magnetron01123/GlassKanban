@@ -223,9 +223,14 @@ struct CardView: View {
             }
             .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
         }
+        // Fixed, not a minimum: every card in a working lane is the same
+        // height, whether it carries three lines of note or none. The notes
+        // zone above takes up the slack (`maxHeight: .infinity`), so the
+        // footer stays pinned to the bottom edge either way.
         .frame(
             maxWidth: .infinity,
-            minHeight: Board.fullCardMinHeight,
+            minHeight: Board.fullCardHeight,
+            maxHeight: Board.fullCardHeight,
             alignment: .topLeading)
     }
 
@@ -316,7 +321,14 @@ struct CardView: View {
             }
         }
         .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // One height for every row in a storage lane. Intrinsic, a row with
+        // a date badge came out a point taller than one without, so Backlog
+        // and Erledigt never quite lined up with each other.
+        .frame(
+            maxWidth: .infinity,
+            minHeight: Board.compactCardHeight,
+            maxHeight: Board.compactCardHeight,
+            alignment: .leading)
     }
 
     /// Erledigt: the work is done — the name is the only thing left to say.
@@ -328,7 +340,12 @@ struct CardView: View {
             // a strike across the whole row would cross empty paper.
             .overlay(alignment: .leading) { strikeLine }
             .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
-            .frame(maxWidth: .infinity, alignment: .leading)
+            // Same row height as Backlog — see `compactBody`.
+            .frame(
+            maxWidth: .infinity,
+            minHeight: Board.compactCardHeight,
+            maxHeight: Board.compactCardHeight,
+            alignment: .leading)
     }
 
     /// The done title's strike, drawn by the board instead of by
