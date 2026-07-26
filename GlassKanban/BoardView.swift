@@ -104,6 +104,26 @@ struct BoardView: View {
             // an offer, not an instruction.
             Text("Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?")
         }
+        // Same shape as the limit question above, for the same reason: driven
+        // by the store, so the context menu and the VoiceOver action both
+        // raise it, and the safe answer is the prominent one — it carries
+        // Return and, through the cancel role, Escape. Deleting takes a
+        // deliberate click.
+        .alert(
+            store.pendingDeletion.map { "„\($0.title)“ löschen?" } ?? "",
+            isPresented: deletionBinding,
+            presenting: store.pendingDeletion
+        ) { deletion in
+            Button("Abbrechen", role: .cancel) {}
+                .keyboardShortcut(.defaultAction)
+            Button("Löschen", role: .destructive) {
+                store.deleteTicket(cardID: deletion.cardID, undoManager: undoManager)
+            }
+        } message: { _ in
+            // The whole reason this question exists, said plainly: undo is a
+            // net with a hole in it, and the hole is worth one sentence.
+            Text("⌘Z holt das Ticket zurück — Unteraufgaben und Anhänge aber nicht.")
+        }
         .overlay { editorOverlay }
         // Board-level for the same reason as the alert above: the failure
         // surfaces from `TicketEditSheet`'s own close, after that sheet is
@@ -195,6 +215,12 @@ struct BoardView: View {
         Binding(
             get: { store.pendingOverflow != nil },
             set: { if !$0 { store.pendingOverflow = nil } })
+    }
+
+    private var deletionBinding: Binding<Bool> {
+        Binding(
+            get: { store.pendingDeletion != nil },
+            set: { if !$0 { store.pendingDeletion = nil } })
     }
 
     private var saveFailureBinding: Binding<Bool> {

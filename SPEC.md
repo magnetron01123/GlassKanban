@@ -175,13 +175,23 @@ Erinnerung wieder, egal was schon in den Feldern stand — abgebrochen ist abgeb
 der Editor ohne jede Eingabe geschlossen, entfernt die App das Ticket ebenfalls
 rückstandslos; der ↗-Sprung nach Reminders zählt dabei als Behalten.
 
-**Löschen fragt nicht nach, sondern lässt sich rückgängig machen.** Jede Schreib-Aktion der
-App — Verschieben, Umbenennen, Anlegen, Löschen — registriert ihr Gegenteil beim
-Undo-Manager des Fensters und ist mit **⌘Z** widerrufbar, ⇧⌘Z stellt sie wieder her. Beim
-Wiederherstellen einer gelöschten Aufgabe legt die App eine neue Erinnerung mit demselben
-Inhalt an (Titel, Notizen, URL, Ort, Priorität, Datum, Wiederholung, Erinnerungen,
-Erledigt-Status samt ursprünglichem Erledigt-Datum) — EventKit kennt kein echtes
-Wiederherstellen, die Erinnerung bekommt also eine neue interne ID.
+**Löschen fragt nach.** Der Menüpunkt öffnet eine Rückfrage mit dem Namen des Tickets
+(„… löschen?"); „Abbrechen" ist die vorbelegte Antwort und liegt auf Return **und**
+Escape, „Löschen" braucht einen bewussten Klick. Dieselbe Rückfrage für jeden Weg ins
+Löschen, also auch für die VoiceOver-Aktion — sie hängt am Store, nicht an der Maus
+(gleiches Muster wie die WIP-Rückfrage). Undo und Redo fragen nicht: eine Entscheidung
+wiederholen ist keine neue Entscheidung.
+
+Bis Juli 2026 fragte die App nicht und verwies auf ⌘Z. Das Argument trug nicht, weil das
+Netz ein Loch hat: Beim Wiederherstellen legt die App eine **neue** Erinnerung mit
+demselben Inhalt an (Titel, Notizen, URL, Ort, Priorität, Datum, Wiederholung,
+Erinnerungen, Erledigt-Status samt ursprünglichem Erledigt-Datum) — EventKit kennt kein
+echtes Wiederherstellen. Was EventKit nicht herausgibt, kommt damit **nicht** zurück:
+**Unteraufgaben, Anhänge, Reminders-Tags und -Flags**. Genau das sagt die Rückfrage.
+
+Jede Schreib-Aktion der App — Verschieben, Umbenennen, Anlegen, Löschen — registriert ihr
+Gegenteil beim Undo-Manager des Fensters und ist mit **⌘Z** widerrufbar, ⇧⌘Z stellt sie
+wieder her. Die Erinnerung bekommt beim Wiederherstellen eine neue interne ID.
 
 ### Tastaturkürzel
 
@@ -227,12 +237,14 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   weiterhin, getragen von Größe und Gewicht (15 pt semibold über 12 pt regular) —
   genau dem Paar, das die beiden auch im Editor trennt.
 
-  „Keine Notizen", „Keine URL", „Kein Datum" tragen dieselbe Stufe wie der Inhalt, den
-  sie vertreten — eine eigene, gedämpftere Platzhalterfarbe war eine dritte Graustufe
-  zu viel für dieselbe Aussage, die das Wort „Keine …" schon trifft (Juli 2026, nach
-  Feedback korrigiert: erst als eigene tertiäre Stufe gebaut, dann wieder auf die
-  bestehenden zwei Stufen zurückgeführt). Ausnahme: System-Controls (Picker im Editor)
-  behalten ihre eigene Textfarbe
+  „Keine Notizen", „Keine URL", „Kein Datum" sind **sekundär** — ein Platzhalter ist
+  nicht, was das Ticket sagt, sondern die App, die sagt, dass da nichts ist. Das ist
+  die Regel, keine Ausnahme davon, und kostet keine dritte Graustufe. Zwei verworfene
+  Zwischenstände (Juli 2026): erst eine eigene tertiäre Stufe (eine Farbe zu viel),
+  dann primär wie der Inhalt — dabei war „Keine Notizen" im Editor nicht mehr von einer
+  echten Notiz zu unterscheiden und stand zwei Zeilen über „Dringlichkeit: Keine", das
+  ein echter Wert ist. Das Suchfeld dämpft seinen Platzhalter ohnehin.
+  Ausnahme: System-Controls (Picker im Editor) behalten ihre eigene Textfarbe
 
 - **Erledigt-Titel in voller (primärer) Textfarbe, nicht gedämpft** — der Durchstrich
   markiert bereits „fertig"; eine zusätzlich sekundäre Farbe wäre ein zweites Signal für

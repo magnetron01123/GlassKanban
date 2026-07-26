@@ -393,11 +393,15 @@ struct TicketEditSheet: View {
     /// typed, leaving a filled field with no label. This one carries the
     /// field's *state*, and the caption above it stands either way.
     ///
-    /// Same primary tier as the value it stands in for: a field's typed
-    /// content is primary here (see `BoardText`), and a dimmer placeholder
-    /// colour was one more shade for the editor to carry than the two ranks
-    /// — primary value, secondary caption — it otherwise keeps. The wording
-    /// alone says "empty"; the tier doesn't need to say it again.
+    /// Secondary, because a placeholder is not a value — it is the app
+    /// saying there isn't one, which is the second tier's whole job (see
+    /// `BoardText`). Set in primary it was indistinguishable from typed
+    /// text: "Keine Notizen" sat in the notes field in the same black as a
+    /// real note, two rows above "Dringlichkeit: Keine", which *is* a value.
+    /// Nothing on screen said which of the two was content. The platform
+    /// makes the same distinction — this window's own search field dims its
+    /// placeholder — and it costs no third shade to follow it.
+    ///
     /// Non-interactive, because it lies over the field it describes and a
     /// click on it belongs to that field.
     @ViewBuilder
@@ -405,6 +409,7 @@ struct TicketEditSheet: View {
         if isEmpty {
             Text(text)
                 .font(BoardText.editorBody)
+                .foregroundStyle(.secondary)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
@@ -499,7 +504,7 @@ struct TicketEditSheet: View {
                         } else {
                             // Same tier as the two empty fields above it —
                             // it says the same thing about the same card.
-                            Text("Kein Datum")
+                            Text("Kein Datum").foregroundStyle(.secondary)
                         }
                     }
                     .font(BoardText.editorBody)

@@ -109,10 +109,11 @@ struct CardView: View {
             }
             Divider()
             Button("Umbenennen") { beginRename() }
-            // The undo manager is what stands in for a confirmation here: the
-            // store registers the inverse write, so ⌘Z brings the card back.
+            // Asks first — see `RemindersStore.requestDelete`. ⌘Z brings
+            // the ticket back, but not its subtasks or attachments, and that
+            // gap has to be named before the deletion, not discovered after.
             Button("Löschen", role: .destructive) {
-                store.deleteTicket(cardID: card.id, undoManager: undoManager)
+                store.requestDelete(cardID: card.id)
             }
         }
         // No tooltip anywhere on a card — body, dwell label or repeat glyph.
@@ -137,7 +138,7 @@ struct CardView: View {
                 }
             }
             Button("Umbenennen") { beginRename() }
-            Button("Löschen") { store.deleteTicket(cardID: card.id, undoManager: undoManager) }
+            Button("Löschen") { store.requestDelete(cardID: card.id) }
         }
         // Losing focus commits, same as clicking away from a Finder rename —
         // Escape (`onExitCommand` on the field itself) is the only way out
@@ -229,21 +230,27 @@ struct CardView: View {
     /// is carried by size and weight instead — 15pt semibold title over
     /// 12pt regular note — which is what separates them in the editor too.
     ///
-    /// The placeholder shares that tier for the reason every empty value
-    /// does here: the words already say "empty", so the colour does not
-    /// have to say it again. Same font, same insets and the same expanding
-    /// frame as a real excerpt, so a card with a note and a card without
-    /// one keep identical geometry.
+    /// The placeholder is the one thing in this zone that is *not* what the
+    /// ticket says — it is the app describing an absence — so it takes the
+    /// second tier, exactly as the rule reads (see `BoardText`). That is not
+    /// a third shade: the board still has two, and this is the one the
+    /// footer facts already use. It was briefly primary, and on a board
+    /// where most tickets carry no note, four cards announcing "Keine
+    /// Notizen" in full black said nothing four times as loudly as the
+    /// tickets that had something to say. Same font, same insets and the
+    /// same expanding frame as a real excerpt, so a card with a note and a
+    /// card without one keep identical geometry.
     @ViewBuilder
     private var notesZone: some View {
         Group {
             if card.notesExcerpt.isEmpty {
                 Text("Keine Notizen")
+                    .foregroundStyle(.secondary)
             } else {
                 Text(card.notesExcerpt)
+                    .foregroundStyle(.primary)
             }
         }
-        .foregroundStyle(.primary)
         .font(BoardText.body)
         .lineLimit(3)
         .multilineTextAlignment(.leading)

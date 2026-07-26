@@ -301,11 +301,17 @@ enum Board {
 /// leads, carried by size and weight (15pt semibold over 12pt regular), the
 /// same pair that separates them in the editor.
 ///
-/// "Keine Notizen", "Keine URL", "Kein Datum" carry the tier of the content
-/// they stand in for rather than a dedicated placeholder shade — the words
-/// already say "empty"; a third rank said it again. A one-rank board would
-/// have no way to separate a ticket from what annotates it; a third stopped
-/// reading as hierarchy at all — see the list name in `CardView.fullBody`.
+/// "Keine Notizen", "Keine URL", "Kein Datum" are secondary, and that is the
+/// rule rather than an exception to it: a placeholder is not what the ticket
+/// says, it is the app saying there is nothing — annotation, like a caption.
+/// They were briefly primary, on the argument that the words already say
+/// "empty"; on screen that made "Keine Notizen" indistinguishable from a real
+/// note, and put "Kein Datum" in the same black as a date. There is still no
+/// third shade — this is the second one, doing what it is for.
+///
+/// A one-rank board would have no way to separate a ticket from what
+/// annotates it; a third stopped reading as hierarchy at all — see the list
+/// name in `CardView.fullBody`.
 enum BoardText {
     // One size for every card title, in two weights. 15 rather than the
     // original 14 for glanceability on a board that is looked at from across

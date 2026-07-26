@@ -691,10 +691,36 @@ final class RemindersStore: ObservableObject {
         let alarms: [EKAlarm]?
     }
 
-    /// Deletes a ticket without asking, and registers the undo that puts it
-    /// back. A confirmation sheet would tax every deletion to guard against
-    /// the rare wrong one; ⌘Z charges only the person who actually made the
-    /// mistake, and is what a Mac user reaches for anyway.
+    /// A ticket the user asked to delete, waiting for the answer.
+    struct PendingDeletion: Identifiable {
+        let cardID: String
+        let title: String
+        var id: String { cardID }
+    }
+
+    /// Set by every user-facing route into deleting — context menu and the
+    /// VoiceOver action alike, the same way `pendingOverflow` catches every
+    /// route into a move. A question only the mouse asks is not a question.
+    @Published var pendingDeletion: PendingDeletion?
+
+    /// Asks first. Undo and redo go straight to `deleteTicket`, because
+    /// replaying a decision is not making one.
+    ///
+    /// Deleting used to happen on the spot, on the argument that ⌘Z charges
+    /// only the person who made the mistake. That argument rested on undo
+    /// being able to put the ticket back — and it cannot put all of it back:
+    /// `restoreTicket` creates a *new* reminder from what EventKit exposes,
+    /// so subtasks and attachments do not survive the round trip. A safety
+    /// net with a hole in it has to be announced before the jump, not after.
+    func requestDelete(cardID: String) {
+        guard let card = cards.first(where: { $0.id == cardID }) else { return }
+        pendingDeletion = PendingDeletion(
+            cardID: cardID,
+            title: card.title.isEmpty ? "Ohne Titel" : card.title)
+    }
+
+    /// Deletes a ticket and registers the undo that puts it back. The
+    /// question is asked by `requestDelete`; this is the write itself.
     func deleteTicket(cardID: String, undoManager: UndoManager? = nil) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         let snapshot = DeletedTicket(

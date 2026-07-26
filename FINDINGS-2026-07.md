@@ -27,15 +27,15 @@ A1 steht vorn, weil es als einziger Befund Nutzertext ohne Zutun und ohne Undo z
 | ~~V0~~ | ~~Escape schließt den Editor nicht~~ — **Fehlalarm**, siehe unten | — | — | widerlegt |
 | ~~A1~~ | ~~Hashtag ohne linke Wortgrenze zerstört Nutzertext~~ — **behoben** | `StatusTagger:52` | ~~Kritisch~~ | erledigt |
 | ~~A2~~ | ~~Editor schreibt gegen veralteten Stand~~ — **behoben** | `RemindersStore:833` | ~~Kritisch~~ | erledigt |
-| V0c | Platzhalter im Editor nicht von Inhalt zu unterscheiden | `TicketEditSheet:388` | Hoch | live |
-| A3 | Undo nach Löschen verliert Unteraufgaben und Anhänge | `RemindersStore:699` | Hoch | gelesen |
+| ~~V0c~~ | ~~Platzhalter nicht von Inhalt zu unterscheiden~~ — **behoben** | `TicketEditSheet:396` | ~~Hoch~~ | erledigt |
+| ~~A3~~ | ~~Undo nach Löschen verliert Unteraufgaben/Anhänge~~ — **Rückfrage eingebaut** | `BoardView:107` | ~~Hoch~~ | erledigt |
 | ~~A4~~ | ~~Edit geht stumm verloren, wenn Karte aus dem Cache fällt~~ — **behoben** | `RemindersStore:846` | ~~Hoch~~ | erledigt |
 | ~~B1~~ | ~~Zeitzone der Fälligkeit geht verloren~~ — **behoben** | `RemindersStore:897` | ~~Hoch~~ | erledigt |
 | ~~B2~~ | ~~URL-Feld verstümmelt Fließtext~~ — **behoben** | `RemindersStore:829` | ~~Hoch~~ | erledigt |
 | ~~B3~~ | ~~Entzogene Berechtigung wird nie bemerkt~~ — **behoben** | `RemindersStore:272` | ~~Hoch~~ | erledigt |
 | ~~C1~~ | ~~Dunkelmodus + „Transparenz reduzieren" kippt die Tiefenordnung~~ — **behoben** | `DesignSystem:158` | ~~Hoch~~ | erledigt |
 | V0b | Editor ist nicht modal — Statistik öffnet darüber | `BoardView:156` | Mittel | live |
-| V1 | „Keine Notizen" so laut wie eine echte Notiz — **Entscheidung offen** | `CardView:220` | Mittel | gemessen |
+| ~~V1~~ | ~~„Keine Notizen" so laut wie eine echte Notiz~~ — **behoben** (Platzhalter sekundär) | `CardView:225` | ~~Mittel~~ | erledigt |
 | ~~A5~~ | ~~Leerzeilen-Notizen werden dauerhaft geschrieben~~ — **behoben** | `TicketEditSheet:648` | ~~Mittel~~ | erledigt |
 | ~~B4~~ | ~~Alle Listen abgewählt → „Nichts zu tun"~~ — **behoben** | `Models:288` | ~~Mittel~~ | erledigt |
 | ~~B5~~ | ~~Schreibfehler sind bis auf einen Pfad stumm~~ — **behoben** | `RemindersStore:92` | ~~Mittel~~ | erledigt |
