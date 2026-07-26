@@ -250,6 +250,25 @@ enum Board {
     /// spring, which left every move feeling a beat behind the drop.
     static let cardMoveAnimation: Animation = .spring(duration: 0.22, bounce: 0.18)
 
+    /// Unfolding a lane, and folding it back.
+    ///
+    /// The largest layout change the board can make — eleven or more rows
+    /// appearing at once — and for a long time it also had the *fastest*
+    /// curve on the board: a 0.2s ease-out, shorter than a single card
+    /// changing lanes, with every revealed card playing its own arrival
+    /// scale-in on top. Fifteen tickets popping in together inside a fifth
+    /// of a second reads as the lane being thrown open, which is a lot of
+    /// noise for "here is what was already there".
+    ///
+    /// So: slower than a card's move rather than quicker, and a spring with
+    /// no bounce at all. The bigger the change, the more time the eye needs
+    /// to follow it — and nothing here has *happened*, so nothing should
+    /// snap. Motion is spent on events (see `settleDelay`); a fold is a
+    /// disclosure, and a disclosure unrolls.
+    ///
+    /// The revealed cards drop their scale-in for the same reason — see
+    /// `ColumnView.isFolding`.
+    static let foldAnimation: Animation = .spring(duration: 0.36, bounce: 0)
     /// How long a just-arrived card waits before its settle plays — the
     /// transit above plus a small margin. The board's feedback runs on two
     /// clocks: the *hand's* (haptics and the chime, immediate at the drop —

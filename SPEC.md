@@ -175,6 +175,20 @@ Erinnerung wieder, egal was schon in den Feldern stand — abgebrochen ist abgeb
 der Editor ohne jede Eingabe geschlossen, entfernt die App das Ticket ebenfalls
 rückstandslos; der ↗-Sprung nach Reminders zählt dabei als Behalten.
 
+**Das Auf- und Zuklappen einer Spalte ist die langsamste Bewegung der App.** Es ist die
+größte Layout-Änderung, die das Board machen kann — elf oder mehr Zeilen auf einmal — und
+lief bis Juli 2026 auf der *schnellsten* Kurve: 0,2 s Ease-out, kürzer als ein einzelner
+Kartenwechsel, und jede aufgedeckte Karte spielte zusätzlich ihre Ankunfts-Animation
+(Scale-in). Fünfzehn Tickets, die in einer Fünftelsekunde gleichzeitig aufpoppen, lesen
+sich als aufgerissene Spalte — viel Lärm für „hier ist, was ohnehin schon da war".
+
+Jetzt: eine Feder ohne jeden Nachschwung über 0,36 s (`Board.foldAnimation`), und die
+aufgedeckten Karten blenden nur ein, statt anzukommen. Je größer die Änderung, desto mehr
+Zeit braucht das Auge — und es ist nichts *passiert*, also darf nichts schnappen. Bewegung
+gibt die App für Ereignisse aus (siehe „Zwei Uhren"); eine Falte ist kein Ereignis, sondern
+eine Offenlegung, und die rollt sich auf. Gilt für beide faltenden Spalten, Backlog wie
+„Erledigt". Unter „Bewegung reduzieren" schaltet sie sich ganz ab.
+
 **Wiederkehrende Aufgaben lassen sich nicht aus „Erledigt" zurückholen, solange die
 Serie weiterläuft.** EventKit löst eine abgehakte Ausführung aus ihrer Serie und legt
 die nächste sofort als eigene offene Erinnerung an. `isCompleted` wieder zu löschen

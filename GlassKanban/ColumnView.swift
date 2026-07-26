@@ -11,6 +11,15 @@ struct ColumnView: View {
     @Environment(\.undoManager) private var undoManager
     @State private var isTargeted = false
     @State private var expanded = false
+    /// True for the length of a fold, so the cards it reveals fade in
+    /// instead of playing the arrival scale-in.
+    ///
+    /// A card that grows the last few percent into place is saying *it just
+    /// got here*. The cards a fold uncovers have been in this lane all
+    /// along — the fold only stopped drawing them. Fifteen of them claiming
+    /// an arrival at once was the single loudest moment on the board, and
+    /// it was announcing nothing.
+    @State private var isFolding = false
     @State private var moreHovered = false
     @State private var addHovered = false
     /// Height of a real card in this lane, so the drop placeholder can match
@@ -160,7 +169,7 @@ struct ColumnView: View {
                             // even pull in opposite directions and partly
                             // cancel.
                             .transition(.asymmetric(
-                                insertion: status == .done || status == .inProgress
+                                insertion: isFolding || status == .done || status == .inProgress
                                     ? .opacity
                                     : .scale(scale: 0.93).combined(with: .opacity),
                                 removal: .opacity))
@@ -301,7 +310,7 @@ struct ColumnView: View {
                       laneCards.contains(where: { $0.id == closed }),
                       !Self.restingCut(laneCards, for: status).contains(where: { $0.id == closed })
                 else { return }
-                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded = true }
+                fold { expanded = true }
             }
         }
         // Without this a card announces its title and nothing about where it
@@ -513,6 +522,31 @@ struct ColumnView: View {
     /// a name and made every other field a second trip. A creation abandoned
     /// without any input is removed again on close (see
     /// `RemindersStore.finalizeNewTicket`) — no untitled ghosts.
+    /// One fold, one motion — used by the button and by the keep-in-sight
+    /// rule after an editor closes, so a lane never opens two different ways.
+    private func toggleFold() {
+        fold { expanded.toggle() }
+    }
+
+    /// Runs a fold: marks it as one for exactly as long as it lasts, so the
+    /// cards it uncovers fade instead of announcing an arrival.
+    ///
+    /// The flag is cleared by the animation's own completion rather than by
+    /// a timer set to roughly the same length — a duration written down
+    /// twice is a duration that drifts apart.
+    private func fold(_ change: @escaping () -> Void) {
+        guard !reduceMotion else {
+            change()
+            return
+        }
+        isFolding = true
+        withAnimation(Board.foldAnimation, completionCriteria: .removed) {
+            change()
+        } completion: {
+            isFolding = false
+        }
+    }
+
     /// The board's one creating gesture, shared by the "+" and by ⌘N.
     private func createTicket() {
         guard let id = store.createTicketForEditing(undoManager: undoManager) else { return }
@@ -589,8 +623,9 @@ struct ColumnView: View {
         Button {
             // Folding 15+ cards in or out at once is the largest layout
             // change the board can make, and the one most worth gating on
-            // Reduce Motion.
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) { expanded.toggle() }
+            // Reduce Motion. `Board.foldAnimation` is deliberately the
+            // board's slowest curve — see there.
+            toggleFold()
         } label: {
             HStack(spacing: 5) {
                 Text(moreLabel)
