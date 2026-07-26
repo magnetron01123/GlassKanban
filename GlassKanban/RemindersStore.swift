@@ -621,7 +621,7 @@ final class RemindersStore: ObservableObject {
     /// silently, no undo entry: there is nothing to restore. `keep` is passed
     /// when the close is a jump to Reminders, where the user is clearly about
     /// to fill the ticket in over there.
-    func finalizeNewTicket(cardID: String, keep: Bool = false) {
+    func finalizeNewTicket(cardID: String, keep: Bool = false, undoManager: UndoManager? = nil) {
         guard newlyCreatedCardID == cardID else { return }
         newlyCreatedCardID = nil
         guard !keep, let ticket = loadEditableTicket(cardID: cardID) else {
@@ -637,7 +637,7 @@ final class RemindersStore: ObservableObject {
             keepNewTicketInSight(cardID: cardID)
             return
         }
-        removeNewTicket(cardID: cardID)
+        removeNewTicket(cardID: cardID, undoManager: undoManager)
     }
 
     /// A ticket someone just made has to be on the board they made it on.
@@ -666,18 +666,24 @@ final class RemindersStore: ObservableObject {
     /// placeholder creation left behind — it goes, regardless of what stood in
     /// the fields. For every other card this does nothing: discarding is
     /// simply not saving, and there is nothing to undo.
-    func cancelNewTicket(cardID: String) {
+    func cancelNewTicket(cardID: String, undoManager: UndoManager? = nil) {
         guard newlyCreatedCardID == cardID else { return }
         newlyCreatedCardID = nil
-        removeNewTicket(cardID: cardID)
+        removeNewTicket(cardID: cardID, undoManager: undoManager)
     }
 
     /// Takes back a creation, silently and with no undo entry — there is
     /// nothing to restore that the user ever put in.
-    private func removeNewTicket(cardID: String) {
+    private func removeNewTicket(cardID: String, undoManager: UndoManager? = nil) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         try? eventStore.remove(reminder, commit: true)
         cards.removeAll { $0.id == cardID }
+        // The "Ticket anlegen" entry the "+" registered describes a creation
+        // that has just been taken back, so its undo would find nothing and
+        // return silently — spending a ⌘Z that then failed to reach the edit
+        // the user actually meant to undo. Removing the reminder is not a
+        // change to undo; it is the change never having happened.
+        undoManager?.removeAllActions(withTarget: self)
         scheduleRefresh()
     }
 
@@ -749,7 +755,11 @@ final class RemindersStore: ObservableObject {
     func deleteTicket(cardID: String, undoManager: UndoManager? = nil) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         let snapshot = DeletedTicket(
-            calendarID: reminder.calendar.calendarIdentifier,
+            // `EKCalendarItem.calendar` is null_unspecified — it arrives as an
+            // implicitly unwrapped optional and is nil for an item that has
+            // not been filed yet. Every other read of it in this file guards;
+            // this one would have trapped.
+            calendarID: reminder.calendar?.calendarIdentifier ?? "",
             title: reminder.title,
             notes: reminder.notes,
             url: reminder.url,

@@ -13,6 +13,13 @@ final class AppearanceDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+extension Notification.Name {
+    /// Raised by the "Finden …" menu item so the board can open its popover.
+    /// The popover's presentation lives in `BoardView`'s own state; a menu
+    /// command has no route into that except through the app's own bus.
+    static let glassKanbanShowFind = Notification.Name("GlassKanbanShowFind")
+}
+
 @main
 struct GlassKanbanApp: App {
     @StateObject private var store = RemindersStore()
@@ -27,6 +34,17 @@ struct GlassKanbanApp: App {
         .defaultSize(width: 1280, height: 760)
         .commands {
             CommandMenu("Board") {
+                // ⌘F lived only on a toolbar button, so the one shortcut a
+                // Mac user looks for by name was findable only by hovering.
+                // The button keeps its own `.keyboardShortcut`; this entry is
+                // where the convention says to look for it.
+                Button("Finden …") {
+                    NotificationCenter.default.post(name: .glassKanbanShowFind, object: nil)
+                }
+                .keyboardShortcut("f")
+
+                Divider()
+
                 Button("In Erinnerungen öffnen") {
                     store.openRemindersApp()
                 }

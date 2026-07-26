@@ -125,6 +125,10 @@ struct BoardView: View {
             Text("⌘Z holt das Ticket zurück — Unteraufgaben und Anhänge aber nicht.")
         }
         .overlay { editorOverlay }
+        // The "Finden …" menu item cannot reach this view's state directly.
+        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanShowFind)) { _ in
+            showFind = true
+        }
         // Board-level for the same reason as the alert above: the failure
         // surfaces from `TicketEditSheet`'s own close, after that sheet is
         // already gone, so nowhere on the sheet itself could show it.

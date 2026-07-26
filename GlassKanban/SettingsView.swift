@@ -94,6 +94,8 @@ struct GeneralSettingsView: View {
     /// service-management daemon, measured at 2–3 ms — cheap enough to do
     /// once here, and it is refreshed on focus for changes made elsewhere.
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    /// Why the switch sprang back, when it did.
+    @State private var launchAtLoginError: String?
     /// Distinguishes the user flipping the switch from us loading its state,
     /// so syncing never re-registers the login item as a side effect.
     @State private var isSyncingLaunchAtLogin = false
@@ -121,9 +123,24 @@ struct GeneralSettingsView: View {
                             try SMAppService.mainApp.unregister()
                         }
                     } catch {
-                        // Revert the toggle if the system rejected the change.
+                        // Revert the toggle if the system rejected the change —
+                        // and say so. Silently springing back looks like a
+                        // broken switch; the usual cause is macOS blocking the
+                        // registration in "Anmeldeobjekte", which the user can
+                        // only act on if they are told.
+                        launchAtLoginError = error.localizedDescription
                         syncLaunchAtLogin()
                     }
+                }
+                .alert(
+                    "Beim Anmelden starten nicht möglich",
+                    isPresented: Binding(
+                        get: { launchAtLoginError != nil },
+                        set: { if !$0 { launchAtLoginError = nil } })
+                ) {
+                    Button("OK") {}
+                } message: {
+                    Text(launchAtLoginError ?? "")
                 }
 
             // The one sound the app makes (see `MoveFeedback`). It ships on —

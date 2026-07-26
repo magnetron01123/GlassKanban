@@ -356,9 +356,15 @@ struct StatsPopover: View {
         return "\(wip) von \(wipLimit)"
     }
 
+    /// Both halves of the number, in that order. With a limit set, this used
+    /// to drop the first half entirely and explain only the limit — so
+    /// VoiceOver read "In Bearbeitung, 3 von 5" and then, as the value,
+    /// "Dein selbst gesetztes Limit": the figure it was announcing went
+    /// unexplained, and only the ceiling got a sentence.
     private var wipHelp: String {
-        guard wipLimit != nil else { return "Aufgaben, die gerade in Bearbeitung sind." }
-        return "Dein selbst gesetztes Limit für „In Bearbeitung“."
+        let load = "\(GermanPlural.tasks(wip)) gerade in Bearbeitung."
+        guard let wipLimit else { return load }
+        return load + " Dein selbst gesetztes Limit: \(wipLimit)."
     }
 
     // MARK: - Rückblick
@@ -441,15 +447,15 @@ struct StatsPopover: View {
                     if let since = historySince {
                         Text(since)
                             .font(BoardText.meta)
-                            // Tertiary on glass is already near the contrast
-                            // floor; under Increase Contrast it has to step
-                            // up, or the one line that says which period
-                            // these numbers cover is the first thing to
-                            // disappear for the people who asked for more
-                            // contrast.
-                            .foregroundStyle(contrast == .increased
-                                ? AnyShapeStyle(.secondary)
-                                : AnyShapeStyle(.tertiary))
+                            // Secondary, like every other caption in this
+                            // window. It was tertiary with a step up under
+                            // Increase Contrast — which conceded the point:
+                            // on glass that shade sat near the contrast
+                            // floor, and the one line saying which period
+                            // these numbers cover was the first to vanish.
+                            // The board has two text tiers (see `BoardText`);
+                            // this was the only place with a third.
+                            .foregroundStyle(.secondary)
                             .padding(.leading, 12)
                     }
                 }
@@ -643,6 +649,9 @@ struct StatsPopover: View {
     /// "3 Tage" in the next for the same kind of figure.
     private static func daysEstimate(_ days: Double) -> String {
         let rounded = (days * 10).rounded() / 10
+        // Work captured and finished the same day rounds to zero, and
+        // "0 Tage" reads as a missing measurement rather than a fast one.
+        guard rounded > 0 else { return "Am selben Tag" }
         let wantsFraction = days < 10 && rounded != rounded.rounded()
         let formatted = rounded.formatted(.number.precision(.fractionLength(wantsFraction ? 1 : 0)))
         return "\(formatted) \(rounded == 1 ? "Tag" : "Tage")"

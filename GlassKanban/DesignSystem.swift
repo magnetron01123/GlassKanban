@@ -159,7 +159,14 @@ enum Board {
         scheme == .dark ? Color(white: 0.32) : .white
     }
 
-    static let columnInnerShadow = Color.black.opacity(0.10)
+    /// The lane's inner shadow, the last of the well tokens to still be one
+    /// fixed value. `columnFill`, `wellFill` and `editableHoverFill` all
+    /// branch by scheme; black at 10% over the dark lane's own 25% black was
+    /// effectively invisible, so in dark mode the recess was carried by its
+    /// contour alone.
+    static func columnInnerShadow(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.black.opacity(0.35) : Color.black.opacity(0.10)
+    }
 
     /// Grouped content inside a popover — the stats window's wells.
     ///

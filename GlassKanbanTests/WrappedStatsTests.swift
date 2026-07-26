@@ -323,3 +323,29 @@ final class WrappedStatsTests: XCTestCase {
         XCTAssertEqual(days ?? 0, 6.0, accuracy: 0.0001)
     }
 }
+
+// MARK: - Durchsatz auf jungem Board
+
+extension WrappedStatsTests {
+    /// A board only a few days old divided by the nominal 30 regardless, so it
+    /// reported a fraction of its real pace — and the forecast that feeds off
+    /// it stretched by the same factor.
+    func testThroughputUsesObservedDaysOnAYoungBoard() {
+        let today = date(2026, 7, 26)
+        // Six days of history, five completions on each.
+        let records = (0..<6).flatMap { offset -> [CompletionRecord] in
+            let day = calendar.date(byAdding: .day, value: -offset, to: today)!
+            return (0..<5).map { _ in record(day) }
+        }
+        let stats = WrappedStats.stats(records: records, calendar: calendar, now: today)
+        XCTAssertEqual(stats.throughputPerDay, 5.0, accuracy: 0.001)
+    }
+
+    /// Once the history covers the whole window, nothing changes.
+    func testThroughputUsesFullWindowOnceHistoryIsLongEnough() {
+        let today = date(2026, 7, 26)
+        let records = dailyRecords(count: WrappedStats.trendWindowDays, now: today)
+        let stats = WrappedStats.stats(records: records, calendar: calendar, now: today)
+        XCTAssertEqual(stats.throughputPerDay, 1.0, accuracy: 0.001)
+    }
+}

@@ -152,9 +152,23 @@ struct WrappedStats: Equatable {
             $0.value != $1.value ? $0.value < $1.value : $0.key > $1.key
         }
 
-        var byList: [String: (count: Int, color: Color)] = [:]
+        // The colour comes from the record that sorts first by date, not from
+        // whichever EventKit happened to hand over first: two lists with the
+        // same name in different accounts could otherwise swap the dot's
+        // colour between refreshes, in a block whose comment promises every
+        // tie resolves deterministically.
+        var byList: [String: (count: Int, color: Color, firstSeen: Date)] = [:]
         for record in records {
-            byList[record.listName, default: (0, record.listColor)].count += 1
+            if var existing = byList[record.listName] {
+                existing.count += 1
+                if record.date < existing.firstSeen {
+                    existing.color = record.listColor
+                    existing.firstSeen = record.date
+                }
+                byList[record.listName] = existing
+            } else {
+                byList[record.listName] = (1, record.listColor, record.date)
+            }
         }
         let topList = byList.min {
             $0.value.count != $1.value.count
@@ -164,11 +178,23 @@ struct WrappedStats: Equatable {
 
         let ranked = records.count >= minSampleForRankings
 
+        // Days the board could actually have been observed, not the nominal
+        // window. Dividing by 30 regardless meant a board a week old reported
+        // a fifth of its real pace: 30 completions in six days came out as
+        // 1,0 pro Tag instead of 5. That figure feeds "Pro Woche" and the
+        // Little's-Law forecast, so a young board was told it was slow *and*
+        // that its current load would take five times as long as it will.
+        let observedDays = dates.min().map { start in
+            let elapsed = calendar.dateComponents(
+                [.day], from: calendar.startOfDay(for: start), to: today).day ?? 0
+            return min(trendWindowDays, max(1, elapsed + 1))
+        } ?? trendWindowDays
+
         return WrappedStats(
             yearCount: yearCount,
             totalCompleted: records.count,
             historyStart: dates.min(),
-            throughputPerDay: Double(sampleCount) / Double(trendWindowDays),
+            throughputPerDay: Double(sampleCount) / Double(observedDays),
             throughputSampleCount: sampleCount,
             consistencyActiveDays: last30.filter(\.didComplete).count,
             last30: last30,

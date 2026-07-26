@@ -139,7 +139,7 @@ struct TicketEditSheet: View {
             // still local state at this point — discarding is literally not
             // saving, which is why there is nothing else to undo here.
             if isCancelled {
-                store.cancelNewTicket(cardID: card.id)
+                store.cancelNewTicket(cardID: card.id, undoManager: undoManager)
                 return
             }
             save()
@@ -150,7 +150,7 @@ struct TicketEditSheet: View {
             // abandoned creation — the store removes it again so no untitled
             // ghost stays behind. Jumping to Reminders counts as keeping it:
             // the user is clearly on the way to fill it in over there.
-            store.finalizeNewTicket(cardID: card.id, keep: opensRemindersOnClose)
+            store.finalizeNewTicket(cardID: card.id, keep: opensRemindersOnClose, undoManager: undoManager)
         }
     }
 
@@ -496,10 +496,19 @@ struct TicketEditSheet: View {
         Button {
             isDuePopoverPresented = true
         } label: {
-            Text(Self.dueWidthTemplate)
-                .monospacedDigit()
-                .font(BoardText.editorBody)
-                .hidden()
+            // A chevron, like the two menu rows above it. The three facts
+            // rows read as one family only if they open the same way — this
+            // one was a bare push button, so the pair with a ⌄ looked like
+            // controls and this one like a label that happened to be raised.
+            HStack(spacing: 4) {
+                Text(Self.dueWidthTemplate)
+                    .monospacedDigit()
+                    .font(BoardText.editorBody)
+                    .hidden()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(BoardText.glyph)
+                    .foregroundStyle(.secondary)
+            }
                 .overlay(alignment: .trailing) {
                     Group {
                         if let dueDate {
@@ -528,10 +537,28 @@ struct TicketEditSheet: View {
 
     /// Picking a day in the calendar is what sets the date — opening the
     /// popover on an undated card must not, or merely looking would date it.
+    /// Reads midnight for an undated card, but a *working* hour once a time
+    /// is actually switched on. Switching "Uhrzeit" on used to leave the
+    /// picker at 00:00, so a reminder that had been all-day quietly became
+    /// one due at midnight — and Reminders duly notified at midnight.
     private var dueBinding: Binding<Date> {
         Binding(
             get: { dueDate ?? Foundation.Calendar.current.startOfDay(for: .now) },
             set: { dueDate = $0 })
+    }
+
+    /// The hour a date gets when a time is switched on for the first time.
+    /// Nine in the morning is what Reminders itself defaults to, and it is a
+    /// time someone might have meant.
+    private static let defaultDueHour = 9
+
+    private func dueTimeSwitchedOn() {
+        let calendar = Foundation.Calendar.current
+        let base = dueDate ?? calendar.startOfDay(for: .now)
+        guard calendar.component(.hour, from: base) == 0,
+              calendar.component(.minute, from: base) == 0 else { return }
+        dueDate = calendar.date(
+            bySettingHour: Self.defaultDueHour, minute: 0, second: 0, of: base) ?? base
     }
 
     private var showsTimePicker: Bool { hasDueTime && dueDate != nil }
@@ -548,6 +575,9 @@ struct TicketEditSheet: View {
             HStack {
                 Toggle("Uhrzeit", isOn: $hasDueTime)
                     .disabled(dueDate == nil)
+                    .onChange(of: hasDueTime) { _, isOn in
+                        if isOn { dueTimeSwitchedOn() }
+                    }
                 Spacer(minLength: 8)
                 // Always laid out, only sometimes visible. Inserting the time
                 // field when the switch went on resized the popover under the

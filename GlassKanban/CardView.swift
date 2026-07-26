@@ -123,22 +123,33 @@ struct CardView: View {
         // Tooltips belong to the chrome (lane header, "+" button), where they
         // explain rules. Reintroduced once by a merge, removed again — check
         // BACKLOG.md before touching this.
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(accessibilityLabel)
+        // While renaming, the card stops being one combined button and lets
+        // the text field speak for itself. Combined, VoiceOver announced the
+        // *old* title and offered "Bearbeiten" — the field the cursor was
+        // actually sitting in, and everything typed into it, did not exist as
+        // far as the screen reader was concerned.
+        .accessibilityElement(children: isRenaming ? .contain : .combine)
+        .accessibilityAddTraits(isRenaming ? [] : .isButton)
+        .accessibilityLabel(isRenaming ? "" : accessibilityLabel)
         // Still spoken, though no longer drawn: VoiceOver has no other route
-        // to a compact row's notes preview.
-        .accessibilityHint(helpText)
-        .accessibilityAction(named: "Bearbeiten") { beginEdit() }
-        .accessibilityAction(named: "In Erinnerungen öffnen") { openInReminders() }
+        // to a card's notes.
+        .accessibilityHint(isRenaming ? "" : helpText)
         .accessibilityActions {
-            ForEach(moveTargets) { target in
-                Button("Verschieben nach \(target.displayName)") {
-                    store.move(cardID: card.id, to: target, undoManager: undoManager)
-                }
+            if !isRenaming {
+                Button("Bearbeiten") { beginEdit() }
+                Button("In Erinnerungen öffnen") { openInReminders() }
             }
-            Button("Umbenennen") { beginRename() }
-            Button("Löschen") { store.requestDelete(cardID: card.id) }
+        }
+        .accessibilityActions {
+            if !isRenaming {
+                ForEach(moveTargets) { target in
+                    Button("Verschieben nach \(target.displayName)") {
+                        store.move(cardID: card.id, to: target, undoManager: undoManager)
+                    }
+                }
+                Button("Umbenennen") { beginRename() }
+                Button("Löschen") { store.requestDelete(cardID: card.id) }
+            }
         }
         // Losing focus commits, same as clicking away from a Finder rename —
         // Escape (`onExitCommand` on the field itself) is the only way out
@@ -370,6 +381,7 @@ struct CardView: View {
             TextField("Titel", text: $renameText)
                 .font(font)
                 .textFieldStyle(.plain)
+                .accessibilityLabel("Titel")
                 .focused($isRenameFieldFocused)
                 .onAppear { isRenameFieldFocused = true }
                 .onSubmit { commitRename() }
@@ -397,14 +409,26 @@ struct CardView: View {
     /// subject and the rest as its qualifiers. Joined with "·" they were one
     /// run-on that wrapped mid-phrase and threw the note, the list and the
     /// gesture hint into a single weight.
+    ///
+    /// The list name is not repeated here: `accessibilityLabel` already says
+    /// it, and VoiceOver reads label and hint back to back, so every card was
+    /// announcing its list twice.
     private var helpText: String {
         var lines: [String] = []
-        if density.isSingleLine && !card.notesPreview.isEmpty {
-            lines.append(card.notesPreview)
+        if !noteForVoiceOver.isEmpty {
+            lines.append(noteForVoiceOver)
         }
-        lines.append(card.listName)
         lines.append("Klick öffnet Bearbeiten")
         return lines.joined(separator: "\n")
+    }
+
+    /// The note as spoken. The hint used to carry it for single-line rows
+    /// only — on the very cards where the excerpt is *drawn*, three lines of
+    /// it, VoiceOver said nothing about it at all: the explicit
+    /// `accessibilityLabel` replaces what `children: .combine` would have
+    /// picked up, and it never included the note.
+    private var noteForVoiceOver: String {
+        density.isSingleLine ? card.notesPreview : card.notesExcerpt
     }
 
     private var displayTitle: String {

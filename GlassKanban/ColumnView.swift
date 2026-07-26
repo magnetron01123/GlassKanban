@@ -47,6 +47,22 @@ struct ColumnView: View {
 
     private var displayedCards: [KanbanCard] { expanded ? cards : restingCards }
 
+    /// Whether this lane has more cards than its resting cut shows — i.e.
+    /// whether there is a fold at all. Once there is not, `expanded` has
+    /// nothing left to mean and is dropped (see `onChange` below), so a lane
+    /// opened this morning does not stay open for the rest of the session
+    /// and quietly swallow the fold when one would form again.
+    private var hasFold: Bool { cards.count > restingCards.count }
+
+    /// True when the lane's content can outgrow its viewport. Used by the
+    /// clip exemption below, which is only safe while nothing can scroll.
+    private var canScroll: Bool { displayedCards.count > Self.clipSafeCardCount }
+
+    /// Above this many cards a lane is assumed to scroll at any usable window
+    /// size. Deliberately conservative: guessing too low only costs the pull
+    /// shake its headroom in a lane that is already crowded.
+    private static let clipSafeCardCount = 3
+
     /// How many cards the resting cut folds away right now — the number the
     /// footer offers to bring back, and the reason the footer exists at all.
     private var foldedCount: Int { cards.count - restingCards.count }
@@ -190,7 +206,14 @@ struct ColumnView: View {
             // clipping would let scrolled-away cards peek out above the
             // viewport, and no other lane's settle ever leaves its row (the
             // pen stroke stays inside the card).
-            .scrollClipDisabled(status == .inProgress)
+            // Only while the lane cannot scroll. The headroom exists for the
+            // pull shake, which lifts the top card a few points past its row
+            // — but unclipped, a lane with more cards than fit also lets the
+            // ones scrolled away draw over the header and its count. That is
+            // exactly the reason the other lanes keep their clip, and "In
+            // Bearbeitung" scrolls as soon as its soft limit is passed
+            // ("Passt schon").
+            .scrollClipDisabled(status == .inProgress && !canScroll)
             .mask {
                 scrollFade.padding(
                     status == .inProgress
@@ -213,7 +236,7 @@ struct ColumnView: View {
         .onTapGesture {
             store.activeEdit = nil
         }
-        .animation(Board.dropTargetAnimation, value: showsDropFeedback)
+        .animation(reduceMotion ? nil : Board.dropTargetAnimation, value: showsDropFeedback)
         .dropDestination(for: String.self) { ids, _ in
             store.endDrag()
             guard let id = ids.first else { return false }
@@ -255,6 +278,12 @@ struct ColumnView: View {
         // the lane and unfold for a card about to vanish. It also reads the
         // store afresh instead of this view's captured inputs, which are a
         // render old by then.
+        // Once there is nothing folded away, "aufgeklappt" has no meaning
+        // left. Without this it survived the rest of the session and ate the
+        // next fold that would have formed.
+        .onChange(of: hasFold) { _, stillHasFold in
+            if !stillHasFold { expanded = false }
+        }
         .onChange(of: store.editingCardID) { previous, current in
             guard current == nil, let closed = previous,
                   status == .backlog || status == .done else { return }
@@ -316,7 +345,7 @@ struct ColumnView: View {
                         Board.chipShape.fill(.quaternary.opacity(Board.chipFill))
                     }
                 }
-                .animation(.easeInOut(duration: 0.2), value: isOverLimit)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 // The over-limit signal is otherwise colour alone.
                 .accessibilityValue(countHelp)
         }
@@ -612,7 +641,7 @@ struct ColumnView: View {
                 Board.columnShape
                     .inset(by: 0.5)
                     .strokeBorder(
-                        LinearGradient(colors: [Board.columnInnerShadow, .clear], startPoint: .top, endPoint: .center),
+                        LinearGradient(colors: [Board.columnInnerShadow(colorScheme), .clear], startPoint: .top, endPoint: .center),
                         lineWidth: 1.5)
                     .blur(radius: 1.5)
             }
@@ -622,7 +651,7 @@ struct ColumnView: View {
     private var columnContour: some View {
         Board.columnShape
             .strokeBorder(
-                showsDropFeedback ? Color.accentColor.opacity(0.7) : Board.columnBorder(contrast),
+                showsDropFeedback ? Color.accentColor.opacity(contrast == .increased ? 1 : 0.7) : Board.columnBorder(contrast),
                 lineWidth: showsDropFeedback ? 1.5 : 1)
     }
 

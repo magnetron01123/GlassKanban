@@ -167,7 +167,11 @@ enum StatusTagger {
                 continue
             }
             cleaned.replace(#/[ \t]{2,}/#, with: " ")
-            cleaned = cleaned.trimmingCharacters(in: .whitespaces)
+            // `.whitespaces` is space and tab only, so a lone carriage return
+            // survived it — notes pasted from a Windows source kept a "\r"
+            // where the tag line had been, and the line counted as non-empty
+            // and stayed as a blank one. `.whitespacesAndNewlines` covers it.
+            cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !cleaned.isEmpty else { continue }
             lines.append(cleaned)
         }
