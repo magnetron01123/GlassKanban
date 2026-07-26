@@ -286,16 +286,22 @@ struct CardView: View {
     }
 
     /// Backlog: everything needed to decide what to pull next.
+    ///
+    /// Badge before glyph, the same order the full card's footer uses. The
+    /// two were mirrored — badge-then-glyph there, glyph-then-badge here —
+    /// so a card swapped its two meta marks around as it moved from Backlog
+    /// into a working lane, which reads as the card being rearranged rather
+    /// than relocated.
     private var compactBody: some View {
         HStack(spacing: 8) {
             titleOrField(font: BoardText.titleCompact)
                 .lineLimit(1)
             Spacer(minLength: 0)
-            if card.isRecurring {
-                repeatIcon
-            }
             if let badge = compactBadge {
                 badgeView(badge)
+            }
+            if card.isRecurring {
+                repeatIcon
             }
         }
         .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))

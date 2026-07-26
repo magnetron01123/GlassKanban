@@ -15,8 +15,12 @@ Nicht enthalten sind Punkte, die BACKLOG.md unter „Explizit abgelehnt" führt.
 **Nicht abgedeckt:** Drag & Drop und die WIP-Rückfrage — beide verändern echte
 Erinnerungen und wurden ausgelassen. Alles andere wurde an der laufenden App bedient.
 
-**Reihenfolge zum Abarbeiten:** A1 → A2 → C1, dann der Rest nach Schwere.
-A1 steht vorn, weil es als einziger Befund Nutzertext ohne Zutun und ohne Undo zerstört.
+**Stand 26.07.2026:** 29 von 56 erledigt (28 behoben, 1 widerlegt). Alle Befunde der
+Schweregrade **Kritisch und Hoch sind abgearbeitet**; offen sind 27 mittlere, niedrige
+und Aufräum-Punkte. Was noch offen ist, steht unten jeweils ohne Durchstreichung.
+
+**Nächste sinnvolle Reihenfolge:** D1/D2 (VoiceOver liest sichtbare Inhalte nicht vor)
+→ B8 (Durchsatz rechnet auf jungem Board zu niedrig) → C2 → E5 → der Rest nach Schwere.
 
 ---
 
@@ -44,21 +48,21 @@ A1 steht vorn, weil es als einziger Befund Nutzertext ohne Zutun und ohne Undo z
 | B10 | Weckzeiten werden beim Datumswechsel nicht mitgeführt | `RemindersStore:874` | Mittel | offen |
 | C2 | Karten können über den Kopf von „In Bearbeitung" zeichnen | `ColumnView:188` | Mittel | gelesen |
 | ~~C4~~ | ~~Deutsche Pluralfehler („1 Karten")~~ — **behoben** | `Models:GermanPlural` | ~~Mittel~~ | erledigt |
-| C7 | „+" bei aktivem Filter erzeugt eine verschwindende Karte | `RemindersStore:562` | Mittel | gelesen |
+| ~~C7~~ | ~~„+" bei aktivem Filter erzeugt verschwindende Karte~~ — **behoben** | `RemindersStore:645` | ~~Mittel~~ | erledigt |
 | D1 | Sichtbare Notizen werden VoiceOver nie vorgelesen | `CardView:125` | Mittel | gelesen |
 | D2 | Umbenennen-Feld hat keine eigene Repräsentation | `CardView:350` | Mittel | gelesen |
 | ~~E2~~ | ~~Leerzeichen-Suche markiert das Board als gefiltert~~ — **behoben** | `RemindersStore:1105` | ~~Mittel~~ | erledigt |
 | E5 | „Beim Anmelden starten" scheitert stumm | `SettingsView:116` | Mittel | gelesen |
-| E7 | Fokusdiebstahl bei jedem Fensterwechsel | `TicketEditSheet:866` | Mittel | gelesen |
+| ~~E7~~ | ~~Fokusdiebstahl bei jedem Fensterwechsel~~ — **behoben** | `TicketEditSheet:889` | ~~Mittel~~ | erledigt |
 | ~~A6~~ | ~~Reiner Lesevorgang schreibt bei Randleerzeichen~~ — **behoben** | `TicketEditSheet:615` | ~~Niedrig~~ | erledigt |
 | B7 | Verwaiste Undo-Einträge nach abgebrochener Neuanlage | `RemindersStore:578` | Niedrig | gelesen |
 | B9 | „0 Tage" bei der Durchlaufzeit | `StatsPopover:652` | Niedrig | gelesen |
 | B11 | Undo einer Fertigstellung bei Wiederkehrern | `RemindersStore:382` | Niedrig | offen |
 | B12 | ⌘Q mit offenem Editor verliert den Edit | `TicketEditSheet:136` | Niedrig | offen |
 | C3 | Dritte Textstufe auf Text („Seit Juni 2025") | `StatsPopover:450` | Niedrig | live |
-| C5 | Datum und Wiederholung tauschen die Reihenfolge | `CardView:188` | Niedrig | gelesen |
-| C6 | Tooltip auf der geöffneten Karte | `TicketEditSheet:216` | Niedrig | gelesen |
-| C8 | Drop-Platzhalter sitzt hinter Fußzeile und „+" | `ColumnView:153` | Niedrig | gelesen |
+| ~~C5~~ | ~~Datum und Wiederholung tauschen die Reihenfolge~~ — **behoben** | `CardView:289` | ~~Niedrig~~ | erledigt |
+| ~~C6~~ | ~~Tooltip auf der geöffneten Karte~~ — **behoben** | `TicketEditSheet:216` | ~~Niedrig~~ | erledigt |
+| ~~C8~~ | ~~Drop-Platzhalter sitzt hinter Fußzeile und „+"~~ — **behoben** | `ColumnView:153` | ~~Niedrig~~ | erledigt |
 | C9 | „Kontrast erhöhen" erreicht das Drag-Feedback nicht | `ColumnView:411` | Niedrig | gelesen |
 | C10a | `columnInnerShadow` nicht scheme-abhängig | `DesignSystem:142` | Niedrig | gelesen |
 | C10b | „Bewegung reduzieren" an drei Stellen ignoriert | `ColumnView:211` | Niedrig | gelesen |
@@ -75,11 +79,11 @@ A1 steht vorn, weil es als einziger Befund Nutzertext ohne Zutun und ohne Undo z
 | ~~F1~~ | ~~`updateTicket` schreibt den unsanitisierten Titel~~ — **behoben** | `RemindersStore:924` | ~~Aufräumen~~ | erledigt |
 | F2 | `reminder.calendar` ohne nil-Guard | `RemindersStore:672` | Aufräumen | gelesen |
 | F3 | Farbe der „Häufigsten Liste" nicht deterministisch | `WrappedStats:155` | Aufräumen | gelesen |
-| F4 | „Letzte 30 Tage" hart kodiert statt `trendWindowDays` | `StatsPopover:534` | Aufräumen | gelesen |
+| ~~F4~~ | ~~„Letzte 30 Tage" hart kodiert~~ — **behoben** | `StatsPopover:534` | ~~Aufräumen~~ | erledigt |
 | F5 | Toter Code, durch Tests festgezurrt (`weekCount`, `last7`, …) | `StreakCalculator:17` | Aufräumen | gelesen |
-| F6 | Kommentar behauptet „built once per card" — stimmt nicht | `Models:115` | Aufräumen | gelesen |
+| ~~F6~~ | ~~Kommentar behauptet „built once per card"~~ — **behoben** | `Models:115` | ~~Aufräumen~~ | erledigt |
 | F7 | CRLF-Notizen hinterlassen eine Leerzeile | `StatusTagger:112` | Aufräumen | gemessen |
-| F8 | Observer wird abgemeldet, aber nicht auf `nil` gesetzt | `TicketEditSheet:863` | Aufräumen | gelesen |
+| ~~F8~~ | ~~Observer wird abgemeldet, aber nicht auf `nil` gesetzt~~ — **behoben** | `TicketEditSheet:889` | ~~Aufräumen~~ | erledigt |
 
 **Geprüft, bewusst nicht übernommen:** V2 — Trennlinien auf Textfarbe ziehen
 (Linie 22 Stufen vom Papier, Text 129 — sechsmal kräftiger; würde Struktur zu einer

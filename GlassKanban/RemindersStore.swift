@@ -624,14 +624,39 @@ final class RemindersStore: ObservableObject {
     func finalizeNewTicket(cardID: String, keep: Bool = false) {
         guard newlyCreatedCardID == cardID else { return }
         newlyCreatedCardID = nil
-        guard !keep, let ticket = loadEditableTicket(cardID: cardID) else { return }
+        guard !keep, let ticket = loadEditableTicket(cardID: cardID) else {
+            keepNewTicketInSight(cardID: cardID)
+            return
+        }
         let isEmpty = ticket.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && ticket.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && ticket.url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && ticket.dueDate == nil
             && ticket.priority == 0
-        guard isEmpty else { return }
+        guard isEmpty else {
+            keepNewTicketInSight(cardID: cardID)
+            return
+        }
         removeNewTicket(cardID: cardID)
+    }
+
+    /// A ticket someone just made has to be on the board they made it on.
+    ///
+    /// The "+" stays available while the find settings are narrowed, and a
+    /// brand-new ticket carries no priority and no date — so almost any
+    /// active restriction hid it the moment the editor closed. The card was
+    /// really there, and it looked like the app had thrown it away.
+    ///
+    /// The find settings lose that argument: they were set before this ticket
+    /// existed, and the lane's own fold already bends the same way to keep a
+    /// just-closed card visible (see `ColumnView.onChange(of:editingCardID)`).
+    private func keepNewTicketInSight(cardID: String) {
+        guard isFiltering else { return }
+        let isVisible = KanbanStatus.allCases.contains { status in
+            cards(for: status).contains { $0.id == cardID }
+        }
+        guard !isVisible else { return }
+        resetFilters()
     }
 
     /// Called instead of `finalizeNewTicket` when the editor was left with

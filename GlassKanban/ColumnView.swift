@@ -150,18 +150,23 @@ struct ColumnView: View {
                                 removal: .opacity))
                     }
 
+                    // The landing spot belongs to the stack of cards, not
+                    // behind the lane's furniture. Below the fold line and
+                    // the "+" it sat detached from the pile it was promising
+                    // to join — in a folded Backlog with a scrolled lane,
+                    // often out of sight entirely.
+                    if showsDropFeedback {
+                        insertionSlot
+                    } else if showsPullSlot {
+                        pullSlot
+                    }
+
                     if foldedCount > 0 {
                         moreButton
                     }
 
                     if status == .backlog {
                         addTicketButton
-                    }
-
-                    if showsDropFeedback {
-                        insertionSlot
-                    } else if showsPullSlot {
-                        pullSlot
                     }
                 }
                 .padding(.horizontal, Board.laneMargin)

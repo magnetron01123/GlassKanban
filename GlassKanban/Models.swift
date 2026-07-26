@@ -113,8 +113,9 @@ struct KanbanCard: Identifiable, Equatable {
     let creationDate: Date?
 
     /// Everything the search looks at, in one place: the title plus whatever
-    /// notes the board itself would show. Built once per card rather than
-    /// stitched together on every keystroke.
+    /// notes the board itself would show. Computed per call — on a personal
+    /// board that is a handful of string joins per keystroke, and keeping it
+    /// derived means it can never disagree with the fields it comes from.
     var searchHaystack: String { "\(title)\n\(notesExcerpt)" }
 
     /// Whether this card matches a search term. Case- and diacritic-insensitive

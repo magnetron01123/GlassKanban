@@ -531,7 +531,7 @@ struct StatsPopover: View {
     /// unexplained is not. Per-day figures stay in each bar's tooltip.
     private var trendSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeading("Letzte 30 Tage")
+            sectionHeading("Letzte \(WrappedStats.trendWindowDays) Tage")
             trendRow
         }
     }

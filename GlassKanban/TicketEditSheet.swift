@@ -213,7 +213,11 @@ struct TicketEditSheet: View {
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
-        .help("In Erinnerungen öffnen")
+        // No `.help` — the card is content, and tooltips on a card are a
+        // settled no (BACKLOG.md, "Explizit abgelehnt"); the opened card is
+        // still a card. `BoardTooltip` says the same thing from the other
+        // side: it replaces `.help()`, never joins it. VoiceOver keeps the
+        // label below.
         .accessibilityLabel("In Erinnerungen öffnen")
     }
 
@@ -882,18 +886,39 @@ private struct FirstResponderNeutralizer: NSViewRepresentable {
 
     final class NeutralizingView: NSView {
         private var observer: NSObjectProtocol?
+        /// The neutralisation is a one-off, and this is what makes it one.
+        ///
+        /// The observer exists because the window may still be becoming key
+        /// when this view lands, so the first attempt can come too early. It
+        /// used to keep firing for as long as the editor was open, which made
+        /// it something else entirely: every return from another app took the
+        /// cursor out of whatever field was being typed in. Worse on a card
+        /// the "+" had just made — the title claims focus 120 ms after
+        /// opening, so one ⌘Tab away and back sent the next keystrokes
+        /// nowhere, and closing then deleted the ticket as "empty".
+        private var hasNeutralized = false
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             observer.map(NotificationCenter.default.removeObserver)
+            observer = nil
+            hasNeutralized = false
             guard let window else { return }
-            window.makeFirstResponder(window.contentView)
+            if window.isKeyWindow {
+                window.makeFirstResponder(window.contentView)
+                hasNeutralized = true
+                return
+            }
             observer = NotificationCenter.default.addObserver(
                 forName: NSWindow.didBecomeKeyNotification,
                 object: window,
                 queue: .main
-            ) { [weak window] _ in
+            ) { [weak self, weak window] _ in
+                guard let self, !self.hasNeutralized else { return }
+                self.hasNeutralized = true
                 window?.makeFirstResponder(window?.contentView)
+                self.observer.map(NotificationCenter.default.removeObserver)
+                self.observer = nil
             }
         }
 
