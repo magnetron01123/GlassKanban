@@ -281,6 +281,13 @@ struct ColumnView: View {
         // Once there is nothing folded away, "aufgeklappt" has no meaning
         // left. Without this it survived the rest of the session and ate the
         // next fold that would have formed.
+        // "Board → Neues Ticket" (⌘N) runs the very same creation the "+"
+        // does, rather than a second path with its own rules. Only the
+        // Backlog lane listens — that is where new work enters the board.
+        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanNewTicket)) { _ in
+            guard status == .backlog else { return }
+            createTicket()
+        }
         .onChange(of: hasFold) { _, stillHasFold in
             if !stillHasFold { expanded = false }
         }
@@ -506,14 +513,19 @@ struct ColumnView: View {
     /// a name and made every other field a second trip. A creation abandoned
     /// without any input is removed again on close (see
     /// `RemindersStore.finalizeNewTicket`) — no untitled ghosts.
+    /// The board's one creating gesture, shared by the "+" and by ⌘N.
+    private func createTicket() {
+        guard let id = store.createTicketForEditing(undoManager: undoManager) else { return }
+        withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
+            store.editingCardID = id
+        }
+    }
+
     private var addTicketButton: some View {
         HStack {
             Spacer()
             Button {
-                guard let id = store.createTicketForEditing(undoManager: undoManager) else { return }
-                withAnimation(reduceMotion ? nil : Board.cardOpenAnimation) {
-                    store.editingCardID = id
-                }
+                createTicket()
             } label: {
                 Image(systemName: "plus")
                     // A touch larger than the toolbar's controls: this is the

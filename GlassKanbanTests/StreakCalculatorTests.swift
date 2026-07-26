@@ -52,7 +52,6 @@ final class StreakCalculatorTests: XCTestCase {
         ]
         let stats = StreakCalculator.stats(completionDates: dates, calendar: calendar, now: date(2026, 7, 17))
         XCTAssertEqual(stats.todayCount, 3)
-        XCTAssertEqual(stats.weekCount, 4)
         XCTAssertEqual(stats.current, 1)
     }
 
@@ -65,15 +64,6 @@ final class StreakCalculatorTests: XCTestCase {
         XCTAssertEqual(stats.current, 1)
     }
 
-    func testStatsLast7DaysMarksActiveDays() {
-        let dates = [date(2026, 7, 17), date(2026, 7, 14), date(2026, 7, 11)]
-        let stats = StreakCalculator.stats(completionDates: dates, calendar: calendar, now: date(2026, 7, 17))
-        XCTAssertEqual(stats.last7.count, 7)
-        // 2026-07-11 is 6 days ago (oldest), 2026-07-14 is 3 days ago, today is last.
-        XCTAssertTrue(stats.last7.first!.didComplete)   // 07-11
-        XCTAssertTrue(stats.last7.last!.didComplete)    // 07-17
-        XCTAssertFalse(stats.last7[1].didComplete)      // 07-12
-    }
 
     func testStatsFlameLevelReachesFullAtDailyTarget() {
         // Two active days before today averaging 2 completions → target 2.

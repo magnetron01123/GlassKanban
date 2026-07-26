@@ -61,17 +61,26 @@ struct BoardView: View {
             if store.wrappedStats.totalCompleted > 0 {
                 ToolbarItem(placement: .navigation) {
                     streakPill
+                        .disabled(store.editingCardID != nil)
                 }
             }
             // Two separate glass groups, not one: narrowing the view down and
             // leaving for Reminders are different jobs, and sharing a capsule
             // would dilute the one deliberately prominent button on the board.
+            // Both disabled while a card is held up in front of the board.
+            // The blur says the lanes are behind the card; the toolbar stayed
+            // fully live, so clicking the flame opened the statistics *over*
+            // the open editor and left two panels stacked with no obvious way
+            // back. Chrome stays visible and sharp — it is not content — but
+            // it does not compete with the one thing the user picked up.
             ToolbarItem(placement: .primaryAction) {
                 findButton
+                    .disabled(store.editingCardID != nil)
             }
             ToolbarSpacer(.fixed, placement: .primaryAction)
             ToolbarItem(placement: .primaryAction) {
                 remindersButton
+                    .disabled(store.editingCardID != nil)
             }
         }
         // Deliberately NOT `.toolbarBackgroundVisibility(.hidden, …)`.

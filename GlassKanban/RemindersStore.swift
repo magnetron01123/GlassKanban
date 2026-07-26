@@ -89,6 +89,11 @@ final class RemindersStore: ObservableObject {
     /// deliberately keeps reachable rather than hiding.
     @Published var pendingSaveFailure: SaveFailure?
 
+    /// Open reminders that carry a recurrence rule, captured by the last
+    /// refresh. Used to recognise the series behind a completed occurrence
+    /// (see `liveRecurringSibling`); not published, because nothing draws it.
+    private var openRecurringReminders: [EKReminder] = []
+
     struct SaveFailure: Identifiable {
         let cardID: String
         /// What did not happen, in the user's words — "Nicht verschoben" for
@@ -408,7 +413,9 @@ final class RemindersStore: ObservableObject {
         // as one of its occurrences, which is what keeps those series
         // creation dates out of the lead-time median (see
         // `CompletionRecord.isRecurring`).
-        let recurringTitles = Set(incomplete.filter(\.hasRecurrenceRules).map(\.title))
+        let openRecurring = incomplete.filter(\.hasRecurrenceRules)
+        openRecurringReminders = openRecurring
+        let recurringTitles = Set(openRecurring.map(\.title))
         let completionRecords: [CompletionRecord] = completed.compactMap { reminder in
             guard let date = reminder.completionDate, let calendar = reminder.calendar else { return nil }
             return CompletionRecord(
@@ -517,6 +524,23 @@ final class RemindersStore: ObservableObject {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
         guard origin != status else { return nil }
+        // Un-completing a repeating reminder is the one move EventKit cannot
+        // express. Completing one detaches the finished occurrence and lets
+        // the series carry on (measured on a real board — see `refresh`), so
+        // clearing `isCompleted` here would not rewind anything: it would
+        // revive the occurrence *beside* the instance the series has already
+        // produced, and the board would show the same chore twice with no
+        // hint of which is which. Saying so is better than quietly making a
+        // duplicate the user then has to clean up by hand.
+        if origin == .done, let live = liveRecurringSibling(of: reminder) {
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID,
+                title: "Nicht zurückgeholt",
+                message: "„\(live.title ?? "Diese Aufgabe")“ wiederholt sich, und die Serie läuft "
+                    + "bereits weiter. Die erledigte Ausführung zurückzuholen würde sie doppelt "
+                    + "auf das Board legen.")
+            return nil
+        }
 
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
         reminder.isCompleted = (status == .done)
@@ -862,6 +886,25 @@ final class RemindersStore: ObservableObject {
         scheduleRefresh()
     }
 
+    /// The live series instance behind a completed occurrence, if there is
+    /// one.
+    ///
+    /// Matched on title within the same list — the same rule `refresh` uses
+    /// to keep series creation dates out of the lead-time median, and for the
+    /// same reason: a completed occurrence has already been detached, so
+    /// `hasRecurrenceRules` is false on it and the recurrence is only visible
+    /// on the sibling that is still open.
+    private func liveRecurringSibling(of reminder: EKReminder) -> EKReminder? {
+        guard reminder.isCompleted,
+              let calendarID = reminder.calendar?.calendarIdentifier,
+              let title = reminder.title else { return nil }
+        return openRecurringReminders.first {
+            $0.title == title
+                && $0.calendar?.calendarIdentifier == calendarID
+                && $0.calendarItemIdentifier != reminder.calendarItemIdentifier
+        }
+    }
+
     /// Registers the inverse of a write with the window's undo manager.
     ///
     /// Every board write goes through here, so ⌘Z means the same thing
@@ -894,6 +937,35 @@ final class RemindersStore: ObservableObject {
             hasDueTime: components?.hour != nil,
             priority: reminder.priority,
             calendarID: reminder.calendar?.calendarIdentifier ?? "")
+    }
+
+    /// Moves the alarm that was pinned to the old due date along with it.
+    ///
+    /// Reminders.app files a timed reminder with an absolute alarm at its due
+    /// date. Nothing here used to touch `alarms`, so shifting the date left
+    /// the notification at the old time — the reminder said Friday and rang
+    /// on Monday — and clearing the date left an alarm on a reminder that no
+    /// longer had one.
+    ///
+    /// Deliberately narrow: only an absolute alarm sitting exactly on the old
+    /// due date is treated as *its* alarm. Relative offsets, location alarms
+    /// and anything the user set to a different time express an intent this
+    /// code cannot infer, and are left alone. `deleteTicket` already carries
+    /// alarms verbatim through the undo round trip; this is the one write
+    /// that changes what they are anchored to.
+    private static func followDueDate(on reminder: EKReminder, from oldDue: Date?, to newDue: Date?) {
+        guard let oldDue, let alarms = reminder.alarms, !alarms.isEmpty else { return }
+        let pinned = alarms.filter { alarm in
+            guard let absolute = alarm.absoluteDate else { return false }
+            return abs(absolute.timeIntervalSince(oldDue)) < 1
+        }
+        guard !pinned.isEmpty else { return }
+        for alarm in pinned {
+            reminder.removeAlarm(alarm)
+        }
+        // The date was cleared: the alarm it hung on goes with it.
+        guard let newDue else { return }
+        reminder.addAlarm(EKAlarm(absoluteDate: newDue))
     }
 
     /// Turns what was typed in the URL field into what EventKit stores.
@@ -1007,9 +1079,12 @@ final class RemindersStore: ObservableObject {
                 edited.hasDueTime
                     ? [.year, .month, .day, .hour, .minute, .timeZone]
                     : [.year, .month, .day]
+            let previousDue = reminder.dueDateComponents
+                .flatMap { Foundation.Calendar.current.date(from: $0) }
             reminder.dueDateComponents = edited.dueDate.map {
                 Foundation.Calendar.current.dateComponents(dueFields, from: $0)
             }
+            Self.followDueDate(on: reminder, from: previousDue, to: edited.dueDate)
         }
         if priorityChanged { reminder.priority = edited.priority }
         if calendarChanged, let newCalendar,

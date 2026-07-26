@@ -15,21 +15,18 @@ Nicht enthalten sind Punkte, die BACKLOG.md unter „Explizit abgelehnt" führt.
 **Nicht abgedeckt:** Drag & Drop und die WIP-Rückfrage — beide verändern echte
 Erinnerungen und wurden ausgelassen. Alles andere wurde an der laufenden App bedient.
 
-**Stand 26.07.2026:** 50 von 56 abgeschlossen — 48 behoben, 1 widerlegt (V0), 1 geprüft
-und bewusst verworfen (V0d). Alle Schweregrade bis einschließlich „Niedrig" sind durch.
+**Stand 26.07.2026: alle 56 Befunde abgeschlossen.** 54 behoben, 1 widerlegt (V0), 1
+geprüft und bewusst verworfen (V0d). Dazu ein geprüfter, nicht übernommener Vorschlag
+(V2, Trennlinien).
 
-**Die verbleibenden 6** stehen unten ohne Durchstreichung. Vier davon (B10, B11, B12,
-V0b) brauchen einen Lauftest mit echten Daten oder eine Design-Entscheidung; zwei
-(E3, F5) sind bewusst zurückgestellt:
+Drei der letzten sechs brauchten eine Entscheidung statt einer Korrektur; sie steht
+jeweils beim Befund und in SPEC.md:
 
-| # | Warum offen |
+| # | Entscheidung |
 |---|---|
-| B10 | Weckzeiten beim Datumswechsel — EventKit-Verhalten muss am Gerät mit einer echten Erinnerung samt Alarm geprüft werden, bevor Code entsteht |
-| B11 | Undo einer Fertigstellung bei Wiederkehrern — braucht eine echte wiederkehrende Erinnerung; aus dem Code nicht entscheidbar |
-| B12 | ⌘Q mit offenem Editor — ob macOS `onDisappear` bei Terminierung sendet, muss gemessen werden |
-| V0b | Editor ist nicht modal — Design-Entscheidung: soll die Toolbar bei offener Karte gesperrt sein? |
-| E3 | ⌘N auf „In Erinnerungen öffnen" ist in SPEC.md so dokumentiert — Umbelegung wäre eine bewusste Änderung, keine Korrektur |
-| F5 | Toter Code (`weekCount`, `last7`, `consistencyRatio`) — Entfernen heißt auch Tests entfernen; lohnt als eigener Aufräum-Durchgang |
+| E3 | ⌘N heißt jetzt „Neues Ticket" — die Bedeutung, die es auf jedem Mac hat. „In Erinnerungen öffnen" ist auf ⇧⌘R gewandert |
+| V0b | Bei geöffneter Karte ist die Toolbar deaktiviert. Sie bleibt sichtbar und scharf, konkurriert aber nicht mit dem, was in der Hand ist |
+| B11 | Eine wiederkehrende Ausführung lässt sich nicht aus „Erledigt" zurückholen, solange die Serie läuft — die App sagt das, statt die Aufgabe doppelt aufs Board zu legen |
 
 ---
 
@@ -47,14 +44,14 @@ V0b) brauchen einen Lauftest mit echten Daten oder eine Design-Entscheidung; zwe
 | ~~B2~~ | ~~URL-Feld verstümmelt Fließtext~~ — **behoben** | `RemindersStore:829` | ~~Hoch~~ | erledigt |
 | ~~B3~~ | ~~Entzogene Berechtigung wird nie bemerkt~~ — **behoben** | `RemindersStore:272` | ~~Hoch~~ | erledigt |
 | ~~C1~~ | ~~Dunkelmodus + „Transparenz reduzieren" kippt die Tiefenordnung~~ — **behoben** | `DesignSystem:158` | ~~Hoch~~ | erledigt |
-| V0b | Editor ist nicht modal — Statistik öffnet darüber | `BoardView:156` | Mittel | live |
+| ~~V0b~~ | ~~Editor ist nicht modal~~ — **behoben** (Toolbar gesperrt) | `BoardView:69` | ~~Mittel~~ | erledigt |
 | ~~V1~~ | ~~„Keine Notizen" so laut wie eine echte Notiz~~ — **behoben** (Platzhalter sekundär) | `CardView:225` | ~~Mittel~~ | erledigt |
 | ~~A5~~ | ~~Leerzeilen-Notizen werden dauerhaft geschrieben~~ — **behoben** | `TicketEditSheet:648` | ~~Mittel~~ | erledigt |
 | ~~B4~~ | ~~Alle Listen abgewählt → „Nichts zu tun"~~ — **behoben** | `Models:288` | ~~Mittel~~ | erledigt |
 | ~~B5~~ | ~~Schreibfehler sind bis auf einen Pfad stumm~~ — **behoben** | `RemindersStore:92` | ~~Mittel~~ | erledigt |
 | ~~B6~~ | ~~Undo-Eintrag vor dem Speichern registriert~~ — **behoben** | `RemindersStore:517` | ~~Mittel~~ | erledigt |
 | ~~B8~~ | ~~Durchsatz teilt immer durch 30~~ — **behoben** | `WrappedStats:167` | ~~Mittel~~ | erledigt |
-| B10 | Weckzeiten werden beim Datumswechsel nicht mitgeführt | `RemindersStore:874` | Mittel | offen |
+| ~~B10~~ | ~~Weckzeiten folgen dem Datum nicht~~ — **behoben** | `RemindersStore:829` | ~~Mittel~~ | erledigt |
 | ~~C2~~ | ~~Karten zeichnen über den Kopf von „In Bearbeitung"~~ — **behoben** | `ColumnView:216` | ~~Mittel~~ | erledigt |
 | ~~C4~~ | ~~Deutsche Pluralfehler („1 Karten")~~ — **behoben** | `Models:GermanPlural` | ~~Mittel~~ | erledigt |
 | ~~C7~~ | ~~„+" bei aktivem Filter erzeugt verschwindende Karte~~ — **behoben** | `RemindersStore:645` | ~~Mittel~~ | erledigt |
@@ -66,8 +63,8 @@ V0b) brauchen einen Lauftest mit echten Daten oder eine Design-Entscheidung; zwe
 | ~~A6~~ | ~~Reiner Lesevorgang schreibt bei Randleerzeichen~~ — **behoben** | `TicketEditSheet:615` | ~~Niedrig~~ | erledigt |
 | ~~B7~~ | ~~Verwaiste Undo-Einträge nach abgebrochener Neuanlage~~ — **behoben** | `RemindersStore:679` | ~~Niedrig~~ | erledigt |
 | ~~B9~~ | ~~„0 Tage" bei der Durchlaufzeit~~ — **behoben** („Am selben Tag") | `StatsPopover:652` | ~~Niedrig~~ | erledigt |
-| B11 | Undo einer Fertigstellung bei Wiederkehrern | `RemindersStore:382` | Niedrig | offen |
-| B12 | ⌘Q mit offenem Editor verliert den Edit | `TicketEditSheet:136` | Niedrig | offen |
+| ~~B11~~ | ~~Undo einer Fertigstellung bei Wiederkehrern~~ — **behoben** (wird abgelehnt statt dupliziert) | `RemindersStore:512` | ~~Niedrig~~ | erledigt |
+| ~~B12~~ | ~~⌘Q mit offenem Editor verliert den Edit~~ — **behoben** | `TicketEditSheet:146` | ~~Niedrig~~ | erledigt |
 | ~~C3~~ | ~~Dritte Textstufe auf Text~~ — **behoben** | `StatsPopover:450` | ~~Niedrig~~ | erledigt |
 | ~~C5~~ | ~~Datum und Wiederholung tauschen die Reihenfolge~~ — **behoben** | `CardView:289` | ~~Niedrig~~ | erledigt |
 | ~~C6~~ | ~~Tooltip auf der geöffneten Karte~~ — **behoben** | `TicketEditSheet:216` | ~~Niedrig~~ | erledigt |
@@ -82,14 +79,14 @@ V0b) brauchen einen Lauftest mit echten Daten oder eine Design-Entscheidung; zwe
 | ~~D3~~ | ~~Listenname doppelt für VoiceOver~~ — **behoben** | `CardView:400` | ~~Niedrig~~ | erledigt |
 | ~~D4~~ | ~~WIP-Zeile erklärt ihre Zahl nicht~~ — **behoben** | `StatsPopover:359` | ~~Niedrig~~ | erledigt |
 | ~~E1~~ | ~~„Filter zurücksetzen" ist immer aktiv~~ — **behoben** | `GlassKanbanApp:49` | ~~Niedrig~~ | erledigt |
-| E3 | ⌘N liegt auf „In Erinnerungen öffnen" | `GlassKanbanApp:33` | Niedrig | gelesen |
+| ~~E3~~ | ~~⌘N liegt auf „In Erinnerungen öffnen"~~ — **behoben** (⌘N = neues Ticket) | `GlassKanbanApp:40` | ~~Niedrig~~ | erledigt |
 | ~~E4~~ | ~~⌘F taucht in keinem Menü auf~~ — **behoben** („Board → Finden …") | `GlassKanbanApp:36` | ~~Niedrig~~ | erledigt |
 | ~~E6~~ | ~~Einstellungen nennen die falsche Ursache~~ — **behoben** | `SettingsView:51` | ~~Niedrig~~ | erledigt |
 | ~~F1~~ | ~~`updateTicket` schreibt den unsanitisierten Titel~~ — **behoben** | `RemindersStore:924` | ~~Aufräumen~~ | erledigt |
 | ~~F2~~ | ~~`reminder.calendar` ohne nil-Guard~~ — **behoben** | `RemindersStore:752` | ~~Aufräumen~~ | erledigt |
 | ~~F3~~ | ~~Farbe der „Häufigsten Liste" nicht deterministisch~~ — **behoben** | `WrappedStats:155` | ~~Aufräumen~~ | erledigt |
 | ~~F4~~ | ~~„Letzte 30 Tage" hart kodiert~~ — **behoben** | `StatsPopover:534` | ~~Aufräumen~~ | erledigt |
-| F5 | Toter Code, durch Tests festgezurrt (`weekCount`, `last7`, …) | `StreakCalculator:17` | Aufräumen | gelesen |
+| ~~F5~~ | ~~Toter Code, durch Tests festgezurrt~~ — **entfernt** | `StreakCalculator` | ~~Aufräumen~~ | erledigt |
 | ~~F6~~ | ~~Kommentar behauptet „built once per card"~~ — **behoben** | `Models:115` | ~~Aufräumen~~ | erledigt |
 | ~~F7~~ | ~~CRLF-Notizen hinterlassen eine Leerzeile~~ — **behoben** | `StatusTagger:165` | ~~Aufräumen~~ | erledigt |
 | ~~F8~~ | ~~Observer wird abgemeldet, aber nicht auf `nil` gesetzt~~ — **behoben** | `TicketEditSheet:889` | ~~Aufräumen~~ | erledigt |

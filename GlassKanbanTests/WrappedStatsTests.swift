@@ -84,7 +84,6 @@ final class WrappedStatsTests: XCTestCase {
         let now = date(2026, 7, 17)
         let stats = WrappedStats.stats(records: dailyRecords(count: 6, now: now), calendar: calendar, now: now)
         XCTAssertEqual(stats.consistencyActiveDays, 6)
-        XCTAssertEqual(stats.consistencyRatio, 0.2, accuracy: 0.0001)
     }
 
     // MARK: - Rankings

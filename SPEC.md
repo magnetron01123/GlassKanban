@@ -175,6 +175,19 @@ Erinnerung wieder, egal was schon in den Feldern stand — abgebrochen ist abgeb
 der Editor ohne jede Eingabe geschlossen, entfernt die App das Ticket ebenfalls
 rückstandslos; der ↗-Sprung nach Reminders zählt dabei als Behalten.
 
+**Wiederkehrende Aufgaben lassen sich nicht aus „Erledigt" zurückholen, solange die
+Serie weiterläuft.** EventKit löst eine abgehakte Ausführung aus ihrer Serie und legt
+die nächste sofort als eigene offene Erinnerung an. `isCompleted` wieder zu löschen
+würde die Ausführung deshalb nicht zurückdrehen, sondern *neben* der laufenden Serie
+wiederbeleben — dieselbe Aufgabe stünde zweimal auf dem Board. Die App sagt das
+stattdessen und ändert nichts.
+
+**Weckzeiten folgen dem Fälligkeitsdatum.** Wird ein Datum im Editor verschoben, wandert
+der Alarm mit, der genau auf dem alten Datum lag; wird das Datum entfernt, geht er mit.
+Bewusst eng: relative Alarme, Ortsalarme und alles, was der Nutzer auf eine andere Zeit
+gestellt hat, bleiben unangetastet — sie tragen eine Absicht, die die App nicht erraten
+kann.
+
 **Löschen fragt nach.** Der Menüpunkt öffnet eine Rückfrage mit dem Namen des Tickets
 („… löschen?"); „Abbrechen" ist die vorbelegte Antwort und liegt auf Return **und**
 Escape, „Löschen" braucht einen bewussten Klick. Dieselbe Rückfrage für jeden Weg ins
@@ -197,15 +210,27 @@ wieder her. Die Erinnerung bekommt beim Wiederherstellen eine neue interne ID.
 
 | Kürzel | Wirkung |
 |---|---|
+| ⌘N | Neues Ticket im Backlog (derselbe Weg wie das „+") |
 | ⌘F | Finden-Popover (Suche + Filter) |
 | ⇧⌘F | Filter zurücksetzen |
-| ⌘N | Erinnerungen-App öffnen |
+| ⇧⌘R | Erinnerungen-App öffnen |
 | ⌘R | Board aktualisieren |
 | ⌘Z / ⇧⌘Z | letzte Board-Änderung rückgängig / wiederherstellen |
 | ⌘, | Einstellungen |
 | Return | im Karten-Editor: übernehmen und schließen (legt ein neues Ticket an) |
 | ⌘Return | dasselbe aus dem Notizfeld heraus, wo Return die Zeile umbricht |
 | Escape | im Karten-Editor: verwerfen und schließen (bricht eine Neuanlage ab) |
+
+Jeder dieser Befehle steht auch im Menü „Board" — ein Kurzbefehl, den man nur durch
+Überfahren eines Toolbar-Knopfs findet, ist keiner. ⌘N lag bis Juli 2026 auf
+„Erinnerungen öffnen", während die einzige anlegende Geste der App („+") gar keinen
+Kurzbefehl hatte: der Mac-Reflex erzeugte damit ausgerechnet das, was er nirgends
+bedeutet. „Erinnerungen öffnen" ist auf ⇧⌘R gewandert.
+
+**Bei geöffneter Karte ist die Toolbar deaktiviert.** Das Board tritt hinter die
+hochgehaltene Karte zurück; ein Klick auf die Flamme legte die Statistik vorher *über*
+den offenen Editor. Die Toolbar bleibt sichtbar und scharf — sie ist Chrome, kein Inhalt
+— konkurriert aber nicht mit dem, was gerade in der Hand ist.
 
 ## Karten-Anzeige
 

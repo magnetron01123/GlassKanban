@@ -66,6 +66,8 @@ struct TicketEditSheet: View {
     /// runs an animation out, so the decision has to survive until the view
     /// is actually gone.
     @State private var isCancelled = false
+    /// Guards `closeAndPersist` — see there.
+    @State private var hasClosed = false
     /// What was loaded, verbatim — the reference a close compares against.
     /// Without it every glance at a card wrote every field back on close,
     /// which bumped `lastModifiedDate` (resetting the card's dwell-time
@@ -133,25 +135,44 @@ struct TicketEditSheet: View {
                 onCommit: onClose,
                 onCancel: cancel))
         .task { load() }
-        .onDisappear {
-            // Escape: write nothing, and take back a creation that was
-            // cancelled rather than finished. Everything the fields hold is
-            // still local state at this point — discarding is literally not
-            // saving, which is why there is nothing else to undo here.
-            if isCancelled {
-                store.cancelNewTicket(cardID: card.id, undoManager: undoManager)
-                return
-            }
-            save()
-            if opensRemindersOnClose {
-                store.openInReminders(cardID: card.id)
-            }
-            // A ticket the "+" just made, closed without any input, is an
-            // abandoned creation — the store removes it again so no untitled
-            // ghost stays behind. Jumping to Reminders counts as keeping it:
-            // the user is clearly on the way to fill it in over there.
-            store.finalizeNewTicket(cardID: card.id, keep: opensRemindersOnClose, undoManager: undoManager)
+        .onDisappear { closeAndPersist() }
+        // Quitting is the one close that does not go through `onDisappear`:
+        // AppKit tears the window down without SwiftUI running a disappear
+        // pass, so ⌘Q with a card open dropped whatever had been typed — and
+        // for a ticket the "+" had just made, left the untitled placeholder
+        // behind in Reminders, which is exactly the ghost
+        // `finalizeNewTicket` exists to prevent. Terminating counts as
+        // closing: the note goes back on the wall with what is written on it.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
+            closeAndPersist()
         }
+    }
+
+    /// Everything a close has to do, on either route in. Runs at most once:
+    /// with both routes live, a normal close would otherwise save twice —
+    /// harmless for the write itself (`save` compares against the baseline),
+    /// but `finalizeNewTicket` is not idempotent in spirit and neither is the
+    /// jump to Reminders.
+    private func closeAndPersist() {
+        guard !hasClosed else { return }
+        hasClosed = true
+        // Escape: write nothing, and take back a creation that was
+        // cancelled rather than finished. Everything the fields hold is
+        // still local state at this point — discarding is literally not
+        // saving, which is why there is nothing else to undo here.
+        if isCancelled {
+            store.cancelNewTicket(cardID: card.id, undoManager: undoManager)
+            return
+        }
+        save()
+        if opensRemindersOnClose {
+            store.openInReminders(cardID: card.id)
+        }
+        // A ticket the "+" just made, closed without any input, is an
+        // abandoned creation — the store removes it again so no untitled
+        // ghost stays behind. Jumping to Reminders counts as keeping it:
+        // the user is clearly on the way to fill it in over there.
+        store.finalizeNewTicket(cardID: card.id, keep: opensRemindersOnClose, undoManager: undoManager)
     }
 
     /// Escape: mark the close as a discard, then close on the same path

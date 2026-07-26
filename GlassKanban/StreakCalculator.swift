@@ -1,6 +1,7 @@
 import Foundation
 
-/// One day in the 7-day strip shown in the streak popover.
+/// One day in the popover's trend strip (30 days — see
+/// `WrappedStats.trendWindowDays`).
 struct DayCompletion: Equatable, Identifiable {
     let date: Date
     let count: Int
@@ -14,11 +15,8 @@ struct StreakStats: Equatable {
     var current: Int = 0
     var best: Int = 0
     var todayCount: Int = 0
-    var weekCount: Int = 0
     /// Typical completions on an active day; the threshold for a "full" flame.
     var dailyTarget: Int = 1
-    /// Last 7 days including today, oldest first.
-    var last7: [DayCompletion] = []
 
     /// 0 = nothing done today (grey flame — the streak is at risk),
     /// 1 = started, 2 = reached the personal daily target (full flame).
@@ -73,10 +71,6 @@ enum StreakCalculator {
 
         let perDay = perDayCounts(completionDates, calendar: calendar)
 
-        let weekCount = completionDates.filter {
-            calendar.isDate($0, equalTo: now, toGranularity: .weekOfYear)
-        }.count
-
         // Daily target = average completions on active days before today,
         // rounded, at least 1. Reaching it fills the flame.
         let activeBeforeToday = perDay.filter { $0.key < today }
@@ -88,19 +82,11 @@ enum StreakCalculator {
             dailyTarget = max(1, Int((Double(total) / Double(activeBeforeToday.count)).rounded()))
         }
 
-        var last7: [DayCompletion] = []
-        for offset in stride(from: 6, through: 0, by: -1) {
-            guard let day = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
-            last7.append(DayCompletion(date: day, count: perDay[day] ?? 0))
-        }
-
         return StreakStats(
             current: streak(completionDates: completionDates, calendar: calendar, now: now),
             best: bestRun(days: Set(perDay.keys), calendar: calendar),
             todayCount: perDay[today] ?? 0,
-            weekCount: weekCount,
-            dailyTarget: dailyTarget,
-            last7: last7)
+            dailyTarget: dailyTarget)
     }
 
     /// Longest run of consecutive completed days anywhere in the window.

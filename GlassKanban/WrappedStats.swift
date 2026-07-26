@@ -93,11 +93,6 @@ struct WrappedStats: Equatable {
     /// remember whether it has been shown.
     var milestone: Int?
 
-    /// Share of the trend window with at least one completion, 0...1.
-    var consistencyRatio: Double {
-        Double(consistencyActiveDays) / Double(Self.trendWindowDays)
-    }
-
     static let trendWindowDays = 30
     /// How far back a milestone still counts as just reached.
     static let milestoneRecentDays = 7
