@@ -25,21 +25,21 @@ A1 steht vorn, weil es als einziger Befund Nutzertext ohne Zutun und ohne Undo z
 | # | Befund | Ort | Schwere | Nachweis |
 |---|---|---|---|---|
 | ~~V0~~ | ~~Escape schließt den Editor nicht~~ — **Fehlalarm**, siehe unten | — | — | widerlegt |
-| **A1** | **Hashtag ohne linke Wortgrenze zerstört Nutzertext, ohne Zutun** | `StatusTagger:16` | **Kritisch** | gemessen |
-| **A2** | **Editor schreibt gegen veralteten Stand (Lost Update)** | `TicketEditSheet:135` | **Kritisch** | gelesen |
+| ~~A1~~ | ~~Hashtag ohne linke Wortgrenze zerstört Nutzertext~~ — **behoben** | `StatusTagger:52` | ~~Kritisch~~ | erledigt |
+| ~~A2~~ | ~~Editor schreibt gegen veralteten Stand~~ — **behoben** | `RemindersStore:833` | ~~Kritisch~~ | erledigt |
 | V0c | Platzhalter im Editor nicht von Inhalt zu unterscheiden | `TicketEditSheet:388` | Hoch | live |
 | A3 | Undo nach Löschen verliert Unteraufgaben und Anhänge | `RemindersStore:699` | Hoch | gelesen |
-| A4 | Edit geht stumm verloren, wenn Karte aus dem Cache fällt | `RemindersStore:844` | Hoch | gelesen |
+| ~~A4~~ | ~~Edit geht stumm verloren, wenn Karte aus dem Cache fällt~~ — **behoben** | `RemindersStore:846` | ~~Hoch~~ | erledigt |
 | B1 | Zeitzone der Fälligkeit geht bei jedem Speichern verloren | `RemindersStore:877` | Hoch | gemessen |
 | B2 | URL-Feld verstümmelt statt zu verwerfen (Punycode, %20) | `RemindersStore:805` | Hoch | gemessen |
 | B3 | Entzogene Berechtigung wird nie bemerkt → „Nichts zu tun" | `RemindersStore:266` | Hoch | gelesen |
-| C1 | Dunkelmodus + „Transparenz reduzieren" kippt die Tiefenordnung | `CardView:462` | Hoch | gerendert |
+| ~~C1~~ | ~~Dunkelmodus + „Transparenz reduzieren" kippt die Tiefenordnung~~ — **behoben** | `DesignSystem:158` | ~~Hoch~~ | erledigt |
 | V0b | Editor ist nicht modal — Statistik öffnet darüber | `BoardView:156` | Mittel | live |
 | V1 | „Keine Notizen" so laut wie eine echte Notiz — **Entscheidung offen** | `CardView:220` | Mittel | gemessen |
 | A5 | Leerzeilen-Notizen werden dauerhaft geschrieben | `TicketEditSheet:259` | Mittel | gelesen |
 | B4 | Alle Listen abgewählt → Board behauptet „Nichts zu tun" | `RemindersStore:354` | Mittel | gelesen |
 | B5 | Schreibfehler sind bis auf einen Pfad stumm | `RemindersStore:508` | Mittel | gelesen |
-| B6 | Undo-Eintrag wird vor dem Speichern registriert | `RemindersStore:500` | Mittel | gelesen |
+| B6 | Undo-Eintrag vor dem Speichern registriert — **`updateTicket` behoben**, `move` offen | `RemindersStore:500` | Mittel | teilweise |
 | B8 | Durchsatz teilt immer durch 30 (junges Board rechnet zu niedrig) | `WrappedStats:171` | Mittel | gelesen |
 | B10 | Weckzeiten werden beim Datumswechsel nicht mitgeführt | `RemindersStore:874` | Mittel | offen |
 | C2 | Karten können über den Kopf von „In Bearbeitung" zeichnen | `ColumnView:188` | Mittel | gelesen |
@@ -72,7 +72,7 @@ A1 steht vorn, weil es als einziger Befund Nutzertext ohne Zutun und ohne Undo z
 | E3 | ⌘N liegt auf „In Erinnerungen öffnen" | `GlassKanbanApp:33` | Niedrig | gelesen |
 | E4 | ⌘F taucht in keinem Menü auf | `BoardView:280` | Niedrig | gelesen |
 | E6 | Einstellungen nennen bei fehlendem Zugriff die falsche Ursache | `SettingsView:46` | Niedrig | gelesen |
-| F1 | `updateTicket` schreibt den unsanitisierten Titel | `RemindersStore:891` | Aufräumen | gelesen |
+| ~~F1~~ | ~~`updateTicket` schreibt den unsanitisierten Titel~~ — **behoben** | `RemindersStore:924` | ~~Aufräumen~~ | erledigt |
 | F2 | `reminder.calendar` ohne nil-Guard | `RemindersStore:672` | Aufräumen | gelesen |
 | F3 | Farbe der „Häufigsten Liste" nicht deterministisch | `WrappedStats:155` | Aufräumen | gelesen |
 | F4 | „Letzte 30 Tage" hart kodiert statt `trendWindowDays` | `StatsPopover:534` | Aufräumen | gelesen |
@@ -184,7 +184,7 @@ Liste in beiden Erscheinungsbildern. WIP-Kapsel färbt bei 7/3 korrekt als „ü
 
 ## A — Datenverlust (zuerst)
 
-### A1. Hashtag ohne linke Wortgrenze zerstört Nutzertext, ohne Zutun · `gemessen`
+### ~~A1. Hashtag ohne linke Wortgrenze zerstört Nutzertext, ohne Zutun~~ · BEHOBEN 26.07.
 `GlassKanban/StatusTagger.swift:16-29`
 
 Alle sechs Tag-Muster haben `\b` nur rechts. Ausgeführt:

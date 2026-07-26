@@ -139,6 +139,26 @@ enum Board {
         return isDone ? Color(white: 0.97) : .white
     }
 
+    /// What a glass surface becomes when "Transparenz reduzieren" is on.
+    ///
+    /// The setting is about seeing *through* the window to the desktop, so it
+    /// only ever concerns real materials — `columnFill` and `cardFill` need no
+    /// stand-in at all: one is black at a few percent over an opaque window
+    /// background, the other is already a solid colour. Both were nonetheless
+    /// swapped for semantic AppKit colours, and those carry their own relative
+    /// order: in dark mode `controlBackgroundColor` (0.118) is *darker* than
+    /// `underPageBackgroundColor` (0.157), so every card sank below the lane
+    /// it lay on and the "+" disc read as a hole. Turning on an accessibility
+    /// setting inverted the one thing the opaque fills exist to guarantee.
+    ///
+    /// So the fallbacks are gone, and what is left is this: one tone for the
+    /// chrome that really is glass — the tooltip, the empty-board notice, the
+    /// "+" disc. It sits *above* paper (0.32 against the card's 0.25 in dark),
+    /// because chrome floats over the board rather than lying on it.
+    static func opaqueGlassFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color(white: 0.32) : .white
+    }
+
     static let columnInnerShadow = Color.black.opacity(0.10)
 
     /// Grouped content inside a popover — the stats window's wells.

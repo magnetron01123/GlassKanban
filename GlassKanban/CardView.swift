@@ -464,10 +464,15 @@ struct CardView: View {
 
     /// Opaque "paper" so cards read as physical objects on the recessed
     /// lanes — independent of whatever wallpaper shines through the window.
+    ///
+    /// One fill in every mode: this is a solid colour, never a material, so
+    /// "Transparenz reduzieren" has nothing to switch off. It used to swap in
+    /// `controlBackgroundColor` there, which in dark mode is darker than the
+    /// lane and dropped the card *below* the surface it lies on — and which
+    /// also lost the dimmer paper a finished ticket carries, because the
+    /// fallback had nowhere to put `isDone`. See `Board.opaqueGlassFill`.
     private var cardFill: Color {
-        reduceTransparency
-            ? Color(nsColor: .controlBackgroundColor)
-            : Board.cardFill(colorScheme, isDone: card.status == .done)
+        Board.cardFill(colorScheme, isDone: card.status == .done)
     }
 
     private var contour: some View {

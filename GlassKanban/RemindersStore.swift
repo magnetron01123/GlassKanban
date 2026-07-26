@@ -830,57 +830,79 @@ final class RemindersStore: ObservableObject {
     /// status hashtag is reapplied for the card's current column — this
     /// method never changes status, `move` does that — so a content edit
     /// can never accidentally relocate the card.
+    /// Writes only the fields that actually changed, measured against the
+    /// state the editor loaded (`baseline`).
+    ///
+    /// The sheet reads once, when it opens, and can then sit open for as long
+    /// as it likes. Writing every field back would make that stale copy the
+    /// truth: add a line to the same reminder on a phone, change nothing but
+    /// the priority here, and the phone's line is gone — no conflict, no
+    /// warning, and nothing on screen that ever showed it. Comparing against
+    /// the baseline instead means an untouched field is not written at all,
+    /// so a change that arrived from somewhere else survives.
+    ///
+    /// This is the same care `status` below already took, applied to the rest
+    /// of the ticket.
     func updateTicket(
         cardID: String,
-        title: String,
-        notes: String,
-        url: String,
-        dueDate: Date?,
-        hasDueTime: Bool,
-        priority: Int,
-        calendarID: String,
+        edited: EditableTicket,
+        baseline: EditableTicket,
         undoManager: UndoManager? = nil
     ) {
-        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder,
-              let index = cards.firstIndex(where: { $0.id == cardID }) else { return }
-        // The inverse write, captured before anything is touched — the same
-        // shape the editor itself reads, so ⌘Z is one updateTicket back.
-        if let previous = loadEditableTicket(cardID: cardID) {
-            register(undoManager, name: "Bearbeiten") { store in
-                store.updateTicket(
-                    cardID: cardID,
-                    title: previous.title,
-                    notes: previous.notes,
-                    url: previous.url,
-                    dueDate: previous.dueDate,
-                    hasDueTime: previous.hasDueTime,
-                    priority: previous.priority,
-                    calendarID: previous.calendarID,
-                    undoManager: undoManager)
-            }
-        }
+        guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
+        // Not a guard: the index only drives the optimistic redraw below. A
+        // card can leave `cards` while its editor is open — its list gets
+        // excluded in Settings, or it is deleted on another device — and the
+        // edit still has to reach EventKit rather than being dropped on the
+        // floor without a word.
+        let index = cards.firstIndex(where: { $0.id == cardID })
+
         // Read from the reminder itself, not the cached `cards[index].status`:
         // the sheet can sit open long enough for an external change (another
         // device, a direct edit in Reminders.app) to move the card before
         // this save runs. Using the stale cache here would silently reapply
         // the old column's tag over whatever the live state already is.
         let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
-        let rewrittenNotes = StatusTagger.rewrittenNotes(notes, for: status)
-        // Without a time of day the reminder stays all-day, the way Reminders
-        // itself models it (see `EditableTicket.hasDueTime`).
-        let dueFields: Set<Foundation.Calendar.Component> =
-            hasDueTime ? [.year, .month, .day, .hour, .minute] : [.year, .month, .day]
-        let newCalendar = eventStore.calendar(withIdentifier: calendarID)
-        reminder.title = title
-        reminder.notes = rewrittenNotes
-        reminder.url = Self.parsedURL(url)
-        reminder.dueDateComponents = dueDate.map {
-            Foundation.Calendar.current.dateComponents(dueFields, from: $0)
+        let newCalendar = eventStore.calendar(withIdentifier: edited.calendarID)
+
+        let titleChanged = edited.title != baseline.title
+        let notesChanged = edited.notes != baseline.notes
+        let urlChanged = edited.url != baseline.url
+        let dueChanged = edited.dueDate != baseline.dueDate || edited.hasDueTime != baseline.hasDueTime
+        let priorityChanged = edited.priority != baseline.priority
+        let calendarChanged = edited.calendarID != baseline.calendarID
+
+        // Only computed when it is going to be written: leaving the notes
+        // alone also leaves whatever tag they carry, which is exactly the
+        // live status — so an untouched note still cannot relocate the card.
+        var rewrittenNotes: String?
+        if notesChanged {
+            rewrittenNotes = StatusTagger.rewrittenNotes(edited.notes, for: status)
         }
-        reminder.priority = priority
-        if let newCalendar, newCalendar.calendarIdentifier != reminder.calendar?.calendarIdentifier {
+
+        if titleChanged { reminder.title = edited.title }
+        if notesChanged { reminder.notes = rewrittenNotes }
+        if urlChanged { reminder.url = Self.parsedURL(edited.url) }
+        if dueChanged {
+            // Without a time of day the reminder stays all-day, the way
+            // Reminders itself models it (see `EditableTicket.hasDueTime`).
+            let dueFields: Set<Foundation.Calendar.Component> =
+                edited.hasDueTime ? [.year, .month, .day, .hour, .minute] : [.year, .month, .day]
+            reminder.dueDateComponents = edited.dueDate.map {
+                Foundation.Calendar.current.dateComponents(dueFields, from: $0)
+            }
+        }
+        if priorityChanged { reminder.priority = edited.priority }
+        if calendarChanged, let newCalendar,
+           newCalendar.calendarIdentifier != reminder.calendar?.calendarIdentifier {
             reminder.calendar = newCalendar
         }
+
+        // Captured before the save but registered after it: an undo entry for
+        // a write that never happened is worse than none, because ⌘Z then
+        // spends itself doing nothing and the *next* ⌘Z undoes something the
+        // user did not mean to reach.
+        let previous = loadEditableTicket(cardID: cardID)
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
@@ -888,12 +910,28 @@ final class RemindersStore: ObservableObject {
             scheduleRefresh()
             return
         }
-        cards[index].title = title
-        cards[index].notesPreview = TextSanitizer.notesPreview(rewrittenNotes)
-        cards[index].notesExcerpt = TextSanitizer.notesExcerpt(rewrittenNotes)
-        cards[index].dueDate = dueDate
-        cards[index].priority = priority
-        if let newCalendar {
+        // The inverse write: back to `previous`, measured against what was
+        // just written, so undo touches exactly the fields this edit did.
+        if let previous {
+            register(undoManager, name: "Bearbeiten") { store in
+                store.updateTicket(
+                    cardID: cardID, edited: previous, baseline: edited, undoManager: undoManager)
+            }
+        }
+        guard let index else {
+            scheduleRefresh()
+            return
+        }
+        // Only what was written is reflected — a field left alone on the
+        // reminder must not be overwritten on the card either.
+        if titleChanged { cards[index].title = TextSanitizer.displayTitle(edited.title) }
+        if notesChanged {
+            cards[index].notesPreview = TextSanitizer.notesPreview(rewrittenNotes)
+            cards[index].notesExcerpt = TextSanitizer.notesExcerpt(rewrittenNotes)
+        }
+        if dueChanged { cards[index].dueDate = edited.dueDate }
+        if priorityChanged { cards[index].priority = edited.priority }
+        if calendarChanged, let newCalendar {
             cards[index].listName = newCalendar.title
             cards[index].listColor = Color(nsColor: newCalendar.color ?? .controlAccentColor)
         }

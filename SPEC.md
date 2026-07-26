@@ -63,11 +63,20 @@ Spaltenwechsel unverändert.
 | Erledigt | `isCompleted = true` setzen, Status-Zeile entfernen |
 
 **Lesen:** Der Hashtag wird an beliebiger Stelle im Notizen-Text gesucht, ohne Rücksicht auf
-Groß-/Kleinschreibung und mit Wortgrenze (`#inbearbeitungszeit` zählt also nicht). Die
+Groß-/Kleinschreibung, aber **nur wo er allein steht** — links und rechts Leerraum oder
+Textgrenze. `#inbearbeitungszeit` zählt damit nicht, und ebenso wenig ein Treffer mitten
+in anderem Text: `https://example.com/guide#next`, `#next-steps`, `#bearbeitung/2024`,
+`ABC#NEXT!`. Die
 umlautfreie Schreibweise `#alsnaechstes` wird beim Lesen akzeptiert (unterwegs ohne Umlaute
 getippt) und beim nächsten Schreiben normalisiert. Stehen mehrere Tags im Text, gewinnt der
 **zuletzt** im Text stehende. Erinnerungen ohne erkannten Hashtag und ohne `isCompleted`
 fallen automatisch in „Backlog".
+
+Die Regel scheitert bewusst **nach innen**: `#alsnächstes.` mit Satzpunkt gilt nicht mehr
+als Tag, die Karte bleibt in „Backlog" und der Text bleibt unangetastet. Ein nicht
+erkanntes Tag kostet einen Zug mit der Maus; ein fälschlich erkanntes kostete bis Juli 2026
+Nutzertext — die Hygiene entfernte den Treffer und hängte einen echten Tag an, ohne Zutun
+und ohne Undo-Eintrag (siehe FINDINGS-2026-07.md, A1).
 
 **Nutzertext bleibt unangetastet:** Beim Schreiben werden ausschließlich Tags entfernt bzw.
 angehängt. Zeilen ohne Tag werden zeichengenau durchgereicht — auch Leerzeilen, die als

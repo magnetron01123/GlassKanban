@@ -418,17 +418,17 @@ struct TicketEditSheet: View {
             .padding(.trailing, Board.openCardInset)
     }
 
+    /// One paper tone whatever the ticket's state. The lanes dim a finished
+    /// card because it is one of many and has to recede among them; held open
+    /// on its own there is nothing for it to recede behind, and a card that
+    /// looks different depending on which lane it came from is two cards.
+    ///
+    /// And one fill in every mode, for the reason `CardView.cardFill` gives:
+    /// a solid colour has nothing for "Transparenz reduzieren" to switch off,
+    /// and the stand-in this used to reach for was darker than the board
+    /// behind it in dark mode.
     private var cardFill: Color {
-        reduceTransparency
-            ? Color(nsColor: .controlBackgroundColor)
-            // The dimmer paper a finished ticket already has in its lane —
-            // the parameter was there, this view just never passed it.
-            // One paper tone whatever the ticket's state. The lanes dim a
-            // finished card because it is one of many and has to recede among
-            // them; held open on its own there is nothing for it to recede
-            // behind, and a card that looks different depending on which lane
-            // it came from is two cards.
-            : Board.cardFill(colorScheme)
+        Board.cardFill(colorScheme)
     }
 
     private var listStripe: some View {
@@ -653,15 +653,14 @@ struct TicketEditSheet: View {
             edited.title = loadedTicket.title
         }
         guard edited != loadedTicket else { return }
+        // `loadedTicket` travels along as the baseline: it is what this sheet
+        // was opened on, so the store can tell an edited field from one that
+        // only looks unchanged, and leave the latter to whatever the live
+        // reminder holds.
         store.updateTicket(
             cardID: card.id,
-            title: edited.title,
-            notes: edited.notes,
-            url: edited.url,
-            dueDate: edited.dueDate,
-            hasDueTime: edited.hasDueTime,
-            priority: edited.priority,
-            calendarID: edited.calendarID,
+            edited: edited,
+            baseline: loadedTicket,
             undoManager: undoManager)
     }
 }

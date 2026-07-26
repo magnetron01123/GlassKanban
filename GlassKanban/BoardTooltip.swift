@@ -248,7 +248,7 @@ private struct BoardTooltipLabel: View {
     @ViewBuilder
     private var surface: some View {
         if reduceTransparency {
-            Board.tooltipShape.fill(Color(nsColor: .controlBackgroundColor))
+            Board.tooltipShape.fill(Board.opaqueGlassFill(colorScheme))
         } else {
             // `.withinWindow`, unlike the lane's add button: this floats
             // *above* the board's own content, so it should frost the cards

@@ -621,10 +621,12 @@ struct ColumnView: View {
                 lineWidth: showsDropFeedback ? 1.5 : 1)
     }
 
+    /// One fill in every mode — the lane is black at a few percent over the
+    /// window's own background, not a material, so there is nothing for
+    /// "Transparenz reduzieren" to switch off. See `Board.opaqueGlassFill`
+    /// for what the old fallback did to the depth order.
     private var columnFill: Color {
-        reduceTransparency
-            ? Color(nsColor: .underPageBackgroundColor)
-            : Board.columnFill(colorScheme)
+        Board.columnFill(colorScheme)
     }
 }
 
@@ -647,6 +649,7 @@ struct ColumnView: View {
 private struct AddButtonGlass: ViewModifier {
     let reduceTransparency: Bool
     let contrast: ColorSchemeContrast
+    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
@@ -657,7 +660,7 @@ private struct AddButtonGlass: ViewModifier {
     @ViewBuilder
     private var disc: some View {
         if reduceTransparency {
-            Circle().fill(Color(nsColor: .windowBackgroundColor))
+            Circle().fill(Board.opaqueGlassFill(colorScheme))
         } else {
             HUDGlassMaterial().clipShape(.circle)
         }

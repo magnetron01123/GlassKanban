@@ -4,7 +4,9 @@ import Foundation
 ///
 /// Rules (see SPEC.md):
 /// - Reading: a tag is recognized anywhere in the text, case-insensitively,
-///   with a word boundary so "#nextlevel" does not count.
+///   but only where it stands alone — whitespace or the ends of the text on
+///   both sides (see `isStandalone`). So neither "#nextlevel" nor the "#next"
+///   inside "example.com/guide#next" counts.
 /// - If several tags are present, the one appearing last in the text wins
 ///   (it is the one most recently appended).
 /// - Writing: all existing tags are removed, then the new tag is appended
@@ -49,20 +51,58 @@ enum StatusTagger {
         }
     }
 
-    private static func lastRange(in text: String, of regexes: [Regex<Substring>]) -> Range<String.Index>? {
+    /// Whether a match is the whole word and not a piece of a longer one.
+    ///
+    /// The patterns above carry `\b` on their right, which stops
+    /// `#inbearbeitungszeit` — but a regex boundary sits between *any* word
+    /// and non-word character, so `#next` was also found inside
+    /// `https://example.com/guide#next` (a URL fragment), inside `#next-steps`
+    /// and inside `ABC#NEXT!`. Every one of those made the tag hygiene rewrite
+    /// the note: the anchor came off the link, the card jumped to another
+    /// lane, and no undo was registered because the user never acted.
+    ///
+    /// So a tag counts only when it stands alone — whitespace or the ends of
+    /// the text on both sides. That is exactly the shape this app writes
+    /// (`rewrittenNotes` puts the tag on its own last line) and the shape
+    /// someone types on the go. The rule deliberately fails *closed*: a tag
+    /// written as `#alsnächstes.` is no longer recognised, so the card stays
+    /// in Backlog with its text intact. Not seeing a tag costs a drag; seeing
+    /// one that is not there costs the user's words.
+    ///
+    /// Checked here rather than in the pattern because Swift's regex engine
+    /// has no lookbehind ("lookbehind is not currently supported").
+    private static func isStandalone(_ range: Range<String.Index>, in text: String) -> Bool {
+        let leftIsClear = range.lowerBound == text.startIndex
+            || text[text.index(before: range.lowerBound)].isWhitespace
+        let rightIsClear = range.upperBound == text.endIndex
+            || text[range.upperBound].isWhitespace
+        return leftIsClear && rightIsClear
+    }
+
+    /// Every standalone tag in `text`, in the order it appears. The one place
+    /// the boundary rule is applied, so reading, counting and removing can
+    /// never disagree about what a tag is.
+    private static func tagRanges(
+        in text: String, of regexes: [Regex<Substring>]
+    ) -> [Range<String.Index>] {
         regexes
             .flatMap { text.ranges(of: $0) }
-            .max { $0.lowerBound < $1.lowerBound }
+            .filter { isStandalone($0, in: text) }
+            .sorted { $0.lowerBound < $1.lowerBound }
+    }
+
+    private static func lastRange(in text: String, of regexes: [Regex<Substring>]) -> Range<String.Index>? {
+        tagRanges(in: text, of: regexes).last
     }
 
     static func tagCount(_ notes: String?) -> Int {
         guard let notes else { return 0 }
-        return allTagRegexes.reduce(0) { $0 + notes.ranges(of: $1).count }
+        return tagRanges(in: notes, of: allTagRegexes).count
     }
 
     static func hasLegacyTag(_ notes: String?) -> Bool {
         guard let notes else { return false }
-        return (legacyNextRegexes + legacyProgressRegexes).contains { notes.contains($0) }
+        return !tagRanges(in: notes, of: legacyNextRegexes + legacyProgressRegexes).isEmpty
     }
 
     static func hasStatusTag(_ notes: String?) -> Bool {
@@ -111,9 +151,16 @@ enum StatusTagger {
     static func removingTags(_ text: String) -> String {
         var lines: [String] = []
         for line in text.components(separatedBy: "\n") {
+            // Only standalone tags come out — see `isStandalone`. Removed back
+            // to front so the earlier ranges keep their indices, and skipping
+            // anything that overlaps what was just cut, since two patterns
+            // could in principle land on the same run of characters.
+            let ranges = tagRanges(in: line, of: allTagRegexes).reversed()
             var cleaned = line
-            for regex in allTagRegexes {
-                cleaned.replace(regex, with: "")
+            var cutFrom: String.Index?
+            for range in ranges where cutFrom.map({ range.upperBound <= $0 }) ?? true {
+                cleaned.removeSubrange(range)
+                cutFrom = range.lowerBound
             }
             guard cleaned != line else {
                 lines.append(line)
