@@ -53,6 +53,15 @@ xcodebuild -project GlassKanban.xcodeproj -scheme GlassKanban \
   -destination 'platform=macOS' test
 ```
 
+## Dokumentation
+
+| Datei | Inhalt |
+|---|---|
+| [SPEC.md](SPEC.md) | Was die App heute tut (lebende Spezifikation) |
+| [CONCEPT.md](CONCEPT.md) | Warum sie so ist (Herleitung, verworfene Alternativen) |
+| [BACKLOG.md](BACKLOG.md) | Was bewusst (noch) nicht umgesetzt ist |
+| [RELEASE.md](RELEASE.md) | Fahrplan und Arbeitsstand zum Mac-App-Store-Release |
+
 ## Hinweise
 
 - Der Doppelklick-Deep-Link nutzt ein undokumentiertes URL-Schema der Erinnerungen-App
