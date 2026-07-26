@@ -189,6 +189,16 @@ gibt die App für Ereignisse aus (siehe „Zwei Uhren"); eine Falte ist kein Ere
 eine Offenlegung, und die rollt sich auf. Gilt für beide faltenden Spalten, Backlog wie
 „Erledigt". Unter „Bewegung reduzieren" schaltet sie sich ganz ab.
 
+**Die Falt-Zeile behält dabei ihre Identität.** Sie wandert beim Aufklappen um die volle
+Höhe des aufgedeckten Stapels nach unten — richtig so, sie markiert dessen Ende und wird
+von den aufrollenden Karten geschoben. Aber Text („… anzeigen" ↔ „… ausblenden") und
+Chevron wechselten im selben Moment hart: drei gleichzeitige Änderungen, und das
+angeklickte Ding verschwand, während ein anderes woanders landete — *das* war das
+Hektische, nicht die Reise. Jetzt **dreht sich ein** Chevron (wie jedes
+Disclosure-Dreieck auf dem Mac, −180°), und der Text **blendet über**
+(`contentTransition(.opacity)`). Ein Objekt, das mitfährt — kein Kontrollwechsel
+(Juli 2026, nach Nutzer-Feedback „viel zu hektisch").
+
 **Wiederkehrende Aufgaben lassen sich nicht aus „Erledigt" zurückholen, solange die
 Serie weiterläuft.** EventKit löst eine abgehakte Ausführung aus ihrer Serie und legt
 die nächste sofort als eigene offene Erinnerung an. `isCompleted` wieder zu löschen

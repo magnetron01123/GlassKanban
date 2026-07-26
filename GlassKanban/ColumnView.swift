@@ -627,6 +627,17 @@ struct ColumnView: View {
             // board's slowest curve — see there.
             toggleFold()
         } label: {
+            // The line keeps its identity through the fold. It travels the
+            // whole height of the revealed stack (it marks the end of the
+            // pile, so the unrolling cards push it down — that part is
+            // right), and it used to change its text and swap its chevron
+            // glyph in the same instant, mid-flight. Three simultaneous
+            // changes meant the thing that was clicked vanished and a
+            // different thing landed somewhere else — which is what read as
+            // hectic, not the travel. So: one chevron that *turns*, the way
+            // every disclosure on this platform turns, and a label that
+            // cross-fades. One object, pushed down by the cards it just
+            // revealed.
             HStack(spacing: 5) {
                 Text(moreLabel)
                     .font(BoardText.body)
@@ -634,8 +645,10 @@ struct ColumnView: View {
                     // line at this scale, and it has to read as a link, not
                     // as running text.
                     .fontWeight(.medium)
-                Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                    .contentTransition(.opacity)
+                Image(systemName: "chevron.down")
                     .font(BoardText.glyph)
+                    .rotationEffect(.degrees(expanded ? -180 : 0))
             }
             .foregroundStyle(moreHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
             .frame(maxWidth: .infinity)
