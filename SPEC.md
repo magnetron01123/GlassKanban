@@ -189,15 +189,21 @@ gibt die App für Ereignisse aus (siehe „Zwei Uhren"); eine Falte ist kein Ere
 eine Offenlegung, und die rollt sich auf. Gilt für beide faltenden Spalten, Backlog wie
 „Erledigt". Unter „Bewegung reduzieren" schaltet sie sich ganz ab.
 
-**Die Falt-Zeile behält dabei ihre Identität.** Sie wandert beim Aufklappen um die volle
-Höhe des aufgedeckten Stapels nach unten — richtig so, sie markiert dessen Ende und wird
-von den aufrollenden Karten geschoben. Aber Text („… anzeigen" ↔ „… ausblenden") und
-Chevron wechselten im selben Moment hart: drei gleichzeitige Änderungen, und das
-angeklickte Ding verschwand, während ein anderes woanders landete — *das* war das
-Hektische, nicht die Reise. Jetzt **dreht sich ein** Chevron (wie jedes
-Disclosure-Dreieck auf dem Mac, −180°), und der Text **blendet über**
-(`contentTransition(.opacity)`). Ein Objekt, das mitfährt — kein Kontrollwechsel
-(Juli 2026, nach Nutzer-Feedback „viel zu hektisch").
+**Die Falt-Zeile reist nicht — sie blendet.** Ihr Ruheplatz liegt unter dem Stapel,
+also verschiebt ihn das Aufklappen um dessen volle Höhe. Das als Fahrt zu animieren
+schickte einen kontrastreichen Textstreifen in einer Drittelsekunde über die halbe
+Spalte — das schnellste bewegte Objekt des ganzen Boards, und ausgerechnet der Anker
+des Auges (die eben geklickte Zeile) war es, das da raste. Ein Zwischenstand erhielt
+ihre Identität während des Flugs (drehendes Chevron, überblendender Text); das machte
+den Streifen ordentlicher, nicht ruhiger — und wurde verworfen.
+
+Es gilt die Distanzregel der Plattform: **kurze Wege animieren, lange Wege blenden.**
+Die zugeklappte und die aufgeklappte Zeile sind zwei Ansichten (`id(expanded)`): die
+alte löst sich an ihrem Platz auf, die neue erscheint an ihrem, beide auf der Kurve der
+Falte — nichts überquert dazwischen den Bildschirm. Die Karten blenden, die Zeile
+blendet: eine leise Geste. Das Chevron zeigt je Zustand in seine Richtung (gedreht
+statt ausgetauscht, damit beide Enden derselben Form angehören). Juli 2026, nach
+zweifachem Nutzer-Feedback — der erste Fix hatte das falsche Element beruhigt.
 
 **Wiederkehrende Aufgaben lassen sich nicht aus „Erledigt" zurückholen, solange die
 Serie weiterläuft.** EventKit löst eine abgehakte Ausführung aus ihrer Serie und legt
