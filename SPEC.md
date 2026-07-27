@@ -425,6 +425,35 @@ Details:
   sich als gar keine Ordnung.
 - Die Zähler-Kapsel nennt den **ganzen Stapel** (die Karten sind wirklich in der Spalte); der
   Spalten-Tooltip nennt die Aufteilung („N davon noch nicht fällig").
+- Die Falz-Zeile **beschreibt immer ihren Inhalt, nie den Grund des Schnitts**: enthält der Falz
+  ausschließlich noch nicht fällige Karten, benennt sie das („N noch nicht fällig"); ist auch
+  nur eine fällige Karte dabei — weil der Stapel über das Kartenlimit gewachsen ist —
+  fällt sie auf „N weitere anzeigen" zurück. Einen von zwei Gründen zu nennen wäre falscher als
+  keinen: eine fällige, sofort ziehbare Karte darf nie unter dem Etikett „noch nicht fällig"
+  liegen. Abgesichert durch `BacklogFoldTests`.
+
+### Schalter „Noch nicht Fälliges einklappen"
+
+In den Einstellungen unter **Backlog**; Standard **an**.
+
+| Stellung | Der Falz klappt ein … |
+|---|---|
+| An (Standard) | noch nicht Fälliges **und** alles über dem Kartenlimit |
+| Aus | nur, was über dem Kartenlimit liegt |
+
+Die **Sortierung ist von beiden Stellungen unberührt** — noch nicht Fälliges sinkt immer ans
+Spaltenende. Der Schalter entscheidet allein, ob der Falz an dieser Linie schneidet.
+
+Das **Kartenlimit ist nicht abschaltbar**. Es hat keine Meinung über die Arbeit, sondern nur
+über eine Spalte, die zur Wand wird — anders als die Reifelinie ist es keine Workflow-Frage.
+
+**Warum an als Standard:** Backlog ist der Vorrat an Optionen, die das Board **jetzt** ziehen
+könnte; eine Aufgabe, die in drei Wochen wiederkommt, ist keine davon. Ein Ruhezustand, der
+zeigt, was tatsächlich ziehbar ist, ist sowohl der ruhigere als auch der Kanban-treuere.
+**Warum es den Schalter trotzdem gibt:** der Backlog ist die Stelle, an der sich Arbeitsweisen
+am stärksten unterscheiden — manche wollen den ganzen Vorrat sehen und selbst triagieren. Und
+anders als bei der abgelösten Regel **verbirgt keine der beiden Stellungen etwas**: beide
+klappen ein, beide benennen die Menge, beide sind einen Klick vom vollen Stapel entfernt.
 
 **Warum nicht ausblenden (Entscheidung 27.07.2026, ersetzt die vorherige Regel):** Bis dahin
 verschwanden diese Karten bis zur Fälligkeit ganz — Standard „Wenn fällig", umschaltbar in den
@@ -435,7 +464,9 @@ Regel genau den Zug, für den das Board da ist: heute Kapazität haben und den E
 Mittwoch vorziehen. Die alte Begründung — eine Monatsaufgabe sei „Hintergrundrauschen" — trug
 nicht: sie ist sehr wohl eine Entscheidung, nur eine schwächere, und schwächere Optionen
 gehören nach unten, nicht weg. Mit gestrichen wurden dabei die Filterzeile „Wiederkehrende",
-die Einstellung dazu und der Leer-Zustand „Nichts fällig".
+die Einstellung dazu und der Leer-Zustand „Nichts fällig". Der Schalter oben ersetzt die alte
+Einstellung *nicht*: er wählt zwischen zwei Falz-Schnitten, die alte wählte zwischen Sehen und
+Nicht-Sehen.
 
 ## WIP-Limits
 

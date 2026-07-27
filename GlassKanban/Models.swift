@@ -322,16 +322,28 @@ enum BacklogFold {
     /// line: a recurring chore whose turn has not come is not something this
     /// board could pull today, so the resting lane stops there (see
     /// `KanbanCard.isNotYetDue`, which `cards` must already be sorted by —
-    /// see `KanbanCard.openLaneOrder`). Then the old count cap, for a pile of
+    /// see `KanbanCard.openLaneOrder`). Then the count cap, for a pile of
     /// ripe cards long enough to be a wall on its own.
+    ///
+    /// `foldsNotYetDue` switches the first cut off — see
+    /// `RemindersStore.foldNotYetDue`, the preference behind it. The count cap
+    /// is not optional: it is what keeps a lane from becoming a wall, and it
+    /// has no opinion about the work, only about the height of the pile.
+    ///
+    /// Note that with the first cut off, the tail can still happen to be all
+    /// not-yet-due cards (they sort last either way, so a pile just over the
+    /// limit spills exactly those). `canNameNotYetDue` then still names them,
+    /// and rightly: it describes what the fold actually holds, never why the
+    /// cut landed where it did.
     static func restingCut(
         _ cards: [KanbanCard],
-        limit: Int = collapsedLimit
+        limit: Int = collapsedLimit,
+        foldsNotYetDue: Bool = true
     ) -> [KanbanCard] {
         // `prefix(while:)` rather than a filter, because the not-yet-due
         // cards really are a tail: `openLaneOrder` sinks them there before
         // anything else it sorts on.
-        let ripe = cards.prefix { !$0.isNotYetDue() }
+        let ripe = foldsNotYetDue ? Array(cards.prefix { !$0.isNotYetDue() }) : cards
         return Array(ripe.prefix(limit))
     }
 

@@ -19,7 +19,7 @@ import ServiceManagement
 enum SettingsMetrics {
     static let width: CGFloat = 420
     static let listsHeight: CGFloat = 260
-    static let generalHeight: CGFloat = 447
+    static let generalHeight: CGFloat = 455
 }
 
 struct SettingsView: View {
@@ -148,6 +148,23 @@ struct GeneralSettingsView: View {
             // around — but an app that lives on screen all day owes the off
             // switch a first-class place.
             Toggle("Ton beim Erledigen", isOn: $store.completionSoundEnabled)
+
+            // Where workflows differ most. Backlog is the pool of options the
+            // board could pull *now*, which is why this ships on — but "now"
+            // is a judgement some people would rather make themselves, with
+            // the whole pool in view. Unlike the rule this replaced, neither
+            // position hides anything: both fold, both count what they hold,
+            // both are one click from the full pile (see `BacklogFold`).
+            Section {
+                Toggle("Noch nicht Fälliges einklappen", isOn: $store.foldNotYetDue)
+            } header: {
+                Text("Backlog")
+            } footer: {
+                // Says what the switch does *and* that nothing disappears
+                // either way — the previous version of this feature did make
+                // cards vanish, and that is the fear worth answering here.
+                Text("Wiederkehrende Aufgaben, deren nächster Termin noch nicht erreicht ist, ruhen hinter der Falz-Zeile am Fuß des Backlogs — ein Klick holt sie hervor, ausgeblendet wird nie etwas. Über \(BacklogFold.collapsedLimit) Karten klappt der Rest unabhängig davon ein.")
+            }
 
             // Deliberately the only place a limit can be changed: a limit you
             // can raise from the board, in the moment it gets inconvenient,

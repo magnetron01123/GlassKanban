@@ -143,9 +143,31 @@ final class RemindersStore: ObservableObject {
         }
     }
 
+    /// Whether Backlog's fold rests at the ripeness line — i.e. whether a
+    /// recurring card whose next turn has not come sits behind the fold line
+    /// rather than in the resting pile (see `BacklogFold.restingCut`).
+    ///
+    /// On by default. Backlog is the pool of options this board could pull
+    /// *now*, and a chore that comes round in three weeks is not one of them;
+    /// a resting board that shows what is actually pullable is both the
+    /// calmer and the more Kanban-honest one. The switch exists because the
+    /// backlog is where people's workflows differ most — some want the whole
+    /// pool in view and do their own triage — and unlike the rule this
+    /// replaced, *neither* position hides anything: both fold, both count,
+    /// both are one click from the full pile.
+    ///
+    /// Off, only the count cap folds. That cap is not switchable: it has no
+    /// opinion about the work, only about a lane tall enough to become a wall.
+    @Published var foldNotYetDue: Bool {
+        didSet {
+            UserDefaults.standard.set(foldNotYetDue, forKey: Self.foldNotYetDueKey)
+        }
+    }
+
     private static let excludedKey = "excludedCalendarIDs"
     private static let wipLimitsKey = "wipLimits"
     private static let completionSoundKey = "completionSoundEnabled"
+    private static let foldNotYetDueKey = "foldNotYetDue"
 
     /// How far back completions are fetched for the streak calculation. A
     /// streak longer than this would be reported short — deliberately far
@@ -184,6 +206,7 @@ final class RemindersStore: ObservableObject {
                     .filter(\.supportsWIPLimit)
                     .map { ($0.rawValue, $0.defaultWIPLimit) })
         completionSoundEnabled = UserDefaults.standard.object(forKey: Self.completionSoundKey) as? Bool ?? true
+        foldNotYetDue = UserDefaults.standard.object(forKey: Self.foldNotYetDueKey) as? Bool ?? true
     }
 
     // MARK: - WIP limits

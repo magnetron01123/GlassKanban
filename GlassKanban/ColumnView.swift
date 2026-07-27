@@ -36,7 +36,7 @@ struct ColumnView: View {
     /// is a later, and there is more of the same", the other is "there is a
     /// past".
     private var restingCards: [KanbanCard] {
-        Self.restingCut(cards, for: status)
+        Self.restingCut(cards, for: status, foldsNotYetDue: store.foldNotYetDue)
     }
 
     /// The resting cut as a function, because two places must agree on it:
@@ -44,10 +44,14 @@ struct ColumnView: View {
     /// editor closes (see `onChange(of: store.editingCardID)`), which has to
     /// re-derive the cut from *fresh* store data rather than from this
     /// view's captured inputs.
-    private static func restingCut(_ cards: [KanbanCard], for status: KanbanStatus) -> [KanbanCard] {
+    private static func restingCut(
+        _ cards: [KanbanCard],
+        for status: KanbanStatus,
+        foldsNotYetDue: Bool
+    ) -> [KanbanCard] {
         switch status {
         case .backlog:
-            return BacklogFold.restingCut(cards)
+            return BacklogFold.restingCut(cards, foldsNotYetDue: foldsNotYetDue)
         case .done:
             return DoneWindow.recent(cards)
         default:
@@ -325,7 +329,8 @@ struct ColumnView: View {
                 let laneCards = store.cards(for: status)
                 guard !expanded,
                       laneCards.contains(where: { $0.id == closed }),
-                      !Self.restingCut(laneCards, for: status).contains(where: { $0.id == closed })
+                      !Self.restingCut(laneCards, for: status, foldsNotYetDue: store.foldNotYetDue)
+                          .contains(where: { $0.id == closed })
                 else { return }
                 fold { expanded = true }
             }

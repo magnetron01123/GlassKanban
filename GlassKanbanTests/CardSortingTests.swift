@@ -402,4 +402,60 @@ final class BacklogFoldTests: XCTestCase {
         XCTAssertEqual(folded.count, 1)
         XCTAssertTrue(BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now))
     }
+
+    // MARK: - The preference (BacklogFold.foldsNotYetDue)
+
+    /// Switched off, the ripeness line stops cutting: a short Backlog rests
+    /// with every card in view, not-yet-due ones included.
+    func testWithoutRipenessCutShortBacklogShowsEverything() {
+        let all = ([ripeCard("ripe")] + [laterCard("later", due: date(2026, 8, 1))])
+            .sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+
+        XCTAssertEqual(BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: false).count, 2)
+        XCTAssertEqual(BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: true).count, 1)
+    }
+
+    /// The count cap is not part of the bargain — it still folds either way.
+    /// It has no opinion about the work, only about a lane tall enough to
+    /// become a wall, so no preference switches it off.
+    func testCountCapStillAppliesWithoutRipenessCut() {
+        let all = (1...20).map { ripeCard("ripe-\($0)") }
+        XCTAssertEqual(BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: false).count, 15)
+    }
+
+    /// Off, and a pile just over the limit: the tail that spills happens to
+    /// be exactly the not-yet-due cards, because they sort last either way.
+    /// The label names them — it describes what the fold holds, never why the
+    /// cut landed there, so it stays true under both positions.
+    func testLabelStaysTruthfulWhenTheSpillIsAllLater() {
+        let ripeCards = (1...15).map { ripeCard("ripe-\($0)") }
+        let laterCards = [
+            laterCard("later-1", due: date(2026, 8, 1)),
+            laterCard("later-2", due: date(2026, 9, 1)),
+        ]
+        let all = (ripeCards + laterCards)
+            .sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+
+        let resting = BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: false)
+        let folded = Array(all.dropFirst(resting.count))
+        XCTAssertEqual(folded.count, 2)
+        XCTAssertTrue(BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now))
+    }
+
+    /// And the fatal case survives the switch: off, with more ripe cards than
+    /// the cap allows, the fold again mixes a ripe card in and must refuse
+    /// the "noch nicht fällig" label.
+    func testMixedFoldStillRefusesTheLabelWithoutRipenessCut() {
+        let ripeCards = (1...16).map { ripeCard("ripe-\($0)") }
+        let laterCards = [laterCard("later-1", due: date(2026, 8, 1))]
+        let all = (ripeCards + laterCards)
+            .sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+
+        let resting = BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: false)
+        let folded = Array(all.dropFirst(resting.count))
+        XCTAssertEqual(folded.count, 2, "1 overflowing ripe card + 1 not-yet-due card")
+        XCTAssertFalse(
+            BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now),
+            "a ripe card is in the fold — it must not be reported as merely \"not due yet\"")
+    }
 }

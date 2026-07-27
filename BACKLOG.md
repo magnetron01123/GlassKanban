@@ -81,7 +81,9 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   27.07.2026 grundlegend neu entschieden: solche Karten werden **nicht mehr ausgeblendet**,
   sondern sinken ans Ende des Backlogs, wo der Falz schneidet („N noch nicht fällig"). Grund:
   Ausblenden ist ein Push-Konzept und verhinderte genau das Vorziehen, für das ein Kanban-Board
-  da ist. Filterzeile, Einstellung und Leer-Zustand dazu sind entfallen. Siehe SPEC.md,
+  da ist. Filterzeile, Einstellung und Leer-Zustand dazu sind entfallen. Ein Schalter „Noch
+  nicht Fälliges einklappen" (Einstellungen → Backlog, Standard an) wählt seit dem 27.07.2026
+  zwischen zwei Falz-Schnitten — nicht mehr zwischen Sehen und Nicht-Sehen. Siehe SPEC.md,
   „Reifegrad statt Sichtbarkeit".
 
 ## Fensterverhalten
