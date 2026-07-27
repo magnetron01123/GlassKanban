@@ -47,7 +47,18 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   Hashtag-Mechanismus wie bei den Spalten, oder etwas anderes, das nicht mit dem
   Status-Hashtag kollidiert.
 - **Mehrere Boards** — MVP ist bewusst ein einzelnes Board.
-- **Konfigurierbare Spaltenanzahl/-namen** — MVP hat vier feste Spalten.
+- **Board-/Workflow-Designer (Name noch offen)** — Idee (26.07.2026): Nutzer:innen können ihr
+  Board individualisieren, statt nur den MVP-Standard mit vier festen Spalten zu bekommen.
+  Vorstellung: die mittleren Spalten (aktuell "Ansteuern"/"In Bearbeitung" o. ä.) lassen sich
+  umbenennen, und pro Spalte lässt sich ein eigenes WIP-Limit setzen statt nur des fest
+  eingebauten Limits für "In Bearbeitung". **Backlog und Erledigt bleiben davon ausgenommen**
+  — beide haben Sonderrollen im System (Backlog ist die Zulaufspalte ohne Limit, Erledigt hat
+  den 7-Tage-Ruhezustand/Streak-Mechanismus, siehe SPEC.md), die sich nicht einfach umbenennen
+  oder umkonfigurieren lassen, ohne diese Mechanik zu brechen. Erweitert/ersetzt die bisherige
+  knappe Notiz "Konfigurierbare Spaltenanzahl/-namen". Noch zu klären: passender Name für das
+  Feature, ob sich die Spaltenanzahl selbst auch ändern lässt oder nur Name+Limit der
+  bestehenden mittleren Spalten, und wie der Status-Hashtag-Mechanismus (SPEC.md) mit
+  umbenannten Spalten zusammenspielt.
 - **Manuelle Kartenreihenfolge innerhalb einer Spalte** — MVP sortiert automatisch nach
   Fälligkeitsdatum.
 
@@ -66,8 +77,12 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   EventKit-Verhalten geprüft werden — kein Blocker fürs MVP, aber ein bekannter blinder Fleck.
   (Das ↻-Icon auf der Karte, das eine Wiederholung überhaupt erst sichtbar macht, gibt es
   bereits — `CardView.repeatIcon` — hier geht es nur noch um das Verhalten beim Abhaken.)
-- ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt, siehe
-  SPEC.md (Filterleiste, Zeile "Wiederkehrende").
+- ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt und am
+  27.07.2026 grundlegend neu entschieden: solche Karten werden **nicht mehr ausgeblendet**,
+  sondern sinken ans Ende des Backlogs, wo der Falz schneidet („N noch nicht fällig"). Grund:
+  Ausblenden ist ein Push-Konzept und verhinderte genau das Vorziehen, für das ein Kanban-Board
+  da ist. Filterzeile, Einstellung und Leer-Zustand dazu sind entfallen. Siehe SPEC.md,
+  „Reifegrad statt Sichtbarkeit".
 
 ## Fensterverhalten
 

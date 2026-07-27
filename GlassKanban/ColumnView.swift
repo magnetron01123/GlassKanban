@@ -30,10 +30,11 @@ struct ColumnView: View {
     private var singleLine: Bool { status.cardDensity.isSingleLine }
 
     /// The two stack lanes fold away what the resting board does not need:
-    /// Backlog caps a huge pile at a count, Erledigt rests at the last week
-    /// and brings back a month on request (see `DoneWindow`). Same gesture,
-    /// different cut — one is "there is more of the same", the other is
-    /// "there is a past".
+    /// Backlog rests at what it could actually pull today and caps a huge pile
+    /// at a count, Erledigt rests at the last week and brings back a month on
+    /// request (see `DoneWindow`). Same gesture, different cut — one is "there
+    /// is a later, and there is more of the same", the other is "there is a
+    /// past".
     private var restingCards: [KanbanCard] {
         Self.restingCut(cards, for: status)
     }
@@ -45,8 +46,18 @@ struct ColumnView: View {
     /// view's captured inputs.
     private static func restingCut(_ cards: [KanbanCard], for status: KanbanStatus) -> [KanbanCard] {
         switch status {
-        case .backlog where cards.count > Board.backlogCollapsedLimit:
-            return Array(cards.prefix(Board.backlogCollapsedLimit))
+        case .backlog:
+            // Two reasons to fold, in the order they matter. First the
+            // meaningful line: a recurring chore whose turn has not come is
+            // not something this board could pull today, so the resting lane
+            // stops there. Then the old count cap, for a pile of ripe cards
+            // long enough to be a wall on its own.
+            //
+            // `prefix(while:)` rather than a filter, because the not-yet-due
+            // cards really are a tail: `KanbanCard.openLaneOrder` sinks them
+            // there before anything else it sorts on.
+            let ripe = cards.prefix { !$0.isNotYetDue() }
+            return Array(ripe.prefix(Board.backlogCollapsedLimit))
         case .done:
             return DoneWindow.recent(cards)
         default:
@@ -75,6 +86,19 @@ struct ColumnView: View {
     /// How many cards the resting cut folds away right now — the number the
     /// footer offers to bring back, and the reason the footer exists at all.
     private var foldedCount: Int { cards.count - restingCards.count }
+
+    /// What the fold is holding — the tail `restingCut` stopped at.
+    private var foldedCards: ArraySlice<KanbanCard> {
+        cards.dropFirst(restingCards.count)
+    }
+
+    /// True when everything under the fold is there because its turn has not
+    /// come, not because the lane ran out of room. Then the line can name the
+    /// reason ("3 noch nicht fällig") instead of counting ("3 weitere"), which
+    /// is the whole point of cutting at that line: the fold answers *why*.
+    private var foldIsAllLater: Bool {
+        !foldedCards.isEmpty && foldedCards.allSatisfy { $0.isNotYetDue() }
+    }
 
     /// True while a card from this very lane is being dragged. Dropping it
     /// back here changes nothing, so the lane must not promise a landing
@@ -434,22 +458,22 @@ struct ColumnView: View {
         } else if wipLimit != nil {
             details.append("Lieber abschließen als stapeln")
         }
-        if let recurringHint {
-            details.append(recurringHint)
+        if let laterHint {
+            details.append(laterHint)
         }
         return details
     }
 
-    /// What the count is leaving out. The capsule states what the lane shows,
-    /// so the one rule that shows less than the lane holds has to be readable
-    /// from the board — the same reason the WIP limit rides along in the
-    /// count. Only ever present when it has something to report, so it costs
-    /// nothing on a lane that is hiding nothing.
-    private var recurringHint: String? {
-        let hidden = store.recurringHiddenCount(for: status)
-        guard hidden > 0 else { return nil }
-        // "wiederkehrende" carries both numbers, so no singular branch needed.
-        return "\(hidden) wiederkehrende Karten"
+    /// How much of the count is not ripe yet. Backlog's capsule states the
+    /// whole pile — every card in it is genuinely in the lane — so the split
+    /// between "could be pulled now" and "comes round later" has to be
+    /// readable somewhere, the same reason the WIP limit rides along in the
+    /// count ("make policies explicit"). Only ever present when it has
+    /// something to report.
+    private var laterHint: String? {
+        let later = cards.count { $0.isNotYetDue() }
+        guard later > 0 else { return nil }
+        return "\(later) davon noch nicht fällig"
     }
 
     // MARK: - Pieces
@@ -668,12 +692,16 @@ struct ColumnView: View {
         }
     }
 
-    /// "weitere" for Backlog (more of the same pile), "ältere" for Erledigt
-    /// (a look into the past) — the word carries what the click will do.
+    /// "noch nicht fällig" when the fold is purely a later (Backlog's usual
+    /// case), "weitere" when it is only the pile being long, "ältere" for
+    /// Erledigt (a look into the past) — the word carries what the click will
+    /// do. A mixed Backlog fold falls back to the plain count: it is both
+    /// things at once, and naming only one of them would misreport the rest.
     private var moreLabel: String {
         switch (status, expanded) {
         case (.done, false): "\(foldedCount) ältere anzeigen"
         case (.done, true): "Ältere ausblenden"
+        case (_, false) where foldIsAllLater: "\(foldedCount) noch nicht fällig"
         case (_, false): "\(foldedCount) weitere anzeigen"
         case (_, true): "Weniger anzeigen"
         }

@@ -33,8 +33,7 @@ struct BoardView: View {
             if let emptiness = store.emptiness {
                 EmptyBoardNotice(
                     emptiness: emptiness,
-                    onReset: { store.resetFilters() },
-                    onShowRecurring: { store.showRecurringCards() })
+                    onReset: { store.resetFilters() })
             }
         }
         // Lanes flex between ticket-friendly bounds; the whole block sits

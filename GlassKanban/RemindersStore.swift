@@ -48,11 +48,6 @@ final class RemindersStore: ObservableObject {
     @Published var nextTopCardHeight: CGFloat?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
-    /// The per-session view of recurring cards. Not persisted itself: it starts
-    /// each launch at `defaultRecurringFilter` — the saved preference — and can
-    /// be nudged from the find popover for a quick look, falling back to that
-    /// preference on the next launch.
-    @Published var recurringFilter: RecurringFilter = .hiddenUntilDue
     @Published var searchText: String = ""
     /// The inline edit currently open anywhere on the board (see `BoardEdit`).
     /// Setting it to nil, or to a different edit, ends the previous one.
@@ -138,24 +133,6 @@ final class RemindersStore: ObservableObject {
         }
     }
 
-    /// Whether Backlog hides recurring reminders until they come due — the
-    /// board's long-standing default, now a saved preference. `recurringFilter`
-    /// starts each launch from this and resets to it, so the board's resting
-    /// state stays one thing rather than two. Persisted like the settings above.
-    @Published var hideRecurringUntilDue: Bool {
-        didSet {
-            UserDefaults.standard.set(hideRecurringUntilDue, forKey: Self.hideRecurringKey)
-            // A preference change belongs on the board now, not next launch —
-            // even if that overrides a look the find popover is currently taking.
-            recurringFilter = defaultRecurringFilter
-        }
-    }
-
-    /// Backlog's resting state for recurring cards, from the saved preference.
-    var defaultRecurringFilter: RecurringFilter {
-        hideRecurringUntilDue ? .hiddenUntilDue : .alwaysVisible
-    }
-
     /// Whether completing a task makes the quiet tick (see `MoveFeedback`).
     /// On by default — it is the reward the completion moment is for — and
     /// switchable in Settings, because an ambient board that suddenly makes
@@ -168,7 +145,6 @@ final class RemindersStore: ObservableObject {
 
     private static let excludedKey = "excludedCalendarIDs"
     private static let wipLimitsKey = "wipLimits"
-    private static let hideRecurringKey = "hideRecurringUntilDue"
     private static let completionSoundKey = "completionSoundEnabled"
 
     /// How far back completions are fetched for the streak calculation. A
@@ -207,12 +183,7 @@ final class RemindersStore: ObservableObject {
                 uniqueKeysWithValues: KanbanStatus.allCases
                     .filter(\.supportsWIPLimit)
                     .map { ($0.rawValue, $0.defaultWIPLimit) })
-        // Hiding unless the user turned it off in Settings on an earlier launch.
-        // Assigning in init does not fire the didSet, so seed the session filter
-        // here rather than relying on the property's declared placeholder.
-        hideRecurringUntilDue = UserDefaults.standard.object(forKey: Self.hideRecurringKey) as? Bool ?? true
         completionSoundEnabled = UserDefaults.standard.object(forKey: Self.completionSoundKey) as? Bool ?? true
-        recurringFilter = hideRecurringUntilDue ? .hiddenUntilDue : .alwaysVisible
     }
 
     // MARK: - WIP limits
@@ -1191,7 +1162,6 @@ final class RemindersStore: ObservableObject {
             $0.status == status
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
-                && recurringFilter.matches($0)
                 && $0.matches(search: searchTerm)
         }
         if status == .done {
@@ -1201,28 +1171,9 @@ final class RemindersStore: ObservableObject {
         return filtered.sorted(by: KanbanCard.openLaneOrder())
     }
 
-    /// Cards this lane holds that only the recurring rule is keeping out of
-    /// sight. The lane count states what is visible, so without this the
-    /// number would quietly disagree with what the lane actually contains —
-    /// and the WIP limit already establishes that a rule affecting a lane
-    /// belongs on the board, not only in a popover ("make policies explicit").
-    /// Counted against the other filters so a hidden card is only reported
-    /// when relaxing *this* rule would really bring it back.
-    func recurringHiddenCount(for status: KanbanStatus) -> Int {
-        guard recurringFilter == .hiddenUntilDue else { return 0 }
-        return cards.filter {
-            $0.status == status
-                && priorityFilter.matches($0.priority)
-                && dueFilter.matches($0.dueDate)
-                && $0.matches(search: searchTerm)
-                && !recurringFilter.matches($0)
-        }.count
-    }
-
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all
-        recurringFilter = defaultRecurringFilter
         searchText = ""
     }
 
@@ -1233,11 +1184,6 @@ final class RemindersStore: ObservableObject {
     /// this: a board must never be filtered without saying so, or cards look
     /// lost rather than hidden.
     ///
-    /// `recurringFilter` deliberately never counts here. Its default hides
-    /// cards, but as the board's normal state — badging that would leave the
-    /// find control permanently lit, which is precisely the standing
-    /// attention-grab this feature exists to avoid. Its other value shows
-    /// *more* than the default and is not a restriction either.
     /// The trimmed text decides, not the raw field: a stray space is not a
     /// search. Untrimmed, one accidental keystroke tinted the magnifier,
     /// raised the badge to 1 and made the board announce itself as filtered
@@ -1259,32 +1205,15 @@ final class RemindersStore: ObservableObject {
             + (searchTerm.isEmpty ? 0 : 1)
     }
 
-    /// Whether anything in the find popover sits away from its default —
-    /// which is a wider question than `isFiltering`, because a recurring value
-    /// away from the saved preference is a departure worth being able to undo
-    /// without being a restriction. Measured against that preference, so the
-    /// reset is not offered for a value that is already the resting one.
-    var canResetFindSettings: Bool {
-        isFiltering || recurringFilter != defaultRecurringFilter
-    }
-
     // MARK: - Empty board
 
     var emptiness: BoardEmptiness? {
         BoardEmptiness.evaluate(
             hasVisibleCards: KanbanStatus.allCases.contains { !cards(for: $0).isEmpty },
             isFiltering: isFiltering,
-            recurringHiddenCount: KanbanStatus.allCases.reduce(0) { $0 + recurringHiddenCount(for: $1) },
             hasSelectedLists: !reminderCalendars.isEmpty
                 && !reminderCalendars.allSatisfy { excludedCalendarIDs.contains($0.calendarIdentifier) })
     }
-
-    /// Shows the recurring cards the default is holding back — the action the
-    /// board offers when that rule is the only thing between it and its cards.
-    func showRecurringCards() {
-        recurringFilter = .alwaysVisible
-    }
-
 
     /// URL that opens this card's reminder directly in the Reminders app,
     /// or nil if no deep link could be resolved.

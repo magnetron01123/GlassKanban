@@ -23,7 +23,6 @@ import SwiftUI
 struct EmptyBoardNotice: View {
     let emptiness: BoardEmptiness
     let onReset: () -> Void
-    let onShowRecurring: () -> Void
 
     /// SwiftUI's own way into the Settings window (macOS 14+), so the one
     /// state whose way out lives *outside* the board can still offer one.
@@ -122,21 +121,18 @@ struct EmptyBoardNotice: View {
         switch emptiness {
         case .nothingToDo: "Nichts zu tun"
         case .filteredAway: "Keine Treffer"
-        case .recurringOnly: "Nichts fällig"
         // Not "Nichts zu tun": the board has no source, which is a setting,
         // not an achievement.
         case .noListsSelected: "Keine Liste ausgewählt"
         }
     }
 
-    /// The way out, where there is one. `recurringOnly` deliberately does not
-    /// offer "Filter zurücksetzen": the filters are already at rest, and that
-    /// button would do nothing at all.
+    /// The way out, where there is one. `nothingToDo` has none on purpose:
+    /// there is nothing to undo and nothing to fix.
     private var action: (label: String, perform: () -> Void)? {
         switch emptiness {
         case .nothingToDo: nil
         case .filteredAway: ("Filter zurücksetzen", onReset)
-        case .recurringOnly: ("Wiederkehrende anzeigen", onShowRecurring)
         case .noListsSelected: ("Listen wählen", { openSettings() })
         }
     }

@@ -1,7 +1,8 @@
 import XCTest
 import SwiftUI
 
-/// Sorting for the open lanes: priority first, then due date, then title.
+/// Sorting for the open lanes: not-yet-due recurring chores sink to the foot,
+/// then urgency, then priority, then due date, then age, then title.
 final class CardSortingTests: XCTestCase {
 
     private var calendar: Calendar {
@@ -22,7 +23,9 @@ final class CardSortingTests: XCTestCase {
         priority: Int = 0,
         due: Date? = nil,
         modified: Date? = nil,
-        created: Date? = nil
+        created: Date? = nil,
+        recurring: Bool = false,
+        status: KanbanStatus = .backlog
     ) -> KanbanCard {
         KanbanCard(
             id: title,
@@ -31,11 +34,11 @@ final class CardSortingTests: XCTestCase {
             notesExcerpt: "",
             dueDate: due,
             priority: priority,
-            status: .backlog,
+            status: status,
             listName: "Test",
             listColor: .accentColor,
             completionDate: nil,
-            isRecurring: false,
+            isRecurring: recurring,
             lastModifiedDate: modified,
             creationDate: created)
     }
@@ -196,5 +199,88 @@ final class CardSortingTests: XCTestCase {
         // must still land somewhere deterministic rather than jittering.
         let noDates = [card("Zebra", priority: 5), card("apple", priority: 5)]
         XCTAssertEqual(sortedTitles(noDates), ["apple", "Zebra"])
+    }
+
+    // MARK: - Ripeness outranks everything else
+
+    /// The reason this rule exists. A high-priority monthly chore used to sit
+    /// above the errand that was actually due today, because priority won
+    /// before the due date was ever consulted. "Important" is not "now".
+    func testNotYetDueSinksBelowPriority() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Monatsputz", priority: 1, due: date(2026, 8, 18), recurring: true),
+                card("Rechnung", priority: 9, due: date(2026, 7, 18)),
+            ]),
+            ["Rechnung", "Monatsputz"])
+    }
+
+    /// It even sinks below an undated card. Backlog is the pool of things that
+    /// could be pulled now; a chore with a date three weeks out is the weakest
+    /// option on the board, whatever else it is competing with.
+    func testNotYetDueSinksBelowUndatedCards() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Einkaufen", due: date(2026, 7, 22), recurring: true),
+                card("Idee notieren"),
+            ]),
+            ["Idee notieren", "Einkaufen"])
+    }
+
+    /// Among themselves the not-yet-due chores run by the calendar: nearest
+    /// turn first.
+    func testNotYetDueCardsRunChronologically() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Filter wechseln", due: date(2026, 9, 1), recurring: true),
+                card("Einkaufen", due: date(2026, 7, 22), recurring: true),
+            ]),
+            ["Einkaufen", "Filter wechseln"])
+    }
+
+    /// And priority does not get a say down there. A "!!!" chore four months
+    /// out above a "!" one due next week is not an order anybody can read —
+    /// this is what the real board showed the first time the fold opened.
+    func testPriorityDoesNotReorderTheNotYetDueTail() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Rebalancing", priority: 1, due: date(2026, 12, 1), recurring: true),
+                card("Saugroboter", priority: 9, due: date(2026, 8, 14), recurring: true),
+                card("HelloFresh", priority: 5, due: date(2026, 8, 1), recurring: true),
+            ]),
+            ["HelloFresh", "Saugroboter", "Rebalancing"])
+    }
+
+    /// Above the line nothing changed: priority still beats the due date for
+    /// the cards that really are candidates for today.
+    func testPriorityStillRanksTheRipeCards() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Später fällig", priority: 9, due: date(2026, 7, 20)),
+                card("Wichtig", priority: 1, due: date(2026, 7, 25)),
+            ]),
+            ["Wichtig", "Später fällig"])
+    }
+
+    /// A recurring card that is due — today or overdue — is an ordinary
+    /// urgent card and keeps the top of the lane.
+    func testDueRecurringCardIsNotSunk() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Idee notieren"),
+                card("Müll rausbringen", due: date(2026, 7, 18), recurring: true),
+            ]),
+            ["Müll rausbringen", "Idee notieren"])
+    }
+
+    /// Once pulled, it is a decision, not an option — the working lanes never
+    /// re-rank it.
+    func testWorkingLanesDoNotSinkRecurringCards() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Idee notieren", status: .inProgress),
+                card("Einkaufen", due: date(2026, 7, 22), recurring: true, status: .inProgress),
+            ]),
+            ["Einkaufen", "Idee notieren"])
     }
 }

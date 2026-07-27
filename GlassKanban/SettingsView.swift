@@ -149,24 +149,6 @@ struct GeneralSettingsView: View {
             // switch a first-class place.
             Toggle("Ton beim Erledigen", isOn: $store.completionSoundEnabled)
 
-            // The board's resting state for recurring cards. Set here rather
-            // than only in the find popover, where every launch would start
-            // over: this is a preference, the popover's row is a quick look.
-            Section {
-                Toggle(
-                    "Wiederkehrende bis zur Fälligkeit ausblenden",
-                    isOn: $store.hideRecurringUntilDue)
-            } header: {
-                Text("Backlog")
-            } footer: {
-                // Two things to convey, and the old wording only managed the
-                // first: what the switch does, and that it is the *resting*
-                // state the find popover's row starts from and returns to.
-                // Without the second, the two controls look like a
-                // contradiction the moment they disagree.
-                Text("Wiederkehrende Aufgaben erscheinen im Backlog erst ab Fälligkeit. Unter „Finden“ vorübergehend umstellbar — Ausgangswert bleibt diese Einstellung.")
-            }
-
             // Deliberately the only place a limit can be changed: a limit you
             // can raise from the board, in the moment it gets inconvenient,
             // stops being a commitment.
