@@ -2,10 +2,12 @@ import SwiftUI
 
 /// The one line the board says when it has nothing to show at all.
 ///
-/// Deliberately not per lane: an empty lane is normal and stays quiet (see
-/// `ColumnView.showsPullSlot`), but four blank columns without a word look
-/// like a failure rather than a state. One line, no icon, no explanation —
-/// same register as the empty slot's "Fertig werden beginnt hier".
+/// Deliberately not per lane: a single empty lane carries its own quiet
+/// invitation (see `ColumnView.showsEmptySlot`), but four blank columns
+/// without a word look like a failure rather than a state. This panel and
+/// those slots never appear together — with nothing on the board at all, the
+/// slots stand down and let this one line speak. One line, no icon, no
+/// explanation — same register as the slots' own appeals.
 ///
 /// It gets a surface, and that surface is glass. Laid bare over the lanes the
 /// sentence landed on whatever was behind the board's middle — usually

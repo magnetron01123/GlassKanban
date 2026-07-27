@@ -406,6 +406,38 @@ Sie werden **nicht gefiltert** — es gibt dafür bewusst keine Filterzeile.
 „Keine Treffer" (Filter, mit Zurücksetzen-Link) oder „Keine Liste ausgewählt" (keine Quelle,
 mit Link in die Einstellungen).
 
+### Leere Spalte: der angedeutete Platz
+
+Jede leere Spur zeigt an der Stelle, wo die nächste Karte läge, einen **gestrichelten
+Karten-Umriss mit einem Satz darin** — genau so hoch wie eine echte Karte *dieser* Spalte
+(38 pt bei Backlog/Erledigt, das Vierfache bei den Arbeitsspuren; „In Bearbeitung" übernimmt
+die gemessene Höhe der obersten Karte aus „Als Nächstes", weil genau die dort landet).
+
+| Spalte | Satz |
+|---|---|
+| Backlog | Nichts im Kopf behalten |
+| Als Nächstes | Entscheiden beginnt hier |
+| In Bearbeitung | Fertigwerden beginnt hier |
+| Erledigt | Nur Fertiges zählt |
+
+Die Sätze sind **indirekte Appelle, keine Beschreibungen**: Der Platz sagt, was zu tun ist, nie
+wofür die Spalte gedacht ist — ein Board, das seine eigenen Spalten erklärt, traut ihnen nicht.
+Die beiden Arbeitsspuren reimen absichtlich („Entscheiden"/„Fertigwerden", zwei nominalisierte
+Verben, eine Kadenz) — es sind die beiden Spalten mit WIP-Limit. „Erledigt" meidet bewusst das
+Wortfeld „fertig", das die Nachbarspalte besetzt, und sagt stattdessen Kanbans eigenes
+*stop starting, start finishing* in einem Atemzug.
+
+Alle Sätze bleiben unter **~28 Zeichen** und einzeilig (`lineLimit(1)`) — bei minimaler
+Fensterbreite (`columnMinWidth` 280) ist das die Grenze, ab der ein Umbruch den 38-pt-Umriss
+sprengen würde.
+
+**Wann er erscheint:** Die beiden Spuren, die durch Ziehen gefüllt werden, laden nur ein, wenn
+es auch etwas zu ziehen gibt — „In Bearbeitung" braucht etwas stromaufwärts, „Als Nächstes"
+einen nicht leeren Backlog. Backlog und Erledigt füllen sich nicht durch Ziehen (sondern über
+„+"/die Reminders-App bzw. durchs Abhaken), dort genügt die Leere als Anlass. Ist das **ganze**
+Board leer, schweigen alle vier: dann spricht `EmptyBoardNotice` in der Mitte, und vier Geister
+dahinter wären dieselbe Nachricht noch viermal.
+
 ### Reifegrad statt Sichtbarkeit
 
 Eine **wiederkehrende Backlog-Karte, deren nächster Termin noch nicht erreicht ist**, sinkt

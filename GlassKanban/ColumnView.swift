@@ -108,14 +108,33 @@ struct ColumnView: View {
     /// Only lanes that would actually receive the card light up.
     private var showsDropFeedback: Bool { isTargeted && !isDragSource }
 
-    /// The pull invitation lives in the *free slot*, not on a card: Kanban's
-    /// answer to "what next" has always been the open space on the board, and
-    /// putting it here means no single ticket gets singled out as the one to
-    /// take. Shown only while there is actually something to pull.
-    private var showsPullSlot: Bool {
-        status == .inProgress
-            && cards.isEmpty
-            && !(store.cards(for: .next).isEmpty && store.cards(for: .backlog).isEmpty)
+    /// The invitation lives in the *free slot*, not on a card: Kanban's answer
+    /// to "what next" has always been the open space on the board, and putting
+    /// it here means no single ticket gets singled out as the one to take.
+    ///
+    /// Every lane carries one now, not just "In Bearbeitung". Backlog and
+    /// Erledigt will rarely be caught empty, but a lane that says nothing at
+    /// all when it runs dry reads as a rendering fault rather than as a state.
+    ///
+    /// Two lanes are fed by a pull and so must not invite one that cannot
+    /// happen: "In Bearbeitung" needs something upstream to take, "Als
+    /// Nächstes" needs a Backlog to choose from. Backlog and Erledigt are not
+    /// pull-fed — one fills from the "+" and the Reminders app, the other by
+    /// finishing work — so emptiness alone is reason enough to speak.
+    ///
+    /// Silent while `EmptyBoardNotice` is up: a board with nothing on it
+    /// already says so once, in the middle, and four ghosts murmuring behind
+    /// that panel would be the same news four more times.
+    private var showsEmptySlot: Bool {
+        guard cards.isEmpty, store.emptiness == nil else { return false }
+        switch status {
+        case .inProgress:
+            return !(store.cards(for: .next).isEmpty && store.cards(for: .backlog).isEmpty)
+        case .next:
+            return !store.cards(for: .backlog).isEmpty
+        case .backlog, .done:
+            return true
+        }
     }
 
     /// Completions done today, for the Erledigt header hint.
@@ -203,8 +222,8 @@ struct ColumnView: View {
                     // often out of sight entirely.
                     if showsDropFeedback {
                         insertionSlot
-                    } else if showsPullSlot {
-                        pullSlot
+                    } else if showsEmptySlot {
+                        emptySlot
                     }
 
                     if foldedCount > 0 {
@@ -493,18 +512,14 @@ struct ColumnView: View {
     /// reserved for the live drop target — and completely static. It is a
     /// standing invitation, not an event, and the board spends motion only on
     /// things that just happened.
-    private var pullSlot: some View {
+    private var emptySlot: some View {
         Board.cardShape
             .strokeBorder(
                 Color.primary.opacity(0.25),
                 style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
-            .frame(height: pullSlotHeight)
+            .frame(height: emptySlotHeight)
             .overlay {
-                // Names the payoff rather than the emptiness: this lane is not
-                // "empty", it is the entrance to finishing. Shares its key word
-                // with the WIP dialog ("Weniger gleichzeitig, mehr fertig") so
-                // the board speaks about its principle in one vocabulary.
-                Text("Fertig werden beginnt hier")
+                Text(emptySlotText)
                     // Card scale, because this slot stands in for a card: at
                     // `body` it was a 12pt line adrift in a 118pt outline,
                     // reading as a caption for the empty space rather than as
@@ -514,8 +529,41 @@ struct ColumnView: View {
                     // stay the ghost it is.
                     .font(BoardText.titleCompact)
                     .foregroundStyle(.secondary)
+                    // One line, always. Two of the four lanes are 38pt tall
+                    // (`Board.compactCardHeight`), so a wrap would not fit the
+                    // outline it is standing in — and the slot's whole promise
+                    // is that it is exactly the size of the card that belongs
+                    // there. The strings are kept under the budget this
+                    // implies (~28 characters at `Board.columnMinWidth`), so
+                    // the truncation this guards against should never be
+                    // reached; it is here so a future edit fails visibly small
+                    // rather than silently breaking the geometry.
+                    .lineLimit(1)
+                    .padding(.horizontal, 12)
             }
             .transition(.opacity)
+    }
+
+    /// What each empty lane says. An *indirect appeal* rather than a label:
+    /// the slot names what to do, never what the column is for — a board that
+    /// explains its own columns is a board that does not trust them.
+    ///
+    /// The two working lanes rhyme deliberately ("Entscheiden" / "Fertigwerden"
+    /// — two nominalized verbs, one cadence), because they are the two lanes
+    /// that carry a WIP limit. The outer two are short calls in their own
+    /// grammar, so the four read as one voice without four identical
+    /// constructions.
+    ///
+    /// Erledigt deliberately avoids the "fertig" vocabulary its neighbour
+    /// owns — it speaks about what finishing is *worth*, which is Kanban's own
+    /// "stop starting, start finishing" said in one breath.
+    private var emptySlotText: String {
+        switch status {
+        case .backlog: "Nichts im Kopf behalten"
+        case .next: "Entscheiden beginnt hier"
+        case .inProgress: "Fertigwerden beginnt hier"
+        case .done: "Nur Fertiges zählt"
+        }
     }
 
     /// Matches a real card in this lane; falls back to the lane's own card
@@ -524,14 +572,19 @@ struct ColumnView: View {
         cardHeight ?? (singleLine ? Board.compactCardHeight : Board.fullCardHeight)
     }
 
-    /// The pull slot's height: exactly the ticket it is inviting. The top
-    /// card of "Als Nächstes" keeps its measured height when it lands here —
-    /// both lanes render at full density — so the promised spot and the
-    /// promised card are the same size, not "a card-ish rectangle" next to
-    /// a visibly different real one. Falls back to the lane's own metrics
-    /// while "Als Nächstes" has nothing measured.
-    private var pullSlotHeight: CGFloat {
-        store.nextTopCardHeight ?? slotHeight
+    /// The slot's height: exactly the ticket that belongs in *this* lane, not
+    /// "a card-ish rectangle" next to a visibly different real one.
+    ///
+    /// `slotHeight` already resolves that per lane — an empty lane has no
+    /// measured card, so it falls back to its own density constant (38pt for
+    /// Backlog and Erledigt, four times that for the working lanes). The one
+    /// special case is "In Bearbeitung", which borrows the measured top card
+    /// of "Als Nächstes": that is the card about to land here, both lanes
+    /// render at full density, and the promised spot should be the size of the
+    /// promise rather than of the generic constant.
+    private var emptySlotHeight: CGFloat {
+        guard status == .inProgress else { return slotHeight }
+        return store.nextTopCardHeight ?? slotHeight
     }
 
     /// Quick-add for Backlog. Sits right after the last card, like the "+" at

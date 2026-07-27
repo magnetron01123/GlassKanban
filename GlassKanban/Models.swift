@@ -377,8 +377,8 @@ enum BoardEdit: Equatable {
 
 /// Why the whole board is blank. The reasons need different answers, and a
 /// wordless empty window reads as a broken app whichever one it is. Nil while
-/// anything is visible; individual empty lanes stay silent (see
-/// `ColumnView.showsPullSlot`).
+/// anything is visible; a single empty lane speaks for itself instead (see
+/// `ColumnView.showsEmptySlot`, which stands down while this is non-nil).
 enum BoardEmptiness: Equatable {
     /// Nothing to show anywhere: no reminders in the chosen lists.
     case nothingToDo
