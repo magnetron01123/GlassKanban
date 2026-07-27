@@ -30,6 +30,7 @@ final class DoneWindowTests: XCTestCase {
             dueDate: nil,
             priority: 0,
             status: .done,
+            listID: "test-list",
             listName: "Test",
             listColor: .accentColor,
             completionDate: completed,

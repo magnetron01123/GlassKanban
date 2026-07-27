@@ -24,6 +24,20 @@ struct FindPopover: View {
                 systemImage: "calendar",
                 selection: $store.dueFilter,
                 options: DueFilter.allCases)
+            // Last of the three, because it is the one that answers "whose
+            // work is this" rather than "how urgent is it" — and the only one
+            // that can be off for a reason the settings already cover.
+            //
+            // Offered when there is a choice to make: with a single list on
+            // the board the row could say nothing that "Alle" doesn't. But
+            // also whenever something *is* switched off, however few lists
+            // are left — otherwise switching the other list off in the
+            // settings would take the row away while its filter kept hiding
+            // the one list that remains, and the board would sit empty with
+            // its cause nowhere on screen.
+            if store.boardCalendars.count > 1 || !store.listFilter.isUnrestricted {
+                listRow
+            }
             // A third row, "Wiederkehrende", used to sit here: the way out of
             // a rule that hid not-yet-due recurring cards. That rule is gone —
             // Backlog now sorts them to its foot and folds there instead — and
@@ -86,9 +100,73 @@ struct FindPopover: View {
         .background(.quaternary.opacity(Board.chipFill), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 
+    /// The lists, as the same label-plus-menu sentence as the two rows above
+    /// — but a menu of checkmarks rather than one choice, because a board
+    /// narrowed to "everything except the shared list" is an ordinary thing to
+    /// want and a single-choice menu cannot say it.
+    ///
+    /// Every list starts ticked and is taken away one at a time, rather than
+    /// built up from nothing: the board's normal state is "all of them", and a
+    /// filter should open showing what is true rather than asking to be filled
+    /// in. Offered here are exactly the lists the settings let onto the board
+    /// — that pane decides what belongs, permanently; this row decides what to
+    /// look at now.
+    ///
+    /// A menu, not a column of checkboxes in the popover: the popover holds a
+    /// fixed set of rows today, and a column would grow it with every list in
+    /// Reminders — the one thing this app has no say over.
+    private var listRow: some View {
+        HStack(spacing: 8) {
+            Label("Listen", systemImage: "list.bullet")
+                .foregroundStyle(.secondary)
+                .fixedSize()
+            Spacer()
+            Menu(listSummary) {
+                ForEach(store.boardCalendars, id: \.calendarIdentifier) { calendar in
+                    Toggle(calendar.title, isOn: Binding(
+                        get: { store.listFilter.shows(calendar.calendarIdentifier) },
+                        set: { _ in store.listFilter.toggle(calendar.calendarIdentifier) }))
+                }
+                // The way back, and only when there is something to come back
+                // from — with every list ticked it would be a command that
+                // does nothing. Below the lists, where an action belongs;
+                // above them it would read as a fourth list.
+                if !store.listFilter.isUnrestricted {
+                    Divider()
+                    Button("Alle anzeigen") { store.listFilter.showAll() }
+                }
+            }
+            .fixedSize()
+            .accessibilityLabel("Listen")
+            .accessibilityValue(listSummary)
+        }
+        .font(BoardText.body)
+    }
+
+    /// What the closed menu says: "Alle" while nothing is switched off, the
+    /// list's own name while exactly one is left, a count otherwise — a menu
+    /// button cannot show three titles, and truncating them into "Arbeit,
+    /// Gemeins…" says less than "2 Listen".
+    private var listSummary: String {
+        guard !store.listFilter.isUnrestricted else { return "Alle" }
+        let shown = store.boardCalendars.filter { store.listFilter.shows($0.calendarIdentifier) }
+        switch shown.count {
+        case 0: return "Keine"
+        case 1: return shown[0].title
+        default: return GermanPlural.lists(shown.count)
+        }
+    }
+
     /// One filter as a label plus a menu, so the row reads like a sentence
     /// ("Dringlichkeit: Hoch") instead of a segmented control that would grow
     /// with every option.
+    ///
+    /// A `Menu` holding an inline `Picker`, rather than the `Picker` itself.
+    /// It shows the same value, opens the same list with the same checkmark,
+    /// and is the same control the list row below has to be — a `Picker`
+    /// there cannot hold more than one choice. Left as two kinds of control,
+    /// the rows wore two different chevrons (⌃⌄ against ⌄) at two widths,
+    /// which is the near-miss that makes a set of rows look accidental.
     private func filterRow<F>(
         _ title: String,
         systemImage: String,
@@ -104,17 +182,21 @@ struct FindPopover: View {
                 // column one letter wide rather than simply being cramped.
                 .fixedSize()
             Spacer()
-            Picker(title, selection: selection) {
-                ForEach(options) { option in
-                    Text(option.displayName).tag(option)
+            Menu(selection.wrappedValue.displayName) {
+                Picker(title, selection: selection) {
+                    ForEach(options) { option in
+                        Text(option.displayName).tag(option)
+                    }
                 }
+                .pickerStyle(.inline)
+                .labelsHidden()
             }
-            .labelsHidden()
-            .pickerStyle(.menu)
             .fixedSize()
+            .accessibilityLabel(title)
+            .accessibilityValue(selection.wrappedValue.displayName)
         }
         // Set on the row, not on the label: the label was 12pt while the
-        // Picker kept the 13pt control default, so a row meant to read as one
+        // menu keeps the 13pt control default, so a row meant to read as one
         // sentence ("Dringlichkeit: Hoch") was set in two sizes.
         .font(BoardText.body)
     }

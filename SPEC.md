@@ -147,6 +147,19 @@ ein, wo das vorhandene Raster die Angabe tragen kann. **Auf der Karte selbst ers
 Datum nicht** — dort sagen Verweildauer-Chip und Sortier-Position schon alles, und ein
 drittes Datum würde die Regel „Kopf = Prozess, Fuß = Aufgaben-Fakten" brechen.
 
+**Die Fakten-Zone ist ein Raster mit zwei Kanten** — Beschriftung links an der Kartenkante,
+Bedienelement rechts, und **alle drei Bedienelemente in einer Breite** (180 pt), sodass auch
+die linke Kante der Werte eine Linie bildet; „Erfasst" rückt seinen Wert um denselben
+Textabstand ein, den ein Rahmen von innen setzt. Vorher trug jede Zeile ihre natürliche
+Breite: eine lange für die Listen, ein Stummel für die vier Dringlichkeiten, ein dritter für
+das Datum — vier Werte, vier Startpunkte. Das ist die klassische AppKit-Formularausrichtung
+(Xcodes Inspektoren), nicht das Zeilenmuster der Systemeinstellungen: Deren ausgefranste
+linke Kante trägt eine graue Zeilenfläche mit Trennlinien, die diese Karte bewusst nicht hat.
+Die beiden Menüs sind deshalb **echte `NSPopUpButton`** (`FactPopUpButton`): SwiftUIs `Picker`
+misst sich am längsten *Menüeintrag* und ignoriert jede angebotene Breite, ein `Menu` mit
+eigenem Label verwirft das Label ganz. Lange Listennamen werden abgeschnitten statt das
+Element zu dehnen — sonst bestimmt der Listenname das Layout der Karte.
+
 **Der Editor hat keine Sichern-/Abbrechen-Knöpfe — die beiden Antworten liegen auf der
 Tastatur, in denselben Worten wie beim Umbenennen: Return übernimmt, Escape verwirft.** Ein
 Klick aufs Board zählt als Return (die Notiz wird zurück an die Wand gehängt, mit dem, was
@@ -395,9 +408,30 @@ Ein einziges Bedienelement in der Toolbar (Lupe, ⌘F) enthält alles zum Finden
 | Suche | Titel + angezeigte Notizen, ohne Groß-/Kleinschreibung und Diakritika, Wortreihenfolge egal |
 | Dringlichkeit | `EKReminder.priority` (Hoch/Mittel/Niedrig/Keine) |
 | Fälligkeit | `EKReminder.dueDateComponents` (Überfällig/Heute/Diese Woche/Ohne Datum) |
+| Listen | `EKCalendar` der Karte, Mehrfachauswahl (ab zwei Listen im Board) |
 
 Ist gefiltert, trägt das eingeklappte Lupensymbol die Anzahl aktiver Einschränkungen und die
-Akzentfarbe — ein Board darf nie gefiltert sein, ohne das zu zeigen.
+Akzentfarbe — ein Board darf nie gefiltert sein, ohne das zu zeigen. Die Listen zählen dabei
+als **eine** Einschränkung, egal wie viele abgewählt sind: das Abzeichen zählt Zeilen, nicht
+Werte.
+
+**Der Listen-Filter startet vollständig angehakt und wird abgewählt**, nicht aufgebaut — der
+Normalzustand des Boards ist „alle", und ein Filter soll zeigen, was gilt, statt ausgefüllt
+werden zu wollen (gespeichert wird deshalb nur, was *aus* ist; siehe `ListFilter`). Zur
+Auswahl stehen genau die Listen, die die Einstellungen aufs Board lassen: **die
+Einstellungen entscheiden dauerhaft, was dazugehört, diese Zeile kurzfristig, was man gerade
+ansieht.** Wird eine Liste in den Einstellungen abgeschaltet oder verschwindet sie aus
+Erinnerungen, fällt sie aus dem Filter heraus — sonst bliebe eine Einschränkung aktiv, die
+nichts mehr anzeigt und nirgends mehr zurückzunehmen wäre. Die Zeile erscheint ab **zwei**
+Listen im Board — und außerdem immer dann, wenn etwas abgewählt ist, egal wie wenige Listen
+übrig sind: Sonst nähme das Abschalten der zweiten Liste in den Einstellungen die Zeile weg,
+während ihr Filter die letzte verbliebene Liste weiter ausblendet. Alle Listen abwählen ist erlaubt
+und endet im ehrlichen „Keine Treffer" statt in einer bevormundenden Sperre; zurück geht es
+über „Alle anzeigen" im Menü (nur sichtbar, wenn es etwas zurückzunehmen gibt) oder „Alles
+zurücksetzen". Die Zeile ist ein Menü mit Häkchen statt einer Spalte von Ankreuzfeldern: Das
+Popover hat eine feste Zeilenzahl, eine Spalte würde mit jeder Liste in Erinnerungen wachsen.
+Alle drei Filterzeilen tragen denselben Menü-Knopf — eine Zeile als `Picker` und eine als
+`Menu` unterschieden sich in Chevron und Breite.
 
 **Wiederkehrende Aufgaben im Backlog:** siehe „Reifegrad statt Sichtbarkeit" weiter unten.
 Sie werden **nicht gefiltert** — es gibt dafür bewusst keine Filterzeile.

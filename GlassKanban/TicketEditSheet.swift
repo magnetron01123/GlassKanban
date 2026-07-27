@@ -363,9 +363,17 @@ struct TicketEditSheet: View {
                     // what says "fact, not setting". The row itself is the
                     // shape Finder's own info panel gives an uneditable
                     // date sitting among editable fields.
+                    //
+                    // Indented by the bezel's own text inset so it starts on
+                    // the same vertical line as the three values below it:
+                    // without a bezel of its own it would otherwise sit a
+                    // control's padding further left than every value it is
+                    // stacked above.
                     Text(created.formatted(date: .long, time: .omitted))
                         .font(BoardText.editorBody)
                         .foregroundStyle(.secondary)
+                        .padding(.leading, Self.controlTextInset)
+                        .frame(width: Self.factControlWidth, alignment: .leading)
                 }
             }
             factRow("Liste") { listControl }
@@ -375,6 +383,19 @@ struct TicketEditSheet: View {
         .padding(EdgeInsets(top: 14, leading: Board.openCardInset, bottom: 16, trailing: Board.openCardInset))
     }
 
+    /// One caption at the card's left edge, one control at its right — and
+    /// every control the same width, which is what makes the zone a grid
+    /// rather than four rows that happen to sit above each other.
+    ///
+    /// Sized controls, not self-sizing ones: left to their own intrinsic
+    /// width each control ended somewhere else on the left — a long bar for
+    /// the lists, a stub for the four priorities, a third width for the date
+    /// — so the block had one clean edge (the right) and a ragged one facing
+    /// the captions, and the date's bar was three times the length of the
+    /// word in it. One width is the platform's own answer: an AppKit form
+    /// aligns its controls on both edges. It is deliberately *not* the row
+    /// pattern of System Settings, whose ragged left edge is carried by a
+    /// grey row background with dividers — chrome this card does not have.
     private func factRow<Control: View>(
         _ caption: String,
         @ViewBuilder control: () -> Control
@@ -386,6 +407,10 @@ struct TicketEditSheet: View {
                 // documents on its own filter rows.
                 .fixedSize()
             Spacer(minLength: 0)
+            // No width forced from out here: neither a menu nor a bordered
+            // button accepts one (see `factControlLabel`). Each control is
+            // sized from the inside instead, by a label of one fixed width —
+            // which comes to the same thing, and actually holds.
             control()
         }
         // Every row keeps a menu control's height whatever it holds, so the
@@ -399,6 +424,23 @@ struct TicketEditSheet: View {
     /// Height of a menu picker at this text size — the tallest of the three
     /// controls, and therefore what the other rows have to reserve.
     private static let factRowHeight: CGFloat = 26
+
+    /// One width for all three controls, which is what gives the zone its
+    /// second edge.
+    ///
+    /// Wide enough for the longest value any of them can hold — a full date
+    /// with a time ("00.00.0000, 00:00") and a list name of ordinary length —
+    /// with a little room to spare, and no wider: a bar that dwarfs its own
+    /// content reads as an empty field rather than a filled one. Longer list
+    /// names truncate, which is what a pop-up button on this platform does
+    /// anyway; growing the control instead would hand the card's layout to
+    /// whatever someone called their list.
+    private static let factControlWidth: CGFloat = 180
+
+    /// How far a bordered control insets its own text. Only the uncontrolled
+    /// value ("Erfasst") has to add it by hand, so that all four values in
+    /// the zone start on one vertical line.
+    private static let controlTextInset: CGFloat = 6
 
     /// A structural label, not decorative meta — it has to read clearly at a
     /// glance, so it borrows `BoardText.chip`'s semibold weight (this app's
@@ -483,78 +525,86 @@ struct TicketEditSheet: View {
 
     // MARK: - Fact controls
 
-    private var priorityControl: some View {
-        Picker("Dringlichkeit", selection: priorityBinding) {
-            ForEach(PriorityOption.allCases) { option in
-                Text(option.displayName).tag(option)
-            }
+    /// The date button's label, built to match what AppKit draws inside the
+    /// two pop-up buttons above it: value at the leading edge, chevron at the
+    /// trailing one, the button's width in between.
+    private func factControlLabel(_ text: String, isPlaceholder: Bool = false) -> some View {
+        HStack(spacing: 4) {
+            Text(text)
+                .font(BoardText.editorBody)
+                .foregroundStyle(isPlaceholder ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+                .lineLimit(1)
+                .truncationMode(.tail)
+            Spacer(minLength: 4)
+            // A chevron on each of the three, because they open the same way.
+            // The date used to be a bare push button, so the pair with a ⌄
+            // looked like controls and it like a label that happened to be
+            // raised.
+            //
+            // Drawn at the size and offset AppKit gives the two pop-up
+            // buttons above, measured against them on screen: a hand-made
+            // glyph that is a shade smaller or a few points further in is
+            // exactly the kind of near-miss that makes three aligned rows
+            // look accidental again.
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .padding(.trailing, -3)
         }
-        .labelsHidden()
-        .pickerStyle(.menu)
-        .fixedSize()
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Reads through `PriorityOption.nearest(to:)` so the menu always shows
-    /// one of the four buckets Reminders.app itself offers; writes the
-    /// bucket's exact value.
-    private var priorityBinding: Binding<PriorityOption> {
-        Binding(
-            get: { PriorityOption.nearest(to: priority) },
-            set: { priority = $0.rawValue })
+    private var priorityControl: some View {
+        FactPopUpButton(
+            titles: PriorityOption.allCases.map(\.displayName),
+            selectedIndex: PriorityOption.allCases.firstIndex(of: PriorityOption.nearest(to: priority)) ?? 0,
+            width: Self.factControlWidth,
+            accessibilityLabel: "Dringlichkeit"
+        ) { index in
+            priority = PriorityOption.allCases[index].rawValue
+        }
     }
 
-    /// One button at one width, whatever it is showing — no date, a date, or
-    /// a date and time. Its text is formatted here rather than by a stepper
-    /// field, whose own text follows the system region ("1. 9.2026") with no
-    /// way to pin it to dd.MM.yyyy.
+    /// A pop-up button in everything but mechanism: same width as the two
+    /// menus above it, same bezel, value left and chevron right, because it
+    /// answers the same kind of question. Only its menu is a calendar.
     ///
-    /// The width is held by an invisible copy of the longest form it can ever
-    /// show. Without it the button shrank the moment the time was switched
-    /// off — and since the calendar hangs off this button, the whole popover
-    /// slid sideways under the pointer while the switch that caused it was
-    /// still being aimed at.
+    /// "Same bezel" was checked rather than assumed — a SwiftUI button beside
+    /// two AppKit pop-ups is exactly where a stray shade would hide. Sampled
+    /// on screen, all three fills are the same pixel: 240 in light, 98 in
+    /// dark. What looks lighter here is the placeholder text, one tier down
+    /// on purpose (see `emptyValue`).
+    ///
+    /// Its text is formatted here rather than by a stepper field, whose own
+    /// text follows the system region ("1. 9.2026") with no way to pin it to
+    /// dd.MM.yyyy.
+    ///
+    /// One width whatever it shows — no date, a date, or a date and time.
+    /// That width now comes from the row (`factControlWidth`) rather than an
+    /// invisible template inside the button, but it is doing the same job:
+    /// the calendar hangs off this button, so a button that resized with its
+    /// own value slid the whole popover sideways under the pointer while the
+    /// switch that caused it was still being aimed at.
     private var dueDateControl: some View {
         Button {
             isDuePopoverPresented = true
         } label: {
-            // A chevron, like the two menu rows above it. The three facts
-            // rows read as one family only if they open the same way — this
-            // one was a bare push button, so the pair with a ⌄ looked like
-            // controls and this one like a label that happened to be raised.
-            HStack(spacing: 4) {
-                Text(Self.dueWidthTemplate)
+            if let dueDate {
+                factControlLabel(Self.dueLabel(for: dueDate, includesTime: hasDueTime))
                     .monospacedDigit()
-                    .font(BoardText.editorBody)
-                    .hidden()
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(BoardText.glyph)
-                    .foregroundStyle(.secondary)
+            } else {
+                // Same tier as the two empty fields above it — it says the
+                // same thing about the same card.
+                factControlLabel("Kein Datum", isPlaceholder: true)
             }
-                .overlay(alignment: .trailing) {
-                    Group {
-                        if let dueDate {
-                            Text(Self.dueLabel(for: dueDate, includesTime: hasDueTime))
-                                .monospacedDigit()
-                        } else {
-                            // Same tier as the two empty fields above it —
-                            // it says the same thing about the same card.
-                            Text("Kein Datum").foregroundStyle(.secondary)
-                        }
-                    }
-                    .font(BoardText.editorBody)
-                    .lineLimit(1)
-                    .fixedSize()
-                }
         }
+        .frame(width: Self.factControlWidth)
         .popover(isPresented: $isDuePopoverPresented, arrowEdge: .bottom) {
             duePopover
         }
+        .accessibilityLabel("Fälligkeit")
+        .accessibilityValue(dueDate.map { Self.dueLabel(for: $0, includesTime: hasDueTime) } ?? "Kein Datum")
     }
-
-    /// The widest string this button can hold — a full date with a time. All
-    /// digits, so `monospacedDigit()` makes it an exact stand-in for any real
-    /// value rather than an estimate.
-    private static let dueWidthTemplate = "00.00.0000, 00:00"
 
     /// Picking a day in the calendar is what sets the date — opening the
     /// popover on an undated card must not, or merely looking would date it.
@@ -648,14 +698,15 @@ struct TicketEditSheet: View {
     /// to leave to Reminders.app. It is a plain `EKReminder.calendar` write,
     /// so it belongs here with the rest.
     private var listControl: some View {
-        Picker("Liste", selection: $calendarID) {
-            ForEach(calendarOptions, id: \.calendarIdentifier) { calendar in
-                Text(calendar.title).tag(calendar.calendarIdentifier)
-            }
+        FactPopUpButton(
+            titles: calendarOptions.map(\.title),
+            selectedIndex: calendarOptions.firstIndex { $0.calendarIdentifier == calendarID } ?? 0,
+            width: Self.factControlWidth,
+            accessibilityLabel: "Liste"
+        ) { index in
+            guard calendarOptions.indices.contains(index) else { return }
+            calendarID = calendarOptions[index].calendarIdentifier
         }
-        .labelsHidden()
-        .pickerStyle(.menu)
-        .fixedSize()
     }
 
     /// The card's own list is always offered, even when it is read-only or
@@ -772,6 +823,67 @@ private enum PriorityOption: Int, CaseIterable, Identifiable {
         case 5: .medium
         case 6...9: .low
         default: .none
+        }
+    }
+}
+
+/// A real `NSPopUpButton`, sized by this card rather than by its own contents.
+///
+/// SwiftUI's menu controls will not do that. A `Picker` sizes itself to its
+/// widest *menu item* and ignores any width it is offered; a `Menu` with a
+/// custom label throws that label away and renders its text with an indicator
+/// of its own. Both leave the facts zone with as many control widths as it has
+/// rows — a ragged edge facing the captions, and a block that does not read as
+/// one thing. AppKit's own pop-up button takes a width and keeps it.
+///
+/// It is also the more faithful control: a pop-up button opens its menu *over*
+/// itself with the current choice under the pointer, which is what this
+/// platform does for a choice among a handful of values.
+private struct FactPopUpButton: NSViewRepresentable {
+    let titles: [String]
+    let selectedIndex: Int
+    let width: CGFloat
+    let accessibilityLabel: String
+    let onSelect: (Int) -> Void
+
+    func makeNSView(context: Context) -> NSPopUpButton {
+        let button = NSPopUpButton(frame: .zero, pullsDown: false)
+        button.font = .systemFont(ofSize: 13)
+        button.target = context.coordinator
+        button.action = #selector(Coordinator.didSelect(_:))
+        button.setAccessibilityLabel(accessibilityLabel)
+        button.widthAnchor.constraint(equalToConstant: width).isActive = true
+        return button
+    }
+
+    func updateNSView(_ button: NSPopUpButton, context: Context) {
+        context.coordinator.onSelect = onSelect
+        button.setAccessibilityLabel(accessibilityLabel)
+        if button.itemTitles != titles {
+            button.removeAllItems()
+            // One item at a time: `addItems(withTitles:)` silently drops a
+            // repeated title, and two accounts may well each have a list
+            // called "Erinnerungen".
+            for title in titles {
+                button.menu?.addItem(NSMenuItem(title: title, action: nil, keyEquivalent: ""))
+            }
+        }
+        if titles.indices.contains(selectedIndex), button.indexOfSelectedItem != selectedIndex {
+            button.selectItem(at: selectedIndex)
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(onSelect: onSelect) }
+
+    final class Coordinator: NSObject {
+        var onSelect: (Int) -> Void
+
+        init(onSelect: @escaping (Int) -> Void) {
+            self.onSelect = onSelect
+        }
+
+        @objc func didSelect(_ sender: NSPopUpButton) {
+            onSelect(sender.indexOfSelectedItem)
         }
     }
 }
