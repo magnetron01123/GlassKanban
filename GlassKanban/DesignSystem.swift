@@ -224,9 +224,6 @@ enum Board {
     static let cardShadowAmbient = (color: Color.black.opacity(0.05), radius: CGFloat(5), y: CGFloat(3))
     static let cardShadowHover = (color: Color.black.opacity(0.16), radius: CGFloat(9), y: CGFloat(5))
 
-    /// Backlog shows this many cards before offering "N weitere anzeigen".
-    static let backlogCollapsedLimit = 15
-
     /// Wells that zone the stats popover's sections — the lanes' recessed
     /// treatment at panel scale, the way the system's own inset groups zone
     /// Settings. Same fill as a lane (`columnFill`), radius one step under

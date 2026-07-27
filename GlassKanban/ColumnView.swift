@@ -47,17 +47,7 @@ struct ColumnView: View {
     private static func restingCut(_ cards: [KanbanCard], for status: KanbanStatus) -> [KanbanCard] {
         switch status {
         case .backlog:
-            // Two reasons to fold, in the order they matter. First the
-            // meaningful line: a recurring chore whose turn has not come is
-            // not something this board could pull today, so the resting lane
-            // stops there. Then the old count cap, for a pile of ripe cards
-            // long enough to be a wall on its own.
-            //
-            // `prefix(while:)` rather than a filter, because the not-yet-due
-            // cards really are a tail: `KanbanCard.openLaneOrder` sinks them
-            // there before anything else it sorts on.
-            let ripe = cards.prefix { !$0.isNotYetDue() }
-            return Array(ripe.prefix(Board.backlogCollapsedLimit))
+            return BacklogFold.restingCut(cards)
         case .done:
             return DoneWindow.recent(cards)
         default:
@@ -96,8 +86,11 @@ struct ColumnView: View {
     /// come, not because the lane ran out of room. Then the line can name the
     /// reason ("3 noch nicht fällig") instead of counting ("3 weitere"), which
     /// is the whole point of cutting at that line: the fold answers *why*.
+    /// Delegates to `BacklogFold` (see there) rather than checking this inline
+    /// — the decision is exactly the one place a wrong label would misreport
+    /// a ripe card as "not due", so it lives where it can be unit-tested.
     private var foldIsAllLater: Bool {
-        !foldedCards.isEmpty && foldedCards.allSatisfy { $0.isNotYetDue() }
+        BacklogFold.canNameNotYetDue(folded: Array(foldedCards))
     }
 
     /// True while a card from this very lane is being dragged. Dropping it

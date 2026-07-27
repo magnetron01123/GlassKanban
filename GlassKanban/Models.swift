@@ -297,6 +297,59 @@ enum DoneWindow {
     }
 }
 
+/// The Backlog lane's fold: which cards its resting cut shows, and whether
+/// the line hiding the rest may name a single reason for that or must fall
+/// back to a plain count.
+///
+/// Pulled out of `ColumnView` (and unit-testable here, unlike a View's private
+/// properties) because getting this wrong is not a cosmetic slip: the fold's
+/// whole point is to say what it holds back, and there are two different
+/// things it can be holding back — cards not yet due, and ripe cards that
+/// simply did not fit under `BacklogFold.collapsedLimit`. A pile long enough
+/// to hit both at once must not tell the reader "not due yet" while a ripe
+/// card sits in there unmentioned.
+enum BacklogFold {
+    /// Backlog shows this many cards before offering "N weitere anzeigen".
+    ///
+    /// Lives here rather than among `Board`'s display constants (like
+    /// `DoneWindow.recentDays` before it): `Models.swift` is compiled
+    /// standalone into the test bundle, with no app host and no dependency
+    /// on `DesignSystem.swift`, and this number gates real behavior that
+    /// needs testing (see `BacklogFoldTests`), not just a visual default.
+    static let collapsedLimit = 15
+
+    /// Two reasons to fold, in the order they matter. First the meaningful
+    /// line: a recurring chore whose turn has not come is not something this
+    /// board could pull today, so the resting lane stops there (see
+    /// `KanbanCard.isNotYetDue`, which `cards` must already be sorted by —
+    /// see `KanbanCard.openLaneOrder`). Then the old count cap, for a pile of
+    /// ripe cards long enough to be a wall on its own.
+    static func restingCut(
+        _ cards: [KanbanCard],
+        limit: Int = collapsedLimit
+    ) -> [KanbanCard] {
+        // `prefix(while:)` rather than a filter, because the not-yet-due
+        // cards really are a tail: `openLaneOrder` sinks them there before
+        // anything else it sorts on.
+        let ripe = cards.prefix { !$0.isNotYetDue() }
+        return Array(ripe.prefix(limit))
+    }
+
+    /// Whether every card the fold is holding back is there for the same
+    /// reason (not yet due), so the line can name it. False for an empty
+    /// fold too — there is nothing to name — and false the moment a single
+    /// ripe card is mixed in, which is exactly the case a count cap
+    /// introduces: naming only one of two reasons there would misreport
+    /// the rest.
+    static func canNameNotYetDue(
+        folded: [KanbanCard],
+        calendar: Calendar = .current,
+        now: Date = .now
+    ) -> Bool {
+        !folded.isEmpty && folded.allSatisfy { $0.isNotYetDue(calendar: calendar, now: now) }
+    }
+}
+
 /// What is being typed on the board right now — a card's title, or the
 /// new-ticket row at the foot of Backlog.
 ///
