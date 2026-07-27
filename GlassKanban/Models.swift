@@ -170,9 +170,39 @@ struct KanbanCard: Identifiable, Equatable {
         return calendar.isDate(dueDate, inSameDayAs: now) || dueDate < calendar.startOfDay(for: now)
     }
 
-    /// Order for the open lanes: urgency first, then priority, then the
-    /// earliest due date (undated cards last), then the oldest ticket, and
-    /// finally the title so the order never jitters between refreshes.
+    /// A recurring Backlog card whose next turn has not come round yet.
+    ///
+    /// Backlog is the pool of options this board could pull from, and a chore
+    /// that comes back on its own in three weeks is a weaker option than
+    /// anything due now — but it is still an option. It sinks to the foot of
+    /// the lane (see `openLaneOrder`) and the lane's fold rests on that line
+    /// (see `ColumnView.restingCut`), so it stays one click away at all times.
+    ///
+    /// This replaced a rule that *hid* such cards until their due date. Kanban
+    /// limits how much is in progress, not what may be looked at; a date that
+    /// removes a card from the board is a schedule pushing work at you, and it
+    /// blocked the one thing the board exists to allow — pulling something
+    /// forward because you have capacity today.
+    ///
+    /// Deliberately only recurring cards. A one-off with a date in October is
+    /// a commitment somebody made on purpose, and the due-date sort already
+    /// puts it behind nearer work; a recurring one regenerates for ever, which
+    /// is what made the pile grow in the first place. Only Backlog, too: a
+    /// card already pulled into a working lane is a decision, not an option.
+    func isNotYetDue(calendar: Calendar = .current, now: Date = .now) -> Bool {
+        guard isRecurring, status == .backlog, dueDate != nil else { return false }
+        return !isUrgent(calendar: calendar, now: now)
+    }
+
+    /// Order for the open lanes: cards whose turn has not come yet sink to the
+    /// bottom, then urgency, then priority, then the earliest due date
+    /// (undated cards last), then the oldest ticket, and finally the title so
+    /// the order never jitters between refreshes.
+    ///
+    /// Ripeness outranks priority, and it has to: priority used to win, so a
+    /// high-priority monthly chore sat above the errand that was actually due
+    /// today. "Important" is not "now", and the foot of the lane is where the
+    /// not-yet-now belongs.
     ///
     /// Age before title, because alphabetical was never a *meaning* — it was
     /// only ever there to keep equal cards from swapping places between
@@ -189,13 +219,27 @@ struct KanbanCard: Identifiable, Equatable {
         now: Date = .now
     ) -> (KanbanCard, KanbanCard) -> Bool {
         { lhs, rhs in
-            let lhsUrgent = lhs.isUrgent(calendar: calendar, now: now)
-            let rhsUrgent = rhs.isUrgent(calendar: calendar, now: now)
-            if lhsUrgent != rhsUrgent {
-                return lhsUrgent
+            let lhsLater = lhs.isNotYetDue(calendar: calendar, now: now)
+            let rhsLater = rhs.isNotYetDue(calendar: calendar, now: now)
+            if lhsLater != rhsLater {
+                return rhsLater
             }
-            if lhs.priorityRank != rhs.priorityRank {
-                return lhs.priorityRank < rhs.priorityRank
+            // Below the ripeness line the calendar ranks alone — urgency and
+            // priority are skipped. Nothing down there is urgent by
+            // definition, and priority is a way of choosing between things you
+            // could start now, which is exactly what these are not. Ranking
+            // them by it produced a fold that opened on 1. Dez. above 1. Aug.
+            // and read as no order at all; what the reader of a fold labelled
+            // "noch nicht fällig" wants is the next turn first.
+            if !lhsLater {
+                let lhsUrgent = lhs.isUrgent(calendar: calendar, now: now)
+                let rhsUrgent = rhs.isUrgent(calendar: calendar, now: now)
+                if lhsUrgent != rhsUrgent {
+                    return lhsUrgent
+                }
+                if lhs.priorityRank != rhs.priorityRank {
+                    return lhs.priorityRank < rhs.priorityRank
+                }
             }
             switch (lhs.dueDate, rhs.dueDate) {
             case let (.some(l), .some(r)) where l != r:
@@ -253,6 +297,71 @@ enum DoneWindow {
     }
 }
 
+/// The Backlog lane's fold: which cards its resting cut shows, and whether
+/// the line hiding the rest may name a single reason for that or must fall
+/// back to a plain count.
+///
+/// Pulled out of `ColumnView` (and unit-testable here, unlike a View's private
+/// properties) because getting this wrong is not a cosmetic slip: the fold's
+/// whole point is to say what it holds back, and there are two different
+/// things it can be holding back — cards not yet due, and ripe cards that
+/// simply did not fit under `BacklogFold.collapsedLimit`. A pile long enough
+/// to hit both at once must not tell the reader "not due yet" while a ripe
+/// card sits in there unmentioned.
+enum BacklogFold {
+    /// Backlog shows this many cards before offering "N weitere anzeigen".
+    ///
+    /// Lives here rather than among `Board`'s display constants (like
+    /// `DoneWindow.recentDays` before it): `Models.swift` is compiled
+    /// standalone into the test bundle, with no app host and no dependency
+    /// on `DesignSystem.swift`, and this number gates real behavior that
+    /// needs testing (see `BacklogFoldTests`), not just a visual default.
+    static let collapsedLimit = 15
+
+    /// Two reasons to fold, in the order they matter. First the meaningful
+    /// line: a recurring chore whose turn has not come is not something this
+    /// board could pull today, so the resting lane stops there (see
+    /// `KanbanCard.isNotYetDue`, which `cards` must already be sorted by —
+    /// see `KanbanCard.openLaneOrder`). Then the count cap, for a pile of
+    /// ripe cards long enough to be a wall on its own.
+    ///
+    /// `foldsNotYetDue` switches the first cut off — see
+    /// `RemindersStore.foldNotYetDue`, the preference behind it. The count cap
+    /// is not optional: it is what keeps a lane from becoming a wall, and it
+    /// has no opinion about the work, only about the height of the pile.
+    ///
+    /// Note that with the first cut off, the tail can still happen to be all
+    /// not-yet-due cards (they sort last either way, so a pile just over the
+    /// limit spills exactly those). `canNameNotYetDue` then still names them,
+    /// and rightly: it describes what the fold actually holds, never why the
+    /// cut landed where it did.
+    static func restingCut(
+        _ cards: [KanbanCard],
+        limit: Int = collapsedLimit,
+        foldsNotYetDue: Bool = true
+    ) -> [KanbanCard] {
+        // `prefix(while:)` rather than a filter, because the not-yet-due
+        // cards really are a tail: `openLaneOrder` sinks them there before
+        // anything else it sorts on.
+        let ripe = foldsNotYetDue ? Array(cards.prefix { !$0.isNotYetDue() }) : cards
+        return Array(ripe.prefix(limit))
+    }
+
+    /// Whether every card the fold is holding back is there for the same
+    /// reason (not yet due), so the line can name it. False for an empty
+    /// fold too — there is nothing to name — and false the moment a single
+    /// ripe card is mixed in, which is exactly the case a count cap
+    /// introduces: naming only one of two reasons there would misreport
+    /// the rest.
+    static func canNameNotYetDue(
+        folded: [KanbanCard],
+        calendar: Calendar = .current,
+        now: Date = .now
+    ) -> Bool {
+        !folded.isEmpty && folded.allSatisfy { $0.isNotYetDue(calendar: calendar, now: now) }
+    }
+}
+
 /// What is being typed on the board right now — a card's title, or the
 /// new-ticket row at the foot of Backlog.
 ///
@@ -268,39 +377,36 @@ enum BoardEdit: Equatable {
 
 /// Why the whole board is blank. The reasons need different answers, and a
 /// wordless empty window reads as a broken app whichever one it is. Nil while
-/// anything is visible; individual empty lanes stay silent (see
-/// `ColumnView.showsPullSlot`).
+/// anything is visible; a single empty lane speaks for itself instead (see
+/// `ColumnView.showsEmptySlot`, which stands down while this is non-nil).
 enum BoardEmptiness: Equatable {
     /// Nothing to show anywhere: no reminders in the chosen lists.
     case nothingToDo
     /// There is work, but the current find settings hide all of it.
     case filteredAway
-    /// Nothing is filtered and yet nothing shows, because everything the board
-    /// holds is a recurring card that is not due yet. Its own case rather than
-    /// a second `filteredAway`: the honest answer is neither "you are done"
-    /// (untrue) nor "reset your filters" (the filters are already at rest —
-    /// the way out is to *widen* the recurring rule, not to reset it).
-    case recurringOnly
     /// No list is switched on in Settings, so the board has no source at all.
-    /// Distinct from `nothingToDo` for the same reason `recurringOnly` is:
-    /// an empty board that means "you chose no lists" must not be read as
-    /// "you are finished". Excluding every list left the board congratulating
-    /// someone on work it could not see.
+    /// Distinct from `nothingToDo`: an empty board that means "you chose no
+    /// lists" must not be read as "you are finished". Excluding every list
+    /// left the board congratulating someone on work it could not see.
     case noListsSelected
 
-    /// Pure, so the four-way decision can be tested without EventKit.
+    /// Pure, so the three-way decision can be tested without EventKit.
+    ///
+    /// There used to be a fourth case, `recurringOnly`, for a board holding
+    /// nothing but recurring cards that were not due yet. It went with the
+    /// rule that hid them: a card that is only folded away still counts as
+    /// visible work, so a board in that state is no longer empty and has
+    /// nothing to explain.
     static func evaluate(
         hasVisibleCards: Bool,
         isFiltering: Bool,
-        recurringHiddenCount: Int,
         hasSelectedLists: Bool = true
     ) -> BoardEmptiness? {
         guard !hasVisibleCards else { return nil }
         // Ahead of the filter check: with no source, a filter cannot be what
         // is hiding anything.
         if !hasSelectedLists { return .noListsSelected }
-        if isFiltering { return .filteredAway }
-        return recurringHiddenCount > 0 ? .recurringOnly : .nothingToDo
+        return isFiltering ? .filteredAway : .nothingToDo
     }
 }
 /// Working copy of a reminder's editable content for `TicketEditSheet`.
@@ -394,72 +500,6 @@ enum DueFilter: String, CaseIterable, Identifiable {
         case .thisWeek:
             guard let dueDate else { return false }
             return calendar.isDate(dueDate, equalTo: now, toGranularity: .weekOfYear)
-        }
-    }
-}
-
-/// Whether recurring reminders that are not due yet take up space in Backlog.
-///
-/// A recurring reminder always carries a *next* due date, so a monthly chore
-/// would otherwise sit in Backlog every single day of the month. Backlog is
-/// meant to hold what could be pulled next; something that comes back on its
-/// own in three weeks is not a decision, it is background noise — and every
-/// card that is not a real option makes the ones that are harder to see.
-///
-/// Unlike the other two filters this one does not rest at "show everything":
-/// `hiddenUntilDue` is the board's normal operating mode and `alwaysVisible`
-/// is the deviation. It is still a visible row rather than a silent rule,
-/// for the same reason the WIP limit rides along in the lane count: a board
-/// must be able to say what it is not showing ("make policies explicit").
-///
-/// Which of the two the board rests at is the user's to set — see
-/// `RemindersStore.hideRecurringUntilDue`, the Settings preference this filter
-/// starts from on every launch. The popover row then only borrows it for a look.
-enum RecurringFilter: String, CaseIterable, Identifiable {
-    /// The factory resting state. The card joins Backlog once it reaches the
-    /// same due window `DueFilter` already calls Überfällig / Heute.
-    case hiddenUntilDue
-    case alwaysVisible
-
-    var id: String { rawValue }
-
-    /// Kept short because this row carries the board's longest label:
-    /// "Wiederkehrende" plus a wordy value is what pushed the row past the
-    /// popover's width twice over (first wrapping the label into a column one
-    /// letter wide, then running the menu off the popover's edge).
-    var displayName: String {
-        switch self {
-        case .hiddenUntilDue: "Wenn fällig"
-        case .alwaysVisible: "Immer"
-        }
-    }
-
-    /// The due window a recurring card has to reach before it appears — due
-    /// today, or already overdue. Composed from `DueFilter` rather than
-    /// restated, so each of those words means one thing in this app.
-    ///
-    /// This first included the whole calendar week, on the idea that the
-    /// week's chores should arrive together on Monday morning. That made the
-    /// row lie: a card due Wednesday appeared on Monday, under a filter
-    /// labelled "Wenn fällig", and its lead time swung between nought and six
-    /// days depending on the weekday. Due means due.
-    private static let visibleWindow: [DueFilter] = [.overdue, .today]
-
-    /// Only Backlog ever hides anything. A recurring card the user has
-    /// already pulled into a working lane is a decision they made, and a
-    /// completed one is a record of work done — neither is ours to hide.
-    func matches(_ card: KanbanCard, calendar: Calendar = .current, now: Date = .now) -> Bool {
-        switch self {
-        case .alwaysVisible:
-            return true
-        case .hiddenUntilDue:
-            guard card.isRecurring, card.status == .backlog else { return true }
-            // Without a due date there is no way to tell when it comes round
-            // again, so it stays visible rather than disappearing for good.
-            guard let dueDate = card.dueDate else { return true }
-            return Self.visibleWindow.contains {
-                $0.matches(dueDate, calendar: calendar, now: now)
-            }
         }
     }
 }

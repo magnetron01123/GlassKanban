@@ -1,7 +1,8 @@
 import XCTest
 import SwiftUI
 
-/// Sorting for the open lanes: priority first, then due date, then title.
+/// Sorting for the open lanes: not-yet-due recurring chores sink to the foot,
+/// then urgency, then priority, then due date, then age, then title.
 final class CardSortingTests: XCTestCase {
 
     private var calendar: Calendar {
@@ -22,7 +23,9 @@ final class CardSortingTests: XCTestCase {
         priority: Int = 0,
         due: Date? = nil,
         modified: Date? = nil,
-        created: Date? = nil
+        created: Date? = nil,
+        recurring: Bool = false,
+        status: KanbanStatus = .backlog
     ) -> KanbanCard {
         KanbanCard(
             id: title,
@@ -31,11 +34,11 @@ final class CardSortingTests: XCTestCase {
             notesExcerpt: "",
             dueDate: due,
             priority: priority,
-            status: .backlog,
+            status: status,
             listName: "Test",
             listColor: .accentColor,
             completionDate: nil,
-            isRecurring: false,
+            isRecurring: recurring,
             lastModifiedDate: modified,
             creationDate: created)
     }
@@ -196,5 +199,263 @@ final class CardSortingTests: XCTestCase {
         // must still land somewhere deterministic rather than jittering.
         let noDates = [card("Zebra", priority: 5), card("apple", priority: 5)]
         XCTAssertEqual(sortedTitles(noDates), ["apple", "Zebra"])
+    }
+
+    // MARK: - Ripeness outranks everything else
+
+    /// The reason this rule exists. A high-priority monthly chore used to sit
+    /// above the errand that was actually due today, because priority won
+    /// before the due date was ever consulted. "Important" is not "now".
+    func testNotYetDueSinksBelowPriority() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Monatsputz", priority: 1, due: date(2026, 8, 18), recurring: true),
+                card("Rechnung", priority: 9, due: date(2026, 7, 18)),
+            ]),
+            ["Rechnung", "Monatsputz"])
+    }
+
+    /// It even sinks below an undated card. Backlog is the pool of things that
+    /// could be pulled now; a chore with a date three weeks out is the weakest
+    /// option on the board, whatever else it is competing with.
+    func testNotYetDueSinksBelowUndatedCards() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Einkaufen", due: date(2026, 7, 22), recurring: true),
+                card("Idee notieren"),
+            ]),
+            ["Idee notieren", "Einkaufen"])
+    }
+
+    /// Among themselves the not-yet-due chores run by the calendar: nearest
+    /// turn first.
+    func testNotYetDueCardsRunChronologically() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Filter wechseln", due: date(2026, 9, 1), recurring: true),
+                card("Einkaufen", due: date(2026, 7, 22), recurring: true),
+            ]),
+            ["Einkaufen", "Filter wechseln"])
+    }
+
+    /// And priority does not get a say down there. A "!!!" chore four months
+    /// out above a "!" one due next week is not an order anybody can read —
+    /// this is what the real board showed the first time the fold opened.
+    func testPriorityDoesNotReorderTheNotYetDueTail() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Rebalancing", priority: 1, due: date(2026, 12, 1), recurring: true),
+                card("Saugroboter", priority: 9, due: date(2026, 8, 14), recurring: true),
+                card("HelloFresh", priority: 5, due: date(2026, 8, 1), recurring: true),
+            ]),
+            ["HelloFresh", "Saugroboter", "Rebalancing"])
+    }
+
+    /// Above the line nothing changed: priority still beats the due date for
+    /// the cards that really are candidates for today.
+    func testPriorityStillRanksTheRipeCards() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Später fällig", priority: 9, due: date(2026, 7, 20)),
+                card("Wichtig", priority: 1, due: date(2026, 7, 25)),
+            ]),
+            ["Wichtig", "Später fällig"])
+    }
+
+    /// A recurring card that is due — today or overdue — is an ordinary
+    /// urgent card and keeps the top of the lane.
+    func testDueRecurringCardIsNotSunk() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Idee notieren"),
+                card("Müll rausbringen", due: date(2026, 7, 18), recurring: true),
+            ]),
+            ["Müll rausbringen", "Idee notieren"])
+    }
+
+    /// Once pulled, it is a decision, not an option — the working lanes never
+    /// re-rank it.
+    func testWorkingLanesDoNotSinkRecurringCards() {
+        XCTAssertEqual(
+            sortedTitles([
+                card("Idee notieren", status: .inProgress),
+                card("Einkaufen", due: date(2026, 7, 22), recurring: true, status: .inProgress),
+            ]),
+            ["Einkaufen", "Idee notieren"])
+    }
+
+}
+
+// MARK: - Backlog fold (BacklogFold)
+
+/// The fold's whole point is to say what it holds back — and there are two
+/// different things it can be holding back: cards not yet due, and ripe
+/// cards that simply did not fit under the count cap. Getting the label
+/// wrong here is not cosmetic: it would tell the reader "not due yet" while
+/// a ripe, actionable card sits in the fold unmentioned.
+final class BacklogFoldTests: XCTestCase {
+
+    private var calendar: Calendar {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Europe/Berlin")!
+        return cal
+    }
+
+    private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
+        calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12))!
+    }
+
+    private var now: Date { date(2026, 7, 18) }
+
+    private func ripeCard(_ title: String) -> KanbanCard {
+        KanbanCard(
+            id: title,
+            title: title,
+            notesPreview: "",
+            notesExcerpt: "",
+            dueDate: date(2026, 7, 18),
+            priority: 0,
+            status: .backlog,
+            listName: "Test",
+            listColor: .accentColor,
+            completionDate: nil,
+            isRecurring: false,
+            lastModifiedDate: nil,
+            creationDate: nil)
+    }
+
+    private func laterCard(_ title: String, due: Date) -> KanbanCard {
+        KanbanCard(
+            id: title,
+            title: title,
+            notesPreview: "",
+            notesExcerpt: "",
+            dueDate: due,
+            priority: 0,
+            status: .backlog,
+            listName: "Test",
+            listColor: .accentColor,
+            completionDate: nil,
+            isRecurring: true,
+            lastModifiedDate: nil,
+            creationDate: nil)
+    }
+
+    /// A fold made up purely of not-yet-due cards may name that reason.
+    func testPureNotYetDueFoldCanNameItself() {
+        let folded = [laterCard("a", due: date(2026, 8, 1)), laterCard("b", due: date(2026, 8, 2))]
+        XCTAssertTrue(BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now))
+    }
+
+    /// The scenario that must never mislabel: more ripe cards than the count
+    /// cap allows, so the fold holds both ripe and not-yet-due cards. It must
+    /// NOT claim "noch nicht fällig" — a ripe, actionable card would be
+    /// sitting in there under a label that says it is not due.
+    func testMixedFoldCannotNameItselfNotYetDue() {
+        let folded = [ripeCard("overflow"), laterCard("later", due: date(2026, 8, 1))]
+        XCTAssertFalse(BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now))
+    }
+
+    /// A fold that is only the count cap doing its job — no not-yet-due cards
+    /// involved at all — must also fall back to the plain count.
+    func testPureOverflowFoldCannotNameItselfNotYetDue() {
+        let folded = [ripeCard("a"), ripeCard("b")]
+        XCTAssertFalse(BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now))
+    }
+
+    /// An empty fold has nothing to name.
+    func testEmptyFoldNamesNothing() {
+        XCTAssertFalse(BacklogFold.canNameNotYetDue(folded: [], calendar: calendar, now: now))
+    }
+
+    /// End-to-end version of the same guarantee, through the real resting
+    /// cut: 16 ripe cards (one more than the limit) plus 2 not-yet-due ones.
+    /// The fold must hold the lowest-ranked ripe card *and* both later cards,
+    /// and must therefore refuse to call itself "noch nicht fällig".
+    func testRestingCutOverflowMixedWithNotYetDueRefusesTheLabel() {
+        let ripeCards = (1...16).map { ripeCard("ripe-\($0)") }
+        let laterCards = [
+            laterCard("later-1", due: date(2026, 8, 1)),
+            laterCard("later-2", due: date(2026, 9, 1)),
+        ]
+        let all = (ripeCards + laterCards).sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+
+        let resting = BacklogFold.restingCut(all, limit: 15)
+        XCTAssertEqual(resting.count, 15, "the count cap still applies to the ripe prefix")
+
+        let folded = Array(all.dropFirst(resting.count))
+        XCTAssertEqual(folded.count, 3, "1 overflowing ripe card + 2 not-yet-due cards")
+        XCTAssertFalse(
+            BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now),
+            "a ripe card is in the fold — it must not be reported as merely \"not due yet\"")
+    }
+
+    /// The counterpart: once every ripe card fits under the limit, the fold
+    /// is purely the not-yet-due tail and may say so.
+    func testRestingCutWithinLimitAllowsTheLabel() {
+        let ripeCards = (1...5).map { ripeCard("ripe-\($0)") }
+        let laterCards = [laterCard("later-1", due: date(2026, 8, 1))]
+        let all = (ripeCards + laterCards).sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+
+        let resting = BacklogFold.restingCut(all, limit: 15)
+        let folded = Array(all.dropFirst(resting.count))
+        XCTAssertEqual(folded.count, 1)
+        XCTAssertTrue(BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now))
+    }
+
+    // MARK: - The preference (BacklogFold.foldsNotYetDue)
+
+    /// Switched off, the ripeness line stops cutting: a short Backlog rests
+    /// with every card in view, not-yet-due ones included.
+    func testWithoutRipenessCutShortBacklogShowsEverything() {
+        let all = ([ripeCard("ripe")] + [laterCard("later", due: date(2026, 8, 1))])
+            .sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+
+        XCTAssertEqual(BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: false).count, 2)
+        XCTAssertEqual(BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: true).count, 1)
+    }
+
+    /// The count cap is not part of the bargain — it still folds either way.
+    /// It has no opinion about the work, only about a lane tall enough to
+    /// become a wall, so no preference switches it off.
+    func testCountCapStillAppliesWithoutRipenessCut() {
+        let all = (1...20).map { ripeCard("ripe-\($0)") }
+        XCTAssertEqual(BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: false).count, 15)
+    }
+
+    /// Off, and a pile just over the limit: the tail that spills happens to
+    /// be exactly the not-yet-due cards, because they sort last either way.
+    /// The label names them — it describes what the fold holds, never why the
+    /// cut landed there, so it stays true under both positions.
+    func testLabelStaysTruthfulWhenTheSpillIsAllLater() {
+        let ripeCards = (1...15).map { ripeCard("ripe-\($0)") }
+        let laterCards = [
+            laterCard("later-1", due: date(2026, 8, 1)),
+            laterCard("later-2", due: date(2026, 9, 1)),
+        ]
+        let all = (ripeCards + laterCards)
+            .sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+
+        let resting = BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: false)
+        let folded = Array(all.dropFirst(resting.count))
+        XCTAssertEqual(folded.count, 2)
+        XCTAssertTrue(BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now))
+    }
+
+    /// And the fatal case survives the switch: off, with more ripe cards than
+    /// the cap allows, the fold again mixes a ripe card in and must refuse
+    /// the "noch nicht fällig" label.
+    func testMixedFoldStillRefusesTheLabelWithoutRipenessCut() {
+        let ripeCards = (1...16).map { ripeCard("ripe-\($0)") }
+        let laterCards = [laterCard("later-1", due: date(2026, 8, 1))]
+        let all = (ripeCards + laterCards)
+            .sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+
+        let resting = BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: false)
+        let folded = Array(all.dropFirst(resting.count))
+        XCTAssertEqual(folded.count, 2, "1 overflowing ripe card + 1 not-yet-due card")
+        XCTAssertFalse(
+            BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now),
+            "a ripe card is in the fold — it must not be reported as merely \"not due yet\"")
     }
 }

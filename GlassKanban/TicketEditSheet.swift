@@ -354,7 +354,7 @@ struct TicketEditSheet: View {
             // act the "+" performs — capturing work out of the head and
             // onto the board (Benson's capture step). "Angelegt" is file-
             // system German; this board speaks Kanban in its chrome
-            // ("Fertig werden beginnt hier"), and the date names when the
+            // ("Fertigwerden beginnt hier"), and the date names when the
             // commitment was captured, not when a record was created.
             if let created = card.creationDate {
                 factRow("Erfasst") {

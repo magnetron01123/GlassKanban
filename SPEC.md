@@ -371,7 +371,9 @@ bleibt, braucht keine Datums-Überschriften, Gruppen oder eigene Archiv-Ansicht.
 Ältere liegt in der Reminders-App, dem eigentlichen Speicher; darauf weist der
 Spalten-Tooltip im aufgeklappten Zustand hin. Die Zähler-Kapsel benennt immer die
 angezeigte Menge und wächst beim Aufklappen mit; was sie ausblendet, meldet der Tooltip
-(„N ältere Karten") — dieselbe Regel wie bei den wiederkehrenden Karten.
+(„N ältere Karten"). Im Backlog gilt dieselbe Regel mit anderem Schnitt: die Kapsel nennt
+dort den ganzen Stapel, und der Falz liegt an der Reifelinie (siehe „Reifegrad statt
+Sichtbarkeit").
 
 Die Fold-Zeile ist eine **blanke Textzeile** (Body-Schriftgrad medium + Chevron, sekundär,
 bei Hover primär), kein Glas-Button: Glas gehört dem Chrome, nie der Inhaltsebene — in der
@@ -393,21 +395,115 @@ Ein einziges Bedienelement in der Toolbar (Lupe, ⌘F) enthält alles zum Finden
 | Suche | Titel + angezeigte Notizen, ohne Groß-/Kleinschreibung und Diakritika, Wortreihenfolge egal |
 | Dringlichkeit | `EKReminder.priority` (Hoch/Mittel/Niedrig/Keine) |
 | Fälligkeit | `EKReminder.dueDateComponents` (Überfällig/Heute/Diese Woche/Ohne Datum) |
-| Wiederkehrende | `EKReminder.hasRecurrenceRules` (Wenn fällig/Immer) |
 
 Ist gefiltert, trägt das eingeklappte Lupensymbol die Anzahl aktiver Einschränkungen und die
 Akzentfarbe — ein Board darf nie gefiltert sein, ohne das zu zeigen.
 
-**Wiederkehrende Aufgaben im Backlog:** Standard ist „Wenn fällig" — die Karte erscheint
-erst, wenn sie heute fällig oder überfällig ist. Betrifft **nur Backlog**; ohne
-Fälligkeitsdatum bleibt sie immer sichtbar. Der Standardwert zählt nicht als aktive
-Filterung (sonst leuchtete das Finden-Symbol dauerhaft). Was er ausblendet, meldet der
-Spalten-Tooltip („N wiederkehrende Karten").
+**Wiederkehrende Aufgaben im Backlog:** siehe „Reifegrad statt Sichtbarkeit" weiter unten.
+Sie werden **nicht gefiltert** — es gibt dafür bewusst keine Filterzeile.
 
-**Leeres Board:** Zeigt das Board gar nichts, sagt es warum — „Board leer, Kopf frei"
-(nichts da), „Kein Treffer, nichts verloren" (Filter, mit Zurücksetzen-Link) oder „Nichts
-fällig, Wiederkehrendes wartet" (nur noch nicht fällige Wiederholungen, mit Link zum
-Einblenden).
+**Leeres Board:** Zeigt das Board gar nichts, sagt es warum — „Nichts zu tun" (nichts da),
+„Keine Treffer" (Filter, mit Zurücksetzen-Link) oder „Keine Liste ausgewählt" (keine Quelle,
+mit Link in die Einstellungen).
+
+### Leere Spalte: der angedeutete Platz
+
+Jede leere Spur zeigt an der Stelle, wo die nächste Karte läge, einen **gestrichelten
+Karten-Umriss mit einem Satz darin** — genau so hoch wie eine echte Karte *dieser* Spalte
+(38 pt bei Backlog/Erledigt, das Vierfache bei den Arbeitsspuren; „In Bearbeitung" übernimmt
+die gemessene Höhe der obersten Karte aus „Als Nächstes", weil genau die dort landet).
+
+| Spalte | Satz |
+|---|---|
+| Backlog | Nichts im Kopf behalten |
+| Als Nächstes | Wählen statt sammeln |
+| In Bearbeitung | Fertigwerden beginnt hier |
+| Erledigt | Nur Fertiges zählt |
+
+Die Sätze sind **indirekte Appelle, keine Beschreibungen**: Der Platz sagt, was zu tun ist, nie
+wofür die Spalte gedacht ist — ein Board, das seine eigenen Spalten erklärt, traut ihnen nicht.
+
+**Vier verschiedene Satzbauten**, absichtlich: verneinter Infinitiv, Gegenüberstellung,
+„X beginnt hier", „Nur X zählt". „Als Nächstes" und „In Bearbeitung" teilten sich zunächst das
+„beginnt hier" — als Reim zwischen den beiden Spalten mit WIP-Limit gedacht, nebeneinander auf
+dem Board aber schlicht derselbe Satz zweimal. Stattdessen bezieht sich jede Spalte auf eine
+*Nachbarin*, ohne sie zu kopieren: „Als Nächstes" greift nach links (Backlog sammelt — also
+hör auf zu sammeln und wähle), und „Erledigt" meidet das Wortfeld „fertig", das seine
+Nachbarin besetzt, und sagt stattdessen Kanbans eigenes *stop starting, start finishing* in
+einem Atemzug.
+
+Alle Sätze bleiben unter **~28 Zeichen** und einzeilig (`lineLimit(1)`) — bei minimaler
+Fensterbreite (`columnMinWidth` 280) ist das die Grenze, ab der ein Umbruch den 38-pt-Umriss
+sprengen würde.
+
+**Wann er erscheint:** Die beiden Spuren, die durch Ziehen gefüllt werden, laden nur ein, wenn
+es auch etwas zu ziehen gibt — „In Bearbeitung" braucht etwas stromaufwärts, „Als Nächstes"
+einen nicht leeren Backlog. Backlog und Erledigt füllen sich nicht durch Ziehen (sondern über
+„+"/die Reminders-App bzw. durchs Abhaken), dort genügt die Leere als Anlass. Ist das **ganze**
+Board leer, schweigen alle vier: dann spricht `EmptyBoardNotice` in der Mitte, und vier Geister
+dahinter wären dieselbe Nachricht noch viermal.
+
+### Reifegrad statt Sichtbarkeit
+
+Eine **wiederkehrende Backlog-Karte, deren nächster Termin noch nicht erreicht ist**, sinkt
+ans Ende der Spalte, und der Backlog-Falz schneidet genau an dieser Linie. Sie wird nie
+ausgeblendet: ein Klick auf die Falz-Zeile („N noch nicht fällig") holt sie hervor, von dort
+lässt sie sich wie jede andere Karte ziehen. Einmal in einer Arbeitsspur ist sie eine
+getroffene Entscheidung und wird nicht mehr umsortiert.
+
+Details:
+
+- Betrifft **nur wiederkehrende Karten und nur Backlog**. Ein einmaliger Termin im Oktober ist
+  eine bewusst gesetzte Verpflichtung; die Datumssortierung stellt ihn ohnehin hinten an.
+- **Ohne Fälligkeitsdatum** gibt es keinen „nächsten Termin" — solche Karten bleiben unter den
+  gewöhnlichen Optionen.
+- Unterhalb der Reifelinie sortiert **allein das Datum**, nicht die Dringlichkeit: dort steht
+  nichts zur Wahl für heute, und ein „!!!" in vier Monaten über einem „!" in einer Woche liest
+  sich als gar keine Ordnung.
+- Die Zähler-Kapsel nennt den **ganzen Stapel** (die Karten sind wirklich in der Spalte); der
+  Spalten-Tooltip nennt die Aufteilung („N davon noch nicht fällig").
+- Die Falz-Zeile **beschreibt immer ihren Inhalt, nie den Grund des Schnitts**: enthält der Falz
+  ausschließlich noch nicht fällige Karten, benennt sie das („N noch nicht fällig"); ist auch
+  nur eine fällige Karte dabei — weil der Stapel über das Kartenlimit gewachsen ist —
+  fällt sie auf „N weitere anzeigen" zurück. Einen von zwei Gründen zu nennen wäre falscher als
+  keinen: eine fällige, sofort ziehbare Karte darf nie unter dem Etikett „noch nicht fällig"
+  liegen. Abgesichert durch `BacklogFoldTests`.
+
+### Schalter „Noch nicht Fälliges einklappen"
+
+In den Einstellungen unter **Backlog**; Standard **an**.
+
+| Stellung | Der Falz klappt ein … |
+|---|---|
+| An (Standard) | noch nicht Fälliges **und** alles über dem Kartenlimit |
+| Aus | nur, was über dem Kartenlimit liegt |
+
+Die **Sortierung ist von beiden Stellungen unberührt** — noch nicht Fälliges sinkt immer ans
+Spaltenende. Der Schalter entscheidet allein, ob der Falz an dieser Linie schneidet.
+
+Das **Kartenlimit ist nicht abschaltbar**. Es hat keine Meinung über die Arbeit, sondern nur
+über eine Spalte, die zur Wand wird — anders als die Reifelinie ist es keine Workflow-Frage.
+
+**Warum an als Standard:** Backlog ist der Vorrat an Optionen, die das Board **jetzt** ziehen
+könnte; eine Aufgabe, die in drei Wochen wiederkommt, ist keine davon. Ein Ruhezustand, der
+zeigt, was tatsächlich ziehbar ist, ist sowohl der ruhigere als auch der Kanban-treuere.
+**Warum es den Schalter trotzdem gibt:** der Backlog ist die Stelle, an der sich Arbeitsweisen
+am stärksten unterscheiden — manche wollen den ganzen Vorrat sehen und selbst triagieren. Und
+anders als bei der abgelösten Regel **verbirgt keine der beiden Stellungen etwas**: beide
+klappen ein, beide benennen die Menge, beide sind einen Klick vom vollen Stapel entfernt.
+
+**Warum nicht ausblenden (Entscheidung 27.07.2026, ersetzt die vorherige Regel):** Bis dahin
+verschwanden diese Karten bis zur Fälligkeit ganz — Standard „Wenn fällig", umschaltbar in den
+Einstellungen und in der Filterleiste. Das ist ein **Push-Konzept**: ein Terminplan, der
+vorschreibt, wann etwas getan werden darf. Kanban begrenzt, wie viel *gleichzeitig in Arbeit*
+ist (dafür gibt es die WIP-Limits), nicht, was angesehen werden darf. Praktisch blockierte die
+Regel genau den Zug, für den das Board da ist: heute Kapazität haben und den Einkauf von
+Mittwoch vorziehen. Die alte Begründung — eine Monatsaufgabe sei „Hintergrundrauschen" — trug
+nicht: sie ist sehr wohl eine Entscheidung, nur eine schwächere, und schwächere Optionen
+gehören nach unten, nicht weg. Mit gestrichen wurden dabei die Filterzeile „Wiederkehrende",
+die Einstellung dazu und der Leer-Zustand „Nichts fällig". Der Schalter oben ersetzt die alte
+Einstellung *nicht*: er wählt zwischen zwei Falz-Schnitten, die alte wählte zwischen Sehen und
+Nicht-Sehen.
 
 ## WIP-Limits
 

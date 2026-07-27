@@ -19,7 +19,7 @@ import ServiceManagement
 enum SettingsMetrics {
     static let width: CGFloat = 420
     static let listsHeight: CGFloat = 260
-    static let generalHeight: CGFloat = 447
+    static let generalHeight: CGFloat = 455
 }
 
 struct SettingsView: View {
@@ -149,22 +149,21 @@ struct GeneralSettingsView: View {
             // switch a first-class place.
             Toggle("Ton beim Erledigen", isOn: $store.completionSoundEnabled)
 
-            // The board's resting state for recurring cards. Set here rather
-            // than only in the find popover, where every launch would start
-            // over: this is a preference, the popover's row is a quick look.
+            // Where workflows differ most. Backlog is the pool of options the
+            // board could pull *now*, which is why this ships on — but "now"
+            // is a judgement some people would rather make themselves, with
+            // the whole pool in view. Unlike the rule this replaced, neither
+            // position hides anything: both fold, both count what they hold,
+            // both are one click from the full pile (see `BacklogFold`).
             Section {
-                Toggle(
-                    "Wiederkehrende bis zur Fälligkeit ausblenden",
-                    isOn: $store.hideRecurringUntilDue)
+                Toggle("Noch nicht Fälliges einklappen", isOn: $store.foldNotYetDue)
             } header: {
                 Text("Backlog")
             } footer: {
-                // Two things to convey, and the old wording only managed the
-                // first: what the switch does, and that it is the *resting*
-                // state the find popover's row starts from and returns to.
-                // Without the second, the two controls look like a
-                // contradiction the moment they disagree.
-                Text("Wiederkehrende Aufgaben erscheinen im Backlog erst ab Fälligkeit. Unter „Finden“ vorübergehend umstellbar — Ausgangswert bleibt diese Einstellung.")
+                // Says what the switch does *and* that nothing disappears
+                // either way — the previous version of this feature did make
+                // cards vanish, and that is the fear worth answering here.
+                Text("Wiederkehrende Aufgaben, deren nächster Termin noch nicht erreicht ist, ruhen hinter der Falz-Zeile am Fuß des Backlogs — ein Klick holt sie hervor, ausgeblendet wird nie etwas. Über \(BacklogFold.collapsedLimit) Karten klappt der Rest unabhängig davon ein.")
             }
 
             // Deliberately the only place a limit can be changed: a limit you

@@ -2,10 +2,12 @@ import SwiftUI
 
 /// The one line the board says when it has nothing to show at all.
 ///
-/// Deliberately not per lane: an empty lane is normal and stays quiet (see
-/// `ColumnView.showsPullSlot`), but four blank columns without a word look
-/// like a failure rather than a state. One line, no icon, no explanation —
-/// same register as the empty slot's "Fertig werden beginnt hier".
+/// Deliberately not per lane: a single empty lane carries its own quiet
+/// invitation (see `ColumnView.showsEmptySlot`), but four blank columns
+/// without a word look like a failure rather than a state. This panel and
+/// those slots never appear together — with nothing on the board at all, the
+/// slots stand down and let this one line speak. One line, no icon, no
+/// explanation — same register as the slots' own appeals.
 ///
 /// It gets a surface, and that surface is glass. Laid bare over the lanes the
 /// sentence landed on whatever was behind the board's middle — usually
@@ -23,7 +25,6 @@ import SwiftUI
 struct EmptyBoardNotice: View {
     let emptiness: BoardEmptiness
     let onReset: () -> Void
-    let onShowRecurring: () -> Void
 
     /// SwiftUI's own way into the Settings window (macOS 14+), so the one
     /// state whose way out lives *outside* the board can still offer one.
@@ -122,21 +123,18 @@ struct EmptyBoardNotice: View {
         switch emptiness {
         case .nothingToDo: "Nichts zu tun"
         case .filteredAway: "Keine Treffer"
-        case .recurringOnly: "Nichts fällig"
         // Not "Nichts zu tun": the board has no source, which is a setting,
         // not an achievement.
         case .noListsSelected: "Keine Liste ausgewählt"
         }
     }
 
-    /// The way out, where there is one. `recurringOnly` deliberately does not
-    /// offer "Filter zurücksetzen": the filters are already at rest, and that
-    /// button would do nothing at all.
+    /// The way out, where there is one. `nothingToDo` has none on purpose:
+    /// there is nothing to undo and nothing to fix.
     private var action: (label: String, perform: () -> Void)? {
         switch emptiness {
         case .nothingToDo: nil
         case .filteredAway: ("Filter zurücksetzen", onReset)
-        case .recurringOnly: ("Wiederkehrende anzeigen", onShowRecurring)
         case .noListsSelected: ("Listen wählen", { openSettings() })
         }
     }

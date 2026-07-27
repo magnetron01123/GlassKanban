@@ -24,18 +24,17 @@ struct FindPopover: View {
                 systemImage: "calendar",
                 selection: $store.dueFilter,
                 options: DueFilter.allCases)
-            // Same row shape as the two filters above, because it answers the
-            // same kind of question — only its resting value differs (see
-            // `RecurringFilter`). The glyph is the one already on the cards.
-            filterRow(
-                "Wiederkehrende",
-                systemImage: "repeat",
-                selection: $store.recurringFilter,
-                options: RecurringFilter.allCases)
+            // A third row, "Wiederkehrende", used to sit here: the way out of
+            // a rule that hid not-yet-due recurring cards. That rule is gone —
+            // Backlog now sorts them to its foot and folds there instead — and
+            // with nothing hidden the row had no difference left to express.
+            // Its one remaining reading, "show me only what is ripe", is what
+            // Fälligkeit already does, for every card rather than just the
+            // recurring ones.
 
             // Only offered when there is something to undo — an always-visible
             // reset would be a permanently greyed-out control.
-            if store.canResetFindSettings {
+            if store.isFiltering {
                 Divider()
                 Button("Alles zurücksetzen") {
                     store.resetFilters()
@@ -45,10 +44,12 @@ struct FindPopover: View {
             }
         }
         .padding(14)
-        // Sized to the widest row rather than to the narrowest: "Wiederkehrende"
-        // beside its value needs more than the 260 the two short labels were
-        // happy with, and at 260 the third row's menu ran off the edge. Set
-        // once here so a future row does not have to rediscover this.
+        // Sized to the widest row rather than to the narrowest. This was 300
+        // for a third row whose label ("Wiederkehrende") plus value ran off a
+        // 260-wide popover; that row is gone, and the two that remain are
+        // short. Kept at 300 all the same: the search field is the control
+        // this popover exists for, and 260 makes a typed ticket title wrap
+        // sooner than it needs to.
         .frame(width: 300)
         // Typing is why the popover opened; asking for a click first would be
         // a wasted step.
@@ -126,4 +127,3 @@ protocol FilterDisplayable {
 
 extension PriorityFilter: FilterDisplayable {}
 extension DueFilter: FilterDisplayable {}
-extension RecurringFilter: FilterDisplayable {}

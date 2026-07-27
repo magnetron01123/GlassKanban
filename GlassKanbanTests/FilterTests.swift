@@ -127,7 +127,7 @@ final class FilterTests: XCTestCase {
         XCTAssertFalse(card.matches(search: "angebot dachterrasse"))
     }
 
-    // MARK: - Recurring (reference "now": Friday, 2026-07-17, week Mon 13 – Sun 19)
+    // MARK: - Ripeness (reference "now": Friday, 2026-07-17, week Mon 13 – Sun 19)
 
     private func card(
         recurring: Bool,
@@ -150,73 +150,66 @@ final class FilterTests: XCTestCase {
             creationDate: nil)
     }
 
-    private func isVisible(
-        _ filter: RecurringFilter,
-        _ card: KanbanCard,
-        now: Date = Date(timeIntervalSince1970: 0)
-    ) -> Bool {
-        filter.matches(card, calendar: calendar, now: now)
+    private func isLater(_ card: KanbanCard, now: Date) -> Bool {
+        card.isNotYetDue(calendar: calendar, now: now)
     }
 
-    func testNonRecurringCardsAreNeverHidden() {
+    /// A one-off with a date in December is a commitment somebody made on
+    /// purpose; only the chore that regenerates for ever sinks.
+    func testOnlyRecurringCardsCountAsNotYetDue() {
         let now = date(2026, 7, 17)
-        let farFuture = card(recurring: false, due: date(2026, 12, 24))
-        XCTAssertTrue(isVisible(.hiddenUntilDue, farFuture, now: now))
+        XCTAssertFalse(isLater(card(recurring: false, due: date(2026, 12, 24)), now: now))
     }
 
-    /// Not yet due is not yet due — including later the same calendar week,
-    /// which is the case that gave the rule away in practice: a card due
-    /// Wednesday sat in the Backlog from Monday under a filter that says
-    /// "Wenn fällig".
-    func testRecurringCardNotYetDueIsHidden() {
+    /// Not yet due is not yet due — including later the same calendar week.
+    func testRecurringCardBeforeItsTurn() {
         let now = date(2026, 7, 17) // Friday, week Mon 13 – Sun 19
-        XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 18)), now: now),
-                       "tomorrow is not due")
-        XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 19)), now: now),
-                       "later this same calendar week is not due either")
-        XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 20)), now: now))
-        XCTAssertFalse(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 8, 17)), now: now))
+        XCTAssertTrue(isLater(card(recurring: true, due: date(2026, 7, 18)), now: now),
+                      "tomorrow is not due")
+        XCTAssertTrue(isLater(card(recurring: true, due: date(2026, 7, 19)), now: now),
+                      "later this same calendar week is not due either")
+        XCTAssertTrue(isLater(card(recurring: true, due: date(2026, 8, 17)), now: now))
     }
 
-    func testRecurringCardAppearsOnceItIsDue() {
+    func testRecurringCardIsRipeOnceItIsDue() {
         let now = date(2026, 7, 17)
-        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 10)), now: now),
-                      "overdue")
-        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: date(2026, 7, 17, hour: 23)), now: now),
-                      "due today, whatever the time of day")
+        XCTAssertFalse(isLater(card(recurring: true, due: date(2026, 7, 10)), now: now),
+                       "overdue")
+        XCTAssertFalse(isLater(card(recurring: true, due: date(2026, 7, 17, hour: 23)), now: now),
+                       "due today, whatever the time of day")
     }
 
-    /// Without a date there is no way to tell when it comes round again, so
-    /// hiding it would remove it from the board indefinitely.
-    func testRecurringCardWithoutDueDateStaysVisible() {
+    /// Without a date there is no telling when it comes round again, so it
+    /// cannot be ranked as "later" — it stays among the ordinary options.
+    func testRecurringCardWithoutDueDateIsNeverLater() {
         let now = date(2026, 7, 17)
-        XCTAssertTrue(isVisible(.hiddenUntilDue, card(recurring: true, due: nil), now: now))
+        XCTAssertFalse(isLater(card(recurring: true, due: nil), now: now))
     }
 
     /// Pulling a card into a lane is a decision the user made; completing it
-    /// is a record. Neither is the board's to hide.
-    func testOnlyBacklogHidesRecurringCards() {
+    /// is a record. Neither gets re-ranked by a date.
+    func testOnlyBacklogRanksCardsAsLater() {
         let now = date(2026, 7, 17)
         let due = date(2026, 8, 17)
         for status in KanbanStatus.allCases where status != .backlog {
-            XCTAssertTrue(
-                isVisible(.hiddenUntilDue, card(recurring: true, due: due, status: status), now: now),
-                "\(status.displayName) must not hide recurring cards")
+            XCTAssertFalse(
+                isLater(card(recurring: true, due: due, status: status), now: now),
+                "\(status.displayName) must not re-rank recurring cards")
         }
     }
 
-    func testAlwaysVisibleShowsEverything() {
+    /// The point of the whole change: a not-yet-due chore is *ordered* last,
+    /// never removed. Its own tests for the ordering live in CardSortingTests;
+    /// this one pins down that ripeness is a property of the card and not a
+    /// filter that can make it disappear.
+    func testNotYetDueIsAnOrderingNotAVisibilityRule() {
         let now = date(2026, 7, 17)
-        XCTAssertTrue(isVisible(.alwaysVisible, card(recurring: true, due: date(2026, 12, 24)), now: now))
-        XCTAssertTrue(isVisible(.alwaysVisible, card(recurring: true, due: nil), now: now))
-    }
-
-    /// The resting value is part of the rule, not an implementation detail:
-    /// it is the one filter whose default already hides something, and the
-    /// store leans on that when deciding whether the board counts as filtered.
-    /// (How the store reports that is exercised through the board itself —
-    /// this bundle compiles pure logic only, with no app host.)
-    func testDefaultIsTheHidingValue() {
-        XCTAssertEqual(RecurringFilter.allCases.first, .hiddenUntilDue)
+        let later = card(recurring: true, due: date(2026, 8, 17))
+        XCTAssertTrue(isLater(later, now: now))
+        // Nothing in the model can hide it: the only filters left are the
+        // explicit ones, and they all rest at "everything".
+        XCTAssertTrue(PriorityFilter.all.matches(later.priority))
+        XCTAssertTrue(DueFilter.all.matches(later.dueDate, calendar: calendar, now: now))
+        XCTAssertTrue(later.matches(search: ""))
     }
 }
