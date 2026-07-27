@@ -147,6 +147,19 @@ ein, wo das vorhandene Raster die Angabe tragen kann. **Auf der Karte selbst ers
 Datum nicht** — dort sagen Verweildauer-Chip und Sortier-Position schon alles, und ein
 drittes Datum würde die Regel „Kopf = Prozess, Fuß = Aufgaben-Fakten" brechen.
 
+**Die Fakten-Zone ist ein Raster mit zwei Kanten** — Beschriftung links an der Kartenkante,
+Bedienelement rechts, und **alle drei Bedienelemente in einer Breite** (180 pt), sodass auch
+die linke Kante der Werte eine Linie bildet; „Erfasst" rückt seinen Wert um denselben
+Textabstand ein, den ein Rahmen von innen setzt. Vorher trug jede Zeile ihre natürliche
+Breite: eine lange für die Listen, ein Stummel für die vier Dringlichkeiten, ein dritter für
+das Datum — vier Werte, vier Startpunkte. Das ist die klassische AppKit-Formularausrichtung
+(Xcodes Inspektoren), nicht das Zeilenmuster der Systemeinstellungen: Deren ausgefranste
+linke Kante trägt eine graue Zeilenfläche mit Trennlinien, die diese Karte bewusst nicht hat.
+Die beiden Menüs sind deshalb **echte `NSPopUpButton`** (`FactPopUpButton`): SwiftUIs `Picker`
+misst sich am längsten *Menüeintrag* und ignoriert jede angebotene Breite, ein `Menu` mit
+eigenem Label verwirft das Label ganz. Lange Listennamen werden abgeschnitten statt das
+Element zu dehnen — sonst bestimmt der Listenname das Layout der Karte.
+
 **Der Editor hat keine Sichern-/Abbrechen-Knöpfe — die beiden Antworten liegen auf der
 Tastatur, in denselben Worten wie beim Umbenennen: Return übernimmt, Escape verwirft.** Ein
 Klick aufs Board zählt als Return (die Notiz wird zurück an die Wand gehängt, mit dem, was
