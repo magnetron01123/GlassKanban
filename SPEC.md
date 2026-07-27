@@ -416,16 +416,21 @@ die gemessene Höhe der obersten Karte aus „Als Nächstes", weil genau die dor
 | Spalte | Satz |
 |---|---|
 | Backlog | Nichts im Kopf behalten |
-| Als Nächstes | Entscheiden beginnt hier |
+| Als Nächstes | Wählen statt sammeln |
 | In Bearbeitung | Fertigwerden beginnt hier |
 | Erledigt | Nur Fertiges zählt |
 
 Die Sätze sind **indirekte Appelle, keine Beschreibungen**: Der Platz sagt, was zu tun ist, nie
 wofür die Spalte gedacht ist — ein Board, das seine eigenen Spalten erklärt, traut ihnen nicht.
-Die beiden Arbeitsspuren reimen absichtlich („Entscheiden"/„Fertigwerden", zwei nominalisierte
-Verben, eine Kadenz) — es sind die beiden Spalten mit WIP-Limit. „Erledigt" meidet bewusst das
-Wortfeld „fertig", das die Nachbarspalte besetzt, und sagt stattdessen Kanbans eigenes
-*stop starting, start finishing* in einem Atemzug.
+
+**Vier verschiedene Satzbauten**, absichtlich: verneinter Infinitiv, Gegenüberstellung,
+„X beginnt hier", „Nur X zählt". „Als Nächstes" und „In Bearbeitung" teilten sich zunächst das
+„beginnt hier" — als Reim zwischen den beiden Spalten mit WIP-Limit gedacht, nebeneinander auf
+dem Board aber schlicht derselbe Satz zweimal. Stattdessen bezieht sich jede Spalte auf eine
+*Nachbarin*, ohne sie zu kopieren: „Als Nächstes" greift nach links (Backlog sammelt — also
+hör auf zu sammeln und wähle), und „Erledigt" meidet das Wortfeld „fertig", das seine
+Nachbarin besetzt, und sagt stattdessen Kanbans eigenes *stop starting, start finishing* in
+einem Atemzug.
 
 Alle Sätze bleiben unter **~28 Zeichen** und einzeilig (`lineLimit(1)`) — bei minimaler
 Fensterbreite (`columnMinWidth` 280) ist das die Grenze, ab der ein Umbruch den 38-pt-Umriss

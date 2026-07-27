@@ -548,19 +548,21 @@ struct ColumnView: View {
     /// the slot names what to do, never what the column is for — a board that
     /// explains its own columns is a board that does not trust them.
     ///
-    /// The two working lanes rhyme deliberately ("Entscheiden" / "Fertigwerden"
-    /// — two nominalized verbs, one cadence), because they are the two lanes
-    /// that carry a WIP limit. The outer two are short calls in their own
-    /// grammar, so the four read as one voice without four identical
-    /// constructions.
+    /// Four different sentence shapes on purpose — negated infinitive, a
+    /// contrast, "X beginnt hier", "Nur X zählt". Two of them once shared the
+    /// "beginnt hier" construction, meant as a rhyme between the two
+    /// WIP-limited lanes; side by side on the board they simply read as the
+    /// same sentence twice.
     ///
-    /// Erledigt deliberately avoids the "fertig" vocabulary its neighbour
-    /// owns — it speaks about what finishing is *worth*, which is Kanban's own
-    /// "stop starting, start finishing" said in one breath.
+    /// Each lane instead relates to a *neighbour* without copying it. "Als
+    /// Nächstes" reaches left: Backlog says collect it out of your head, so
+    /// the next lane answers stop collecting, choose. And Erledigt avoids the
+    /// "fertig" vocabulary its own neighbour owns, saying what finishing is
+    /// *worth* — Kanban's "stop starting, start finishing" in one breath.
     private var emptySlotText: String {
         switch status {
         case .backlog: "Nichts im Kopf behalten"
-        case .next: "Entscheiden beginnt hier"
+        case .next: "Wählen statt sammeln"
         case .inProgress: "Fertigwerden beginnt hier"
         case .done: "Nur Fertiges zählt"
         }
