@@ -48,6 +48,9 @@ final class RemindersStore: ObservableObject {
     @Published var nextTopCardHeight: CGFloat?
     @Published var priorityFilter: PriorityFilter = .all
     @Published var dueFilter: DueFilter = .all
+    /// Which lists the board is narrowed to right now — empty means all of
+    /// them (see `ListFilter`). Not persisted, like the two above it.
+    @Published var listFilter = ListFilter()
     @Published var searchText: String = ""
     /// The inline edit currently open anywhere on the board (see `BoardEdit`).
     /// Setting it to nil, or to a different edit, ends the previous one.
@@ -370,7 +373,14 @@ final class RemindersStore: ObservableObject {
         if Self.identity(of: calendars) != Self.identity(of: reminderCalendars) {
             reminderCalendars = calendars
         }
-        let included = reminderCalendars.filter { !excludedCalendarIDs.contains($0.calendarIdentifier) }
+        let included = boardCalendars
+        // A list the board no longer draws from cannot stay in the filter —
+        // it would go on hiding cards with nothing left in the popover to
+        // switch it off again.
+        let includedIDs = Set(included.map(\.calendarIdentifier))
+        if !listFilter.isUnrestricted {
+            listFilter.retain(includedIDs)
+        }
         guard !included.isEmpty else {
             cards = []
             streakStats = StreakStats()
@@ -472,6 +482,7 @@ final class RemindersStore: ObservableObject {
             dueDate: reminder.dueDateComponents.flatMap { Foundation.Calendar.current.date(from: $0) },
             priority: reminder.priority,
             status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted),
+            listID: calendar.calendarIdentifier,
             listName: calendar.title,
             listColor: Color(nsColor: calendar.color ?? .controlAccentColor),
             completionDate: reminder.completionDate,
@@ -992,13 +1003,18 @@ final class RemindersStore: ObservableObject {
         return URL(string: trimmed)
     }
 
+    /// Every list the board actually draws from — what the settings left
+    /// switched on. Read-only lists are in it: their cards are on the board
+    /// too, so the find popover has to be able to filter by them.
+    var boardCalendars: [EKCalendar] {
+        reminderCalendars.filter { !excludedCalendarIDs.contains($0.calendarIdentifier) }
+    }
+
     /// Lists a card can be moved to from the edit sheet: writable, and not
     /// hidden from the board — moving a card into an excluded list would
     /// make it vanish, which is not what picking a list should mean.
     var selectableCalendars: [EKCalendar] {
-        reminderCalendars.filter {
-            $0.allowsContentModifications && !excludedCalendarIDs.contains($0.calendarIdentifier)
-        }
+        boardCalendars.filter(\.allowsContentModifications)
     }
 
     /// Writes back the fields `TicketEditSheet` lets the user touch. The
@@ -1185,6 +1201,7 @@ final class RemindersStore: ObservableObject {
             $0.status == status
                 && priorityFilter.matches($0.priority)
                 && dueFilter.matches($0.dueDate)
+                && listFilter.matches($0.listID)
                 && $0.matches(search: searchTerm)
         }
         if status == .done {
@@ -1197,6 +1214,7 @@ final class RemindersStore: ObservableObject {
     func resetFilters() {
         priorityFilter = .all
         dueFilter = .all
+        listFilter.showAll()
         searchText = ""
     }
 
@@ -1218,13 +1236,19 @@ final class RemindersStore: ObservableObject {
     }
 
     var isFiltering: Bool {
-        priorityFilter != .all || dueFilter != .all || !searchTerm.isEmpty
+        priorityFilter != .all
+            || dueFilter != .all
+            || !listFilter.isUnrestricted
+            || !searchTerm.isEmpty
     }
 
     /// Active restrictions, for the badge on the collapsed find control.
+    /// The list filter counts as one however many lists it holds — it is one
+    /// row in the popover, and the badge counts rows, not values.
     var activeRestrictionCount: Int {
         (priorityFilter != .all ? 1 : 0)
             + (dueFilter != .all ? 1 : 0)
+            + (listFilter.isUnrestricted ? 0 : 1)
             + (searchTerm.isEmpty ? 0 : 1)
     }
 

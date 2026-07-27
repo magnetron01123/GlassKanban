@@ -98,6 +98,10 @@ struct KanbanCard: Identifiable, Equatable {
     var dueDate: Date?
     var priority: Int
     var status: KanbanStatus
+    /// Which list this card lives in. The name is what the card shows; the
+    /// identifier is what the list filter matches on, because two accounts
+    /// may each have a list called "Erinnerungen".
+    var listID: String
     var listName: String
     var listColor: Color
     var completionDate: Date?
@@ -504,6 +508,53 @@ enum DueFilter: String, CaseIterable, Identifiable {
     }
 }
 
+/// Which lists the board is showing right now — the third filter, and the
+/// only one that is a choice of many rather than one of a few.
+///
+/// It holds what is switched *off*, not what is switched on: the board starts
+/// with every list ticked and lists are taken away one at a time. That is what
+/// the row is for — "everything except the shared list, just now" — and it
+/// keeps the default state empty, so nothing has to be seeded when a list
+/// appears in Reminders or is switched on in the settings.
+///
+/// Its candidates are exactly the lists the settings let onto the board
+/// (`RemindersStore.boardCalendars`); the settings decide what belongs here at
+/// all, permanently, and this decides what to look at now. It resets with the
+/// other two filters and is never saved.
+struct ListFilter: Equatable {
+    /// Lists the board is currently not showing. Empty — the default — means
+    /// every list is ticked.
+    private(set) var hiddenIDs: Set<String> = []
+
+    var isUnrestricted: Bool { hiddenIDs.isEmpty }
+
+    /// Whether this list's tick is set.
+    func shows(_ listID: String) -> Bool { !hiddenIDs.contains(listID) }
+
+    func matches(_ listID: String) -> Bool { shows(listID) }
+
+    mutating func toggle(_ listID: String) {
+        if hiddenIDs.contains(listID) {
+            hiddenIDs.remove(listID)
+        } else {
+            hiddenIDs.insert(listID)
+        }
+    }
+
+    /// Every list ticked again — the row's way back, and what a reset does.
+    mutating func showAll() {
+        hiddenIDs.removeAll()
+    }
+
+    /// Forgets lists the board no longer draws from — one switched off in the
+    /// settings, or gone from Reminders altogether. Without this the filter
+    /// would keep a tick-less entry for a list nothing in the UI still offers,
+    /// and the row would claim a restriction that hides nothing.
+    mutating func retain(_ availableIDs: Set<String>) {
+        hiddenIDs.formIntersection(availableIDs)
+    }
+}
+
 /// German plurals for the counts the board says out loud.
 ///
 /// Every one of these read "1 Karten" until July 2026 — in the lane header's
@@ -527,6 +578,11 @@ enum GermanPlural {
 
     static func tasks(_ count: Int) -> String {
         count == 1 ? "1 Aufgabe" : "\(count) Aufgaben"
+    }
+
+    /// "2 Listen" — what the list filter says once it holds more than one.
+    static func lists(_ count: Int) -> String {
+        count == 1 ? "1 Liste" : "\(count) Listen"
     }
 
     /// "1 Einschränkung" / "2 Einschränkungen" — the find popover's badge.

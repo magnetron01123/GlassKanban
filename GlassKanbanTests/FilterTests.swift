@@ -78,6 +78,71 @@ final class FilterTests: XCTestCase {
         XCTAssertFalse(DueFilter.noDate.matches(now, calendar: calendar, now: now))
     }
 
+    // MARK: - Lists
+
+    /// A fresh filter shows everything: the row opens with every list ticked,
+    /// which is the board's normal state rather than an empty form.
+    func testFreshListFilterShowsEveryList() {
+        let filter = ListFilter()
+        XCTAssertTrue(filter.isUnrestricted)
+        XCTAssertTrue(filter.matches("arbeit"))
+        XCTAssertTrue(filter.matches("privat"))
+    }
+
+    /// Unticking takes one list away and leaves the rest alone — including
+    /// lists this filter has never heard of, which are ticked by default.
+    func testUntickedListsAreTheOnlyOnesHidden() {
+        var filter = ListFilter()
+        filter.toggle("gemeinsam")
+        XCTAssertFalse(filter.isUnrestricted)
+        XCTAssertFalse(filter.shows("gemeinsam"))
+        XCTAssertFalse(filter.matches("gemeinsam"))
+        XCTAssertTrue(filter.matches("arbeit"))
+        XCTAssertTrue(filter.matches("privat"))
+    }
+
+    /// Ticking it again is the whole way back when it was the only one off.
+    func testTickingAListAgainRestoresIt() {
+        var filter = ListFilter()
+        filter.toggle("arbeit")
+        filter.toggle("arbeit")
+        XCTAssertTrue(filter.isUnrestricted)
+        XCTAssertTrue(filter.matches("arbeit"))
+    }
+
+    func testShowAllRestoresEveryList() {
+        var filter = ListFilter()
+        filter.toggle("arbeit")
+        filter.toggle("privat")
+        filter.showAll()
+        XCTAssertTrue(filter.isUnrestricted)
+        XCTAssertTrue(filter.matches("arbeit"))
+        XCTAssertTrue(filter.matches("privat"))
+    }
+
+    /// A list the board no longer draws from — switched off in the settings,
+    /// or gone from Reminders — leaves the filter with it.
+    func testRetainDropsListsTheBoardNoLongerHas() {
+        var filter = ListFilter()
+        filter.toggle("arbeit")
+        filter.toggle("weg")
+        filter.retain(["arbeit", "privat"])
+        XCTAssertFalse(filter.shows("arbeit"))
+        XCTAssertTrue(filter.shows("weg"))
+        XCTAssertTrue(filter.matches("privat"))
+    }
+
+    /// Once the last list it had switched off is gone, the filter is a
+    /// restriction that restricts nothing — and must stop claiming to be one,
+    /// or the find control would wear a badge for it for ever.
+    func testRetainWithNothingHiddenLeftIsUnrestricted() {
+        var filter = ListFilter()
+        filter.toggle("weg")
+        filter.retain(["arbeit"])
+        XCTAssertTrue(filter.isUnrestricted)
+        XCTAssertTrue(filter.matches("arbeit"))
+    }
+
     // MARK: - Search
 
     private func searchCard(title: String, notes: String = "") -> KanbanCard {
@@ -89,6 +154,7 @@ final class FilterTests: XCTestCase {
             dueDate: nil,
             priority: 0,
             status: .backlog,
+            listID: "test-list",
             listName: "Test",
             listColor: .accentColor,
             completionDate: nil,
@@ -142,6 +208,7 @@ final class FilterTests: XCTestCase {
             dueDate: due,
             priority: 0,
             status: status,
+            listID: "test-list",
             listName: "Test",
             listColor: .accentColor,
             completionDate: nil,
