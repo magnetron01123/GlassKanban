@@ -17,7 +17,8 @@ Erinnerungs-Zugriff.
   direkt auf dem Board (Titel, Notizen, URL, Liste, Dringlichkeit, Fälligkeit)
 - **Tickets anlegen** über das „+" im Backlog — Titel tippen, Return, fertig
 - **Alles widerrufbar:** Verschieben, Bearbeiten, Umbenennen, Anlegen und Löschen lassen
-  sich mit ⌘Z rückgängig machen — deshalb fragt das Löschen nicht nach
+  sich mit ⌘Z rückgängig machen; Löschen fragt zusätzlich nach, weil EventKit
+  Unteraufgaben und Anhänge nicht wiederherstellen kann
 - **Bidirektionaler Live-Sync**: Änderungen in der Erinnerungen-App (auch auf
   iPhone/iPad via iCloud) erscheinen sofort im Board — der Status-Hashtag kann auch
   unterwegs von Hand getippt werden
@@ -61,11 +62,14 @@ xcodebuild -project GlassKanban.xcodeproj -scheme GlassKanban \
 | [CONCEPT.md](CONCEPT.md) | Warum sie so ist (Herleitung, verworfene Alternativen) |
 | [BACKLOG.md](BACKLOG.md) | Was bewusst (noch) nicht umgesetzt ist |
 | [RELEASE.md](RELEASE.md) | Fahrplan und Arbeitsstand zum Mac-App-Store-Release |
+| [CLAUDE.md](CLAUDE.md) | Kompass für die Arbeit am Projekt: die drei Design-Prinzipien, Dokument- und Code-Landkarte |
 
 ## Hinweise
 
-- Der Doppelklick-Deep-Link nutzt ein undokumentiertes URL-Schema der Erinnerungen-App
-  (`x-apple-reminderkit://…/details`); falls Apple es ändert, öffnet sich ersatzweise
-  die Erinnerungen-App selbst
+- „In Erinnerungen öffnen" (Kontextmenü und ↗ im Karten-Editor) springt über ein
+  undokumentiertes URL-Schema der Erinnerungen-App direkt zur Aufgabe
+  (`x-apple-reminderkit://…/details`); lässt es sich nicht auflösen — etwa bei rein
+  lokalen Listen —, öffnet sich ersatzweise die Erinnerungen-App selbst. Für die
+  1.0-Einreichung wird der Deep-Link entfernt (siehe [RELEASE.md](RELEASE.md), Phase 2)
 - Reminders-Tags, Flags und Unteraufgaben sind über die öffentliche EventKit-API nicht
   zugänglich — daher die Hashtag-Lösung

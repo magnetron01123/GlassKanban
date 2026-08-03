@@ -6,6 +6,13 @@ weiterentwickelt: Ändert sich Verhalten, ändert sich diese Datei mit.
 - Warum es so ist (Herleitung, verworfene Alternativen): [CONCEPT.md](CONCEPT.md)
 - Was bewusst *nicht* umgesetzt ist: [BACKLOG.md](BACKLOG.md)
 
+> **Warum hier trotzdem Begründungen stehen:** Bei Regeln, die schon einmal versehentlich
+> zurückgedreht wurden oder deren Sinn sich nicht aus dem Verhalten ergibt (Animationskurven,
+> Kartenhöhen, gleich hohe Statistik-Register), steht die Kurzbegründung samt der bereits
+> verworfenen Alternativen **direkt an der Regel** — dort, wo der nächste Eingriff passiert,
+> und nicht drei Dateien entfernt. Das ist Absicht, keine Vermischung mit CONCEPT.md: Dort
+> liegt die ausführliche Herleitung der *Haltung*, hier die knappe Warnung am *Verhalten*.
+
 > **Historie:** Diese Datei hieß bis Juli 2026 `MVP.md` und war die verbindliche
 > Vorab-Spezifikation für die Erstumsetzung. Der MVP ist erreicht und die App inzwischen
 > darüber hinausgewachsen — eine Datei, die einen abgeschlossenen Planungsstand festhält,
