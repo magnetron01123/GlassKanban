@@ -135,10 +135,57 @@ nicht möglich)
   (täglich/wöchentlich/benutzerdefiniert…), die Reminders bereits gut löst. Der ↗-Knopf im
   Editor führt genau dafür in die native App.
 
+## Onboarding / Ersteinstieg
+
+- **Einführung in die App-Nutzung** — Idee (27.07.2026): eine Einführung für neue Nutzer:innen
+  (z. B. Spaltenbedeutung, Hashtag-Mechanismus, WIP-Limit, Drag & Drop) beim ersten Start.
+  **Offene Spannung, vor einer Umsetzung zu klären:** CONCEPT.md legt beim Chrome-Hover-Tipp-
+  Konzept bewusst den Grundsatz „Wissen entsteht im Moment der Berührung, nicht über
+  Onboarding" fest (Design-Anspruch, Abschnitt Hover-Tipps) — ein klassischer
+  Onboarding-Flow (Klick-durch-Screens beim ersten Start) widerspräche dem direkt und wäre
+  zudem der erste modale Ablauf der App. Käme also nur infrage, wenn er sich an diese Haltung
+  anpasst statt sie zu ersetzen — z. B. eine einmalige, zurückhaltende Übersicht statt einer
+  mehrschrittigen Tour, oder Wissen weiterhin punktuell am Ort des Bedarfs statt vorab
+  gebündelt. Nicht umsetzen, ohne diesen Grundsatz bewusst gegeneinander abzuwägen.
+
 ## Spätere Apple-/Mac-Ausbaustufen
 
-- **Desktop-Widget (WidgetKit)** — kompakte Ambient-Ansicht direkt auf dem Schreibtisch,
-  ergänzend oder alternativ zum offenen Fenster.
+- **Widget (WidgetKit, Mac + iPhone)** — kompakte Ambient-Ansicht des aktuellen Kanbanboards
+  auf dem Schreibtisch (Mac) bzw. Homescreen/Sperrbildschirm (iPhone), ergänzend oder
+  alternativ zum offenen Fenster. Idee (27.07.2026): Muss die stark eingeschränkte
+  Widget-Größe von vornherein mitdenken statt einer verkleinerten Kopie des Boards — eher
+  eine eigene, radikal reduzierte Darstellung (z. B. nur Zahlen/Kompaktkarten statt echter
+  Spalten). Die iPhone-Variante setzt die begleitende iOS-App voraus, siehe unten
+  „Plattform-Erweiterung: iOS-App". **Ergänzung (03.08.2026), inspiriert von MonoNote
+  (digitalminimalist.com/tools/mononote):** Die radikalste Reduktion wäre nicht „Board im
+  Kleinformat", sondern MonoNotes Prinzip „one note at a time" — das Widget zeigt genau
+  **eine** Karte: die oberste dringliche bzw. die oberste aus „Als Nächstes". Das wäre
+  konsequenter als Zahlen/Kompaktkarten (eine Zahl beantwortet „wie viel?", eine einzelne
+  Karte beantwortet „was jetzt?") und deckt sich mit der eigenen Haltung, dass Fokus aus dem
+  Karteninhalt kommt. Beide Darstellungen (eine Karte vs. Kennzahlen) gegeneinander abwägen,
+  wenn das Widget konkret wird. **Prinzipien-Check (03.08.2026):** Minimalismus und
+  Psychologie sprechen für die Eine-Karte-Variante („was jetzt?" senkt Entscheidungslast,
+  ohne Push). Das Kanban-Prinzip „keine Karte wird zum Favoriten erklärt" (CONCEPT.md,
+  Pull-Signal) setzt aber eine Bedingung: Die eine Karte muss aus der bestehenden
+  Board-Ordnung folgen (oberste nach automatischer Sortierung), nie aus einer neuen
+  Auszeichnungs-Logik. Kanban-rein wäre alternativ, dass das Widget bei freiem
+  „In Bearbeitung"-Platz genau die bestehende Einladung zeigt („Frei für die nächste
+  Aufgabe") — dieselbe Regel „höchstens eine Einladung, nur wo Nichtstun etwas kostet",
+  nur an einem zweiten Ort.
+- **Interaktives Widget (App Intents)** — Idee (27.07.2026), baut auf dem Widget-Punkt oben
+  auf: Seit iOS 17/macOS Sonoma können Widgets Buttons enthalten, die ohne App-Start etwas
+  auslösen. Für ein bewusst überwiegend read-only Board wäre die einzig stimmige Aktion die,
+  die es auch in der App bereits gibt — eine Karte direkt aus dem Widget nach „Erledigt"
+  abhaken. Kein neues Bedienkonzept, nur derselbe eine erlaubte Schreibzugriff an einem
+  zweiten Ort.
+- **Apple-Watch-Komplikation** — Idee (27.07.2026): Streak-Flamme oder WIP-Auslastung als
+  Zifferblatt-Komplikation. Reine Anzeige aus bereits vorhandenen, rein lesend berechneten
+  Werten (`completionDate`-Auswertung, siehe Statistik-Fenster) — keine neuen Daten, keine
+  neue Schreiblogik, dieselbe Zurückhaltung wie der bestehende Streak-Zähler im Fensterrahmen.
+- **Ambient-Screensaver-Modus (Mac)** — Idee (27.07.2026): Bei längerer Inaktivität geht das
+  Board in eine noch ruhigere, rein dekorative Ansicht über, passend zum
+  „Minimal-Desk-Setup"-Vibe für einen Bildschirm, der sonst idle wäre. Eher ein stilistischer
+  Zusatz als ein Produktivitäts-Feature — Nice-to-have, kein Blocker für irgendetwas anderes.
 - **Shortcuts-App/App Intents** — z. B. Karte per Kurzbefehl/Automation verschieben oder
   Kennzahlen abfragen.
 - **Fokus-Modi-Integration (Focus Filters)** — Board passt Filter automatisch an aktiven
@@ -167,6 +214,43 @@ nicht möglich)
   ohne eigene App, siehe Bonus-Hinweis in SPEC.md). Eigenes Xcode-Multiplatform-Target, eigene
   UI-Anpassung für kleinere Bildschirme/Touch-Bedienung, eigene App-Store-Überlegungen — klare
   Plattformerweiterung nach dem Mac-MVP, nicht Teil davon.
+- **Ausrichtungsabhängige Ansicht (iPhone)** — Idee (27.07.2026) für die begleitende iOS-App
+  oben: Querformat zeigt das gewohnte Kanbanboard, Hochkant zeigt etwas anderes. Kandidaten
+  fürs Hochkant-Format: Statistiken/Winning-Streak, nur die aktuell fälligen Aufgaben, oder
+  eine Kombination aus beidem — noch zu evaluieren, welche Hochkant-Ansicht am meisten Sinn
+  ergibt. Setzt die App oben voraus, ist also selbst kein eigenständiges Feature.
+- **StandBy-Modus (iPhone quer + Laden)** — Idee (27.07.2026), praktisch die offizielle
+  Apple-Antwort auf den Punkt oben: Apple hat mit StandBy bereits ein System dafür, dass ein
+  liegendes/ladendes iPhone im Querformat eine große, glanceable Ansicht zeigt. Board als
+  StandBy-taugliche Ansicht bauen, statt eine eigene Querformat-Logik von Grund auf zu
+  entwerfen. Setzt ebenfalls die begleitende iOS-App voraus. **Präzisierung (27.07.2026):**
+  StandBy soll optisch genau die normale Querformat-Ansicht des Boards zeigen (die aus dem
+  Punkt oben), nur ohne jegliche Bedienelemente — reine Anzeige, kein Chrome, kein Drag & Drop.
+  Passt zur bestehenden Haltung „Glas ist Chrome, nie Inhalt": StandBy ist der Moment, in dem
+  nur noch der Inhalt bleibt.
+- **Live Activity** — Idee (27.07.2026): z. B. „In Bearbeitung: 2/3" als Dauerpräsenz auf dem
+  Sperrbildschirm/in der Dynamic Island während einer aktiven Arbeitssession. **Offene
+  Spannung, vor einer Umsetzung zu klären:** Eine Live Activity ist keine Benachrichtigung,
+  grenzt aber an den bestehenden Ausschluss „Eigene Push-Benachrichtigungen der App" (s. u.,
+  „Explizit abgelehnt") und an den Grundsatz „Bewegung/Aufmerksamkeit gehört Ereignissen,
+  nicht Dauerzuständen" (CONCEPT.md, Motivation). Käme also nur infrage, klar auf einen
+  begrenzten Moment beschränkt (z. B. nur während aktiv an „In Bearbeitung" gearbeitet wird),
+  nicht als dauerhaftes Banner — sonst widerspricht sie der eigenen Philosophie.
+  **Ergänzung (03.08.2026), inspiriert von MonoNote (digitalminimalist.com/tools/mononote):**
+  MonoNote nutzt Live Activity/Dynamic Island, um genau **eine** dringende Notiz auf dem
+  Sperrbildschirm präsent zu halten — nicht als Benachrichtigung, sondern als stille
+  Dauerpräsenz eines selbst gewählten Inhalts. Übertragen auf Glass Kanban wäre der stimmigste
+  Zuschnitt daher nicht die Kennzahl „In Bearbeitung: 2/3", sondern **die eine Karte, an der
+  gerade gearbeitet wird** — bewusst vom Nutzer gestartet (z. B. „diese Karte anheften",
+  Fokus-Session) und mit dem Erledigen oder manuell wieder beendet. Das löst die oben
+  beschriebene Spannung sauberer: Der begrenzte Moment ist dann nicht ein Zeitfenster, das die
+  App erraten muss, sondern eine explizite Nutzerentscheidung mit klarem Anfang und Ende —
+  psychologisch dieselbe Selbstverpflichtungs-Linie wie das WIP-Limit (Reibung statt Verbot,
+  CONCEPT.md), und kanban-seitig ein Pull im Wortsinn: Die Nutzerin zieht sich eine Karte in
+  den Fokus, das Erledigen beendet die Präsenz von selbst (Ende als Belohnungsmoment, kein
+  Mahnen).
+  Passt zusammen mit der „Eine Karte"-Variante des Widgets (s. o., „Spätere
+  Apple-/Mac-Ausbaustufen") zu einem gemeinsamen Muster „ein Fokus-Inhalt außerhalb der App".
 
 ## Veröffentlichung (Mac App Store)
 
@@ -210,10 +294,16 @@ entfernt in `4f83347`).
   gehört Dingen, die gerade passiert sind, nicht Dauerzuständen. Aus derselben Überlegung
   ist das Motivierende dorthin gewandert, wo es an ein Ereignis gekoppelt ist: die sich
   füllende Streak-Flamme und der Settle-Moment beim Erledigen.
-- **Bestätigungsdialog vor dem Löschen** — abgelöst durch Undo (⌘Z). Eine Rückfrage
-  besteuert jede Löschung, um die seltene falsche abzufangen; ein Undo kostet nur die
-  Person etwas, die sich tatsächlich vertan hat, und ist das, wonach ein Mac-Nutzer
-  ohnehin greift.
+- ~~**Bestätigungsdialog vor dem Löschen**~~ — **diese Ablehnung ist am 26.07.2026
+  revidiert worden; die App fragt heute nach (SPEC.md, „Löschen fragt nach").** Die
+  ursprüngliche Begründung lautete: abgelöst durch Undo (⌘Z) — eine Rückfrage besteuert
+  jede Löschung, um die seltene falsche abzufangen, während ein Undo nur die Person etwas
+  kostet, die sich tatsächlich vertan hat. Das Argument trug nicht, weil das Netz ein Loch
+  hat: EventKit kennt kein echtes Wiederherstellen, ⌘Z legt eine **neue** Erinnerung an,
+  und **Unteraufgaben, Anhänge, Reminders-Tags und -Flags kommen dabei nicht zurück**
+  (FINDINGS-2026-07.md, A3). Ein Undo, das nicht alles zurückholt, kann eine Rückfrage
+  nicht ersetzen. Der Eintrag bleibt als Vorgeschichte stehen, damit die Rückfrage nicht
+  eines Tages unter Berufung auf diese Zeile wieder ausgebaut wird.
 - **Tastaturfokus und Pfeiltasten-Navigation auf Karten** — war im Juli 2026 kurz
   implementiert (fokussierbare Karten, Pfeiltasten über die Spalten, Akzent-Kontur als
   Fokus-Cursor) und wurde auf Nutzerentscheidung wieder entfernt. Karten werden mit der

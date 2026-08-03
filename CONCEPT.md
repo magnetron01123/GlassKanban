@@ -140,7 +140,14 @@ höchstens eine spätere, rein kosmetische Verbesserung, keine funktionale Notwe
 | **Fälligkeit** | `EKReminder.dueDateComponents` (z. B. Überfällig/Heute/Diese Woche/Ohne Datum) | keine |
 | **Verantwortliche Person** | `EKCalendarItem.attendees` (`EKParticipant`) | **nur lesend.** Funktioniert nur bei über iCloud **geteilten** Listen. EventKit erlaubt kein programmatisches Zuweisen — das Zuweisen einer Person zu einer Erinnerung muss weiterhin in der nativen Reminders-App erfolgen. Glass Kanban kann nur anzeigen und danach filtern. |
 
-### Finden: ein Bedienelement statt drei — Konzeptvorschlag
+### Finden: ein Bedienelement statt drei
+
+> **Umgesetzt** (Lupe in der Toolbar, ⌘F). Was unten als Empfehlung formuliert ist, ist
+> gebautes Verhalten — der verbindliche Stand steht in [SPEC.md](SPEC.md), Abschnitt
+> „Finden". Der Text bleibt als Herleitung stehen. Eine Abweichung: Statt des
+> Verantwortliche-Person-Filters aus der Tabelle oben enthält das Element heute einen
+> **Listen-Filter** (die Personen-Zuordnung ist über EventKit kaum nutzbar, siehe
+> BACKLOG.md).
 
 **Ausgangsproblem:** Suche, Dringkeit und Fälligkeit sind für den Nutzer *eine* Aufgabe
 („finde ein Ticket"), stehen im Chrome aber als getrennte Elemente. Heute sind das zwei
@@ -406,45 +413,21 @@ nativen Mac-App statt eines austauschbaren Tools?
   in der nativen Reminders-App hat) als kleiner Akzent/Punkt auf der Karte — verbindet das Board
   visuell mit der bestehenden, vertrauten Reminders-Farbcodierung, ganz ohne neue Konzepte.
 
-**Interessante spätere Ausbaustufen (bewusst nicht MVP, aber notiert):**
+## Was hier bewusst *nicht* mehr steht
 
-- **Desktop-Widget (WidgetKit):** eine kompakte Ambient-Ansicht (z. B. Kartenanzahl pro Spalte,
-  Streak) direkt auf dem Schreibtisch, ergänzend oder als Alternative zum dauerhaft offenen
-  Fenster.
-- **Shortcuts-App/App Intents:** z. B. "Wie viele Karten sind in Bearbeitung?" oder eine Karte
-  per Kurzbefehl/Automation verschieben — externe Steuerung, die den "kein Editor in der App"-
-  Grundsatz nicht verletzt, da Shortcuts von außen kommen.
-- **Fokus-Modi-Integration (Focus Filters):** Board passt Filter automatisch an den aktiven
-  macOS-Fokus an (z. B. "Arbeit" vs. "Privat") — passt inhaltlich gut zur Personal-Kanban-Idee
-  von Kontexttrennung.
-- **App-Icon im neuen Icon-Composer-Format:** Light/Dark/Tinted-Varianten mit
-  Liquid-Glass-Spiegelungen, passend zum macOS-26-Icon-System.
+Dieses Dokument führte bis zum 03.08.2026 an dieser Stelle vier Listen: spätere
+Ausbaustufen, bewusst Ausgeschlossenes, „außerhalb des MVP" und bekannte Risiken. Sie
+waren reine Aufzählungen ohne Herleitung — also genau das, was **nicht** die Aufgabe
+dieses Dokuments ist — und liefen der Wirklichkeit hinterher: Das WIP-Limit stand dort
+noch als „spätere Ausbaustufe", das Bearbeiten in der App als ausgeschlossen, und die
+Hashtag-Risiken waren längst gelöst und spezifiziert.
 
-**Bewusst ausgeschlossen:**
+Gültig ist deshalb:
 
-- **Eigene Push-Benachrichtigungen der App:** Reminders hat bereits eigene Benachrichtigungen;
-  eigene Notifications würden sich damit doppeln und widersprechen dem ruhigen,
-  Minimal-Desk-Setup-Vibe der App.
+- **Was später oder nie kommt** → [BACKLOG.md](BACKLOG.md) (Ausbaustufen, „Explizit
+  abgelehnt", Apple-Plattform-Grenzen)
+- **Wie die App mit diesen Fällen heute umgeht** → [SPEC.md](SPEC.md) (Tag-Erkennung
+  samt Wortgrenzen, Mehrfach-Tags, Datenhygiene, bekannte Einschränkungen)
 
-## Bewusst außerhalb des MVP
-
-- Mehrere Boards
-- Konfigurierbare Spaltenanzahl/-namen
-- Manuelle Kartenreihenfolge innerhalb einer Spalte (MVP sortiert z. B. nach Fälligkeitsdatum)
-- Menüleisten-Modus / Always-on-Top
-- Aufgaben anlegen/inhaltlich bearbeiten in der App (bewusst nur über Reminders-App)
-- Zuweisen von Personen aus Glass Kanban heraus (zusätzlich auch eine EventKit-Limitierung, s. o.)
-- WIP-Limit für "In Bearbeitung" (spätere Ausbaustufe)
-- Unteraufgaben (Subtasks): **nicht per öffentlicher EventKit-API auslesbar**, ähnlich wie Tags
-  eine private, nicht zugängliche Funktion der Reminders-App — technisch im MVP nicht umsetzbar
-
-## Bekannte Risiken / offene Punkte
-
-- Nutzer muss beim ersten Start den Vollzugriff auf Erinnerungen im Systemdialog genehmigen.
-- Enthält der eigene Notiztext zufällig bereits `#backlog`/`#alsnächstes`/`#inbearbeitung`, würde das als
-  Status interpretiert — in der Praxis unwahrscheinlich, aber beim Hashtag-Parsing zu bedenken.
-- Werden mehrere erkannte Hashtags gleichzeitig in den Notizen gefunden (z. B. durch manuelles
-  Bearbeiten in Reminders), braucht es eine klare Regel (z. B. der zuletzt hinzugefügte/erste
-  gefundene Tag gewinnt, App bereinigt beim nächsten Sync auf einen einzigen Tag).
-- Verantwortliche-Person-Filter liefert nur Daten, wenn die zugrunde liegende Liste aktiv
-  über iCloud geteilt ist.
+Der Rest dieses Dokuments bleibt, was er sein soll: die Begründung hinter den
+Entscheidungen, nicht ihre Liste.
