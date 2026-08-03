@@ -6,3 +6,8 @@ build/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprint
+*.xcarchive
+
+# Personal Claude Code overrides. .claude/settings.json is tracked on purpose:
+# it carries the documentation guard the whole project relies on.
+.claude/settings.local.json
