@@ -94,13 +94,13 @@ struct CardView: View {
             beginEdit()
         }
         .contextMenu {
-            Button("Bearbeiten") { beginEdit() }
-            Button("In Erinnerungen öffnen") { openInReminders() }
+            Button("Edit") { beginEdit() }
+            Button("Open in Reminders") { openInReminders() }
             Divider()
             // Drag & drop is the accelerator; this is the route that works
             // without a pointer. Both go through store.move, so the WIP
             // question fires either way.
-            Menu("Verschieben nach") {
+            Menu("Move to") {
                 ForEach(moveTargets) { target in
                     Button(target.displayName) {
                         store.move(cardID: card.id, to: target, undoManager: undoManager)
@@ -108,11 +108,11 @@ struct CardView: View {
                 }
             }
             Divider()
-            Button("Umbenennen") { beginRename() }
+            Button("Rename") { beginRename() }
             // Asks first — see `RemindersStore.requestDelete`. ⌘Z brings
             // the ticket back, but not its subtasks or attachments, and that
             // gap has to be named before the deletion, not discovered after.
-            Button("Löschen", role: .destructive) {
+            Button("Delete", role: .destructive) {
                 store.requestDelete(cardID: card.id)
             }
         }
@@ -136,19 +136,19 @@ struct CardView: View {
         .accessibilityHint(isRenaming ? "" : helpText)
         .accessibilityActions {
             if !isRenaming {
-                Button("Bearbeiten") { beginEdit() }
-                Button("In Erinnerungen öffnen") { openInReminders() }
+                Button("Edit") { beginEdit() }
+                Button("Open in Reminders") { openInReminders() }
             }
         }
         .accessibilityActions {
             if !isRenaming {
                 ForEach(moveTargets) { target in
-                    Button("Verschieben nach \(target.displayName)") {
+                    Button("Move to \(target.displayName)") {
                         store.move(cardID: card.id, to: target, undoManager: undoManager)
                     }
                 }
-                Button("Umbenennen") { beginRename() }
-                Button("Löschen") { store.requestDelete(cardID: card.id) }
+                Button("Rename") { beginRename() }
+                Button("Delete") { store.requestDelete(cardID: card.id) }
             }
         }
         // Losing focus commits, same as clicking away from a Finder rename —
@@ -260,7 +260,7 @@ struct CardView: View {
     private var notesZone: some View {
         Group {
             if card.notesExcerpt.isEmpty {
-                Text("Keine Notizen")
+                Text("No Notes")
                     .foregroundStyle(.secondary)
             } else {
                 Text(card.notesExcerpt)
@@ -293,7 +293,7 @@ struct CardView: View {
             HStack(spacing: 3) {
                 Image(systemName: "clock")
                     .font(BoardText.glyph)
-                Text("\(days) Tage")
+                Text("\(days) days")
                     .font(BoardText.meta)
                     .monospacedDigit()
             }
@@ -395,10 +395,10 @@ struct CardView: View {
     @ViewBuilder
     private func titleOrField(font: Font) -> some View {
         if isRenaming {
-            TextField("Titel", text: $renameText)
+            TextField("Title", text: $renameText)
                 .font(font)
                 .textFieldStyle(.plain)
-                .accessibilityLabel("Titel")
+                .accessibilityLabel("Title")
                 .focused($isRenameFieldFocused)
                 .onAppear { isRenameFieldFocused = true }
                 .onSubmit { commitRename() }
@@ -435,7 +435,7 @@ struct CardView: View {
         if !noteForVoiceOver.isEmpty {
             lines.append(noteForVoiceOver)
         }
-        lines.append("Klick öffnet Bearbeiten")
+        lines.append(String(localized: "Click to edit"))
         return lines.joined(separator: "\n")
     }
 
@@ -449,7 +449,7 @@ struct CardView: View {
     }
 
     private var displayTitle: String {
-        card.title.isEmpty ? "Ohne Titel" : card.title
+        card.title.isEmpty ? String(localized: "Untitled") : card.title
     }
 
     /// Built explicitly rather than left to `children: .combine`. Combining
@@ -461,30 +461,30 @@ struct CardView: View {
     private var accessibilityLabel: String {
         var parts: [String] = []
         if card.status == .done {
-            parts.append("Erledigt")
+            parts.append(String(localized: "Done"))
         }
         if let priority = priorityDescription {
             parts.append(priority)
         }
         parts.append(displayTitle)
         if let due = card.dueDate {
-            parts.append("Fällig \(badge(for: due).label)")
+            parts.append(String(localized: "Due \(badge(for: due).label)"))
         }
         if card.isRecurring {
-            parts.append("Wiederholend")
+            parts.append(String(localized: "Repeats"))
         }
-        parts.append("Liste \(card.listName)")
+        parts.append(String(localized: "List \(card.listName)"))
         if let days = card.daysInColumn(), days >= Board.agingThresholdDays {
-            parts.append("Seit \(days) Tagen in dieser Spalte")
+            parts.append(String(localized: "In this column for \(days) days"))
         }
         return parts.joined(separator: ", ")
     }
 
     private var priorityDescription: String? {
         switch card.priority {
-        case 1...4: "Hohe Priorität"
-        case 5: "Mittlere Priorität"
-        case 6...9: "Niedrige Priorität"
+        case 1...4: String(localized: "High priority")
+        case 5: String(localized: "Medium priority")
+        case 6...9: String(localized: "Low priority")
         default: nil
         }
     }
@@ -580,13 +580,13 @@ struct CardView: View {
     private func badge(for due: Date) -> BadgeInfo {
         let calendar = Calendar.current
         if calendar.isDateInToday(due) {
-            return BadgeInfo(label: "Heute", tint: .orange)
+            return BadgeInfo(label: String(localized: "Today"), tint: .orange)
         }
         if due < calendar.startOfDay(for: .now) {
-            return BadgeInfo(label: "Überfällig", tint: .red, isEmphasized: true)
+            return BadgeInfo(label: String(localized: "Overdue"), tint: .red, isEmphasized: true)
         }
         if calendar.isDateInTomorrow(due) {
-            return BadgeInfo(label: "Morgen", tint: nil)
+            return BadgeInfo(label: String(localized: "Tomorrow"), tint: nil)
         }
         return BadgeInfo(label: due.formatted(.dateTime.day().month()), tint: nil)
     }

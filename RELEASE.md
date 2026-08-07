@@ -24,7 +24,7 @@ Phase) gelaufen ist — nicht, wenn der Code geschrieben ist.
 | # | Phase | Aufwand | Status |
 |---|---|---|---|
 | 0 | Apple Developer Program + App Store Connect | S (wartezeitgetrieben) | ☐ offen |
-| 1 | Lokalisierung DE + EN (String Catalog) | **L — der Brocken** | ☐ offen |
+| 1 | Lokalisierung DE + EN (String Catalog) | **L — der Brocken** | ☑ erledigt 07.08.2026 (bis auf VoiceOver-Stichprobe) |
 | 2 | Signing & Distribution | M | ☐ offen — braucht Phase 0 |
 | 3 | Store-Auftritt, Website, Screenshots | M | ☐ offen |
 | 4 | TestFlight-Beta & Härtung | M | ☐ offen — braucht 1+2 |
@@ -57,29 +57,65 @@ Interpolation; `CFBundleDevelopmentRegion: de` in project.yml.
 englisch), Deutsch wird vollwertige Lokalisierung im String Catalog. Begründung: Die
 Fallback-Sprache für alle nicht übersetzten Märkte muss Englisch sein.
 
-- [ ] `Localizable.xcstrings` anlegen; project.yml: `CFBundleDevelopmentRegion: en`,
-      `CFBundleLocalizations: [en, de]` (Projekt wird von XcodeGen generiert —
-      Änderungen **nur** in project.yml, nie im .pbxproj)
-- [ ] Dateiweise migrieren, kleine Dateien zuerst als Muster (TicketRename,
-      StatusTagger-UI-Anteile, ContentView), dann die großen; Nicht-View-Strings
-      (Fehlertitel in RemindersStore wie „Nicht verschoben", Anzeigenamen in Models)
-      explizit über `String(localized:)`
-- [ ] Deutsche Übersetzungen in den Katalog (die heutigen Texte *sind* die Übersetzung)
-- [ ] `GermanPlural` (Models.swift) auflösen → echte Plural-Regeln im Katalog für die
-      17 interpolierten Strings
-- [ ] Tests umstellen, die deutsche UI-Strings prüfen (GermanPlural-Tests,
-      BoardEmptiness, dueLabel …) — auf englische Quell-Strings bzw. fixierte Locale
-- [ ] **Tag-Migration (Datenformat, entschieden 26.07., siehe Entscheidungslog):**
-      kanonisch `#next`/`#inprogress`; `#alsnächstes`/`#inbearbeitung` (+
-      Umlaut-Varianten) in die bestehende Legacy-Migrationsliste in StatusTagger.swift
-      (derselbe Mechanismus, der früher englisch→deutsch migriert hat, jetzt
-      umgekehrt); StatusTaggerTests um die neuen Legacy-Formen erweitern
-- [ ] SPEC.md nachziehen: Hashtag-Tabelle, Lese-/Schreibregeln, Migrationstabelle
+- [x] `Localizable.xcstrings` + `InfoPlist.xcstrings` angelegt; project.yml:
+      `developmentLanguage: en`, `CFBundleDevelopmentRegion: en`,
+      `CFBundleLocalizations: [en, de]` (07.08.2026 — Projekt wird von XcodeGen
+      generiert, Änderungen nur in project.yml)
+- [x] Alle 16 Dateien migriert (07.08.2026); Nicht-View-Strings (Fehlertitel in
+      RemindersStore, Anzeigenamen in Models) explizit über `String(localized:)`,
+      View-Captions über `LocalizedStringKey`-Parameter (`fieldCaption`, `factRow`,
+      `filterRow`, `row`)
+- [x] Deutsche Übersetzungen im Katalog — 158 Einträge, die heutigen Texte sind die
+      Übersetzung (07.08.2026)
+- [x] `GermanPlural` (Models.swift) ersatzlos aufgelöst → echte
+      `variations.plural`-Einträge im Katalog für die sieben Strings, die es
+      grammatisch brauchen (Karten/Tage/Aufgaben/Listen/Streak-Sätze); die übrigen
+      interpolierten Strings sind strukturell nie Singular oder inhaltlich invariant
+      (07.08.2026)
+- [x] Tests umgestellt: `GermanPluralTests` entfernt, `StatusTaggerTests` auf
+      `#next`/`#inprogress` als Kanonik + deutsche Formen als Legacy umgeschrieben;
+      volle Suite grün bis auf zwei vorbestehende, unabhängige `BacklogFoldTests`
+      (Datumsfixtur, an anderer Stelle zur Behebung vorgemerkt) (07.08.2026)
+- [x] **Tag-Migration:** kanonisch `#next`/`#inprogress`; `#alsnächstes`/
+      `#inbearbeitung` (+ Umlaut-/Kurzvarianten) in der Legacy-Migrationsliste in
+      StatusTagger.swift (07.08.2026)
+- [x] SPEC.md nachgezogen: Hashtag-Tabelle, Lese-/Schreibregeln, Migrationstabelle
+      (07.08.2026)
 
-**Verifikation Phase 1:** Testsuite grün; App mit `-AppleLanguages (en)` und `(de)`
-gestartet und alle Kern-Screens durchgeklickt; bestehendes Board mit deutschen Tags
-konvergiert in einem Refresh; Screenshot-Vergleich gegen heute (Textlängen-Brüche —
-das Layout wurde auf Deutsch gebaut, Englisch ist meist kürzer, aber nicht überall).
+**Verifikation Phase 1 — abgeschlossen 07.08.2026:**
+
+- Build und Testsuite grün (188 Tests, `xcodebuild … test`, derivedDataPath
+  außerhalb iCloud)
+- **Katalog-Vollständigkeit skriptgeprüft**, nicht per Augenmaß: jede
+  `String(localized:)`- und `LocalizedStringKey`-Stelle im Code gegen die
+  Katalog-Schlüssel diffen (Interpolationen normalisiert), plus Gegenprobe, dass
+  jeder Schlüssel `en` *und* `de` im Zustand `translated` trägt. Der Durchgang
+  fand vier echte Lücken, die der Blick vorher nicht gesehen hatte: die
+  fehlenden Schlüssel `Notes`, `Refresh`, `Yesterday` und eine
+  Anführungszeichen-Abweichung (gerade `"` im Katalog gegen typografische `“ ”`
+  im Code) an der Wiederkehrer-Meldung. **Lehre: Diese Prüfung gehört bei jeder
+  künftigen Katalog-Änderung dazu** — drei der vier Lücken wären erst einem
+  Nutzer aufgefallen.
+- **Beide Sprachen live durchgeklickt** (`-AppleLanguages (en)`/`(de)`): Board,
+  Karten-Editor, Finden-Popover, Statistik in beiden Registern, Einstellungen in
+  beiden Reitern, Board-Menü. Keine Textabschneidung, kein Umbruch, kein
+  gesprengtes Layout — auch nicht an den drei Fakten-Bedienelementen mit fester
+  180-pt-Breite, an den einzeiligen Leer-Sätzen oder an der Einstellungs-Fußnote.
+  Beide Statistik-Register bleiben gleich hoch (SPEC-Regel gehalten).
+- **Standard-Menüs folgen der Sprache** (Bearbeiten/Darstellung/Fenster/Hilfe
+  gegen Edit/View/Window/Help) — `CFBundleLocalizations` wirkt wie gewollt.
+- **Sprache und Region sind sauber getrennt:** Datums- und Zahlenformate folgen
+  weiterhin der Systemregion (`1,8 Tage` auch in englischer Oberfläche),
+  Wochentagsnamen der Sprache (`Montag`/`Monday`). Das ist das
+  Plattformverhalten, kein Fehler.
+- **Tag-Konvergenz beobachtet:** Das Board stand über mehrere App-Neustarts
+  hinweg unverändert in denselben Spalten (3/5 „Als Nächstes", 0/3 „In
+  Bearbeitung") — die Migration hat die Status erhalten, und es läuft keine
+  Schreibschleife. Der literale Notiztext in der Erinnerungen-App wurde nicht
+  inspiziert; die Konvergenz selbst ist unit-getestet.
+
+**Noch offen:** VoiceOver-Stichprobe in beiden Sprachen an einer Karte und einem
+Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels).
 
 ## Phase 2 — Signing & Distribution (nach Phase 0, parallel zu 1 vorbereitbar)
 

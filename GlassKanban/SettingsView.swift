@@ -26,9 +26,9 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             ListsSettingsView()
-                .tabItem { Label("Listen", systemImage: "list.bullet") }
+                .tabItem { Label("Lists", systemImage: "list.bullet") }
             GeneralSettingsView()
-                .tabItem { Label("Allgemein", systemImage: "gearshape") }
+                .tabItem { Label("General", systemImage: "gearshape") }
         }
         .frame(width: SettingsMetrics.width)
     }
@@ -41,7 +41,7 @@ struct ListsSettingsView: View {
 
     var body: some View {
         Form {
-            Section("Diese Listen im Board anzeigen") {
+            Section("Show These Lists on the Board") {
                 if store.reminderCalendars.isEmpty {
                     // Two different states looked the same here. Without
                     // permission EventKit simply returns nothing, so the
@@ -49,8 +49,8 @@ struct ListsSettingsView: View {
                     // missing access — and the one sentence that could have
                     // explained it said the opposite.
                     Text(store.accessState == .denied
-                        ? "Kein Zugriff auf Erinnerungen. In den Systemeinstellungen unter „Datenschutz & Sicherheit“ freigeben."
-                        : "Keine Erinnerungslisten gefunden.")
+                        ? "No access to Reminders. Allow it in System Settings under “Privacy & Security”."
+                        : "No reminder lists found.")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(store.reminderCalendars, id: \.calendarIdentifier) { calendar in
@@ -107,13 +107,13 @@ struct GeneralSettingsView: View {
             // No `onChange` here on purpose: the controller's setter persists
             // and applies in one step, so the effect does not depend on this
             // window being open.
-            Picker("Erscheinungsbild", selection: $appearance.selection) {
+            Picker("Appearance", selection: $appearance.selection) {
                 ForEach(AppAppearance.allCases) { option in
                     Text(option.displayName).tag(option)
                 }
             }
 
-            Toggle("Beim Anmelden starten", isOn: $launchAtLogin)
+            Toggle("Start at Login", isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { _, enabled in
                     guard !isSyncingLaunchAtLogin else { return }
                     do {
@@ -133,7 +133,7 @@ struct GeneralSettingsView: View {
                     }
                 }
                 .alert(
-                    "Beim Anmelden starten nicht möglich",
+                    "Couldn't Start at Login",
                     isPresented: Binding(
                         get: { launchAtLoginError != nil },
                         set: { if !$0 { launchAtLoginError = nil } })
@@ -147,7 +147,7 @@ struct GeneralSettingsView: View {
             // the completion tick is part of the reward the board is built
             // around — but an app that lives on screen all day owes the off
             // switch a first-class place.
-            Toggle("Ton beim Erledigen", isOn: $store.completionSoundEnabled)
+            Toggle("Sound on Completion", isOn: $store.completionSoundEnabled)
 
             // Where workflows differ most. Backlog is the pool of options the
             // board could pull *now*, which is why this ships on — but "now"
@@ -156,14 +156,14 @@ struct GeneralSettingsView: View {
             // position hides anything: both fold, both count what they hold,
             // both are one click from the full pile (see `BacklogFold`).
             Section {
-                Toggle("Noch nicht Fälliges einklappen", isOn: $store.foldNotYetDue)
+                Toggle("Collapse Not-Yet-Due Items", isOn: $store.foldNotYetDue)
             } header: {
                 Text("Backlog")
             } footer: {
                 // Says what the switch does *and* that nothing disappears
                 // either way — the previous version of this feature did make
                 // cards vanish, and that is the fear worth answering here.
-                Text("Wiederkehrende Aufgaben, deren nächster Termin noch nicht erreicht ist, ruhen hinter der Falz-Zeile am Fuß des Backlogs — ein Klick holt sie hervor, ausgeblendet wird nie etwas. Über \(BacklogFold.collapsedLimit) Karten klappt der Rest unabhängig davon ein.")
+                Text("Recurring tasks whose next due date hasn't arrived yet rest behind the fold at the bottom of the Backlog — one click brings them forward, nothing is ever hidden for good. Beyond \(BacklogFold.collapsedLimit) cards, the rest folds regardless.")
             }
 
             // Deliberately the only place a limit can be changed: a limit you
@@ -182,8 +182,8 @@ struct GeneralSettingsView: View {
                     }
                 }
             } header: {
-                Text("Work-in-Progress-Limits")
-                    .help("Lieber abschließen als stapeln")
+                Text("Work-in-Progress Limits")
+                    .help("Finish rather than stack")
             }
         }
         .formStyle(.grouped)
@@ -210,6 +210,6 @@ struct GeneralSettingsView: View {
 
     private func limitLabel(for status: KanbanStatus) -> String {
         let limit = store.wipLimits[status.rawValue] ?? 0
-        return limit > 0 ? "\(limit)" : "Kein Limit"
+        return limit > 0 ? "\(limit)" : String(localized: "No Limit")
     }
 }

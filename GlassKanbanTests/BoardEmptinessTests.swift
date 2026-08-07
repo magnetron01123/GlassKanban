@@ -60,28 +60,3 @@ extension BoardEmptinessTests {
                 hasVisibleCards: true, isFiltering: false, hasSelectedLists: false))
     }
 }
-
-// MARK: - Deutsche Plurale
-
-/// The counts the board says out loud. Every one of these read "1 Karten"
-/// until July 2026 — in the lane tooltip someone opens *because* they are
-/// counting, and in five VoiceOver labels, where a wrong ending is spoken.
-final class GermanPluralTests: XCTestCase {
-    func testSingularAndPlural() {
-        XCTAssertEqual(GermanPlural.cards(1), "1 Karte")
-        XCTAssertEqual(GermanPlural.cards(0), "0 Karten")
-        XCTAssertEqual(GermanPlural.cards(7), "7 Karten")
-
-        XCTAssertEqual(GermanPlural.olderCards(1), "1 ältere Karte")
-        XCTAssertEqual(GermanPlural.olderCards(11), "11 ältere Karten")
-
-        XCTAssertEqual(GermanPlural.days(1), "1 Tag")
-        XCTAssertEqual(GermanPlural.days(2), "2 Tage")
-
-        XCTAssertEqual(GermanPlural.tasks(1), "1 Aufgabe")
-        XCTAssertEqual(GermanPlural.tasks(5), "5 Aufgaben")
-
-        XCTAssertEqual(GermanPlural.restrictions(1), "1 Einschränkung")
-        XCTAssertEqual(GermanPlural.restrictions(3), "3 Einschränkungen")
-    }
-}

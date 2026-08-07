@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>de</string>
+	<string>en</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -12,6 +12,7 @@
 	<string>6.0</string>
 	<key>CFBundleLocalizations</key>
 	<array>
+		<string>en</string>
 		<string>de</string>
 	</array>
 	<key>CFBundleName</key>
@@ -29,6 +30,6 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 David Trogemann</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
-	<string>Glass Kanban zeigt deine Erinnerungen als Kanban-Board an und liest sowie bearbeitet dafür deine Erinnerungen.</string>
+	<string>Glass Kanban displays your reminders as a Kanban board. To do this, it reads, creates, edits, moves, and deletes your reminders.</string>
 </dict>
 </plist>

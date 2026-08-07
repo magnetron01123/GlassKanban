@@ -100,17 +100,17 @@ struct BoardView: View {
             // Every easy way out of this dialog respects the limit: the safe
             // action is the prominent one, carries Return, and — via the
             // cancel role — Escape too. Overloading takes a deliberate click.
-            Button("Erst abschließen", role: .cancel) {
+            Button("Finish First", role: .cancel) {
                 store.move(cardID: overflow.cardID, to: overflow.origin, undoManager: undoManager)
             }
             .keyboardShortcut(.defaultAction)
-            // "Passt schon" rather than "Trotzdem": the board does not get to
+            // "That's Fine" rather than "Anyway": the board does not get to
             // decide that the user is wrong about their own capacity.
-            Button("Passt schon") {}
+            Button("That's Fine") {}
         } message: { _ in
             // The Kanban idea in four words, no jargon and no lecture — then
             // an offer, not an instruction.
-            Text("Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?")
+            Text("Less at once, more done. Finish something first?")
         }
         // Same shape as the limit question above, for the same reason: driven
         // by the store, so the context menu and the VoiceOver action both
@@ -118,19 +118,19 @@ struct BoardView: View {
         // Return and, through the cancel role, Escape. Deleting takes a
         // deliberate click.
         .alert(
-            store.pendingDeletion.map { "„\($0.title)“ löschen?" } ?? "",
+            store.pendingDeletion.map { String(localized: "Delete “\($0.title)”?") } ?? "",
             isPresented: deletionBinding,
             presenting: store.pendingDeletion
         ) { deletion in
-            Button("Abbrechen", role: .cancel) {}
+            Button("Cancel", role: .cancel) {}
                 .keyboardShortcut(.defaultAction)
-            Button("Löschen", role: .destructive) {
+            Button("Delete", role: .destructive) {
                 store.deleteTicket(cardID: deletion.cardID, undoManager: undoManager)
             }
         } message: { _ in
             // The whole reason this question exists, said plainly: undo is a
             // net with a hole in it, and the hole is worth one sentence.
-            Text("⌘Z holt das Ticket zurück — Unteraufgaben und Anhänge aber nicht.")
+            Text("⌘Z brings the ticket back — but not its subtasks or attachments.")
         }
         .overlay { editorOverlay }
         // The "Finden …" menu item cannot reach this view's state directly.
@@ -141,7 +141,7 @@ struct BoardView: View {
         // surfaces from `TicketEditSheet`'s own close, after that sheet is
         // already gone, so nowhere on the sheet itself could show it.
         .alert(
-            store.pendingSaveFailure?.title ?? "Nicht gespeichert",
+            store.pendingSaveFailure?.title ?? String(localized: "Not Saved"),
             isPresented: saveFailureBinding,
             presenting: store.pendingSaveFailure
         ) { _ in
@@ -180,7 +180,7 @@ struct BoardView: View {
                     // The board is the way out: put the card back by clicking
                     // where it came from. Nothing on the card itself closes it.
                     .onTapGesture { closeEditor() }
-                    .accessibilityLabel("Karte schließen")
+                    .accessibilityLabel("Close card")
                     .accessibilityAddTraits(.isButton)
                     .accessibilityAction { closeEditor() }
                     // The scrim fades; only the card scales. Scaling a
@@ -277,7 +277,7 @@ struct BoardView: View {
         // A bare number plus a decorative flame announces as "1" — true and
         // useless. The label says what the number counts.
         .accessibilityLabel(streakPillLabel)
-        .help("Statistiken")
+        .help("Statistics")
         .popover(isPresented: $showStreak, arrowEdge: .bottom) {
             StatsPopover(
                 streak: store.streakStats,
@@ -289,8 +289,8 @@ struct BoardView: View {
 
     private var streakPillLabel: String {
         store.streakStats.current > 0
-            ? "Statistiken. Folge: \(GermanPlural.days(store.streakStats.current)) nacheinander mit mindestens einer erledigten Aufgabe"
-            : "Statistiken. Zurzeit keine Folge"
+            ? String(localized: "Statistics. Streak: \(store.streakStats.current) days in a row with at least one task done")
+            : String(localized: "Statistics. No current streak")
     }
 
     // MARK: - Find
@@ -324,11 +324,11 @@ struct BoardView: View {
         // rather than hidden.
         .tint(store.isFiltering ? Color.accentColor : nil)
         .accessibilityLabel(store.isFiltering
-            ? "Finden, Board ist gefiltert, \(GermanPlural.restrictions(store.activeRestrictionCount)) aktiv"
-            : "Aufgabe finden")
+            ? String(localized: "Find, board is filtered, \(store.activeRestrictionCount) restrictions active")
+            : String(localized: "Find a task"))
         .help(store.isFiltering
-            ? "Board ist gefiltert — \(store.activeRestrictionCount) aktiv (⌘F)"
-            : "Aufgabe finden (⌘F)")
+            ? "Board is filtered — \(store.activeRestrictionCount) active (⌘F)"
+            : "Find a task (⌘F)")
         .popover(isPresented: $showFind, arrowEdge: .bottom) {
             FindPopover()
                 .environmentObject(store)
@@ -357,14 +357,14 @@ struct BoardView: View {
                         .resizable()
                         .frame(width: 15, height: 15)
                 }
-                Text("Erinnerungen")
+                Text("Reminders")
                 Image(systemName: "arrow.up.forward")
                     .font(BoardText.glyph)
                     .foregroundStyle(.secondary)
             }
         }
         .tint(.accentColor)
-        .help("Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)")
+        .help("Open Apple Reminders to create or edit tasks (⌘N)")
     }
 
     /// The real Reminders icon, read from the installed app once.

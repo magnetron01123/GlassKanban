@@ -52,6 +52,24 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   `TextSanitizer`, `BacklogTicketTargeting`, `StreakCalculator`, `WrappedStats`,
   `ReminderDeepLink`. **Muster für neue Logik:** Entscheidung aus der View
   herausziehen, dann testen.
+- **`Localizable.xcstrings`/`InfoPlist.xcstrings`** — String Catalogs, Englisch Quelle,
+  Deutsch vollwertige Lokalisierung (seit 07.08.2026, siehe RELEASE.md Phase 1). **Regel
+  fürs Testziel:** Die reinen Logik-Dateien oben werden ohne App-Host direkt ins
+  Testbundle kompiliert (`project.yml`, `GlassKanbanTests`-Target) — dort ist
+  `Bundle.main` der `xctest`-Runner, der Katalog wird nie gefunden. Deshalb dürfen
+  diese Dateien nur **nicht-interpolierte** `String(localized:)`-Aufrufe enthalten,
+  bei denen der Rückfall auf den Schlüssel (= englischer Text) ein brauchbares
+  Ergebnis ist (z. B. `KanbanStatus.displayName`). **Jeder Plural und jeder
+  interpolierte Satz gehört in die View-Ebene** des App-Ziels, wo der Katalog
+  tatsächlich lädt.
+  **Nach jeder Katalog-Änderung skriptgeprüft, nie per Augenmaß:** jede
+  `String(localized:)`/`LocalizedStringKey`-Stelle gegen die Schlüssel diffen
+  (Interpolationen normalisieren) und gegenprüfen, dass jeder Schlüssel `en` und
+  `de` im Zustand `translated` trägt. Ein fehlender Schlüssel fällt sonst nicht
+  auf — er zeigt still den englischen Quelltext. Beim ersten Durchgang
+  (07.08.2026) fand genau diese Prüfung vier Lücken, die vier Augenpaare
+  übersehen hatten, darunter eine reine Anführungszeichen-Abweichung (gerade `"`
+  gegen typografische `“ ”`).
 - **Tests** — `GlassKanbanTests/`, 14 Dateien, benannt nach der Regel statt nach der
   Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
 
@@ -70,3 +88,19 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   App-Instanzen aus früheren Sessions beenden.
 - CLI-Builds/Tests mit `-derivedDataPath` außerhalb von `~/Documents` laufen lassen
   (iCloud-xattrs verursachen sonst CodeSign-Fehler).
+- `Glass Kanban.app` liegt direkt im Projektordner und ist immer ein aktueller,
+  doppelklickbarer Build — ohne Nachfrage. `scripts/build-app.sh` läuft über dieselben
+  zwei Hooks wie der Doku-Wächter (SessionStart, Stop), prüft nur einen Fingerprint der
+  Quellen (Millisekunden) und stößt bei Änderung einen Build als abgekoppelten
+  Hintergrundprozess an — kein Zug wartet auf `xcodebuild`. Gebaut wird weiterhin nach
+  `~/Library/Caches/GlassKanban/DerivedData` (außerhalb iCloud, siehe Punkt oben), das
+  fertige, bereits signierte Bundle wird dann direkt in den Projektordner kopiert.
+  Dadurch synct `~/Documents` die App bei jedem Build neu — bewusst in Kauf genommen,
+  keine Automatik ohne Weiteres um diesen Punkt herum. Bekannte Nebenwirkung frisch
+  geschriebener Dateien in iCloud Drive: macOS markiert sie mit `com.apple.quarantine`
+  und würde die App sonst aus einem randomisierten Temp-Pfad statt dem echten
+  Projektordner starten (Gatekeeper-Translokation) — das Skript entfernt das Attribut
+  nach jedem Kopiervorgang und heilt es bei jedem Hook-Aufruf nach, falls iCloud es
+  nachträglich erneut setzt. Ein fehlgeschlagener Build wird einmal pro Fingerprint
+  gemeldet, sonst bleibt es still. Manuell: `scripts/build-app.sh --manual` (synchron,
+  mit Ausgabe) oder `--release` für einen optimierten Build.

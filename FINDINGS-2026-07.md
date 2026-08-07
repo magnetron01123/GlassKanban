@@ -158,19 +158,19 @@ Aus dem Rendering-Durchgang: `ImageRenderer` stellt `ScrollView`, `TextField`,
 `TextEditor` und `Picker` nicht dar — die Spaltenansicht ließ sich so nicht prüfen
 (C2 blieb dadurch ungetestet, siehe dort).
 
-### V1. „Keine Notizen" ist jetzt so laut wie eine echte Notiz · `gemessen`
+### ~~V1. „Keine Notizen" ist jetzt so laut wie eine echte Notiz~~ — BEHOBEN · `gemessen`
 `CardView.swift:220-248`
 
 Folge zweier Entscheidungen, die je für sich gewollt sind: Platzhalter trägt die Stufe
-seines Inhalts, und der Notizinhalt ist seit dem 26.07. primär. Ergebnis: Eine Karte
-**ohne** Notiz verkündet ihre Leere in vollem Schwarz, genauso kräftig wie eine Karte
+seines Inhalts, und der Notizinhalt ist seit dem 26.07. primär. Ergebnis war: Eine Karte
+**ohne** Notiz verkündete ihre Leere in vollem Schwarz, genauso kräftig wie eine Karte
 mit Inhalt. Auf einem Brett, auf dem die meisten Backlog-Tickets keine Notiz haben,
-ist das viel Tinte für „hier steht nichts".
+war das viel Tinte für „hier steht nichts".
 
-Optionen: (a) so lassen — der Platzhalter ist Teil der Anatomie; (b) Platzhalter
-zurück auf sekundär — kostet die eben beschlossene Ein-Farb-Regel für die Zone;
-(c) Platzhalter nur in den Arbeitsspalten zeigen, wo die Zone ohnehin steht.
-**Entscheidung offen.**
+Entschieden: Option (b) — der Platzhalter steht wieder auf der sekundären Stufe
+(`BoardText`, siehe DesignSystem.swift). Ein Platzhalter ist kein Wert, sondern die App,
+die sagt, dass keiner da ist — dieselbe Abgrenzung, die „Keine Notizen"/„Keine URL"/
+„Kein Datum" im Karten-Editor tragen (siehe SPEC.md).
 
 ### V2. Trennlinien auf Textfarbe ziehen — geprüft, nicht sinnvoll · `gemessen`
 

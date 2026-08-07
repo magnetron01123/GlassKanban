@@ -41,12 +41,14 @@
 		A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */; };
 		A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CAB35E9902F258F00D82A7 /* SettingsView.swift */; };
 		A70E5A894D67BF2B9B9C0779 /* AppAppearanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48CB5158B3D021C846E9BDE /* AppAppearanceTests.swift */; };
+		B3A56D5A44AADDEA5AA38F85 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7465F3337FF2CB0DD4ED428F /* InfoPlist.xcstrings */; };
 		B5100A228F130EF0A3292797 /* StreakCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */; };
 		B57FB64598820E281C5E6066 /* EditorKeyCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */; };
 		B70019CC6B6074138D0342C5 /* WrappedStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E1A9343D54C7091C20BBDE /* WrappedStats.swift */; };
 		BA331CEEE97A7000C960DB81 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE77523ACBD14B219E0031C5 /* ContentView.swift */; };
 		BC16F8EF904EDF88D5EC21A0 /* ReminderDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */; };
 		C3122530F3FD6606EBCD4E6C /* WIPLimitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C252FF02D5162B99A3F30F7 /* WIPLimitTests.swift */; };
+		C6143CC1D768FB89B9186BAE /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7D4FAE96F445D94EBA27D6B9 /* Localizable.xcstrings */; };
 		C633F382DEFE9FD32C03C6A7 /* ReminderDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */; };
 		C7D82269F67091F5AE0E8870 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 10C56C38B8A1956F2F2974FE /* PrivacyInfo.xcprivacy */; };
 		C831C7F9A270718B155C00E3 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
@@ -80,6 +82,8 @@
 		67AD6D2BADC416DFB80C4A38 /* CompletionChime.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = CompletionChime.wav; sourceTree = "<group>"; };
 		6E37F12841D6179B39F5B3D1 /* GlassKanban.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassKanban.entitlements; sourceTree = "<group>"; };
 		73CAB35E9902F258F00D82A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		7465F3337FF2CB0DD4ED428F /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		7D4FAE96F445D94EBA27D6B9 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyBoardNotice.swift; sourceTree = "<group>"; };
 		885796666D14CA49747DB258 /* AppAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearance.swift; sourceTree = "<group>"; };
 		916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderDeepLink.swift; sourceTree = "<group>"; };
@@ -161,6 +165,8 @@
 				C3D494DF4EBCB89C86134C27 /* GlassKanbanApp.swift */,
 				EABE4A8869EFB12034A075AB /* HUDGlassMaterial.swift */,
 				10ECC48E9096FEF7E8FFDCB5 /* Info.plist */,
+				7465F3337FF2CB0DD4ED428F /* InfoPlist.xcstrings */,
+				7D4FAE96F445D94EBA27D6B9 /* Localizable.xcstrings */,
 				C67BD228B20A88109D18DAA5 /* Models.swift */,
 				CAB79A546CDB1692EDDD28BA /* MoveFeedback.swift */,
 				10C56C38B8A1956F2F2974FE /* PrivacyInfo.xcprivacy */,
@@ -244,6 +250,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
+				de,
 				en,
 			);
 			mainGroup = 3579B4714A2E3E49300D5DE6;
@@ -266,6 +273,8 @@
 			files = (
 				A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */,
 				90DAC564A495A35F79208319 /* CompletionChime.wav in Resources */,
+				B3A56D5A44AADDEA5AA38F85 /* InfoPlist.xcstrings in Resources */,
+				C6143CC1D768FB89B9186BAE /* Localizable.xcstrings in Resources */,
 				C7D82269F67091F5AE0E8870 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

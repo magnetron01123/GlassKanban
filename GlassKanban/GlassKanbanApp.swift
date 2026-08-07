@@ -14,11 +14,11 @@ final class AppearanceDelegate: NSObject, NSApplicationDelegate {
 }
 
 extension Notification.Name {
-    /// Raised by "Neues Ticket" so the Backlog lane can run the same creation
+    /// Raised by "New Ticket" so the Backlog lane can run the same creation
     /// its "+" button does — one path, one set of rules.
     static let glassKanbanNewTicket = Notification.Name("GlassKanbanNewTicket")
 
-    /// Raised by the "Finden …" menu item so the board can open its popover.
+    /// Raised by the "Find …" menu item so the board can open its popover.
     /// The popover's presentation lives in `BoardView`'s own state; a menu
     /// command has no route into that except through the app's own bus.
     static let glassKanbanShowFind = Notification.Name("GlassKanbanShowFind")
@@ -42,7 +42,7 @@ struct GlassKanbanApp: App {
                 // Mac user looks for by name was findable only by hovering.
                 // The button keeps its own `.keyboardShortcut`; this entry is
                 // where the convention says to look for it.
-                Button("Finden …") {
+                Button("Find …") {
                     NotificationCenter.default.post(name: .glassKanbanShowFind, object: nil)
                 }
                 .keyboardShortcut("f")
@@ -52,25 +52,25 @@ struct GlassKanbanApp: App {
                 // ⌘N means "new" on every Mac, and here it opened another
                 // application. The "+" in the Backlog had no shortcut at all,
                 // so the reflex produced the one thing it never means.
-                Button("Neues Ticket") {
+                Button("New Ticket") {
                     NotificationCenter.default.post(name: .glassKanbanNewTicket, object: nil)
                 }
                 .keyboardShortcut("n")
                 .disabled(store.accessState != .granted)
 
-                Button("In Erinnerungen öffnen") {
+                Button("Open in Reminders") {
                     store.openRemindersApp()
                 }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
 
                 Divider()
 
-                Button("Aktualisieren") {
+                Button("Refresh") {
                     store.scheduleRefresh()
                 }
                 .keyboardShortcut("r")
 
-                Button("Filter zurücksetzen") {
+                Button("Reset Filters") {
                     store.resetFilters()
                 }
                 .keyboardShortcut("f", modifiers: [.command, .shift])

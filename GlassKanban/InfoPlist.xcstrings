@@ -1,0 +1,24 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Glass Kanban displays your reminders as a Kanban board. To do this, it reads, creates, edits, moves, and deletes your reminders." : {
+      "comment" : "NSRemindersFullAccessUsageDescription — must describe write access (rename, move, edit, create, delete), not just reading; understating it is a standard 5.1.1 review rejection.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glass Kanban zeigt deine Erinnerungen als Kanban-Board an. Dafür liest, erstellt, bearbeitet, verschiebt und löscht die App deine Erinnerungen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glass Kanban displays your reminders as a Kanban board. To do this, it reads, creates, edits, moves, and deletes your reminders."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

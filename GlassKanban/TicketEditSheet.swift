@@ -52,7 +52,7 @@ struct TicketEditSheet: View {
     @State private var priority = 0
     @State private var calendarID = ""
     @State private var isDuePopoverPresented = false
-    /// Set by the "In Erinnerungen öffnen" button, acted on after `save()` —
+    /// Set by the "Open in Reminders" button, acted on after `save()` —
     /// handing over to the native app before writing would show it a stale
     /// reminder, and leaving this sheet open beside it would let its own
     /// save on close overwrite whatever was edited there.
@@ -195,9 +195,9 @@ struct TicketEditSheet: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             VStack(alignment: .leading, spacing: Board.editorCaptionSpacing) {
-                fieldCaption("Titel")
+                fieldCaption("Title")
                 // Empty placeholder: the caption above already names the
-                // field, and a second "Titel" inside it just said the same
+                // field, and a second "Title" inside it just said the same
                 // thing twice.
                 TextField("", text: $title)
                     .textFieldStyle(.plain)
@@ -206,7 +206,7 @@ struct TicketEditSheet: View {
                     .editableHint(hoveredField == .title, scheme: colorScheme)
                     // The chip beside it is a sibling view, not part of this
                     // field, so the state has to be said here too.
-                    .accessibilityLabel(isDone ? "Titel, erledigt" : "Titel")
+                    .accessibilityLabel(isDone ? "Title, done" : "Title")
             }
             .onHover { hovering in
                 withAnimation(Board.hoverAnimation) {
@@ -239,12 +239,12 @@ struct TicketEditSheet: View {
         // still a card. `BoardTooltip` says the same thing from the other
         // side: it replaces `.help()`, never joins it. VoiceOver keeps the
         // label below.
-        .accessibilityLabel("In Erinnerungen öffnen")
+        .accessibilityLabel("Open in Reminders")
     }
 
     private var notesZone: some View {
         VStack(alignment: .leading, spacing: Board.editorCaptionSpacing) {
-            fieldCaption("Notizen")
+            fieldCaption("Notes")
             // A `TextEditor`, not a vertical-axis `TextField`.
             //
             // The field was chosen to dodge the scroll view a TextEditor
@@ -281,7 +281,7 @@ struct TicketEditSheet: View {
                 // lines under a caption pose the same question the blank
                 // strip on the card did.
                 .overlay(alignment: .topLeading) {
-                    emptyValue("Keine Notizen", when: Self.normalizedNotes(notes).isEmpty)
+                    emptyValue("No Notes", when: Self.normalizedNotes(notes).isEmpty)
                         // TextEditor sets its first line a hair below its own
                         // top edge; the label follows it rather than the
                         // frame, so the two sit on one baseline.
@@ -319,7 +319,7 @@ struct TicketEditSheet: View {
                 // system would otherwise "fix" a domain into a sentence.
                 .autocorrectionDisabled()
                 .overlay(alignment: .leading) {
-                    emptyValue("Keine URL", when: url.isEmpty)
+                    emptyValue("No URL", when: url.isEmpty)
                 }
                 .editableHint(hoveredField == .url, scheme: colorScheme)
                 .onHover { hovering in
@@ -333,7 +333,7 @@ struct TicketEditSheet: View {
 
     /// The card's facts, one labelled row each — from the most stable
     /// property to the most volatile: which list a card belongs to rarely
-    /// changes, its due date changes most often. "Dringlichkeit"/"Fälligkeit"
+    /// changes, its due date changes most often. "Urgency"/"Due Date"
     /// are the same words the find popover uses for these two properties, so
     /// the board speaks one vocabulary throughout.
     private var factsZone: some View {
@@ -341,7 +341,7 @@ struct TicketEditSheet: View {
             // The creation date leads because the zone's own order demands
             // it: rows run from the most stable property to the most
             // volatile, and this one never changes at all. Leading also
-            // parks it as far as possible from "Fälligkeit", so the card's
+            // parks it as far as possible from "Due Date", so the card's
             // two dates can never read as one stacked pair.
             //
             // It is here because the open lanes sort by age (see
@@ -357,7 +357,7 @@ struct TicketEditSheet: View {
             // ("Fertigwerden beginnt hier"), and the date names when the
             // commitment was captured, not when a record was created.
             if let created = card.creationDate {
-                factRow("Erfasst") {
+                factRow("Captured") {
                     // Bare secondary text where the other rows carry
                     // controls: no bezel, no chevron — the stillness is
                     // what says "fact, not setting". The row itself is the
@@ -376,9 +376,9 @@ struct TicketEditSheet: View {
                         .frame(width: Self.factControlWidth, alignment: .leading)
                 }
             }
-            factRow("Liste") { listControl }
-            factRow("Dringlichkeit") { priorityControl }
-            factRow("Fälligkeit") { dueDateControl }
+            factRow("List") { listControl }
+            factRow("Urgency") { priorityControl }
+            factRow("Due Date") { dueDateControl }
         }
         .padding(EdgeInsets(top: 14, leading: Board.openCardInset, bottom: 16, trailing: Board.openCardInset))
     }
@@ -397,7 +397,7 @@ struct TicketEditSheet: View {
     /// pattern of System Settings, whose ragged left edge is carried by a
     /// grey row background with dividers — chrome this card does not have.
     private func factRow<Control: View>(
-        _ caption: String,
+        _ caption: LocalizedStringKey,
         @ViewBuilder control: () -> Control
     ) -> some View {
         HStack(spacing: 10) {
@@ -446,7 +446,7 @@ struct TicketEditSheet: View {
     /// glance, so it borrows `BoardText.chip`'s semibold weight (this app's
     /// answer to "small text that must stay legible") rather than the
     /// thinner `BoardText.meta` used for de-emphasized detail.
-    private func fieldCaption(_ text: String) -> some View {
+    private func fieldCaption(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(BoardText.editorCaption)
             .foregroundStyle(.secondary)
@@ -472,7 +472,7 @@ struct TicketEditSheet: View {
     /// Non-interactive, because it lies over the field it describes and a
     /// click on it belongs to that field.
     @ViewBuilder
-    private func emptyValue(_ text: String, when isEmpty: Bool) -> some View {
+    private func emptyValue(_ text: LocalizedStringKey, when isEmpty: Bool) -> some View {
         if isEmpty {
             Text(text)
                 .font(BoardText.editorBody)
@@ -559,7 +559,7 @@ struct TicketEditSheet: View {
             titles: PriorityOption.allCases.map(\.displayName),
             selectedIndex: PriorityOption.allCases.firstIndex(of: PriorityOption.nearest(to: priority)) ?? 0,
             width: Self.factControlWidth,
-            accessibilityLabel: "Dringlichkeit"
+            accessibilityLabel: String(localized: "Urgency")
         ) { index in
             priority = PriorityOption.allCases[index].rawValue
         }
@@ -595,15 +595,15 @@ struct TicketEditSheet: View {
             } else {
                 // Same tier as the two empty fields above it — it says the
                 // same thing about the same card.
-                factControlLabel("Kein Datum", isPlaceholder: true)
+                factControlLabel(String(localized: "No Date"), isPlaceholder: true)
             }
         }
         .frame(width: Self.factControlWidth)
         .popover(isPresented: $isDuePopoverPresented, arrowEdge: .bottom) {
             duePopover
         }
-        .accessibilityLabel("Fälligkeit")
-        .accessibilityValue(dueDate.map { Self.dueLabel(for: $0, includesTime: hasDueTime) } ?? "Kein Datum")
+        .accessibilityLabel("Due Date")
+        .accessibilityValue(dueDate.map { Self.dueLabel(for: $0, includesTime: hasDueTime) } ?? String(localized: "No Date"))
     }
 
     /// Picking a day in the calendar is what sets the date — opening the
@@ -639,12 +639,12 @@ struct TicketEditSheet: View {
             // No explicit width: the month grid has a fixed intrinsic size on
             // macOS (the same one Calendar.app's date popover uses), so a
             // wider frame only pads empty space beside it.
-            DatePicker("Fällig", selection: dueBinding, displayedComponents: .date)
+            DatePicker("Due", selection: dueBinding, displayedComponents: .date)
                 .datePickerStyle(.graphical)
                 .labelsHidden()
             Divider()
             HStack {
-                Toggle("Uhrzeit", isOn: $hasDueTime)
+                Toggle("Time", isOn: $hasDueTime)
                     .disabled(dueDate == nil)
                     .onChange(of: hasDueTime) { _, isOn in
                         if isOn { dueTimeSwitchedOn() }
@@ -656,7 +656,7 @@ struct TicketEditSheet: View {
                 // the whole grid jumped with it. A control that appears must
                 // not move the thing you are still aiming at; reserving its
                 // space costs nothing and keeps the panel still.
-                DatePicker("Uhrzeit", selection: dueBinding, displayedComponents: .hourAndMinute)
+                DatePicker("Time", selection: dueBinding, displayedComponents: .hourAndMinute)
                     .labelsHidden()
                     .monospacedDigit()
                     .opacity(showsTimePicker ? 1 : 0)
@@ -666,7 +666,7 @@ struct TicketEditSheet: View {
             .font(BoardText.editorBody)
             if dueDate != nil {
                 Divider()
-                Button("Datum entfernen") {
+                Button("Remove Date") {
                     dueDate = nil
                     hasDueTime = false
                     isDuePopoverPresented = false
@@ -702,7 +702,7 @@ struct TicketEditSheet: View {
             titles: calendarOptions.map(\.title),
             selectedIndex: calendarOptions.firstIndex { $0.calendarIdentifier == calendarID } ?? 0,
             width: Self.factControlWidth,
-            accessibilityLabel: "Liste"
+            accessibilityLabel: String(localized: "List")
         ) { index in
             guard calendarOptions.indices.contains(index) else { return }
             calendarID = calendarOptions[index].calendarIdentifier
@@ -810,10 +810,10 @@ private enum PriorityOption: Int, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .none: "Keine"
-        case .low: "Niedrig"
-        case .medium: "Mittel"
-        case .high: "Hoch"
+        case .none: String(localized: "None")
+        case .low: String(localized: "Low")
+        case .medium: String(localized: "Medium")
+        case .high: String(localized: "High")
         }
     }
 

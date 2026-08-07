@@ -121,11 +121,11 @@ struct EmptyBoardNotice: View {
     /// name the state and stop.
     private var line: String {
         switch emptiness {
-        case .nothingToDo: "Nichts zu tun"
-        case .filteredAway: "Keine Treffer"
-        // Not "Nichts zu tun": the board has no source, which is a setting,
+        case .nothingToDo: String(localized: "Nothing to Do")
+        case .filteredAway: String(localized: "No Matches")
+        // Not "Nothing to Do": the board has no source, which is a setting,
         // not an achievement.
-        case .noListsSelected: "Keine Liste ausgewählt"
+        case .noListsSelected: String(localized: "No List Selected")
         }
     }
 
@@ -134,8 +134,8 @@ struct EmptyBoardNotice: View {
     private var action: (label: String, perform: () -> Void)? {
         switch emptiness {
         case .nothingToDo: nil
-        case .filteredAway: ("Filter zurücksetzen", onReset)
-        case .noListsSelected: ("Listen wählen", { openSettings() })
+        case .filteredAway: (String(localized: "Reset Filters"), onReset)
+        case .noListsSelected: (String(localized: "Choose Lists"), { openSettings() })
         }
     }
 }

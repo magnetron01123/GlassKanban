@@ -357,12 +357,12 @@ enum Board {
 /// leads, carried by size and weight (15pt semibold over 12pt regular), the
 /// same pair that separates them in the editor.
 ///
-/// "Keine Notizen", "Keine URL", "Kein Datum" are secondary, and that is the
+/// "No Notes", "No URL", "No Date" are secondary, and that is the
 /// rule rather than an exception to it: a placeholder is not what the ticket
 /// says, it is the app saying there is nothing — annotation, like a caption.
 /// They were briefly primary, on the argument that the words already say
-/// "empty"; on screen that made "Keine Notizen" indistinguishable from a real
-/// note, and put "Kein Datum" in the same black as a date. There is still no
+/// "empty"; on screen that made "No Notes" indistinguishable from a real
+/// note, and put "No Date" in the same black as a date. There is still no
 /// third shade — this is the second one, doing what it is for.
 ///
 /// A one-rank board would have no way to separate a ticket from what
@@ -394,7 +394,7 @@ enum BoardText {
     static let body = Font.system(size: 12)
     /// Chips: date badges, lane counts, dwell time.
     static let chip = Font.system(size: 11, weight: .semibold)
-    /// Quiet metadata — list name, "N weitere anzeigen", weekday letters.
+    /// Quiet metadata — list name, "Show N more", weekday letters.
     static let meta = Font.system(size: 11)
     /// Inline symbols sitting beside `meta` or `chip` text. Deliberately
     /// smaller than its companion text: a glyph reads at a smaller size than
@@ -413,7 +413,7 @@ enum BoardText {
     static let editorTitle = Font.system(size: 17, weight: .semibold)
     /// Notes and every value in the opened card.
     static let editorBody = Font.system(size: 13)
-    /// Field captions in the opened card ("Titel", "Fälligkeit"). Semibold
+    /// Field captions in the opened card ("Title", "Due Date"). Semibold
     /// for the same reason `chip` is: small text that has to stay legible.
     static let editorCaption = Font.system(size: 12, weight: .semibold)
     /// The one inline symbol at editor scale — the "open in Reminders" corner
@@ -422,7 +422,7 @@ enum BoardText {
     /// the same way, an icon reads smaller than the letterform beside it.
     static let editorGlyph = Font.system(size: 13, weight: .regular)
 
-    /// The streak row — flame, count and "Tage in Folge" — set as one
+    /// The streak row — flame, count and "days in a row" — set as one
     /// uniform line rather than a hero number with a caption trailing it.
     /// One size, one (regular) weight: nothing in the row outranks anything
     /// else in it, the flame's own colour is the only emphasis it carries.

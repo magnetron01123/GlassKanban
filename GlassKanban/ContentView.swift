@@ -12,7 +12,7 @@ struct ContentView: View {
             case .denied:
                 AccessDeniedView()
             case .unknown, .requesting:
-                ProgressView("Zugriff auf Erinnerungen…")
+                ProgressView("Accessing Reminders…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
@@ -86,13 +86,13 @@ struct AccessDeniedView: View {
             Image(systemName: "lock.circle")
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
-            Text("Kein Zugriff auf Erinnerungen")
+            Text("No Access to Reminders")
                 .font(.headline)
-            Text("Glass Kanban benötigt Vollzugriff auf deine Erinnerungen, um das Board anzuzeigen. Erlaube den Zugriff in den Systemeinstellungen unter Datenschutz & Sicherheit → Erinnerungen.")
+            Text("Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 400)
-            Button("Systemeinstellungen öffnen") {
+            Button("Open System Settings") {
                 if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders") {
                     NSWorkspace.shared.open(url)
                 }

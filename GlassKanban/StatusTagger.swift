@@ -13,19 +13,24 @@ import Foundation
 ///   as its own last line. Backlog and Done write no tag at all.
 enum StatusTagger {
 
-    /// Written tag is "#alsnächstes"; the umlaut-free spelling "#alsnaechstes"
-    /// is accepted when reading (e.g. typed on the go without umlauts).
-    static let nextRegex = #/#alsn(?:ä|ae)chstes\b/#.ignoresCase()
-    static let progressRegex = #/#inbearbeitung\b/#.ignoresCase()
+    /// Canonical tags as of the DE+EN localization (2026): `#next`/`#inprogress`.
+    /// English is the app's source language for 1.0, so the visible data
+    /// format — a hashtag typed into notes on any device, in any locale —
+    /// moves with it.
+    static let nextRegex = #/#next\b/#.ignoresCase()
+    static let progressRegex = #/#inprogress\b/#.ignoresCase()
 
-    /// Tags from earlier builds (English, then a shorter German form).
+    /// Tags from earlier builds — the pre-localization German forms
+    /// (`#alsnächstes`/`#inbearbeitung` and their older, shorter cousins),
+    /// plus `#progress` from a build that briefly used it without the "in".
     /// Recognized when reading and normalized to the current tags above by
     /// the next hygiene pass.
     static let legacyNextRegexes: [Regex<Substring>] = [
+        #/#alsn(?:ä|ae)chstes\b/#.ignoresCase(),
         #/#n(?:ä|ae)chstes\b/#.ignoresCase(),
-        #/#next\b/#.ignoresCase(),
     ]
     static let legacyProgressRegexes: [Regex<Substring>] = [
+        #/#inbearbeitung\b/#.ignoresCase(),
         #/#bearbeitung\b/#.ignoresCase(),
         #/#progress\b/#.ignoresCase(),
     ]
