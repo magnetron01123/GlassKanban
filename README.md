@@ -5,12 +5,12 @@ Ein natives macOS-Kanban-Board für Apple Erinnerungen (Reminders) im Liquid-Gla
 Alle Daten leben ausschließlich in Erinnerungen — Glass Kanban ist reine Visualisierung
 und Steuerung über EventKit. Kein Server, kein Konto, keine Cloud-Komponente, keine
 Zugangsdaten: Die einzige Berechtigung ist der macOS-Systemdialog für den
-Erinnerungs-Zugriff.
+Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
 
 ## Funktionsweise
 
 - **Vier Spalten:** Backlog → Als Nächstes → In Bearbeitung → Erledigt
-- **Status als Hashtag in den Notizen** (`#alsnächstes`, `#inbearbeitung`) — die
+- **Status als Hashtag in den Notizen** (`#next`, `#inprogress`) — die
   Listenzugehörigkeit der Erinnerung bleibt unangetastet, Backlog = kein Tag,
   Erledigt = abgehakt (`isCompleted`)
 - **Drag & Drop** zwischen den Spalten; **Klick** auf eine Karte öffnet den Karten-Editor
@@ -53,6 +53,10 @@ Tests:
 xcodebuild -project GlassKanban.xcodeproj -scheme GlassKanban \
   -destination 'platform=macOS' test
 ```
+
+**Immer aktuelle App zum Doppelklick:** `Glass Kanban.app` im Projektordner wird von
+`scripts/build-app.sh` automatisch aktuell gehalten — kein manueller Build nötig, um die
+App im Finder zu öffnen. Details siehe [CLAUDE.md](CLAUDE.md).
 
 ## Dokumentation
 

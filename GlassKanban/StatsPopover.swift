@@ -65,8 +65,8 @@ struct FlameIcon: View {
 /// One number is set large, and it is the streak: the reason the flame is in
 /// the toolbar. Everything else stays at reading size, so nothing competes.
 ///
-/// Two tabs rather than two windows: "Jetzt" answers *how is it going right
-/// now*, "Rückblick" answers *what am I like*.
+/// Two tabs rather than two windows: "Now" answers *how is it going right
+/// now*, "Recap" answers *what am I like*.
 ///
 /// The content carries no glass of its own — the popover already *is* the
 /// app's chrome glass, and glass inside glass renders as a boxed artifact
@@ -89,8 +89,8 @@ struct StatsPopover: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .now: "Jetzt"
-            case .past: "Rückblick"
+            case .now: String(localized: "Now")
+            case .past: String(localized: "Recap")
             }
         }
     }
@@ -104,7 +104,7 @@ struct StatsPopover: View {
             tabBar
             // Both tabs are always laid out, stacked, and the panel takes the
             // height of the taller one — so switching between "Jetzt" and
-            // "Rückblick" never resizes the popover. This is a standing design
+            // "Recap" never resizes the popover. This is a standing design
             // rule, not an incidental layout (see SPEC.md, Design → "Beide
             // Register immer gleich hoch"): the two are peers a click apart,
             // and a panel that jumps taller or shorter as you flick between
@@ -149,7 +149,7 @@ struct StatsPopover: View {
     /// Glass. Reaching for the system control is how the effect gets rendered
     /// properly rather than imitated.
     private var tabBar: some View {
-        Picker("Ansicht", selection: $tab) {
+        Picker("View", selection: $tab) {
             ForEach(Tab.allCases) { candidate in
                 Text(candidate.title).tag(candidate)
             }
@@ -188,7 +188,7 @@ struct StatsPopover: View {
     /// needs to say what it is — first written for "Letzte 30 Tage" over the
     /// trend chart, now shared by every section heading in this window so
     /// none of them can drift from the others one at a time.
-    private func sectionHeading(_ text: String) -> some View {
+    private func sectionHeading(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(BoardText.body)
             .foregroundStyle(.secondary)
@@ -201,19 +201,19 @@ struct StatsPopover: View {
             hero
             well {
                 rows {
-                    row("Heute",
-                        GermanPlural.tasks(streak.todayCount),
+                    row("Today",
+                        String(localized: "\(streak.todayCount) tasks"),
                         // Clearing the personal daily average is the reward,
                         // and it is carried by a glyph rather than a coloured
                         // label: the board's badge rule is measured, and
                         // orange at reading size on a light surface lands
                         // under the contrast floor.
                         mark: streak.todayCount >= max(1, streak.dailyTarget) ? "flame.fill" : nil,
-                        help: "Dein Schnitt an aktiven Tagen: \(GermanPlural.tasks(max(1, streak.dailyTarget))).")
+                        help: String(localized: "Your average on active days: \(max(1, streak.dailyTarget)) tasks."))
 
-                    row("In Bearbeitung", wipValue, help: wipHelp)
+                    row("In Progress", wipValue, help: wipHelp)
 
-                    // "Dieses Jahr" used to close this list and does not
+                    // "This Year" used to close this list and does not
                     // belong here: every other figure in it is about the state
                     // of things right now — what is done today, what is open,
                     // how long that will take. A year's total is a look back,
@@ -224,9 +224,9 @@ struct StatsPopover: View {
                     // "Little's Law" in a row label would be jargon standing
                     // where an answer belongs.
                     if let days = forecastDays {
-                        row("Bis fertig",
+                        row("Time Left",
                             Self.daysEstimate(days),
-                            help: "Little’s Law: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten \(WrappedStats.trendWindowDays) Tage — eine Schätzung, kein Versprechen.")
+                            help: String(localized: "Little's Law: tasks in progress divided by your pace over the last \(WrappedStats.trendWindowDays) days — an estimate, not a promise."))
                     }
                 }
             }
@@ -287,7 +287,7 @@ struct StatsPopover: View {
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .foregroundStyle(streak.current == 0 ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-                Text(streak.current == 1 ? "Tag in Folge" : "Tage in Folge")
+                Text(streak.current == 1 ? "day in a row" : "days in a row")
                     .font(BoardText.heroUnit)
                     .foregroundStyle(.secondary)
             }
@@ -310,7 +310,7 @@ struct StatsPopover: View {
         .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(GermanPlural.days(streak.current)) in Folge." + (heroNote.map { " \($0.text)." } ?? ""))
+            String(localized: "\(streak.current) days in a row.") + (heroNote.map { " \($0.text)." } ?? ""))
     }
 
     /// One line, three jobs, in strict priority — an invitation while today is
@@ -323,20 +323,22 @@ struct StatsPopover: View {
     private var heroNote: (text: String, isReward: Bool)? {
         guard streak.todayCount > 0 else {
             return (streak.current == 0
-                        ? "Eine Aufgabe startet eine neue Folge"
-                        : "Eine Aufgabe hält die Folge",
+                        ? String(localized: "One task starts a new streak")
+                        : String(localized: "One task keeps the streak alive"),
                     false)
         }
         guard streak.current > 0, streak.best > 0 else { return nil }
         if streak.current >= streak.best {
-            return ("Dein längster Lauf bisher", true)
+            return (String(localized: "Your longest run yet"), true)
         }
         // Goal-gradient (Hull): closeness to the goal is what accelerates
         // effort — so this only appears once the record is actually in reach.
-        // "Noch 38 Tage" is not a pull, it is a wall.
+        // "38 days to go" is not a pull, it is a wall.
         let gap = streak.best - streak.current
         guard gap <= Self.recordInReachDays else { return nil }
-        return (gap == 1 ? "Noch 1 Tag bis zum Rekord" : "Noch \(gap) Tage bis zum Rekord", true)
+        return (gap == 1
+            ? String(localized: "1 day to the record")
+            : String(localized: "\(gap) days to the record"), true)
     }
 
     private static let recordInReachDays = 5
@@ -353,21 +355,21 @@ struct StatsPopover: View {
     /// says the same thing without one.
     private var wipValue: String {
         guard let wipLimit else { return "\(wip)" }
-        return "\(wip) von \(wipLimit)"
+        return String(localized: "\(wip) of \(wipLimit)")
     }
 
     /// Both halves of the number, in that order. With a limit set, this used
     /// to drop the first half entirely and explain only the limit — so
-    /// VoiceOver read "In Bearbeitung, 3 von 5" and then, as the value,
-    /// "Dein selbst gesetztes Limit": the figure it was announcing went
-    /// unexplained, and only the ceiling got a sentence.
+    /// VoiceOver read "In Progress, 3 of 5" and then, as the value,
+    /// "Your own limit": the figure it was announcing went unexplained, and
+    /// only the ceiling got a sentence.
     private var wipHelp: String {
-        let load = "\(GermanPlural.tasks(wip)) gerade in Bearbeitung."
+        let load = String(localized: "\(wip) tasks in progress right now.")
         guard let wipLimit else { return load }
-        return load + " Dein selbst gesetztes Limit: \(wipLimit)."
+        return load + " " + String(localized: "Your own limit: \(wipLimit).")
     }
 
-    // MARK: - Rückblick
+    // MARK: - Recap
 
     /// The same silhouette as "Jetzt", on purpose: one hero figure on the
     /// glass, then a well of running figures, then a second well the history
@@ -395,22 +397,22 @@ struct StatsPopover: View {
             yearHero
             well {
                 rows {
-                    row("Längste Folge", GermanPlural.days(streak.best))
+                    row("Longest Streak", String(localized: "\(streak.best) days"))
 
                     // The two flow figures, side by side and on the same
-                    // 30-day window — with "In Bearbeitung" on the other
+                    // 30-day window — with "In Progress" on the other
                     // tab, all three variables of Little's Law are on the
-                    // board: the "Bis fertig" forecast stops being an
+                    // board: the "Time Left" forecast stops being an
                     // oracle and becomes arithmetic the reader can check.
                     if let weekly = weeklyThroughput {
-                        row("Pro Woche",
-                            GermanPlural.tasks(weekly),
-                            help: "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten \(WrappedStats.trendWindowDays) Tage — das Tempo in Little’s Law.")
+                        row("Per Week",
+                            String(localized: "\(weekly) tasks"),
+                            help: String(localized: "Your throughput: tasks completed per week, averaged over the last \(WrappedStats.trendWindowDays) days — the pace in Little's Law."))
                     }
                     if let lead = wrapped.medianLeadTimeDays {
-                        row("Durchlaufzeit",
+                        row("Lead Time",
                             Self.daysEstimate(lead),
-                            help: "Median von „erfasst“ bis „erledigt“ bei einmaligen Aufgaben der letzten \(WrappedStats.trendWindowDays) Tage — mit Auslastung und Tempo die dritte Größe in Little’s Law.")
+                            help: String(localized: "Median time from “Captured” to “Done” for one-off tasks over the last \(WrappedStats.trendWindowDays) days — with load and pace, the third figure in Little's Law."))
                     }
                 }
             }
@@ -419,30 +421,30 @@ struct StatsPopover: View {
                     well {
                         rows {
                             if let best = wrapped.bestDay {
-                                row("Bester Tag",
-                                    GermanPlural.tasks(best.count),
+                                row("Best Day",
+                                    String(localized: "\(best.count) tasks"),
                                     help: best.date.formatted(date: .long, time: .omitted))
                             }
                             if let rank = wrapped.mostActiveWeekday {
-                                row("Stärkster Wochentag",
+                                row("Strongest Weekday",
                                     Calendar.current.weekdaySymbols[rank.weekday - 1],
-                                    help: "\(GermanPlural.tasks(rank.count)) — mehr als an jedem anderen Wochentag.")
+                                    help: String(localized: "\(rank.count) tasks — more than any other weekday."))
                             }
                             if let rank = wrapped.mostUsedList {
-                                row("Häufigste Liste",
+                                row("Most Used List",
                                     rank.name,
                                     dot: rank.color,
-                                    help: GermanPlural.tasks(rank.count))
+                                    help: String(localized: "\(rank.count) tasks"))
                             }
                         }
                     }
                     // A footnote about this group, below it and indented to
                     // its content edge — the system's own group-footer
                     // position, where a note about the numbers never reads as
-                    // one of them. A real month rather than a vague "letzte
-                    // 13 Monate", which is the kind of range nobody can
+                    // one of them. A real month rather than a vague "last
+                    // 13 months", which is the kind of range nobody can
                     // check. Scoped to the rankings rather than the tab as a
-                    // whole: "Dieses Jahr" and "Längste Folge" above already
+                    // whole: "This Year" and "Longest Streak" above already
                     // state their own period.
                     if let since = historySince {
                         Text(since)
@@ -474,7 +476,7 @@ struct StatsPopover: View {
 
     private var historySince: String? {
         guard let start = wrapped.historyStart else { return nil }
-        return "Seit \(start.formatted(.dateTime.month(.wide).year()))"
+        return String(localized: "Since \(start.formatted(.dateTime.month(.wide).year()))")
     }
 
     /// The year total, set exactly like the streak hero next door — same
@@ -501,14 +503,14 @@ struct StatsPopover: View {
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .foregroundStyle(wrapped.yearCount == 0 ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-                Text(wrapped.yearCount == 1 ? "Aufgabe dieses Jahr" : "Aufgaben dieses Jahr")
+                Text(wrapped.yearCount == 1 ? "task this year" : "tasks this year")
                     .font(BoardText.heroUnit)
                     .foregroundStyle(.secondary)
             }
             if let milestone = wrapped.milestone {
-                // Reward styling, like the record line on "Jetzt": a fact
+                // Reward styling, like the record line on "Now": a fact
                 // about the count, at reading size, in the primary colour.
-                Text("Meilenstein erreicht: \(milestone) erledigte Aufgaben")
+                Text("Milestone reached: \(milestone) tasks done")
                     .font(BoardText.body)
                     .fontWeight(.semibold)
                     .fixedSize(horizontal: false, vertical: true)
@@ -517,8 +519,8 @@ struct StatsPopover: View {
         .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "\(GermanPlural.tasks(wrapped.yearCount)) dieses Jahr erledigt."
-                + (wrapped.milestone.map { " Meilenstein erreicht: \($0)." } ?? ""))
+            String(localized: "\(wrapped.yearCount) tasks done this year.")
+                + (wrapped.milestone.map { " " + String(localized: "Milestone reached: \($0).") } ?? ""))
     }
 
     /// Completions per week over the trend window, behind the same sample
@@ -537,7 +539,7 @@ struct StatsPopover: View {
     /// unexplained is not. Per-day figures stay in each bar's tooltip.
     private var trendSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeading("Letzte \(WrappedStats.trendWindowDays) Tage")
+            sectionHeading("Last \(WrappedStats.trendWindowDays) Days")
             trendRow
         }
     }
@@ -567,7 +569,7 @@ struct StatsPopover: View {
         // Otherwise this is 30 VoiceOver stops that each say nothing.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            "Letzte \(WrappedStats.trendWindowDays) Tage: an \(GermanPlural.days(wrapped.consistencyActiveDays)) etwas erledigt.")
+            String(localized: "Last \(WrappedStats.trendWindowDays) days: something done on \(wrapped.consistencyActiveDays) of them."))
     }
 
     /// A day with nothing done keeps a hairline so the row still reads as a
@@ -585,13 +587,14 @@ struct StatsPopover: View {
         let calendar = Calendar.current
         let when: String
         if calendar.isDateInToday(day.date) {
-            when = "Heute"
+            when = String(localized: "Today")
         } else if calendar.isDateInYesterday(day.date) {
-            when = "Gestern"
+            when = String(localized: "Yesterday")
         } else {
             when = day.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
         }
-        return "\(when): \(GermanPlural.tasks(day.count))"
+        let tasks = day.count == 1 ? String(localized: "1 task") : String(localized: "\(day.count) tasks")
+        return "\(when): \(tasks)"
     }
 
     // MARK: - Rows
@@ -604,7 +607,7 @@ struct StatsPopover: View {
     /// unlike figures. The label is never further from its value than the
     /// width of one well.
     private func row(
-        _ label: String,
+        _ label: LocalizedStringKey,
         _ value: String,
         dot: Color? = nil,
         mark: String? = nil,
@@ -650,11 +653,12 @@ struct StatsPopover: View {
     private static func daysEstimate(_ days: Double) -> String {
         let rounded = (days * 10).rounded() / 10
         // Work captured and finished the same day rounds to zero, and
-        // "0 Tage" reads as a missing measurement rather than a fast one.
-        guard rounded > 0 else { return "Am selben Tag" }
+        // "0 days" reads as a missing measurement rather than a fast one.
+        guard rounded > 0 else { return String(localized: "Same day") }
         let wantsFraction = days < 10 && rounded != rounded.rounded()
         let formatted = rounded.formatted(.number.precision(.fractionLength(wantsFraction ? 1 : 0)))
-        return "\(formatted) \(rounded == 1 ? "Tag" : "Tage")"
+        let unit = rounded == 1 ? String(localized: "day") : String(localized: "days")
+        return "\(formatted) \(unit)"
     }
 }
 

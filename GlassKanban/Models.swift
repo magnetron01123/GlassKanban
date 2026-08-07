@@ -12,10 +12,10 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .backlog: "Backlog"
-        case .next: "Als Nächstes"
-        case .inProgress: "In Bearbeitung"
-        case .done: "Erledigt"
+        case .backlog: String(localized: "Backlog")
+        case .next: String(localized: "Next Up")
+        case .inProgress: String(localized: "In Progress")
+        case .done: String(localized: "Done")
         }
     }
 
@@ -24,8 +24,8 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
     /// Done is expressed via `isCompleted`.
     var tag: String? {
         switch self {
-        case .next: "#alsnächstes"
-        case .inProgress: "#inbearbeitung"
+        case .next: "#next"
+        case .inProgress: "#inprogress"
         case .backlog, .done: nil
         }
     }
@@ -339,15 +339,24 @@ enum BacklogFold {
     /// limit spills exactly those). `canNameNotYetDue` then still names them,
     /// and rightly: it describes what the fold actually holds, never why the
     /// cut landed where it did.
+    /// The clock is injectable for the same reason `canNameNotYetDue`'s is:
+    /// ripeness is a question about *today*, so a test that fixes a date has
+    /// to be able to fix this one too. Left on the real `.now` it read the
+    /// wall clock, and fixtures written against a fixed date silently began
+    /// to fail as actual time moved past them.
     static func restingCut(
         _ cards: [KanbanCard],
         limit: Int = collapsedLimit,
-        foldsNotYetDue: Bool = true
+        foldsNotYetDue: Bool = true,
+        calendar: Calendar = .current,
+        now: Date = .now
     ) -> [KanbanCard] {
         // `prefix(while:)` rather than a filter, because the not-yet-due
         // cards really are a tail: `openLaneOrder` sinks them there before
         // anything else it sorts on.
-        let ripe = foldsNotYetDue ? Array(cards.prefix { !$0.isNotYetDue() }) : cards
+        let ripe = foldsNotYetDue
+            ? Array(cards.prefix { !$0.isNotYetDue(calendar: calendar, now: now) })
+            : cards
         return Array(ripe.prefix(limit))
     }
 
@@ -450,11 +459,11 @@ enum PriorityFilter: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .all: "Alle"
-        case .high: "Hoch"
-        case .medium: "Mittel"
-        case .low: "Niedrig"
-        case .unset: "Keine"
+        case .all: String(localized: "All")
+        case .high: String(localized: "High")
+        case .medium: String(localized: "Medium")
+        case .low: String(localized: "Low")
+        case .unset: String(localized: "None")
         }
     }
 
@@ -481,11 +490,11 @@ enum DueFilter: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .all: "Alle"
-        case .overdue: "Überfällig"
-        case .today: "Heute"
-        case .thisWeek: "Diese Woche"
-        case .noDate: "Ohne Datum"
+        case .all: String(localized: "All")
+        case .overdue: String(localized: "Overdue")
+        case .today: String(localized: "Today")
+        case .thisWeek: String(localized: "This Week")
+        case .noDate: String(localized: "No Date")
         }
     }
 
@@ -552,41 +561,5 @@ struct ListFilter: Equatable {
     /// and the row would claim a restriction that hides nothing.
     mutating func retain(_ availableIDs: Set<String>) {
         hiddenIDs.formIntersection(availableIDs)
-    }
-}
-
-/// German plurals for the counts the board says out loud.
-///
-/// Every one of these read "1 Karten" until July 2026 — in the lane header's
-/// tooltip, which is where someone goes precisely because they are counting,
-/// and in five VoiceOver labels, where a wrong ending is not a typo you skim
-/// past but a word spoken into your ear. `StatsPopover` had `days`/`tasks`
-/// right all along; they moved here so the three places that need them stop
-/// each having their own idea.
-enum GermanPlural {
-    static func cards(_ count: Int) -> String {
-        count == 1 ? "1 Karte" : "\(count) Karten"
-    }
-
-    static func olderCards(_ count: Int) -> String {
-        count == 1 ? "1 ältere Karte" : "\(count) ältere Karten"
-    }
-
-    static func days(_ count: Int) -> String {
-        count == 1 ? "1 Tag" : "\(count) Tage"
-    }
-
-    static func tasks(_ count: Int) -> String {
-        count == 1 ? "1 Aufgabe" : "\(count) Aufgaben"
-    }
-
-    /// "2 Listen" — what the list filter says once it holds more than one.
-    static func lists(_ count: Int) -> String {
-        count == 1 ? "1 Liste" : "\(count) Listen"
-    }
-
-    /// "1 Einschränkung" / "2 Einschränkungen" — the find popover's badge.
-    static func restrictions(_ count: Int) -> String {
-        count == 1 ? "1 Einschränkung" : "\(count) Einschränkungen"
     }
 }

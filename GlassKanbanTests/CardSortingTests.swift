@@ -383,7 +383,7 @@ final class BacklogFoldTests: XCTestCase {
         ]
         let all = (ripeCards + laterCards).sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
 
-        let resting = BacklogFold.restingCut(all, limit: 15)
+        let resting = BacklogFold.restingCut(all, limit: 15, calendar: calendar, now: now)
         XCTAssertEqual(resting.count, 15, "the count cap still applies to the ripe prefix")
 
         let folded = Array(all.dropFirst(resting.count))
@@ -400,7 +400,7 @@ final class BacklogFoldTests: XCTestCase {
         let laterCards = [laterCard("later-1", due: date(2026, 8, 1))]
         let all = (ripeCards + laterCards).sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
 
-        let resting = BacklogFold.restingCut(all, limit: 15)
+        let resting = BacklogFold.restingCut(all, limit: 15, calendar: calendar, now: now)
         let folded = Array(all.dropFirst(resting.count))
         XCTAssertEqual(folded.count, 1)
         XCTAssertTrue(BacklogFold.canNameNotYetDue(folded: folded, calendar: calendar, now: now))
@@ -414,8 +414,14 @@ final class BacklogFoldTests: XCTestCase {
         let all = ([ripeCard("ripe")] + [laterCard("later", due: date(2026, 8, 1))])
             .sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
 
-        XCTAssertEqual(BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: false).count, 2)
-        XCTAssertEqual(BacklogFold.restingCut(all, limit: 15, foldsNotYetDue: true).count, 1)
+        XCTAssertEqual(
+            BacklogFold.restingCut(
+                all, limit: 15, foldsNotYetDue: false, calendar: calendar, now: now).count,
+            2)
+        XCTAssertEqual(
+            BacklogFold.restingCut(
+                all, limit: 15, foldsNotYetDue: true, calendar: calendar, now: now).count,
+            1)
     }
 
     /// The count cap is not part of the bargain — it still folds either way.

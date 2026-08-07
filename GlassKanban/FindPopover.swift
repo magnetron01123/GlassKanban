@@ -15,12 +15,12 @@ struct FindPopover: View {
             Divider()
 
             filterRow(
-                "Dringlichkeit",
+                "Urgency",
                 systemImage: "flag",
                 selection: $store.priorityFilter,
                 options: PriorityFilter.allCases)
             filterRow(
-                "Fälligkeit",
+                "Due Date",
                 systemImage: "calendar",
                 selection: $store.dueFilter,
                 options: DueFilter.allCases)
@@ -50,7 +50,7 @@ struct FindPopover: View {
             // reset would be a permanently greyed-out control.
             if store.isFiltering {
                 Divider()
-                Button("Alles zurücksetzen") {
+                Button("Reset All") {
                     store.resetFilters()
                 }
                 .buttonStyle(.link)
@@ -74,7 +74,7 @@ struct FindPopover: View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-            TextField("Aufgabe finden", text: $store.searchText)
+            TextField("Find a task", text: $store.searchText)
                 .textFieldStyle(.plain)
                 .focused($searchFocused)
             if !store.searchText.isEmpty {
@@ -86,7 +86,7 @@ struct FindPopover: View {
                         .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)
-                .help("Suche löschen")
+                .help("Clear search")
             }
         }
         // Matches the filter rows directly below it — same popover, same
@@ -117,7 +117,7 @@ struct FindPopover: View {
     /// Reminders — the one thing this app has no say over.
     private var listRow: some View {
         HStack(spacing: 8) {
-            Label("Listen", systemImage: "list.bullet")
+            Label("Lists", systemImage: "list.bullet")
                 .foregroundStyle(.secondary)
                 .fixedSize()
             Spacer()
@@ -133,11 +133,11 @@ struct FindPopover: View {
                 // above them it would read as a fourth list.
                 if !store.listFilter.isUnrestricted {
                     Divider()
-                    Button("Alle anzeigen") { store.listFilter.showAll() }
+                    Button("Show All") { store.listFilter.showAll() }
                 }
             }
             .fixedSize()
-            .accessibilityLabel("Listen")
+            .accessibilityLabel("Lists")
             .accessibilityValue(listSummary)
         }
         .font(BoardText.body)
@@ -148,12 +148,12 @@ struct FindPopover: View {
     /// button cannot show three titles, and truncating them into "Arbeit,
     /// Gemeins…" says less than "2 Listen".
     private var listSummary: String {
-        guard !store.listFilter.isUnrestricted else { return "Alle" }
+        guard !store.listFilter.isUnrestricted else { return String(localized: "All") }
         let shown = store.boardCalendars.filter { store.listFilter.shows($0.calendarIdentifier) }
         switch shown.count {
-        case 0: return "Keine"
+        case 0: return String(localized: "None")
         case 1: return shown[0].title
-        default: return GermanPlural.lists(shown.count)
+        default: return String(localized: "\(shown.count) lists")
         }
     }
 
@@ -168,7 +168,7 @@ struct FindPopover: View {
     /// the rows wore two different chevrons (⌃⌄ against ⌄) at two widths,
     /// which is the near-miss that makes a set of rows look accidental.
     private func filterRow<F>(
-        _ title: String,
+        _ title: LocalizedStringKey,
         systemImage: String,
         selection: Binding<F>,
         options: [F]

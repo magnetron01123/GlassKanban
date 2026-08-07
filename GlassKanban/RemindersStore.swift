@@ -94,8 +94,8 @@ final class RemindersStore: ObservableObject {
 
     struct SaveFailure: Identifiable {
         let cardID: String
-        /// What did not happen, in the user's words — "Nicht verschoben" for
-        /// a refused move, not the blanket "Nicht gespeichert" that only fits
+        /// What did not happen, in the user's words — "Not Moved" for
+        /// a refused move, not the blanket "Not Saved" that only fits
         /// an edit. A read-only shared list refuses every write the same way;
         /// the alert has to say which one it was.
         let title: String
@@ -538,12 +538,11 @@ final class RemindersStore: ObservableObject {
         // hint of which is which. Saying so is better than quietly making a
         // duplicate the user then has to clean up by hand.
         if origin == .done, let live = liveRecurringSibling(of: reminder) {
+            let name = live.title ?? String(localized: "This task")
             pendingSaveFailure = SaveFailure(
                 cardID: cardID,
-                title: "Nicht zurückgeholt",
-                message: "„\(live.title ?? "Diese Aufgabe")“ wiederholt sich, und die Serie läuft "
-                    + "bereits weiter. Die erledigte Ausführung zurückzuholen würde sie doppelt "
-                    + "auf das Board legen.")
+                title: String(localized: "Not Restored"),
+                message: String(localized: "“\(name)” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice."))
             return nil
         }
 
@@ -557,14 +556,14 @@ final class RemindersStore: ObservableObject {
             // drop that missed — so the user tries again instead of learning
             // that this list is read-only.
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: "Nicht verschoben", message: error.localizedDescription)
+                cardID: cardID, title: String(localized: "Not Moved"), message: error.localizedDescription)
             scheduleRefresh()
             return nil
         }
         // Registered after the save, not before: an undo entry for a move
         // that never happened spends itself doing nothing, and the *next* ⌘Z
         // then reaches back past it into an edit the user did mean to keep.
-        register(undoManager, name: "Verschieben") { store in
+        register(undoManager, name: String(localized: "Move")) { store in
             store.move(cardID: cardID, to: origin, undoManager: undoManager, feedback: false)
         }
 
@@ -633,7 +632,7 @@ final class RemindersStore: ObservableObject {
 
         let cardID = reminder.calendarItemIdentifier
         newlyCreatedCardID = cardID
-        register(undoManager, name: "Ticket anlegen") { store in
+        register(undoManager, name: String(localized: "Create Ticket")) { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
         // Optimistic, like `move`: the editor opens on this card immediately,
@@ -707,7 +706,7 @@ final class RemindersStore: ObservableObject {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         try? eventStore.remove(reminder, commit: true)
         cards.removeAll { $0.id == cardID }
-        // The "Ticket anlegen" entry the "+" registered describes a creation
+        // The "Create Ticket" entry the "+" registered describes a creation
         // that has just been taken back, so its undo would find nothing and
         // return silently — spending a ⌘Z that then failed to reach the edit
         // the user actually meant to undo. Removing the reminder is not a
@@ -733,7 +732,7 @@ final class RemindersStore: ObservableObject {
 
     /// Everything needed to put a deleted ticket back. EventKit has no
     /// undelete, so restoring writes a fresh reminder carrying the same
-    /// content — which is what Reminders' own "Zuletzt gelöscht" does too.
+    /// content — which is what Reminders' own "Recently Deleted" does too.
     /// The new reminder gets a new identifier; nothing on the board depends on
     /// the old one surviving.
     struct DeletedTicket {
@@ -804,11 +803,11 @@ final class RemindersStore: ObservableObject {
             try eventStore.remove(reminder, commit: true)
         } catch {
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: "Nicht gelöscht", message: error.localizedDescription)
+                cardID: cardID, title: String(localized: "Not Deleted"), message: error.localizedDescription)
             scheduleRefresh()
             return
         }
-        register(undoManager, name: "Ticket löschen") { store in
+        register(undoManager, name: String(localized: "Delete Ticket")) { store in
             store.restoreTicket(snapshot, undoManager: undoManager)
         }
         cards.removeAll { $0.id == cardID }
@@ -849,7 +848,7 @@ final class RemindersStore: ObservableObject {
         }
 
         let cardID = reminder.calendarItemIdentifier
-        register(undoManager, name: "Ticket löschen") { store in
+        register(undoManager, name: String(localized: "Delete Ticket")) { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
         scheduleRefresh()
@@ -876,11 +875,11 @@ final class RemindersStore: ObservableObject {
             try eventStore.save(reminder, commit: true)
         } catch {
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: "Nicht umbenannt", message: error.localizedDescription)
+                cardID: cardID, title: String(localized: "Not Renamed"), message: error.localizedDescription)
             scheduleRefresh()
             return
         }
-        register(undoManager, name: "Umbenennen") { store in
+        register(undoManager, name: String(localized: "Rename")) { store in
             store.renameTicket(cardID: cardID, title: previousTitle, undoManager: undoManager)
         }
         if let index = cards.firstIndex(where: { $0.id == cardID }) {
@@ -1111,14 +1110,14 @@ final class RemindersStore: ObservableObject {
             try eventStore.save(reminder, commit: true)
         } catch {
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: "Nicht gespeichert", message: error.localizedDescription)
+                cardID: cardID, title: String(localized: "Not Saved"), message: error.localizedDescription)
             scheduleRefresh()
             return
         }
         // The inverse write: back to `previous`, measured against what was
         // just written, so undo touches exactly the fields this edit did.
         if let previous {
-            register(undoManager, name: "Bearbeiten") { store in
+            register(undoManager, name: String(localized: "Edit")) { store in
                 store.updateTicket(
                     cardID: cardID, edited: previous, baseline: edited, undoManager: undoManager)
             }

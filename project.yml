@@ -3,6 +3,11 @@ options:
   bundleIdPrefix: com.davidtrogemann
   deploymentTarget:
     macOS: "26.0"
+  # English is the source language for the whole app (code strings, String
+  # Catalog keys). German is a full localization, not the base language — the
+  # fallback for every market Glass Kanban does not explicitly translate must
+  # be English, and a store reviewer outside Germany must not see German UI.
+  developmentLanguage: en
 settings:
   base:
     # Swift 5 language mode for the MVP: EventKit's callback APIs and
@@ -22,10 +27,13 @@ targets:
       properties:
         # Must describe write access too: the board renames, moves, edits,
         # creates and deletes reminders. Understating this is a standard
-        # 5.1.1 review rejection.
+        # 5.1.1 review rejection. English here is the source string; the
+        # German translation lives in InfoPlist.xcstrings and carries the
+        # same level of detail.
         NSRemindersFullAccessUsageDescription: >-
-          Glass Kanban zeigt deine Erinnerungen als Kanban-Board an und liest
-          sowie bearbeitet dafür deine Erinnerungen.
+          Glass Kanban displays your reminders as a Kanban board. To do
+          this, it reads, creates, edits, moves, and deletes your
+          reminders.
         NSHumanReadableCopyright: "© 2026 David Trogemann"
         LSApplicationCategoryType: public.app-category.productivity
         # Without these two the plist would carry XcodeGen's literal 1.0/1
@@ -36,12 +44,14 @@ targets:
         # No network code, no encryption of our own — declaring it here stops
         # App Store Connect asking the export-compliance question every upload.
         ITSAppUsesNonExemptEncryption: false
-        # The app's own strings are German, but AppKit localizes the standard
-        # menus (Bearbeiten, Darstellung, Fenster, Hilfe) from the bundle's
-        # declared languages — without this it hands out English ones next to
-        # German content.
-        CFBundleDevelopmentRegion: de
+        # English is the app's source language (see developmentLanguage above)
+        # and German a full String Catalog localization. AppKit localizes the
+        # standard menus (Edit, View, Window, Help) from these declared
+        # languages — without both listed here it would hand out English
+        # standard menus next to German content, or vice versa.
+        CFBundleDevelopmentRegion: en
         CFBundleLocalizations:
+          - en
           - de
     entitlements:
       path: GlassKanban/GlassKanban.entitlements

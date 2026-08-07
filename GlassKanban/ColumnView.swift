@@ -450,14 +450,14 @@ struct ColumnView: View {
 
     /// Every lane opens the same way, so the four read as one family.
     private var countSummary: String {
-        guard let wipLimit else { return GermanPlural.cards(shownCount) }
-        return "\(cards.count) von \(wipLimit) Karten"
+        guard let wipLimit else { return String(localized: "\(shownCount) cards") }
+        return String(localized: "\(cards.count) of \(wipLimit) cards")
     }
 
     private var countDetails: [String] {
         var details: [String] = []
         if status == .done, todayCount > 0 {
-            details.append("\(todayCount) heute erledigt")
+            details.append(String(localized: "\(todayCount) done today"))
         }
         // Same reasoning as `recurringHint`: a lane that shows less than it
         // could must be able to say so. Once the look back is open, the one
@@ -465,15 +465,15 @@ struct ColumnView: View {
         // the exact moment someone is digging for it.
         if status == .done {
             if !expanded, foldedCount > 0 {
-                details.append(GermanPlural.olderCards(foldedCount))
+                details.append(String(localized: "\(foldedCount) older cards"))
             } else if expanded {
-                details.append("Älteres liegt in Erinnerungen")
+                details.append(String(localized: "Older items live in Reminders"))
             }
         }
         if isOverLimit {
-            details.append("Limit überschritten")
+            details.append(String(localized: "Over the limit"))
         } else if wipLimit != nil {
-            details.append("Lieber abschließen als stapeln")
+            details.append(String(localized: "Finish rather than stack"))
         }
         if let laterHint {
             details.append(laterHint)
@@ -490,7 +490,7 @@ struct ColumnView: View {
     private var laterHint: String? {
         let later = cards.count { $0.isNotYetDue() }
         guard later > 0 else { return nil }
-        return "\(later) davon noch nicht fällig"
+        return String(localized: "\(later) not yet due")
     }
 
     // MARK: - Pieces
@@ -561,10 +561,10 @@ struct ColumnView: View {
     /// *worth* — Kanban's "stop starting, start finishing" in one breath.
     private var emptySlotText: String {
         switch status {
-        case .backlog: "Nichts im Kopf behalten"
-        case .next: "Wählen statt sammeln"
-        case .inProgress: "Fertigwerden beginnt hier"
-        case .done: "Nur Fertiges zählt"
+        case .backlog: String(localized: "Don't hold it in your head")
+        case .next: String(localized: "Choose, don't collect")
+        case .inProgress: String(localized: "Finishing starts here")
+        case .done: String(localized: "Only finished counts")
         }
     }
 
@@ -668,8 +668,8 @@ struct ColumnView: View {
             .onHover { hovering in
                 withAnimation(reduceMotion ? nil : Board.hoverAnimation) { addHovered = hovering }
             }
-            .accessibilityLabel("Neue Karte anlegen")
-            .boardTooltip("Neue Karte anlegen")
+            .accessibilityLabel("Add a new card")
+            .boardTooltip(String(localized: "Add a new card"))
             Spacer()
         }
         .padding(.vertical, 4)
@@ -752,11 +752,11 @@ struct ColumnView: View {
     /// things at once, and naming only one of them would misreport the rest.
     private var moreLabel: String {
         switch (status, expanded) {
-        case (.done, false): "\(foldedCount) ältere anzeigen"
-        case (.done, true): "Ältere ausblenden"
-        case (_, false) where foldIsAllLater: "\(foldedCount) noch nicht fällig"
-        case (_, false): "\(foldedCount) weitere anzeigen"
-        case (_, true): "Weniger anzeigen"
+        case (.done, false): String(localized: "Show \(foldedCount) older")
+        case (.done, true): String(localized: "Hide older")
+        case (_, false) where foldIsAllLater: String(localized: "\(foldedCount) not yet due")
+        case (_, false): String(localized: "Show \(foldedCount) more")
+        case (_, true): String(localized: "Show less")
         }
     }
 

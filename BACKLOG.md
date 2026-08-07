@@ -70,7 +70,7 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   (1) Setzt EventKit beim Abhaken einer wiederkehrenden Erinnerung `isCompleted` überhaupt
   sichtbar/dauerhaft, oder springt sie sofort auf die nächste Fälligkeit, ohne dass die App den
   "Erledigt"-Moment je beobachten kann? (2) Falls ja: bleibt der alte Status-Hashtag (z. B.
-  `#inbearbeitung`) in den Notizen stehen, bis die bestehende Hygiene-Pass beim nächsten Sync
+  `#inprogress`) in den Notizen stehen, bis die bestehende Hygiene-Pass beim nächsten Sync
   greift, oder kann das mit dem Wiederholungs-Sprung kollidieren (Karte taucht kurz in der
   falschen Spalte auf)? (3) Zählt eine wiederkehrende Erledigung überhaupt zum Streak-Zähler,
   oder fehlt dafür schlicht ein beobachtbares `completionDate`? Muss erst gegen echtes

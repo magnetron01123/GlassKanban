@@ -23,6 +23,9 @@ weiterentwickelt: Ändert sich Verhalten, ändert sich diese Datei mit.
 
 - **Name:** Glass Kanban
 - **Plattform:** natives SwiftUI, macOS 26 (Tahoe)+
+- **Sprachen:** Englisch (Quellsprache im Code, String Catalog) und Deutsch (vollwertige
+  Lokalisierung, `Localizable.xcstrings`/`InfoPlist.xcstrings`) — Englisch ist die
+  Fallback-Sprache für jeden Markt ohne eigene Übersetzung
 - **Grundprinzipien:** Personal-Kanban-Philosophie (Arbeit sichtbar machen, Workflow nicht
   stören) + komplett lokal (keine Cloud-Komponente, kein Server, kein Konto, keine
   Zugangsdaten in der App — einzige Berechtigung ist der macOS-Systemdialog für
@@ -56,30 +59,34 @@ Spaltenwechsel unverändert.
 | Spalte (technisch) | Anzeige (Deutsch) | Hashtag in den Notizen |
 |---|---|---|
 | Backlog | Backlog | kein Tag (Standard/Fallback) |
-| Next | Als Nächstes | `#alsnächstes` |
-| In Progress | In Bearbeitung | `#inbearbeitung` |
+| Next | Als Nächstes | `#next` |
+| In Progress | In Bearbeitung | `#inprogress` |
 | Done | Erledigt | — (`isCompleted = true`, kein Tag) |
+
+Das Tag-Format ist **Englisch und plattformweit einheitlich** — dasselbe `#next`/
+`#inprogress`, das die App in Notizen schreibt, egal in welcher Sprache die Oberfläche
+gerade läuft. Ein sichtbares Datenformat in Notizen internationaler Nutzer:innen muss
+sprachunabhängig sein; die deutschen Formen aus der Zeit vor der Lokalisierung
+(`#alsnächstes`/`#inbearbeitung`) sind Legacy, siehe Migrationstabelle unten.
 
 **Schreiben (bei Drag & Drop bzw. „Verschieben nach"):**
 
 | Ziel-Spalte | Aktion in den Notizen |
 |---|---|
 | Backlog | vorhandene Status-Zeile entfernen |
-| Als Nächstes | Status-Zeile entfernen, `#alsnächstes` als neue, eigene letzte Zeile anhängen |
-| In Bearbeitung | Status-Zeile entfernen, `#inbearbeitung` als neue, eigene letzte Zeile anhängen |
+| Als Nächstes | Status-Zeile entfernen, `#next` als neue, eigene letzte Zeile anhängen |
+| In Bearbeitung | Status-Zeile entfernen, `#inprogress` als neue, eigene letzte Zeile anhängen |
 | Erledigt | `isCompleted = true` setzen, Status-Zeile entfernen |
 
 **Lesen:** Der Hashtag wird an beliebiger Stelle im Notizen-Text gesucht, ohne Rücksicht auf
 Groß-/Kleinschreibung, aber **nur wo er allein steht** — links und rechts Leerraum oder
-Textgrenze. `#inbearbeitungszeit` zählt damit nicht, und ebenso wenig ein Treffer mitten
+Textgrenze. `#inprogressreport` zählt damit nicht, und ebenso wenig ein Treffer mitten
 in anderem Text: `https://example.com/guide#next`, `#next-steps`, `#bearbeitung/2024`,
-`ABC#NEXT!`. Die
-umlautfreie Schreibweise `#alsnaechstes` wird beim Lesen akzeptiert (unterwegs ohne Umlaute
-getippt) und beim nächsten Schreiben normalisiert. Stehen mehrere Tags im Text, gewinnt der
+`ABC#NEXT!`. Stehen mehrere Tags im Text, gewinnt der
 **zuletzt** im Text stehende. Erinnerungen ohne erkannten Hashtag und ohne `isCompleted`
 fallen automatisch in „Backlog".
 
-Die Regel scheitert bewusst **nach innen**: `#alsnächstes.` mit Satzpunkt gilt nicht mehr
+Die Regel scheitert bewusst **nach innen**: `#next.` mit Satzpunkt gilt nicht mehr
 als Tag, die Karte bleibt in „Backlog" und der Text bleibt unangetastet. Ein nicht
 erkanntes Tag kostet einen Zug mit der Maus; ein fälschlich erkanntes kostete bis Juli 2026
 Nutzertext — die Hygiene entfernte den Treffer und hängte einen echten Tag an, ohne Zutun
@@ -96,8 +103,17 @@ zutrifft:
 1. `isCompleted = true`, aber es steht noch ein Status-Hashtag in den Notizen (z. B. direkt
    in Reminders abgehakt)
 2. mehrere Status-Hashtags gleichzeitig vorhanden (z. B. am iPhone von Hand ergänzt)
-3. ein Hashtag in einer alten Schreibweise früherer Builds (`#next`, `#progress`,
-   `#nächstes`, `#bearbeitung`) — wird auf die aktuelle Form migriert
+3. ein Hashtag in einer alten Schreibweise früherer Builds — wird auf die aktuelle Form
+   migriert:
+
+   | Legacy-Form | Migriert zu |
+   |---|---|
+   | `#alsnächstes`, `#alsnaechstes`, `#nächstes`, `#naechstes` | `#next` |
+   | `#inbearbeitung`, `#bearbeitung`, `#progress` | `#inprogress` |
+
+   Die deutschen Formen stammen aus der Zeit vor der DE+EN-Lokalisierung, `#progress`
+   (ohne „in") aus einem noch früheren Build. Ein Board mit deutschen Tags konvergiert
+   dadurch in genau einem Refresh auf die neue Form, ganz ohne Zutun.
 
 Der Vorgang ist konvergent: Nach einem Umschreiben existiert genau ein Tag der aktuellen
 Form (oder keiner), es entsteht also keine Schreibschleife über die

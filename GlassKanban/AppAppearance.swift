@@ -21,9 +21,9 @@ enum AppAppearance: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .system: "Nach System"
-        case .light: "Hell"
-        case .dark: "Dunkel"
+        case .system: String(localized: "System")
+        case .light: String(localized: "Light")
+        case .dark: String(localized: "Dark")
         }
     }
 
