@@ -282,6 +282,43 @@ Jede Schreib-Aktion der App — Verschieben, Umbenennen, Anlegen, Löschen — r
 Gegenteil beim Undo-Manager des Fensters und ist mit **⌘Z** widerrufbar, ⇧⌘Z stellt sie
 wieder her. Die Erinnerung bekommt beim Wiederherstellen eine neue interne ID.
 
+### Wiederkehrende Aufgaben beim Erledigen
+
+Am 08.08.2026 gegen echtes EventKit gemessen (iCloud-Liste, wöchentliche Regel), nachdem
+ein Ticket nach dem Erledigen in „Als Nächstes" stehen blieb:
+
+- Eine wiederkehrende Erinnerung abzuhaken erledigt **nicht** den Datensatz, den das Board
+  in der Hand hat. EventKit legt den erledigten Durchgang als **neue, abgelöste**
+  Erinnerung ab (eigene ID, keine Wiederholungsregel mehr) und lässt die **Serie unter der
+  bisherigen ID** weiterlaufen, nur mit dem nächsten Fälligkeitsdatum.
+- Der Status-Hashtag wird dabei korrekt entfernt: Die zurückkehrende Serie trägt keinen
+  Tag und landet damit im **Backlog** — richtig, denn ihr nächster Durchgang wurde noch
+  nicht gezogen. Ein nachträgliches Zurückschreiben durch iCloud gibt es nicht (90 s
+  beobachtet, unverändert).
+- **Die ID wechselt also die Bedeutung.** Ab dem Erledigen zeigt sie auf den *nächsten*
+  Durchgang. Alles, was vorher auf diese ID gebucht wurde, zielt danach auf Arbeit, die
+  niemand begonnen hat — im Undo-Stapel gleich mehrfach: Das erste ⌘Z schrieb
+  `#inprogress` auf den nächsten Durchgang, das zweite `#next`. So kam eine Karte in eine
+  Arbeitsspalte, ohne je gezogen worden zu sein, und zählte dort gegen das WIP-Limit.
+
+**Regel daraus:** Ist eine wiederkehrende Karte erledigt worden, werden **wiedergespielte**
+Schreibvorgänge (Undo/Redo) über diese ID abgelehnt und erklärt („Nicht rückgängig
+gemacht") statt ausgeführt. Der Eintrag bleibt dabei auf dem Stapel und wird von der
+Erklärung verbraucht — ihn still zu verschlucken, ließe das *nächste* ⌘Z in eine Änderung
+greifen, die der Nutzer behalten wollte. Ein **eigener** Zug des Nutzers — er zieht den
+neuen Durchgang, wenn dessen Termin kommt — gibt die ID zurück, und ⌘Z bedeutet ab da
+wieder, was es sagt (`RecurringHandoff`).
+
+Ebenfalls an dieser Stelle: Die Erledigt-Settle-Animation wird für wiederkehrende Karten
+**nicht** mehr auf die gezogene ID gelegt — sie gehörte sonst der zurückkehrenden
+Backlog-Karte. Der erledigte Durchgang ist ein eigener Datensatz und bekommt sie über
+dieselbe Abgleich-Erkennung wie Arbeit, die auf einem anderen Gerät fertig wurde, also
+innerhalb von `Board.settleDelay` — die Choreografie bleibt unverändert.
+
+Das Gegenstück bleibt bestehen: Eine erledigte Ausführung aus „Erledigt" **heraus**zuziehen
+lehnt die App weiterhin mit „Nicht zurückgeholt" ab, weil das die Aufgabe doppelt aufs
+Board legen würde.
+
 ### Tastaturkürzel
 
 | Kürzel | Wirkung |
