@@ -8,6 +8,13 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "“%@” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice." } }
       }
     },
+    "“%@” repeats. The turn you finished is filed away and this card is already the next one — undoing would change work that has not even been pulled yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "„%@“ wiederholt sich. Der erledigte Durchgang ist abgelegt und diese Karte ist bereits der nächste — rückgängig würde also Arbeit ändern, die noch niemand gezogen hat." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "“%@” repeats. The turn you finished is filed away and this card is already the next one — undoing would change work that has not even been pulled yet." } }
+      }
+    },
     "1 task" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -595,6 +602,13 @@
       "localizations" : {
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht gespeichert" } },
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Saved" } }
+      }
+    },
+    "Not Undone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht rückgängig gemacht" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Undone" } }
       }
     },
     "Notes" : {

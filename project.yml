@@ -85,6 +85,7 @@ targets:
       - path: GlassKanban/EditorKeyCommand.swift
       - path: GlassKanban/WrappedStats.swift
       - path: GlassKanban/ReminderDeepLink.swift
+      - path: GlassKanban/RecurringHandoff.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanbanTests

@@ -92,6 +92,12 @@ final class RemindersStore: ObservableObject {
     /// (see `liveRecurringSibling`); not published, because nothing draws it.
     private var openRecurringReminders: [EKReminder] = []
 
+    /// Card ids that stopped meaning what the undo stack thinks they mean,
+    /// because a repeating card was completed through them (see
+    /// `RecurringHandoff`). Not published: it changes nothing that is drawn,
+    /// it only decides which replayed writes are allowed to land.
+    private var recurringHandoff = RecurringHandoff()
+
     struct SaveFailure: Identifiable {
         let cardID: String
         /// What did not happen, in the user's words — "Not Moved" for
@@ -448,6 +454,7 @@ final class RemindersStore: ObservableObject {
             flagRecentlyCompleted(isDone.subtracting(wasDone))
         }
         cards = refreshed
+        recurringHandoff.retain(Set(refreshed.map(\.id)))
         hasLoadedOnce = true
     }
 
@@ -545,7 +552,19 @@ final class RemindersStore: ObservableObject {
                 message: String(localized: "“\(name)” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice."))
             return nil
         }
+        // The other half of the same truth, and the one the guard above cannot
+        // see: after a repeating card is completed here, this identifier
+        // belongs to the *next* turn of the series — an ordinary, open,
+        // untagged card. So `origin` reads `.backlog` and nothing above
+        // objects, while a replayed move would tag work nobody has pulled.
+        // See `RecurringHandoff`.
+        if !feedback, refuseReplayOnRolledOnSeries(reminder) {
+            return nil
+        }
 
+        // Read before the save: afterwards this record is the rolled-on series
+        // and no longer says anything about the occurrence that was finished.
+        let wasRecurringSeries = reminder.hasRecurrenceRules
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
         reminder.isCompleted = (status == .done)
         do {
@@ -566,6 +585,14 @@ final class RemindersStore: ObservableObject {
         register(undoManager, name: String(localized: "Move")) { store in
             store.move(cardID: cardID, to: origin, undoManager: undoManager, feedback: false)
         }
+        // Who this identifier belongs to from here on. Completing a repeating
+        // card hands it to the next turn of the series; a move the user made
+        // themselves hands it back (see `RecurringHandoff`).
+        if status == .done {
+            recurringHandoff.completed(cardID: cardID, isRecurringSeries: wasRecurringSeries)
+        } else if feedback {
+            recurringHandoff.movedDeliberately(cardID: cardID)
+        }
 
         // Optimistic UI update; the EventKit change notification will
         // confirm it with a full refresh shortly after.
@@ -573,7 +600,13 @@ final class RemindersStore: ObservableObject {
             cards[index].status = status
             cards[index].completionDate = (status == .done) ? .now : nil
         }
-        if status == .done {
+        // Not for a repeating card: this id is the next turn of the series by
+        // now, so the strike-through would be drawn across a Backlog card that
+        // has not been done at all. The finished occurrence is a record of its
+        // own with its own id, and the refresh a moment later flags it through
+        // the same diff that catches work finished on another device — inside
+        // `Board.settleDelay`, so the choreography is unchanged.
+        if status == .done, !wasRecurringSeries {
             flagRecentlyCompleted([cardID])
         }
         if status == .inProgress {
@@ -890,6 +923,24 @@ final class RemindersStore: ObservableObject {
         scheduleRefresh()
     }
 
+    /// Whether a replayed write (undo/redo) has to be turned away because this
+    /// identifier has moved on to the next turn of a repeating series, and
+    /// says so if it does. See `RecurringHandoff` for the measurement behind
+    /// the rule.
+    ///
+    /// One place for both replay paths — the move and the edit — so ⌘Z means
+    /// the same thing whichever kind of change it lands on.
+    private func refuseReplayOnRolledOnSeries(_ reminder: EKReminder) -> Bool {
+        let cardID = reminder.calendarItemIdentifier
+        guard recurringHandoff.refusesReplay(of: cardID) else { return false }
+        let name = reminder.title ?? String(localized: "This task")
+        pendingSaveFailure = SaveFailure(
+            cardID: cardID,
+            title: String(localized: "Not Undone"),
+            message: String(localized: "“\(name)” repeats. The turn you finished is filed away and this card is already the next one — undoing would change work that has not even been pulled yet."))
+        return true
+    }
+
     /// The live series instance behind a completed occurrence, if there is
     /// one.
     ///
@@ -1033,13 +1084,20 @@ final class RemindersStore: ObservableObject {
     ///
     /// This is the same care `status` below already took, applied to the rest
     /// of the ticket.
+    ///
+    /// `isReplay` is true only when undo/redo runs this, the same way `move`
+    /// uses `feedback` — a replayed edit on a card whose identifier has since
+    /// rolled on to the next turn of a series would put an old due date on a
+    /// chore that has not come round yet.
     func updateTicket(
         cardID: String,
         edited: EditableTicket,
         baseline: EditableTicket,
-        undoManager: UndoManager? = nil
+        undoManager: UndoManager? = nil,
+        isReplay: Bool = false
     ) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
+        if isReplay, refuseReplayOnRolledOnSeries(reminder) { return }
         // Not a guard: the index only drives the optimistic redraw below. A
         // card can leave `cards` while its editor is open — its list gets
         // excluded in Settings, or it is deleted on another device — and the
@@ -1119,7 +1177,8 @@ final class RemindersStore: ObservableObject {
         if let previous {
             register(undoManager, name: String(localized: "Edit")) { store in
                 store.updateTicket(
-                    cardID: cardID, edited: previous, baseline: edited, undoManager: undoManager)
+                    cardID: cardID, edited: previous, baseline: edited,
+                    undoManager: undoManager, isReplay: true)
             }
         }
         guard let index else {

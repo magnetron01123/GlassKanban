@@ -64,19 +64,24 @@ Begründung, warum später (oder warum grundsätzlich nicht).
 
 ## Wiederkehrende Aufgaben (Reminders-Wiederholung)
 
-- **Verhalten wiederkehrender Erinnerungen beim Abhaken klären** — Reminders erlaubt
-  Wiederholungsregeln (täglich/wöchentlich/…) pro Erinnerung; wie sich das mit dem
-  Status-Hashtag-Mechanismus und dem Erledigt-Zustand verträgt, ist ungeklärt. Offene Fragen:
-  (1) Setzt EventKit beim Abhaken einer wiederkehrenden Erinnerung `isCompleted` überhaupt
-  sichtbar/dauerhaft, oder springt sie sofort auf die nächste Fälligkeit, ohne dass die App den
-  "Erledigt"-Moment je beobachten kann? (2) Falls ja: bleibt der alte Status-Hashtag (z. B.
-  `#inprogress`) in den Notizen stehen, bis die bestehende Hygiene-Pass beim nächsten Sync
-  greift, oder kann das mit dem Wiederholungs-Sprung kollidieren (Karte taucht kurz in der
-  falschen Spalte auf)? (3) Zählt eine wiederkehrende Erledigung überhaupt zum Streak-Zähler,
-  oder fehlt dafür schlicht ein beobachtbares `completionDate`? Muss erst gegen echtes
-  EventKit-Verhalten geprüft werden — kein Blocker fürs MVP, aber ein bekannter blinder Fleck.
-  (Das ↻-Icon auf der Karte, das eine Wiederholung überhaupt erst sichtbar macht, gibt es
-  bereits — `CardView.repeatIcon` — hier geht es nur noch um das Verhalten beim Abhaken.)
+- ~~**Verhalten wiederkehrender Erinnerungen beim Abhaken klären**~~ — am 08.08.2026 gegen
+  echtes EventKit gemessen und beantwortet, ausgelöst von einem echten Fehler: ein
+  wiederkehrendes Ticket stand nach dem Erledigen in „Als Nächstes". Antworten auf die drei
+  offenen Fragen: (1) Der erledigte Durchgang wird als **eigene, abgelöste** Erinnerung
+  abgelegt, die Serie läuft **unter derselben ID** mit dem nächsten Termin weiter — der
+  „Erledigt"-Moment ist also sichtbar und dauerhaft, nur nicht an der ID, die das Board
+  gezogen hat. (2) Der Status-Hashtag wird sauber entfernt; die zurückkehrende Serie landet
+  korrekt im Backlog, auch nach 90 s Beobachtung ohne iCloud-Rückschreiber. (3) Die
+  Erledigung zählt zum Streak (echtes `completionDate`), fließt aber bewusst nicht in die
+  Durchlaufzeit ein — siehe SPEC.md, „Durchlaufzeit bewusst gefenstert".
+  Der eigentliche Fehler lag anderswo: Weil die ID nach dem Erledigen den *nächsten*
+  Durchgang meint, schrieben wiedergespielte Undo-Schritte Status-Tags auf ungezogene
+  Arbeit. Regel und Behebung stehen in SPEC.md, „Wiederkehrende Aufgaben beim Erledigen".
+  **Verworfen wurde dabei**, das Erledigen einer Wiederholung „echt" rückgängig zu machen
+  (erledigten Durchgang löschen, Fälligkeit der Serie zurückdrehen, Tag wiederherstellen):
+  Das setzt voraus, dass die App die Wiederholungsregel korrekt rückwärts rechnet („jeden
+  3. Dienstag") und einen Datensatz löscht, den sie nie angelegt hat — ein Rateschritt mit
+  Datenverlust als Fehlerfall, für einen Sonderfall, den ein Satz Text ehrlich erklärt.
 - ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt und am
   27.07.2026 grundlegend neu entschieden: solche Karten werden **nicht mehr ausgeblendet**,
   sondern sinken ans Ende des Backlogs, wo der Falz schneidet („N noch nicht fällig"). Grund:
