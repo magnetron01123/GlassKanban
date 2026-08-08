@@ -86,16 +86,22 @@ Fallback-Sprache für alle nicht übersetzten Märkte muss Englisch sein.
 
 - Build und Testsuite grün (188 Tests, `xcodebuild … test`, derivedDataPath
   außerhalb iCloud)
-- **Katalog-Vollständigkeit skriptgeprüft**, nicht per Augenmaß: jede
-  `String(localized:)`- und `LocalizedStringKey`-Stelle im Code gegen die
-  Katalog-Schlüssel diffen (Interpolationen normalisiert), plus Gegenprobe, dass
-  jeder Schlüssel `en` *und* `de` im Zustand `translated` trägt. Der Durchgang
-  fand vier echte Lücken, die der Blick vorher nicht gesehen hatte: die
-  fehlenden Schlüssel `Notes`, `Refresh`, `Yesterday` und eine
-  Anführungszeichen-Abweichung (gerade `"` im Katalog gegen typografische `“ ”`
-  im Code) an der Wiederkehrer-Meldung. **Lehre: Diese Prüfung gehört bei jeder
-  künftigen Katalog-Änderung dazu** — drei der vier Lücken wären erst einem
-  Nutzer aufgefallen.
+- **Katalog skriptgeprüft**, nicht per Augenmaß — inzwischen versioniert als
+  `scripts/check-localization.py`: Vollständigkeit gegen jede
+  `String(localized:)`/`LocalizedStringKey`-Stelle, `en`+`de` im Zustand
+  `translated`, und **Pluralregel für jeden Zähler**. Der erste Durchgang fand
+  vier fehlende Schlüssel (`Notes`, `Refresh`, `Yesterday` und eine
+  Anführungszeichen-Abweichung, gerade `"` gegen typografische `“ ”`).
+- **Nachträglich beim Review der englischen Texte gefunden (08.08.2026):** Der
+  erste Prüflauf prüfte nur *Vollständigkeit*, nicht *Korrektheit* — und dabei
+  waren beim Auflösen von `GermanPlural` **fünf Pluralregeln verloren
+  gegangen**. „1 Aufgaben gerade in Bearbeitung", „Folge: 1 Tage" und drei
+  weitere waren zurück, also genau das, was FINDINGS **C4** schon einmal behoben
+  hatte; die Streak-Pille stand beim Review selbst auf 1. Behoben durch echte
+  `variations.plural` in beiden Sprachen (bzw. einen zahl-neutral formulierten
+  Satz), und die Plural-Prüfung ist seither Teil des Skripts. **Lehre:
+  Vollständigkeit sagt nichts über Korrektheit** — eine Prüfung, die nur zählt,
+  ob ein Schlüssel existiert, übersieht, ob er das Richtige sagt.
 - **Beide Sprachen live durchgeklickt** (`-AppleLanguages (en)`/`(de)`): Board,
   Karten-Editor, Finden-Popover, Statistik in beiden Registern, Einstellungen in
   beiden Reitern, Board-Menü. Keine Textabschneidung, kein Umbruch, kein

@@ -62,14 +62,27 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Ergebnis ist (z. B. `KanbanStatus.displayName`). **Jeder Plural und jeder
   interpolierte Satz gehört in die View-Ebene** des App-Ziels, wo der Katalog
   tatsächlich lädt.
-  **Nach jeder Katalog-Änderung skriptgeprüft, nie per Augenmaß:** jede
-  `String(localized:)`/`LocalizedStringKey`-Stelle gegen die Schlüssel diffen
-  (Interpolationen normalisieren) und gegenprüfen, dass jeder Schlüssel `en` und
-  `de` im Zustand `translated` trägt. Ein fehlender Schlüssel fällt sonst nicht
-  auf — er zeigt still den englischen Quelltext. Beim ersten Durchgang
-  (07.08.2026) fand genau diese Prüfung vier Lücken, die vier Augenpaare
-  übersehen hatten, darunter eine reine Anführungszeichen-Abweichung (gerade `"`
-  gegen typografische `“ ”`).
+  **Nach jeder Katalog-Änderung `scripts/check-localization.py` laufen lassen, nie
+  per Augenmaß.** Es prüft dreierlei, jedes davon aus einem tatsächlich passierten
+  Fehler entstanden:
+  1. **Vollständigkeit** — jede `String(localized:)`/`LocalizedStringKey`-Stelle hat
+     einen Schlüssel. Ein fehlender fällt sonst nicht auf: er zeigt still den
+     englischen Quelltext. Fand am 07.08.2026 vier Lücken, die vier Augenpaare
+     übersehen hatten, darunter eine reine Anführungszeichen-Abweichung (gerade `"`
+     gegen typografische `“ ”`).
+  2. **Übersetzung** — jeder Schlüssel trägt `en` *und* `de` im Zustand `translated`.
+  3. **Plurale** — jeder Schlüssel mit Zähler trägt entweder `variations.plural` oder
+     steht mit Begründung auf der Ausnahmeliste im Skript. **Diese Prüfung fehlte beim
+     ersten Durchgang und das hat gekostet:** beim Auflösen von `GermanPlural` gingen
+     fünf Pluralregeln verloren, „1 Aufgaben" war zurück — also genau das, was
+     FINDINGS C4 schon einmal behoben hatte. Vollständigkeit allein sagt nichts über
+     Korrektheit.
+
+  **Grenze des Skripts:** Die Ausnahmeliste ist eine *Zusicherung*, keine Messung. Wer
+  einen Schlüssel dort einträgt, behauptet „diese Zahl wird nie 1" oder „liest sich bei
+  1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
+  echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
+  Eintrag in der Liste.
 - **Tests** — `GlassKanbanTests/`, 14 Dateien, benannt nach der Regel statt nach der
   Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
 
