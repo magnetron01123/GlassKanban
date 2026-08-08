@@ -183,7 +183,7 @@ struct GeneralSettingsView: View {
                 }
             } header: {
                 Text("Work-in-Progress Limits")
-                    .help("Finish rather than stack")
+                    .help("Finish before you stack")
             }
         }
         .formStyle(.grouped)

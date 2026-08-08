@@ -473,7 +473,7 @@ struct ColumnView: View {
         if isOverLimit {
             details.append(String(localized: "Over the limit"))
         } else if wipLimit != nil {
-            details.append(String(localized: "Finish rather than stack"))
+            details.append(String(localized: "Finish before you stack"))
         }
         if let laterHint {
             details.append(laterHint)
@@ -490,7 +490,9 @@ struct ColumnView: View {
     private var laterHint: String? {
         let later = cards.count { $0.isNotYetDue() }
         guard later > 0 else { return nil }
-        return String(localized: "\(later) not yet due")
+        // Its own string, not the fold line's: this sits under "N of M cards"
+        // and refers back to it ("of them"), where the fold line stands alone.
+        return String(localized: "\(later) of them not yet due")
     }
 
     // MARK: - Pieces
@@ -561,7 +563,7 @@ struct ColumnView: View {
     /// *worth* — Kanban's "stop starting, start finishing" in one breath.
     private var emptySlotText: String {
         switch status {
-        case .backlog: String(localized: "Don't hold it in your head")
+        case .backlog: String(localized: "Get it out of your head")
         case .next: String(localized: "Choose, don't collect")
         case .inProgress: String(localized: "Finishing starts here")
         case .done: String(localized: "Only finished counts")

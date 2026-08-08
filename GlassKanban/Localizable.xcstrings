@@ -176,11 +176,12 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete Ticket" } }
       }
     },
-    "Don't hold it in your head" : {
+    "Get it out of your head" : {
+      "comment" : "Empty-lane appeal for Backlog. Four different sentence shapes across the four lanes, all under ~28 characters and single-line; deliberately avoids repeating a word its neighbour \"Choose, don't collect\" uses.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Nichts im Kopf behalten" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Don't hold it in your head" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get it out of your head" } }
       }
     },
     "Done" : {
@@ -267,11 +268,11 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Finish First" } }
       }
     },
-    "Finish rather than stack" : {
+    "Finish before you stack" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : { "stringUnit" : { "state" : "translated", "value" : "Lieber abschließen als stapeln" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Finish rather than stack" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Finish before you stack" } }
       }
     },
     "Finishing starts here" : {
@@ -340,7 +341,7 @@
     "Last %lld days: something done on %lld of them." : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzte %lld Tage: an %lld Tagen etwas erledigt." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzte %lld Tage: an %lld davon etwas erledigt." } },
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Last %lld days: something done on %lld of them." } }
       }
     },
@@ -844,8 +845,22 @@
     "Statistics. Streak: %lld days in a row with at least one task done" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Statistiken. Folge: %lld Tage nacheinander mit mindestens einer erledigten Aufgabe" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Statistics. Streak: %lld days in a row with at least one task done" } }
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "Statistiken. Folge: %lld Tag mit mindestens einer erledigten Aufgabe" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "Statistiken. Folge: %lld Tage nacheinander mit mindestens einer erledigten Aufgabe" } }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "Statistics. Streak: %lld day with at least one task done" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "Statistics. Streak: %lld days in a row with at least one task done" } }
+            }
+          }
+        }
       }
     },
     "Strongest Weekday" : {
@@ -970,8 +985,22 @@
     "Your average on active days: %lld tasks." : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein Schnitt an aktiven Tagen: %lld Aufgaben." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your average on active days: %lld tasks." } }
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "Dein Schnitt an aktiven Tagen: %lld Aufgabe." } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "Dein Schnitt an aktiven Tagen: %lld Aufgaben." } }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "Your average on active days: %lld task." } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "Your average on active days: %lld tasks." } }
+            }
+          }
+        }
       }
     },
     "Your longest run yet" : {
@@ -1135,6 +1164,14 @@
         }
       }
     },
+    "%lld of them not yet due" : {
+      "comment" : "Lane tooltip detail, sits under \"N of M cards\" and refers back to it. The fold line uses \"%lld not yet due\", which stands alone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld davon noch nicht fällig" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld of them not yet due" } }
+      }
+    },
     "%lld not yet due" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1201,8 +1238,22 @@
     "%lld tasks — more than any other weekday." : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben — mehr als an jedem anderen Wochentag." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks — more than any other weekday." } }
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe — mehr als an jedem anderen Wochentag." } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben — mehr als an jedem anderen Wochentag." } }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task — more than any other weekday." } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks — more than any other weekday." } }
+            }
+          }
+        }
       }
     },
     "%lld tasks done this year." : {
@@ -1229,8 +1280,22 @@
     "%lld tasks in progress right now." : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben gerade in Bearbeitung." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks in progress right now." } }
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe gerade in Bearbeitung." } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben gerade in Bearbeitung." } }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task in progress right now." } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks in progress right now." } }
+            }
+          }
+        }
       }
     },
     "⌘Z brings the ticket back — but not its subtasks or attachments." : {

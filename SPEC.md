@@ -470,12 +470,12 @@ Karten-Umriss mit einem Satz darin** — genau so hoch wie eine echte Karte *die
 (38 pt bei Backlog/Erledigt, das Vierfache bei den Arbeitsspuren; „In Bearbeitung" übernimmt
 die gemessene Höhe der obersten Karte aus „Als Nächstes", weil genau die dort landet).
 
-| Spalte | Satz |
-|---|---|
-| Backlog | Nichts im Kopf behalten |
-| Als Nächstes | Wählen statt sammeln |
-| In Bearbeitung | Fertigwerden beginnt hier |
-| Erledigt | Nur Fertiges zählt |
+| Spalte | Satz (Deutsch) | Satz (Englisch) |
+|---|---|---|
+| Backlog | Nichts im Kopf behalten | Get it out of your head |
+| Als Nächstes | Wählen statt sammeln | Choose, don't collect |
+| In Bearbeitung | Fertigwerden beginnt hier | Finishing starts here |
+| Erledigt | Nur Fertiges zählt | Only finished counts |
 
 Die Sätze sind **indirekte Appelle, keine Beschreibungen**: Der Platz sagt, was zu tun ist, nie
 wofür die Spalte gedacht ist — ein Board, das seine eigenen Spalten erklärt, traut ihnen nicht.
@@ -488,6 +488,14 @@ dem Board aber schlicht derselbe Satz zweimal. Stattdessen bezieht sich jede Spa
 hör auf zu sammeln und wähle), und „Erledigt" meidet das Wortfeld „fertig", das seine
 Nachbarin besetzt, und sagt stattdessen Kanbans eigenes *stop starting, start finishing* in
 einem Atemzug.
+
+**Die englischen Sätze sind Transkreation, keine Übersetzung** — dieselben Regeln, in einer
+Sprache neu erfüllt. Backlog hieß zunächst wörtlich „Don't hold it in your head"; damit trugen
+die beiden *nebeneinanderliegenden* Spalten Backlog und „Als Nächstes" beide ein „don't",
+also genau die Doppelung, die das Deutsche vermeidet. „Get it out of your head" löst das mit
+einem positiven Imperativ und ist zugleich Bensons und Allens eigene Formulierung für den
+Capture-Schritt. Auch das Englische bleibt damit unter 28 Zeichen und in vier verschiedenen
+Satzbauten.
 
 Alle Sätze bleiben unter **~28 Zeichen** und einzeilig (`lineLimit(1)`) — bei minimaler
 Fensterbreite (`columnMinWidth` 280) ist das die Grenze, ab der ein Umbruch den 38-pt-Umriss
