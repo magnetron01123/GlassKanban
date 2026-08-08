@@ -8,6 +8,10 @@ build/
 *.xcscmblueprint
 *.xcarchive
 
+# The always-fresh build, kept up to date by scripts/build-app.sh. A build
+# artifact, not source — never committed.
+/Glass Kanban.app
+
 # Personal Claude Code overrides. .claude/settings.json is tracked on purpose:
 # it carries the documentation guard the whole project relies on.
 .claude/settings.local.json

@@ -8,6 +8,11 @@
             "type": "command",
             "command": "\"${CLAUDE_PROJECT_DIR:-.}/scripts/doc-guard.sh\" --session-start",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR:-.}/scripts/build-app.sh\" --session-start",
+            "timeout": 15
           }
         ]
       }
@@ -20,6 +25,12 @@
             "command": "\"${CLAUDE_PROJECT_DIR:-.}/scripts/doc-guard.sh\" --stop",
             "timeout": 15,
             "statusMessage": "Doku-Wächter prüft"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR:-.}/scripts/build-app.sh\" --stop",
+            "timeout": 15,
+            "statusMessage": "App-Build wird geprüft"
           }
         ]
       }
