@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Checks the String Catalogs against the code. Run after every catalog change.
+r"""Checks the String Catalogs against the code. Run after every catalog change.
 
-Three checks, in the order the mistakes actually happened:
+Four checks, in the order the mistakes actually happened:
 
 1. COMPLETENESS — every localizable call site in the code has a catalog key.
    A missing key does not fail the build and does not look broken in English;
@@ -16,6 +16,15 @@ Three checks, in the order the mistakes actually happened:
    was missing on 07.08.2026: five keys lost the plural rules that
    `GermanPlural` used to enforce, and "1 Aufgaben" reappeared — re-breaking
    what FINDINGS C4 had already fixed once.
+
+4. NO STRAY GERMAN — no German text in a Swift string literal. Check 1 only
+   sees text that *asked* to be localized; a literal that never went through
+   `String(localized:)` is invisible to it. On 09.08.2026 the overflow dialog
+   built its title in code as "\(lane): \(count) von \(limit)", so English
+   readers were shown "In Progress: 4 von 3" while this script reported all
+   clear. The source language is English, so any German in a literal is either
+   a leak or belongs in the catalog. Comments are skipped — this project quotes
+   German UI text in its reasoning on purpose.
 
 Usage: python3 scripts/check-localization.py
 Exit code 0 = clean, 1 = problems found.
@@ -55,6 +64,16 @@ PLURAL_EXEMPT = {
     "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law": "fixed 30-day window",
 }
 
+# German in a Swift literal, by its own letters or by function words that no
+# English word shares. Deliberately conservative: a missed leak costs one more
+# round, a false alarm costs trust in the check.
+GERMAN = re.compile(
+    r"[äöüÄÖÜß]|\b(?:von|und|nicht|kein|keine|keinen|dein|deine|deinem|deinen|"
+    r"noch|mehr|weniger|oder|aber|auch|wenn|dann|durch|gegen|ohne|zwischen|"
+    r"wird|wurde|werden|gerade|schon|immer|etwas|nichts|alles|jede|jeder|"
+    r"das|der|ein|eine|einen|ist|sind)\b",
+    re.IGNORECASE)
+
 # Call sites that resolve through the catalog.
 CALL_SITE = re.compile(
     r"(?:String\(localized:\s*|Text\(|Button\(|Label\(|TextField\(|Toggle\(|Section\(|Menu\(|"
@@ -86,6 +105,40 @@ def normalise(text):
             out.append(text[i])
             i += 1
     return re.sub(r"%lld|%@", "{}", "".join(out))
+
+
+def code_literals(text):
+    """Every string literal that reaches the compiler, with its line number.
+    Runs a small scanner rather than a regex because the two have to be told
+    apart both ways: a `//` inside a string does not start a comment, and a
+    quote inside a comment does not start a string."""
+    in_block = False
+    for number, line in enumerate(text.splitlines(), 1):
+        index, in_string, buffer, found = 0, False, [], []
+        while index < len(line):
+            pair = line[index:index + 2]
+            if in_block:
+                in_block, index = (False, index + 2) if pair == "*/" else (True, index + 1)
+                continue
+            if in_string:
+                if line[index] == "\\":
+                    buffer.append(line[index:index + 2])
+                    index += 2
+                elif line[index] == '"':
+                    found.append("".join(buffer))
+                    buffer, in_string, index = [], False, index + 1
+                else:
+                    buffer.append(line[index])
+                    index += 1
+                continue
+            if pair == "//":
+                break
+            if pair == "/*":
+                in_block, index = True, index + 2
+                continue
+            in_string, index = (True, index + 1) if line[index] == '"' else (in_string, index + 1)
+        for literal in found:
+            yield number, literal
 
 
 def main():
@@ -138,6 +191,14 @@ def main():
                     f"counts but has no plural rule ({language}): {key!r}\n"
                     f"      add variations.plural, or list it in PLURAL_EXEMPT with a reason")
 
+    # 4 — no German that never asked to be localized
+    for path in SOURCES:
+        for number, literal in code_literals(path.read_text()):
+            if GERMAN.search(literal):
+                problems.append(
+                    f"German in a raw literal: {literal!r}  ({path.name}:{number})\n"
+                    f"      route it through String(localized:) and add the key")
+
     stale = sorted(set(PLURAL_EXEMPT) - set(catalog))
     for key in stale:
         problems.append(f"exemption no longer matches any key: {key!r}")
@@ -149,7 +210,7 @@ def main():
         return 1
 
     print(f"✓ {len(catalog)} keys — complete, translated in {'/'.join(LANGUAGES)}, "
-          f"plurals accounted for")
+          f"plurals accounted for, no stray German")
     return 0
 
 

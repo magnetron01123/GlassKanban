@@ -900,7 +900,7 @@ final class RemindersStore: ObservableObject {
         guard let card = cards.first(where: { $0.id == cardID }) else { return }
         pendingDeletion = PendingDeletion(
             cardID: cardID,
-            title: card.title.isEmpty ? "Ohne Titel" : card.title)
+            title: card.title.isEmpty ? String(localized: "Untitled") : card.title)
     }
 
     /// Deletes a ticket and registers the undo that puts it back. The
