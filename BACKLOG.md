@@ -67,6 +67,30 @@ hierher gehört.
   nicht nur den Fensterrahmen wie heute. Genau genommen kein Feature, sondern ein
   Fehlerbild: Bei einer App, deren ganze Idee „steht immer da" ist, ist ein Board am
   falschen Platz der teuerste Alltagsmoment.
+  **Angefangen am 09.08.2026, Branch `feature/window-screen-memory` — halb fertig, bewusst
+  nicht gemergt.** Die Entscheidung liegt als reine Regel in `WindowPlacement.swift` samt
+  neun Tests. Festgelegt wurde dabei dreierlei: Die Position wird **relativ zum
+  Bildschirmursprung** gemerkt, damit ein Umsortieren der Displays in den
+  Systemeinstellungen sie nicht entwertet; der Bildschirm wird über seine **UUID**
+  identifiziert, nicht über die Nummer, die macOS beim Wiederanstecken neu vergibt; und
+  **Stehenbleiben ist der Standard** — bewegt wird nur, wenn der gemerkte Bildschirm zurück
+  ist *und* das Fenster nicht darauf liegt. Ein Fenster, das aus anderen Gründen springt,
+  wäre schlimmer als eines am falschen Platz: Der falsche Platz ist wenigstens der, an dem
+  man es zuletzt gesehen hat. Wer das Fenster absichtlich auf den eingebauten Schirm zieht,
+  für den wird das der neue Platz; die Regel folgt dem Nutzer, statt ihn zurückzuziehen.
+  Kein Schalter in den Einstellungen — ein Fehlerbild schaltet man nicht ab.
+  **Verworfen (09.08.2026): das Fenster über eine unsichtbare `NSViewRepresentable` im
+  Hintergrund von `ContentView` greifen.** Der naheliegende SwiftUI-Weg, und er läuft nicht:
+  SwiftUI baut diese View nicht in die Fensterhierarchie ein, `viewDidMoveToWindow` feuert
+  nie, der Controller verbindet sich nie — und Build, Tests und die gestartete App sehen
+  dabei alle gesund aus. Dieselbe Fehlerklasse wie beim Erscheinungsbild (siehe Kommentar
+  in `GlassKanbanApp.swift`). Die Anbindung läuft deshalb über den App-Delegate.
+  **Offen und der Grund, warum nichts gemergt ist:** Auch über den Delegate wurde bisher
+  kein Lauf beobachtet, der tatsächlich eine Position speichert. Nächster Schritt ist ein
+  Haltepunkt in `WindowPlacementController.start()` aus Xcode heraus — Diagnose über Dateien
+  und Logs hat in der Kommandozeilen-Umgebung nichts ausgegeben. Solange das nicht geklärt
+  ist, steht in SPEC.md bewusst nichts dazu: Dort gehört nur gebautes und geprüftes
+  Verhalten hin.
 - **Darstellungsgröße** — Skalierung des ganzen Boards für Leseabstände bis etwa zwei
   Meter. Der Aufwand steckt nicht im Bedienelement, sondern darin, die Tokens in
   `DesignSystem.swift` skalierbar zu machen; wer daran vorbei baut, zerlegt das
