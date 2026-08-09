@@ -43,16 +43,16 @@ PLURAL_EXEMPT = {
     "Board is filtered — %lld active (⌘F)": "no noun to inflect",
     "In this column for %lld days": "only shown from agingThresholdDays (3) upwards",
     "Last %lld Days": "fixed window, WrappedStats.trendWindowDays == 30",
-    "Last %lld days: something done on %lld of them.": "window is fixed at 30; the second count is phrased to be number-neutral in both languages",
-    "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise.": "fixed 30-day window",
-    "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law.": "fixed 30-day window",
+    "Last %lld days: something done on %lld of them": "window is fixed at 30; the second count is phrased to be number-neutral in both languages",
+    "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise": "fixed 30-day window",
+    "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law": "fixed 30-day window",
     "Milestone reached: %lld tasks done": "milestones are 50, 100, 250 … never 1",
-    "Milestone reached: %lld.": "milestones are 50, 100, 250 … never 1",
+    "Milestone reached: %lld": "milestones are 50, 100, 250 … never 1",
     "Recurring tasks whose next due date hasn't arrived yet rest behind the fold at the bottom of the Backlog — one click brings them forward, nothing is ever hidden for good. Beyond %lld cards, the rest folds regardless.": "fixed BacklogFold.collapsedLimit (15)",
     "Show %lld more": "'Show 1 more' reads correctly; German inherited from before the localization",
     "Show %lld older": "'Show 1 older' reads correctly; German inherited from before the localization",
-    "Your own limit: %lld.": "bare number, no noun to inflect",
-    "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law.": "fixed 30-day window",
+    "Your limit: %lld": "bare number, no noun to inflect",
+    "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law": "fixed 30-day window",
 }
 
 # Call sites that resolve through the catalog.

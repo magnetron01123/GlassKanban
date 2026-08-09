@@ -97,6 +97,14 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   ausdrücklicher Satz dazu; der Wächter blockt pro Zug nur einmal.
 - Vor Änderungen an bestehendem UI-Verhalten `git log --all` auf die betroffene Datei
   prüfen — Feature-History, nicht nur Diff gegen main.
+- **Ton der Texte: knapp und sachlich, benennen statt kommentieren.** Die App spricht wie
+  ein Werkzeug, nicht wie ein Begleiter — kein Coaching, kein Trost, kein Ansporn.
+  Hergeleitet samt sieben Prüffragen und Beispieltabelle in CONCEPT.md („Ton der Texte");
+  vor jeder Textänderung dort nachlesen. Drei Regeln, die dort am häufigsten verletzt
+  wurden: Besitz benennen, wo der Zustand aus einer eigenen Einstellung folgt („Über
+  deinem Limit"); die Frage stellen die Knöpfe, nicht der Meldungstext; und ein Punkt
+  steht nur hinter einem vollständigen Satz, nie hinter einer Zahlenzeile. Ein
+  Textvorschlag ohne Vorher-Nachher-Gegenüberstellung ist keiner.
 - UI-Änderungen selbst per Screenshot prüfen und eigenständig nachbessern; vorher alte
   App-Instanzen aus früheren Sessions beenden.
 - CLI-Builds/Tests mit `-derivedDataPath` außerhalb von `~/Documents` laufen lassen

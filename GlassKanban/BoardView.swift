@@ -110,7 +110,7 @@ struct BoardView: View {
         } message: { _ in
             // The Kanban idea in four words, no jargon and no lecture — then
             // an offer, not an instruction.
-            Text("Less at once, more done. Finish something first?")
+            Text("Less at once, more done")
         }
         // Same shape as the limit question above, for the same reason: driven
         // by the store, so the context menu and the VoiceOver action both
@@ -246,7 +246,8 @@ struct BoardView: View {
         guard let limit = store.wipLimit(for: overflow.status) else {
             return overflow.status.displayName
         }
-        return "\(overflow.status.displayName): \(store.cards(for: overflow.status).count) von \(limit)"
+        return "\(overflow.status.displayName): "
+            + String(localized: "\(store.cards(for: overflow.status).count) of \(limit)")
     }
 
     // MARK: - Streak pill + popover

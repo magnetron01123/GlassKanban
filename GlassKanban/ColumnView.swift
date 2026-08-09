@@ -471,7 +471,7 @@ struct ColumnView: View {
             }
         }
         if isOverLimit {
-            details.append(String(localized: "Over the limit"))
+            details.append(String(localized: "Over your limit"))
         } else if wipLimit != nil {
             details.append(String(localized: "Finish before you stack"))
         }

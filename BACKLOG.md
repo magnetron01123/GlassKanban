@@ -39,7 +39,6 @@ das, was Apple aus Massentauglichkeit nie bauen wird: Meinungsstärke.
 |---|---|---|---|---|
 | Bildschirmzuordnung (neu, unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
 | Darstellungsgröße (neu, unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
-| Tonalität der Texte (neu, unten) | erfüllt | Produktversprechen | gebunden | S |
 | Ablegen aus anderen Apps (neu, unten) | erfüllt | Kaufentscheidung | gebunden | S–M |
 | Widget „eine Karte" (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Kaufentscheidung | gebunden | L |
 | Natürlichsprachige Erfassung (neu, unten) | erfüllt | Kaufentscheidung | gebunden | M |
@@ -120,13 +119,6 @@ hierher gehört.
   durch die Hintertür. Vorbild ist Sunsamas Shutdown-Ritual, die einzige konzeptionelle
   Lücke, die die Recherche im eigenen Konzept gefunden hat; als Moment zulässig, als
   Pflichtritual nicht.
-- **Tonalität der Texte** — ein Durchgang über jeden sichtbaren Satz (WIP-Dialog,
-  Leerzustände, Statistik, Löschen-Rückfrage) gegen eine Regel: nie „verloren",
-  „gescheitert", „keine" — immer anbieten statt mahnen. Gentler Streak hat im Kern für
-  diese Sprachpolitik gewonnen, CARROT Weather zeigt, dass Tonalität allein ein Kaufgrund
-  sein kann. **Terminkritisch:** Die Strings sind seit dem 07.08.2026 lokalisiert; nach dem
-  Verkaufsstart kostet jede Änderung eine vollständige Übersetzungsrunde samt
-  `scripts/check-localization.py`.
 
 ## Karten-Anzeige (später ergänzen)
 
