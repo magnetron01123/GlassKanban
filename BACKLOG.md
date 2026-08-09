@@ -3,6 +3,131 @@
 Alles, was bewusst **nicht** in den MVP geht. Sortiert nach Kategorie, jeweils mit kurzer
 Begründung, warum später (oder warum grundsätzlich nicht).
 
+## Bewertungsraster für neue Ideen (09.08.2026)
+
+Aus einer Marktrecherche entstanden (Design-prämierte Apps, Kanban-Markt, Mac-native Apps,
+Produktivitäts-Psychologie) und für alles in diesem Dokument gedacht. Drei Größen mit je
+einer eigenen Aufgabe — bewusst nicht mehr, damit das Raster demselben Maßstab genügt wie
+die App:
+
+- **Philosophie** entscheidet über die *Zulässigkeit*: erfüllt / mit Vorbehalt / verletzt.
+  Ausschlusskriterium, kein Bewertungsfaktor — wird nie gegen Marktwert aufgerechnet. „Mit
+  Vorbehalt" heißt, dass der Vorbehalt hier benannt und bewusst entschieden wird, statt
+  weggemittelt zu werden (CLAUDE.md: Spannung benennen, nicht still entscheiden).
+- **Wirkung** entscheidet über die *Reihenfolge*: Produktversprechen vor Kaufentscheidung
+  vor Nutzungsalltag. Ein Versprechen, das die App nicht einlöst, kostet vor dem
+  Verkaufsstart mehr, als jedes Zusatzfeature einbringt.
+- **Umkehrbarkeit** entscheidet über die *Sorgfalt*: Umkehrbares darf erprobt werden.
+  Gebundenes — was in fremde Daten schreibt, eine zweite Plattform öffnet oder in den
+  Automatisierungen der Nutzer steckt — muss vor der Umsetzung stehen. Dieses Kriterium
+  stammt aus der eigenen Historie: Ein erheblicher Teil der Gestaltungsideen dieses
+  Projekts wurde nach dem Praxistest wieder entfernt (pulsierendes Pull-Signal,
+  Karten-Tooltips, Tastaturfokus, grüner Blitz, Motivationssatz).
+
+**Marktbefund, damit die Bewertungen nachvollziehbar bleiben:** Es gibt inzwischen ein
+halbes Dutzend Kanban-Aufsätze auf Reminders, dazu Apples eigene Spaltenansicht seit
+Sonoma — durchweg ohne Methode, ohne Design-Anspruch, ohne Pflege. Die Idee ist damit
+validiert, die Ausführung überall Prototyp; der Pitch muss „die ernsthafte Umsetzung"
+sein, nicht „die Idee". „Lokal, kein Konto, Einmalkauf" ist im Indie-Segment inzwischen
+Standard-Pitch und damit Eintrittskarte, kein Alleinstellungsmerkmal. Unbesetzt sind
+dagegen drei Dinge, die dieses Projekt hat oder leicht bekommt: Flusskennzahlen für
+Einzelpersonen, WIP als Reibung statt Verbot, und die Positionierung als ruhige Dauerfläche
+im Schreibtisch-Setup. Gegen ein mögliches Sherlocking schützt nicht das Layout, sondern
+das, was Apple aus Massentauglichkeit nie bauen wird: Meinungsstärke.
+
+| Idee | Philosophie | Wirkung | Umkehrbarkeit | Aufwand |
+|---|---|---|---|---|
+| Bildschirmzuordnung (neu, unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
+| Darstellungsgröße (neu, unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
+| Tonalität der Texte (neu, unten) | erfüllt | Produktversprechen | gebunden | S |
+| Ablegen aus anderen Apps (neu, unten) | erfüllt | Kaufentscheidung | gebunden | S–M |
+| Widget „eine Karte" (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Kaufentscheidung | gebunden | L |
+| Natürlichsprachige Erfassung (neu, unten) | erfüllt | Kaufentscheidung | gebunden | M |
+| StandBy (s. Plattform-Erweiterung: iOS-App) | erfüllt | Kaufentscheidung | gebunden | XL |
+| Tageszeit-Palette (neu, unten) | mit Vorbehalt | Nutzungsalltag | umkehrbar | M |
+| Serie mit Ruhetag (neu, unten) | mit Vorbehalt | Nutzungsalltag | umkehrbar | S |
+| Ruhezustand (s. Ambient-Screensaver-Modus) | mit Vorbehalt | Nutzungsalltag | umkehrbar | M–L |
+| Fokus-Filter (s. Fokus-Modi-Integration) | erfüllt | Nutzungsalltag | umkehrbar | M |
+| Tagesrückblick (neu, unten) | erfüllt | Nutzungsalltag | umkehrbar | S |
+| Trennung im Backlog (s. Board-Struktur) | erfüllt | Nutzungsalltag | umkehrbar | S |
+| Vordergrund-Option (s. Fensterverhalten) | erfüllt | Nutzungsalltag | umkehrbar | S |
+| App Intents (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Nutzungsalltag | gebunden | M |
+
+### Die ruhige Fläche im Schreibtisch-Setup (09.08.2026)
+
+Die Prämisse „das Board steht dauerhaft offen und wird kaum bedient" hat bisher genau eine
+Konsequenz in der App: die Immer-aktiv-Regel (CONCEPT.md, Design-Anspruch). Das ist die
+schwierigste — die übrigen sind billiger und im Alltag deutlicher. Der gemeinsame Nenner
+ist nicht die Hardware, sondern die Rolle: eine Fläche, die dasteht. Im
+Minimal-Desk-Setup ist das ebenso oft ein iPhone am Ladeständer wie ein zweiter Monitor,
+weshalb der StandBy-Punkt unten (Abschnitt „Plattform-Erweiterung: iOS-App") inhaltlich
+hierher gehört.
+
+- **Bildschirmzuordnung** — das Fenster kehrt nach dem Andocken auf seinen Monitor zurück,
+  statt auf dem eingebauten Display zu bleiben. Dafür die Identität des Displays merken,
+  nicht nur den Fensterrahmen wie heute. Genau genommen kein Feature, sondern ein
+  Fehlerbild: Bei einer App, deren ganze Idee „steht immer da" ist, ist ein Board am
+  falschen Platz der teuerste Alltagsmoment.
+- **Darstellungsgröße** — Skalierung des ganzen Boards für Leseabstände bis etwa zwei
+  Meter. Der Aufwand steckt nicht im Bedienelement, sondern darin, die Tokens in
+  `DesignSystem.swift` skalierbar zu machen; wer daran vorbei baut, zerlegt das
+  Abstandssystem. Heute löst das ein einziger fester Wert (Kartentitel 15pt statt 14,
+  siehe SPEC.md, „Design") — eine Entscheidung, die eigentlich der Nutzer treffen sollte.
+
+### Erfassung und Eingang (09.08.2026)
+
+- **Ablegen aus anderen Apps** — eine Mail, ein Safari-Link oder eine Datei wird per
+  Drag & Drop auf eine Spalte zur Karte. `ColumnView.dropDestination` nimmt heute nur
+  `String` (Karten-IDs) an und müsste zusätzlich `URL` und Text annehmen; das URL-Feld des
+  Karten-Editors existiert samt Schreibpfad, der Link landet also in genau dem Feld, das
+  Reminders ohnehin an jeder Aufgabe zeigt. Drag & Drop ist bereits die Kerngeste des
+  Boards — es entsteht kein neues Chrome. Wohin die Karte fällt, entscheidet die Geste;
+  überschreitet sie dabei „In Bearbeitung", greift der bestehende WIP-Dialog ohne
+  Sonderlogik. **Gebunden:** neuer Schreibzugriff auf fremde Daten, daher Testpflicht als
+  reine Regel vor dem Bau (Muster `StatusTagger`, `RecurringTagRelease`).
+- **Natürlichsprachige Erfassung** — eine Eingabezeile statt eines Formulars; Termin und
+  Priorität werden aus dem Text erkannt und **vor** dem Speichern als Token sichtbar
+  gemacht. Das ist dieselbe Sicherheitsbedingung wie beim eingefärbten Finden-Symbol: nie
+  still etwas anderes tun, als man sieht. Folgt dem Leitsatz „weniger Bedienelemente statt
+  versteckter" (CONCEPT.md, „Finden: ein Bedienelement statt drei"). **Trotz hoher Wirkung
+  bewusst niedrig priorisiert:** Ein falsch erkanntes Datum landet in einer echten
+  Erinnerung, und an eine Eingabeart gewöhnt man sich — hohes Risiko und hohe Bindung
+  zugleich.
+
+### Motivation und Darstellung (09.08.2026)
+
+- **Tageszeit-Palette** — die Farbtemperatur von Fensterglas und Spaltenmulden folgt
+  langsam der Tageszeit, mit Übergängen über Minuten; „Bewegung reduzieren" schaltet auf
+  harte Wechsel. Es ist die einzige Form von Lebendigkeit, die eine Dauerfläche haben darf,
+  ohne Aufmerksamkeit zu kosten, und bei den Apple Design Awards 2026 gleich zweimal
+  prämiert (Tide Guide, Lumy). **Vorbehalt:** Das Kartenpapier darf nicht mitwandern — die
+  Entkopplung von Karte und Umgebung war eine gemessene Entscheidung, keine ästhetische
+  (CONCEPT.md, Design-Anspruch). Und die Vibe-Referenz verlangt eine ruhige, neutrale
+  Farbgebung; der Wandel gehört ausschließlich ins Chrome.
+- **Serie mit Ruhetag** — ein freier Tag je Woche beendet die Serie nicht. Die Änderung
+  liegt vollständig in `StreakCalculator.swift`, ohne UI und ohne EventKit-Berührung.
+  Empfohlen wird „ein Ruhetag je sieben Tage" statt „Wochenenden zählen nicht" — Letzteres
+  unterstellt, wann jemand frei hat. **Vorbehalt:** Die Flamme ist heute wörtlich und rein
+  abgeleitet; eine vergebende Regel macht sie freundlicher, aber weniger buchstäblich.
+  Dafür spricht, dass eine nach einem freien Wochenende gerissene Serie genau das bestraft,
+  was sie nicht bestrafen soll — und dass der Markt diese Bewegung gerade macht
+  (Streak-Backlash; Gentler Streak hat für die vergebende Variante einen Apple Design Award
+  bekommen).
+- **Tagesrückblick** — beim ersten Öffnen des Statistik-Fensters an einem neuen Tag eine
+  abgeleitete Belohnungszeile zum Vortag, an derselben Stelle und nach denselben Regeln wie
+  der bestehende Meilenstein-Hinweis: nichts gespeichert, verschwindet von selbst.
+  Ausdrücklich **kein Banner auf dem Board** — das wäre der abgelehnte Motivationssatz
+  durch die Hintertür. Vorbild ist Sunsamas Shutdown-Ritual, die einzige konzeptionelle
+  Lücke, die die Recherche im eigenen Konzept gefunden hat; als Moment zulässig, als
+  Pflichtritual nicht.
+- **Tonalität der Texte** — ein Durchgang über jeden sichtbaren Satz (WIP-Dialog,
+  Leerzustände, Statistik, Löschen-Rückfrage) gegen eine Regel: nie „verloren",
+  „gescheitert", „keine" — immer anbieten statt mahnen. Gentler Streak hat im Kern für
+  diese Sprachpolitik gewonnen, CARROT Weather zeigt, dass Tonalität allein ein Kaufgrund
+  sein kann. **Terminkritisch:** Die Strings sind seit dem 07.08.2026 lokalisiert; nach dem
+  Verkaufsstart kostet jede Änderung eine vollständige Übersetzungsrunde samt
+  `scripts/check-localization.py`.
+
 ## Karten-Anzeige (später ergänzen)
 
 - **Prioritäts-Icon auf der Karte** — MVP zeigt nur Titel, Notizen-Vorschau und Fälligkeit, um
@@ -190,6 +315,12 @@ nicht möglich)
   „In Bearbeitung"-Platz genau die bestehende Einladung zeigt („Frei für die nächste
   Aufgabe") — dieselbe Regel „höchstens eine Einladung, nur wo Nichtstun etwas kostet",
   nur an einem zweiten Ort.
+  **Gewicht gestiegen (09.08.2026):** Das Widget ist nicht nur eine Mac-Nebenansicht,
+  sondern das einzige technische Mittel, mit dem die App außerhalb ihres Fensters überhaupt
+  präsent sein kann — auf dem Mac-Schreibtisch ebenso wie später im StandBy des iPhones
+  (siehe die Korrektur dort). Es trägt damit die Positionierung „ruhige Fläche im
+  Schreibtisch-Setup". Bauvorgabe daraus: von vornherein als Widget-Familie denken, die
+  auch in einem StandBy-Stack im Querformat funktioniert — nicht als verkleinertes Board.
 - **Interaktives Widget (App Intents)** — Idee (27.07.2026), baut auf dem Widget-Punkt oben
   auf: Seit iOS 17/macOS Sonoma können Widgets Buttons enthalten, die ohne App-Start etwas
   auslösen. Für ein bewusst überwiegend read-only Board wäre die einzig stimmige Aktion die,
@@ -246,6 +377,15 @@ nicht möglich)
   Punkt oben), nur ohne jegliche Bedienelemente — reine Anzeige, kein Chrome, kein Drag & Drop.
   Passt zur bestehenden Haltung „Glas ist Chrome, nie Inhalt": StandBy ist der Moment, in dem
   nur noch der Inhalt bleibt.
+  **Korrektur (09.08.2026) — die Präzisierung vom 27.07.2026 ist technisch nicht umsetzbar:**
+  StandBy erlaubt Drittanbietern keine eigene Vollbild-Ansicht. Apps sind dort ausschließlich
+  über WidgetKit-Widgets und Live Activities präsent (so lösen es Structured, TickTick und
+  Flighty). „Das Board im Querformat ohne Bedienelemente" gibt es also nicht; was es gibt,
+  ist **eine Karte** — und damit genau die Variante, die oben beim Widget und bei der Live
+  Activity bereits prinzipiengeprüft ist (MonoNote-Ergänzungen vom 03.08.2026). Die
+  Plattform-Grenze bestätigt die eigene Haltung, statt sie zu behindern. Vor einer Umsetzung
+  gegen die dann aktuelle Apple-Dokumentation gegenprüfen; Grundlage dieser Korrektur ist
+  eine Recherche, kein eigener Test.
 - **Live Activity** — Idee (27.07.2026): z. B. „In Bearbeitung: 2/3" als Dauerpräsenz auf dem
   Sperrbildschirm/in der Dynamic Island während einer aktiven Arbeitssession. **Offene
   Spannung, vor einer Umsetzung zu klären:** Eine Live Activity ist keine Benachrichtigung,
