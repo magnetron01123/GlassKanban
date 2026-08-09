@@ -392,6 +392,81 @@ welche Tipps gelesen werden), und fügt sich als natives Systemverhalten unauff�
 in bestehende Mac-Konventionen ein (native Apple-App statt Custom-Tooling). Konkret
 angewendet z. B. am Spaltenkopf, dessen Tooltip das WIP-Limit erklärt.
 
+### Ton der Texte
+
+Das Board spricht wie ein Werkzeug, nicht wie ein Begleiter: knapp und sachlich. Es coacht
+nicht, tröstet nicht und feuert nicht an. Der Ton ist kein viertes Prinzip, sondern fällt
+aus den drei bestehenden ab:
+
+- **Minimalismus** → so kurz wie möglich. Ein Satz im Chrome wird hundertmal gelesen; über
+  ihn entscheidet die zehnte Lesung, nicht die erste. Jedes Wort, das den Zustand nicht
+  benennt, ist Rauschen.
+- **Psychologische Wirksamkeit** → über *Zustände* redet die App klar, über die *Person*
+  nur dort, wo es etwas beiträgt („Dein Schnitt an aktiven Tagen"). Nie Trost, nie Ansporn.
+- **Kanban** → Regeln werden beim Namen genannt. Ein überschrittenes Limit zu benennen ist
+  keine Rüge, sondern „make policies explicit".
+
+**Sieben Fragen an jeden neuen oder geänderten Satz:**
+
+1. Benennt er den Zustand — oder kommentiert er ihn?
+2. Ist er kürzer als das, was er ersetzt? Wenn nicht: Was trägt die Mehrlänge?
+3. Hält er die zehnte Lesung aus?
+4. Steht Deutsch im selben Register wie Englisch? Wobei „idiomatisch in beiden Sprachen"
+   das Ziel ist, nicht Wort-für-Wort-Gleichheit.
+5. **Besitz benennen, wo der Zustand aus einer eigenen Einstellung folgt.** Stammt eine
+   Zahl oder ein Zustand aus etwas, das der Nutzer selbst eingestellt oder entschieden hat,
+   sagt die App das mit „dein" statt unpersönlich. Das ist kein Kommentar, sondern
+   Genauigkeit darüber, wessen Regel gerade greift — und es passt zu „Reibung statt
+   Verbot": Die App setzt nichts durch, sie zeigt die eigene Grenze. „Über deinem Limit"
+   trägt zwei Tatsachen (überschritten *und* selbst gesetzt), wo „Limit überschritten" nur
+   eine trägt und dabei klingt, als sei es die Regel der App.
+   **Grenze:** Der Besitz gilt dem *Zustand*, nie dem *Verhalten* — „Über deinem Limit" ja,
+   „Du hast zu viel angefangen" nein. Und nur, wo wirklich eine eigene Einstellung
+   dahintersteht; „Keine Treffer" und „Nicht gespeichert" hat niemand eingestellt. Ein
+   „dein" reicht: „dein eigenes" oder „dein selbst gesetztes" verdoppelt, was das Possessiv
+   schon sagt.
+6. **Die Frage stellen die Knöpfe.** Ein Dialogtext, der wiederholt, was auf den Knöpfen
+   steht, sagt es zweimal. Die Meldung erklärt, *warum* gefragt wird, nicht *was*.
+7. **Punkt nur, wo ein vollständiger Satz steht — oder mehr als einer.** Zahlenzeilen,
+   Beschriftungen, Merksätze und Halbsätze bleiben ohne, auch lange mit Doppelpunkt und
+   Gedankenstrich („Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten
+   30 Tage — das Tempo in Little's Law"). Probe: Lässt sich die Zeile als Satz mit Verb
+   lesen? Dann Punkt, sonst nicht. Ein Punkt hinter einem Fragment ist ein Wort, das nichts
+   sagt. Dieselbe Grenze fällt im Deutschen und im Englischen an denselben Stellen, weil
+   dort dieselben Fragmente stehen; sie deckt sich zudem mit Apples Regel für Hilfetexte.
+   **Werden Bausteine zur Laufzeit zusammengesetzt** (Statistik-Zeilen, VoiceOver-Labels),
+   gehört das Trennzeichen in die Zusammensetzung, nicht in den Baustein — `joined` mit
+   `". "` statt eines Punktes im Text. Sonst hängt die Lesbarkeit der einen Stelle am
+   Satzzeichen der anderen, und der letzte Baustein trägt am Ende doch wieder einen Punkt.
+
+**Gültige Muster, alle aus der App:**
+
+| Fall | So | Nicht so |
+|---|---|---|
+| Fehler | „Nicht gespeichert" | „Das hat leider nicht geklappt" |
+| Leerer Zustand | „Keine Treffer" | „Kein Treffer, nichts verloren" (2026 entfernt) |
+| Regel | „Über deinem Limit" | „Limit überschritten" / „Über deinem eigenen Limit" |
+| Leeres Feld | „Keine Notizen" | „Notiz hinzufügen" |
+| Reibung | „Weniger gleichzeitig, mehr fertig." | dieselbe Zeile plus „Erst etwas abschließen?" — das steht schon auf dem Knopf |
+| Leistung | „Dein Schnitt an aktiven Tagen" | „Du warst an 4 Tagen untätig" |
+| Zahlenzeile | „Dein Limit: 3" | „Dein Limit: 3." |
+
+Für VoiceOver-Beschriftungen gilt dasselbe, nur schärfer: Sie werden bei jedem Anlaufen
+erneut vorgelesen und vertragen kein Wort zu viel. Ein Motivationssatz als Beschriftung ist
+derselbe Dauertext, den das Board an anderer Stelle bereits abgeschafft hat.
+
+**Vorgeschichte, damit sie sich nicht wiederholt (09.08.2026):** Aus einer Marktrecherche
+kam der Vorschlag, alle Texte einem Durchgang „anbieten statt mahnen" zu unterziehen,
+hergeleitet aus Gentler Streak und CARROT Weather. Beides sind Apps mit einer *Stimme*;
+dieses Board ist ein Werkzeug. Herausgekommen sind Ersetzungen, die länger,
+umgangssprachlicher und indirekter waren als die Originale — „Statistiken. Eine Aufgabe
+startet eine neue Folge" statt „Zurzeit keine Folge", „hat nicht geklappt" statt „nicht
+möglich". Verworfen. Die Prüfung aller 164 Schlüssel ergab, dass das Register bereits
+stimmt; geblieben sind allein die Regeln 5 und 6, die aus dieser Diskussion entstanden
+sind. Lehre: Vorbilder für den Ton kommen aus Werkzeugen, nicht aus Apps mit Persönlichkeit
+— und wer eine Textänderung vorschlägt, legt Vorher und Nachher nebeneinander und begründet
+jede zusätzliche Silbe.
+
 ## Mac-/Apple-spezifische Vertiefung
 
 Konsequent aus Sicht eines Mac-/Apple-Nutzers gedacht — was macht die App zu einer "echten"

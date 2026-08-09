@@ -209,7 +209,7 @@ struct StatsPopover: View {
                         // orange at reading size on a light surface lands
                         // under the contrast floor.
                         mark: streak.todayCount >= max(1, streak.dailyTarget) ? "flame.fill" : nil,
-                        help: String(localized: "Your average on active days: \(max(1, streak.dailyTarget)) tasks."))
+                        help: String(localized: "Your average on active days: \(max(1, streak.dailyTarget)) tasks"))
 
                     row("In Progress", wipValue, help: wipHelp)
 
@@ -226,7 +226,7 @@ struct StatsPopover: View {
                     if let days = forecastDays {
                         row("Time Left",
                             Self.daysEstimate(days),
-                            help: String(localized: "Little's Law: tasks in progress divided by your pace over the last \(WrappedStats.trendWindowDays) days — an estimate, not a promise."))
+                            help: String(localized: "Little's Law: tasks in progress divided by your pace over the last \(WrappedStats.trendWindowDays) days — an estimate, not a promise"))
                     }
                 }
             }
@@ -310,7 +310,9 @@ struct StatsPopover: View {
         .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            String(localized: "\(streak.current) days in a row.") + (heroNote.map { " \($0.text)." } ?? ""))
+            [String(localized: "\(streak.current) days in a row"), heroNote?.text]
+                .compactMap { $0 }
+                .joined(separator: ". "))
     }
 
     /// One line, three jobs, in strict priority — an invitation while today is
@@ -329,7 +331,7 @@ struct StatsPopover: View {
         }
         guard streak.current > 0, streak.best > 0 else { return nil }
         if streak.current >= streak.best {
-            return (String(localized: "Your longest run yet"), true)
+            return (String(localized: "Your longest streak yet"), true)
         }
         // Goal-gradient (Hull): closeness to the goal is what accelerates
         // effort — so this only appears once the record is actually in reach.
@@ -361,12 +363,14 @@ struct StatsPopover: View {
     /// Both halves of the number, in that order. With a limit set, this used
     /// to drop the first half entirely and explain only the limit — so
     /// VoiceOver read "In Progress, 3 of 5" and then, as the value,
-    /// "Your own limit": the figure it was announcing went unexplained, and
+    /// "Your limit": the figure it was announcing went unexplained, and
     /// only the ceiling got a sentence.
     private var wipHelp: String {
-        let load = String(localized: "\(wip) tasks in progress right now.")
+        let load = String(localized: "\(wip) tasks in progress right now")
         guard let wipLimit else { return load }
-        return load + " " + String(localized: "Your own limit: \(wipLimit).")
+        // The separator lives here, not inside either half: both are fragments,
+        // and a fragment does not carry a full stop (CONCEPT.md, "Ton der Texte").
+        return load + ". " + String(localized: "Your limit: \(wipLimit)")
     }
 
     // MARK: - Recap
@@ -407,12 +411,12 @@ struct StatsPopover: View {
                     if let weekly = weeklyThroughput {
                         row("Per Week",
                             String(localized: "\(weekly) tasks"),
-                            help: String(localized: "Your throughput: tasks completed per week, averaged over the last \(WrappedStats.trendWindowDays) days — the pace in Little's Law."))
+                            help: String(localized: "Your throughput: tasks completed per week, averaged over the last \(WrappedStats.trendWindowDays) days — the pace in Little's Law"))
                     }
                     if let lead = wrapped.medianLeadTimeDays {
                         row("Lead Time",
                             Self.daysEstimate(lead),
-                            help: String(localized: "Median time from “Captured” to “Done” for one-off tasks over the last \(WrappedStats.trendWindowDays) days — with load and pace, the third figure in Little's Law."))
+                            help: String(localized: "Median time from “Captured” to “Done” for one-off tasks over the last \(WrappedStats.trendWindowDays) days — with load and pace, the third figure in Little's Law"))
                     }
                 }
             }
@@ -428,7 +432,7 @@ struct StatsPopover: View {
                             if let rank = wrapped.mostActiveWeekday {
                                 row("Strongest Weekday",
                                     Calendar.current.weekdaySymbols[rank.weekday - 1],
-                                    help: String(localized: "\(rank.count) tasks — more than any other weekday."))
+                                    help: String(localized: "\(rank.count) tasks — more than any other weekday"))
                             }
                             if let rank = wrapped.mostUsedList {
                                 row("Most Used List",
@@ -519,8 +523,10 @@ struct StatsPopover: View {
         .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            String(localized: "\(wrapped.yearCount) tasks done this year.")
-                + (wrapped.milestone.map { " " + String(localized: "Milestone reached: \($0).") } ?? ""))
+            [String(localized: "\(wrapped.yearCount) tasks done this year"),
+             wrapped.milestone.map { String(localized: "Milestone reached: \($0)") }]
+                .compactMap { $0 }
+                .joined(separator: ". "))
     }
 
     /// Completions per week over the trend window, behind the same sample
@@ -569,7 +575,7 @@ struct StatsPopover: View {
         // Otherwise this is 30 VoiceOver stops that each say nothing.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            String(localized: "Last \(WrappedStats.trendWindowDays) days: something done on \(wrapped.consistencyActiveDays) of them."))
+            String(localized: "Last \(WrappedStats.trendWindowDays) days: something done on \(wrapped.consistencyActiveDays) of them"))
     }
 
     /// A day with nothing done keeps a hairline so the row still reads as a

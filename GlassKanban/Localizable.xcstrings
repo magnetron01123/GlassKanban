@@ -345,11 +345,11 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Last %lld Days" } }
       }
     },
-    "Last %lld days: something done on %lld of them." : {
+    "Last %lld days: something done on %lld of them" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzte %lld Tage: an %lld davon etwas erledigt." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last %lld days: something done on %lld of them." } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzte %lld Tage: an %lld davon etwas erledigt" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last %lld days: something done on %lld of them" } }
       }
     },
     "Lead Time" : {
@@ -359,11 +359,11 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Lead Time" } }
       }
     },
-    "Less at once, more done. Finish something first?" : {
+    "Less at once, more done" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Less at once, more done. Finish something first?" } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Weniger gleichzeitig, mehr fertig" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Less at once, more done" } }
       }
     },
     "Light" : {
@@ -387,11 +387,11 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "List %@" } }
       }
     },
-    "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise." : {
+    "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Little's Law: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten %lld Tage — eine Schätzung, kein Versprechen." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise." } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Little's Law: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten %lld Tage — eine Schätzung, kein Versprechen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise" } }
       }
     },
     "Lists" : {
@@ -422,11 +422,11 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Low priority" } }
       }
     },
-    "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law." : {
+    "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Median von „erfasst“ bis „erledigt“ bei einmaligen Aufgaben der letzten %lld Tage — mit Auslastung und Tempo die dritte Größe in Little's Law." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law." } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Median von „erfasst“ bis „erledigt“ bei einmaligen Aufgaben der letzten %lld Tage — mit Auslastung und Tempo die dritte Größe in Little's Law" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law" } }
       }
     },
     "Medium" : {
@@ -443,11 +443,11 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Medium priority" } }
       }
     },
-    "Milestone reached: %lld." : {
+    "Milestone reached: %lld" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Meilenstein erreicht: %lld." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Milestone reached: %lld." } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Meilenstein erreicht: %lld" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Milestone reached: %lld" } }
       }
     },
     "Milestone reached: %lld tasks done" : {
@@ -555,11 +555,11 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "No access to Reminders. Allow it in System Settings under “Privacy & Security”." } }
       }
     },
-    "No reminder lists found." : {
+    "No reminder lists found" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Erinnerungslisten gefunden." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No reminder lists found." } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Erinnerungslisten gefunden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No reminder lists found" } }
       }
     },
     "None" : {
@@ -695,11 +695,11 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Open in Reminders" } }
       }
     },
-    "Over the limit" : {
+    "Over your limit" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Limit überschritten" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Over the limit" } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Über deinem Limit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Over your limit" } }
       }
     },
     "Overdue" : {
@@ -996,46 +996,46 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Yesterday" } }
       }
     },
-    "Your average on active days: %lld tasks." : {
+    "Your average on active days: %lld tasks" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "Dein Schnitt an aktiven Tagen: %lld Aufgabe." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "Dein Schnitt an aktiven Tagen: %lld Aufgaben." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "Dein Schnitt an aktiven Tagen: %lld Aufgabe" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "Dein Schnitt an aktiven Tagen: %lld Aufgaben" } }
             }
           }
         },
         "en" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "Your average on active days: %lld task." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "Your average on active days: %lld tasks." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "Your average on active days: %lld task" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "Your average on active days: %lld tasks" } }
             }
           }
         }
       }
     },
-    "Your longest run yet" : {
+    "Your longest streak yet" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein längster Lauf bisher" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your longest run yet" } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Deine längste Folge bisher" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your longest streak yet" } }
       }
     },
-    "Your own limit: %lld." : {
+    "Your limit: %lld" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein selbst gesetztes Limit: %lld." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your own limit: %lld." } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein Limit: %lld" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your limit: %lld" } }
       }
     },
-    "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law." : {
+    "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten %lld Tage — das Tempo in Little's Law." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law." } }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten %lld Tage — das Tempo in Little's Law" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law" } }
       }
     },
     "day" : {
@@ -1122,22 +1122,22 @@
         }
       }
     },
-    "%lld days in a row." : {
+    "%lld days in a row" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Tag in Folge." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Tage in Folge." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Tag in Folge" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Tage in Folge" } }
             }
           }
         },
         "en" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld day in a row." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld days in a row." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld day in a row" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld days in a row" } }
             }
           }
         }
@@ -1249,64 +1249,64 @@
         }
       }
     },
-    "%lld tasks — more than any other weekday." : {
+    "%lld tasks — more than any other weekday" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe — mehr als an jedem anderen Wochentag." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben — mehr als an jedem anderen Wochentag." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe — mehr als an jedem anderen Wochentag" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben — mehr als an jedem anderen Wochentag" } }
             }
           }
         },
         "en" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task — more than any other weekday." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks — more than any other weekday." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task — more than any other weekday" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks — more than any other weekday" } }
             }
           }
         }
       }
     },
-    "%lld tasks done this year." : {
+    "%lld tasks done this year" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe dieses Jahr erledigt." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben dieses Jahr erledigt." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe dieses Jahr erledigt" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben dieses Jahr erledigt" } }
             }
           }
         },
         "en" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task done this year." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks done this year." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task done this year" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks done this year" } }
             }
           }
         }
       }
     },
-    "%lld tasks in progress right now." : {
+    "%lld tasks in progress right now" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe gerade in Bearbeitung." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben gerade in Bearbeitung." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe gerade in Bearbeitung" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben gerade in Bearbeitung" } }
             }
           }
         },
         "en" : {
           "variations" : {
             "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task in progress right now." } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks in progress right now." } }
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task in progress right now" } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks in progress right now" } }
             }
           }
         }

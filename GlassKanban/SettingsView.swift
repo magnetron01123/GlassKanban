@@ -50,7 +50,7 @@ struct ListsSettingsView: View {
                     // explained it said the opposite.
                     Text(store.accessState == .denied
                         ? "No access to Reminders. Allow it in System Settings under “Privacy & Security”."
-                        : "No reminder lists found.")
+                        : "No reminder lists found")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(store.reminderCalendars, id: \.calendarIdentifier) { calendar in
