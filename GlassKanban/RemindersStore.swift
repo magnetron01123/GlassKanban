@@ -1,6 +1,7 @@
 import EventKit
 import SwiftUI
 import AppKit
+import os
 
 /// The single data layer of the app. Reads reminders via EventKit, derives
 /// `KanbanCard`s, and performs every write the app has: moving a card
@@ -111,6 +112,13 @@ final class RemindersStore: ObservableObject {
     /// move the final refresh never saw is also missing from the persisted
     /// memory below, so condition 2 already keeps its tag after a restart.
     private var deliberatelyMovedSinceRefresh: Set<String> = []
+
+    /// TEMPORARY diagnostic channel (09.08.2026): every path that writes or
+    /// observes a status change logs here, so a tag that reappears without a
+    /// hand on the card can be attributed — app write (and which route) or
+    /// change synced in from outside. Watch with:
+    /// `log stream --predicate 'subsystem == "com.davidtrogemann.GlassKanban"'`
+    static let tagLog = Logger(subsystem: "com.davidtrogemann.GlassKanban", category: "tagwrites")
 
     /// The release rule's memory of the previous session, loaded once and
     /// used to seed the very first refresh after a cold start — a completion
@@ -476,6 +484,13 @@ final class RemindersStore: ObservableObject {
             let isDone = Set(refreshed.filter { $0.status == .done }.map(\.id))
             flagRecentlyCompleted(isDone.subtracting(wasDone))
         }
+        // TEMPORARY diagnostics: any status change the refresh observes. One
+        // that no app write logged right before it came in from outside.
+        for card in refreshed {
+            if let old = cards.first(where: { $0.id == card.id }), old.status != card.status {
+                Self.tagLog.notice("refresh SAW CHANGE: \"\(card.title, privacy: .public)\" \(old.status.rawValue, privacy: .public) -> \(card.status.rawValue, privacy: .public)")
+            }
+        }
         cards = refreshed
         recurringHandoff.retain(Set(refreshed.map(\.id)))
         lastFetchedReminderIDs = Set((incomplete + completed).map(\.calendarItemIdentifier))
@@ -529,6 +544,7 @@ final class RemindersStore: ObservableObject {
         guard !released.isEmpty else { return }
         var dirty = false
         for reminder in incomplete where released.contains(reminder.calendarItemIdentifier) {
+            Self.tagLog.notice("release STRIPPED: \"\(reminder.title ?? "?", privacy: .public)\" (was: \(reminder.notes ?? "nil", privacy: .public))")
             reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: .backlog)
             if (try? eventStore.save(reminder, commit: false)) != nil {
                 dirty = true
@@ -590,6 +606,7 @@ final class RemindersStore: ObservableObject {
             guard StatusTagger.needsHygiene(
                 notes: reminder.notes, isCompleted: reminder.isCompleted) else { continue }
             let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
+            Self.tagLog.notice("hygiene REWROTE: \"\(reminder.title ?? "?", privacy: .public)\" -> \(status.rawValue, privacy: .public) (was: \(reminder.notes ?? "nil", privacy: .public))")
             reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
             if (try? eventStore.save(reminder, commit: false)) != nil {
                 dirty = true
@@ -616,7 +633,10 @@ final class RemindersStore: ObservableObject {
     func move(cardID: String, to status: KanbanStatus, undoManager: UndoManager? = nil, feedback: Bool = true) -> KanbanStatus? {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
-        guard origin != status else { return nil }
+        guard origin != status else {
+            Self.tagLog.notice("move REFUSED (origin==target): \"\(reminder.title ?? "?", privacy: .public)\" already \(status.rawValue, privacy: .public)")
+            return nil
+        }
         // Un-completing a repeating reminder is the one move EventKit cannot
         // express. Completing one detaches the finished occurrence and lets
         // the series carry on (measured on a real board — see `refresh`), so
@@ -656,7 +676,9 @@ final class RemindersStore: ObservableObject {
         }
         do {
             try eventStore.save(reminder, commit: true)
+            Self.tagLog.notice("move WROTE: \"\(reminder.title ?? "?", privacy: .public)\" \(origin.rawValue, privacy: .public) -> \(status.rawValue, privacy: .public) feedback=\(feedback) notesNow=\(reminder.notes ?? "nil", privacy: .public)")
         } catch {
+            Self.tagLog.error("move FAILED: \"\(reminder.title ?? "?", privacy: .public)\" \(origin.rawValue, privacy: .public) -> \(status.rawValue, privacy: .public): \(error.localizedDescription, privacy: .public)")
             // Say so. A move that fails leaves the card where it was, which
             // on a board that animates every real move looks exactly like a
             // drop that missed — so the user tries again instead of learning
@@ -1221,7 +1243,10 @@ final class RemindersStore: ObservableObject {
         }
 
         if titleChanged { reminder.title = edited.title }
-        if notesChanged { reminder.notes = rewrittenNotes }
+        if notesChanged {
+            Self.tagLog.notice("edit REWROTE NOTES: \"\(reminder.title ?? "?", privacy: .public)\" status=\(status.rawValue, privacy: .public) replay=\(isReplay) notesNow=\(rewrittenNotes ?? "nil", privacy: .public)")
+            reminder.notes = rewrittenNotes
+        }
         if urlChanged { reminder.url = Self.parsedURL(edited.url) }
         if dueChanged {
             // Without a time of day the reminder stays all-day, the way
