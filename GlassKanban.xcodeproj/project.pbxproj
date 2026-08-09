@@ -24,6 +24,7 @@
 		4DDD94D9BA542BA62B842C25 /* BacklogTicketCreationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */; };
 		5579A24C7243C659DB0C9698 /* TicketRename.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350F062261A839B0E19ADC65 /* TicketRename.swift */; };
 		5C60750477A63990C6B97E35 /* EmptyBoardNotice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */; };
+		5E842D73DB62AFBFA9030CFA /* RecurringTagRelease.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E0CEF056779A87A7359CF3 /* RecurringTagRelease.swift */; };
 		6E3C54C9398748DCB39B3DB3 /* BacklogTicketTargeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */; };
 		73526449E43A7458F4BA2C81 /* BacklogTicketTargeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C679386A3AB722944FC891 /* BacklogTicketTargeting.swift */; };
 		735A75EBAD75AEDA15D7EF67 /* ReminderDeepLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D665E92128A470288652C9 /* ReminderDeepLinkTests.swift */; };
@@ -39,9 +40,11 @@
 		9438002A6DAF5EE01AF19041 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AD1B4A61352C1461953925D /* BoardView.swift */; };
 		9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8099603D0D48B34633EB69D /* StatusTagger.swift */; };
 		9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
+		9FDA368678556A086FFC3E61 /* RecurringTagReleaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D67DA6580C3911EBE64E996 /* RecurringTagReleaseTests.swift */; };
 		A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */; };
 		A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CAB35E9902F258F00D82A7 /* SettingsView.swift */; };
 		A70E5A894D67BF2B9B9C0779 /* AppAppearanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48CB5158B3D021C846E9BDE /* AppAppearanceTests.swift */; };
+		A9AA91F4C71136A717EED6B4 /* RecurringTagRelease.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E0CEF056779A87A7359CF3 /* RecurringTagRelease.swift */; };
 		B3A56D5A44AADDEA5AA38F85 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7465F3337FF2CB0DD4ED428F /* InfoPlist.xcstrings */; };
 		B5100A228F130EF0A3292797 /* StreakCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */; };
 		B57FB64598820E281C5E6066 /* EditorKeyCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */; };
@@ -72,12 +75,14 @@
 		10ECC48E9096FEF7E8FFDCB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorKeyCommand.swift; sourceTree = "<group>"; };
 		168AF2A9B4F0AA4920636C98 /* TicketRenameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketRenameTests.swift; sourceTree = "<group>"; };
+		2D67DA6580C3911EBE64E996 /* RecurringTagReleaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringTagReleaseTests.swift; sourceTree = "<group>"; };
 		2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		350F062261A839B0E19ADC65 /* TicketRename.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketRename.swift; sourceTree = "<group>"; };
 		4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculatorTests.swift; sourceTree = "<group>"; };
 		4F5178AE744F393F737442A5 /* FilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterTests.swift; sourceTree = "<group>"; };
 		5363A88A1AA13D97EEF4C674 /* TicketEditSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketEditSheet.swift; sourceTree = "<group>"; };
 		57D665E92128A470288652C9 /* ReminderDeepLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderDeepLinkTests.swift; sourceTree = "<group>"; };
+		57E0CEF056779A87A7359CF3 /* RecurringTagRelease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringTagRelease.swift; sourceTree = "<group>"; };
 		616551F8C95C166758DC62DD /* TextSanitizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSanitizer.swift; sourceTree = "<group>"; };
 		61E1A9343D54C7091C20BBDE /* WrappedStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrappedStats.swift; sourceTree = "<group>"; };
 		61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculator.swift; sourceTree = "<group>"; };
@@ -140,6 +145,7 @@
 				9A5342367B7E44D3B673B801 /* EditorKeyCommandTests.swift */,
 				4F5178AE744F393F737442A5 /* FilterTests.swift */,
 				FA4804A3C1E8609F49D22E90 /* RecurringHandoffTests.swift */,
+				2D67DA6580C3911EBE64E996 /* RecurringTagReleaseTests.swift */,
 				57D665E92128A470288652C9 /* ReminderDeepLinkTests.swift */,
 				E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */,
 				4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */,
@@ -177,6 +183,7 @@
 				CAB79A546CDB1692EDDD28BA /* MoveFeedback.swift */,
 				10C56C38B8A1956F2F2974FE /* PrivacyInfo.xcprivacy */,
 				A5FEC3424708E67072981E4B /* RecurringHandoff.swift */,
+				57E0CEF056779A87A7359CF3 /* RecurringTagRelease.swift */,
 				916BEB3FF1D30E3F22831CAA /* ReminderDeepLink.swift */,
 				E38DFB23226AD6A320E58F33 /* RemindersStore.swift */,
 				73CAB35E9902F258F00D82A7 /* SettingsView.swift */,
@@ -309,6 +316,7 @@
 				8935EE20B247C64B80C071A6 /* Models.swift in Sources */,
 				3D1BFE85DE013F64E08C7720 /* MoveFeedback.swift in Sources */,
 				B737BA5430AB69B0F1680614 /* RecurringHandoff.swift in Sources */,
+				5E842D73DB62AFBFA9030CFA /* RecurringTagRelease.swift in Sources */,
 				C633F382DEFE9FD32C03C6A7 /* ReminderDeepLink.swift in Sources */,
 				F497DB173B495A88ADCD4821 /* RemindersStore.swift in Sources */,
 				A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */,
@@ -339,6 +347,8 @@
 				CF6FC09044300C4AEE056EF2 /* Models.swift in Sources */,
 				91D3FEA31173894F675B22D8 /* RecurringHandoff.swift in Sources */,
 				C850B74FF429C454C1B8A3D8 /* RecurringHandoffTests.swift in Sources */,
+				A9AA91F4C71136A717EED6B4 /* RecurringTagRelease.swift in Sources */,
+				9FDA368678556A086FFC3E61 /* RecurringTagReleaseTests.swift in Sources */,
 				BC16F8EF904EDF88D5EC21A0 /* ReminderDeepLink.swift in Sources */,
 				735A75EBAD75AEDA15D7EF67 /* ReminderDeepLinkTests.swift in Sources */,
 				C831C7F9A270718B155C00E3 /* StatusTagger.swift in Sources */,

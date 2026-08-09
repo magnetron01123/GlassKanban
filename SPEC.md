@@ -319,6 +319,60 @@ Das Gegenstück bleibt bestehen: Eine erledigte Ausführung aus „Erledigt" **h
 lehnt die App weiterhin mit „Nicht zurückgeholt" ab, weil das die Aufgabe doppelt aufs
 Board legen würde.
 
+**Extern abgehakt (09.08.2026 gegen echtes iCloud gemessen, nachdem eine wöchentliche
+Karte nach jedem Abhaken erneut in „Als Nächstes" stand):** Nur diese App entfernt den
+Status-Tag *vor* dem Erledigen. Wird eine getaggte wiederkehrende Erinnerung außerhalb
+abgehakt — Erinnerungen-App, iPhone, Mitteilung, oder von einer anderen Person in einer
+geteilten Liste —, bleiben die Notizen unangetastet: Der abgelöste Durchgang **und** die
+weiterlaufende Serie tragen beide weiterhin den Tag. Der nächste, nie gezogene Durchgang
+stand damit in einer Arbeitsspalte, Woche für Woche.
+
+**Regel daraus (`RecurringTagRelease`):** Der Pull, für den der Tag stand, wurde vom
+erledigten Durchgang verbraucht — die App gibt den Tag der Serie deshalb beim nächsten
+Sync still zurück (Karte → Backlog), aber nur, wenn das *beweisbar* ist. Alle fünf
+Bedingungen müssen gelten, jeder Zweifel lässt den Tag stehen (ein stehen gebliebener Tag
+kostet einen Zug, eine still zurückgeschobene gezogene Karte bräche das Pull-Prinzip):
+
+1. Die Serie ist offen, wiederkehrend und trägt einen Status-Tag.
+2. Der vorige Refresh sah **denselben Tag auf derselben ID** — der Tag ist älter als
+   dieser Refresh, niemand hat gerade erst gezogen.
+3. Eine erledigte Erinnerung gleichen Titels in derselben Liste ist aufgetaucht, deren
+   **ID nie zuvor geladen wurde** — der Fingerabdruck eines frisch abgelösten Durchgangs.
+   (Eine gewöhnliche Erledigung behält ihre ID; das Abhaken einer gleichnamigen
+   einmaligen Aufgabe kann die Regel darum nicht auslösen.)
+4. Der Nutzer hat die Serie seit dem letzten Refresh nicht selbst bewegt — ein Zug im
+   Fenster zwischen Sync und Refresh bleibt ein Zug.
+5. Genau **eine** Serie passt auf den Durchgang; bei zwei gleichnamigen Serien in einer
+   Liste passiert nichts.
+
+Die Freigabe ist bewusst **nicht widerrufbar** und ohne Dialog: Es wird keine
+Nutzer-Entscheidung zurückgenommen, und ein ⌘Z, das ungezogene Arbeit wieder taggt, ist
+genau das, was `RecurringHandoff` auf der Replay-Seite verhindert.
+
+**Der Beweis überlebt den Neustart** (`RecurringTagRelease.Memory`, 09.08.2026): Am Ende
+jedes Refreshs speichert die App, was die Bedingungen 2 und 3 brauchen — welche IDs
+geladen waren und welche Karten einen Arbeits-Tag trugen (ein UserDefaults-Schlüssel,
+`tagReleaseMemory`). Der erste Refresh nach einem Kaltstart wird damit geseedet; ein
+Abhaken, während die App zu war, findet seinen Beweis also beim nächsten Start vor. Die
+Regel selbst ändert sich dadurch nicht, nur ihr Gedächtnis. Fehlt der Speicher, ist er
+beschädigt oder stammt er von einem Build mit anderen Statusnamen, fällt betroffenes
+still weg — ein leeres Gedächtnis heißt nur: Die erste Sitzung verhält sich wie früher
+(Upgrade-Pfad; die Freigabe greift ab der zweiten Sitzung). Aus Zeitstempeln zu raten
+bleibt verworfen: Das Weiterrollen der Serie setzt selbst `lastModifiedDate` neu, es
+gibt dort nichts Verlässliches — der gespeicherte Beweis ist kein Raten.
+
+**Verbleibende, akzeptierte Restlücke:** Wird der Tag *nach* einem externen Abhaken von
+Hand auf einem anderen Gerät erneut in die Notizen getippt, während die App zu ist, ist
+er von einem überlebenden Tag nicht zu unterscheiden und wird freigegeben. Das verlangt
+Hashtag-Handarbeit abseits dieses Macs, ist selbstheilend (ein Zug) und fällt in
+dieselbe Richtung wie jeder andere Zweifelsfall — Karte im Backlog, nie in einer
+Arbeitsspalte.
+
+Im selben Zug abgesichert: `move` schreibt `isCompleted` nur noch, wenn sich der Wert
+tatsächlich ändert — ein seitlicher Zug hat auf einer laufenden Serie keine
+Erledigt-Felder anzufassen. (Gemessen hat auch die alte, redundante Schreibung keine
+Notizen verändert; die Absicherung ist Hygiene, nicht Fehlerbehebung.)
+
 ### Tastaturkürzel
 
 | Kürzel | Wirkung |

@@ -98,6 +98,28 @@ final class RemindersStore: ObservableObject {
     /// it only decides which replayed writes are allowed to land.
     private var recurringHandoff = RecurringHandoff()
 
+    /// Every identifier the last completed refresh fetched — wider than
+    /// `cards`, which only keeps recent Done cards. `RecurringTagRelease`
+    /// reads this to tell a freshly detached occurrence from an old
+    /// completion that was merely in the fetch window again.
+    private var lastFetchedReminderIDs: Set<String> = []
+
+    /// Identifiers the user moved themselves since the last completed
+    /// refresh. A pull made in the window between an external completion
+    /// syncing in and the refresh seeing it must stay a pull (see
+    /// `RecurringTagRelease`, condition 4). Deliberately not persisted: a
+    /// move the final refresh never saw is also missing from the persisted
+    /// memory below, so condition 2 already keeps its tag after a restart.
+    private var deliberatelyMovedSinceRefresh: Set<String> = []
+
+    /// The release rule's memory of the previous session, loaded once and
+    /// used to seed the very first refresh after a cold start — a completion
+    /// that happened during downtime still meets its proof. Never cleared on
+    /// load: a first refresh that a newer one supersedes must find the seed
+    /// intact on the next attempt. Overwritten (and saved, on change) at the
+    /// end of every completed refresh.
+    private var releaseMemory = RecurringTagRelease.Memory.load()
+
     struct SaveFailure: Identifiable {
         let cardID: String
         /// What did not happen, in the user's words — "Not Moved" for
@@ -408,6 +430,7 @@ final class RemindersStore: ObservableObject {
         guard generation == refreshGeneration else { return }
 
         performTagHygiene(on: incomplete + completed)
+        releaseTagsSpentByDetachedOccurrences(incomplete: incomplete, completed: completed)
 
         // The list a finished task came from is thrown away everywhere else —
         // a completed card only needs its title. The stats view is the one
@@ -455,7 +478,65 @@ final class RemindersStore: ObservableObject {
         }
         cards = refreshed
         recurringHandoff.retain(Set(refreshed.map(\.id)))
+        lastFetchedReminderIDs = Set((incomplete + completed).map(\.calendarItemIdentifier))
+        deliberatelyMovedSinceRefresh.removeAll()
+        // Rebuilt from this fetch, never merged — the fetch window is the
+        // retention policy. Saved only on change: the seen set is a list of
+        // every open and recently completed reminder, not worth rewriting for
+        // a refresh that moved nothing.
+        let memory = RecurringTagRelease.Memory(
+            seenIDs: lastFetchedReminderIDs,
+            taggedStatusByID: Dictionary(
+                refreshed.filter { $0.status == .next || $0.status == .inProgress }
+                    .map { ($0.id, $0.status) }) { first, _ in first })
+        if memory != releaseMemory {
+            releaseMemory = memory
+            memory.save()
+        }
         hasLoadedOnce = true
+    }
+
+    /// Strips the status tag from recurring series whose tagged occurrence
+    /// was completed outside this app — the rule itself, with its five
+    /// conditions and the measurement behind it, lives in
+    /// `RecurringTagRelease`. Runs before the cards are built from these
+    /// reminders, so the same refresh already shows the released card in
+    /// Backlog. Converges like `performTagHygiene`: a released series carries
+    /// no tag, so the refresh this write triggers finds nothing to release.
+    private func releaseTagsSpentByDetachedOccurrences(incomplete: [EKReminder], completed: [EKReminder]) {
+        let snapshots = (incomplete + completed).compactMap { reminder -> RecurringTagRelease.Snapshot? in
+            guard let listID = reminder.calendar?.calendarIdentifier else { return nil }
+            return RecurringTagRelease.Snapshot(
+                id: reminder.calendarItemIdentifier,
+                title: reminder.title ?? "",
+                listID: listID,
+                isCompleted: reminder.isCompleted,
+                isRecurring: reminder.hasRecurrenceRules,
+                status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted))
+        }
+        // The very first refresh after a cold start has no previous board —
+        // `cards` and `lastFetchedReminderIDs` are still empty. The persisted
+        // memory of the last session stands in, exactly once (`hasLoadedOnce`
+        // flips after this runs); from then on the live state is strictly
+        // fresher and takes over. Never a union of both.
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            previousStatusByID: hasLoadedOnce
+                ? Dictionary(cards.map { ($0.id, $0.status) }) { first, _ in first }
+                : releaseMemory.taggedStatusByID,
+            previouslySeenIDs: hasLoadedOnce ? lastFetchedReminderIDs : releaseMemory.seenIDs,
+            refreshed: snapshots,
+            deliberatelyMoved: deliberatelyMovedSinceRefresh)
+        guard !released.isEmpty else { return }
+        var dirty = false
+        for reminder in incomplete where released.contains(reminder.calendarItemIdentifier) {
+            reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: .backlog)
+            if (try? eventStore.save(reminder, commit: false)) != nil {
+                dirty = true
+            }
+        }
+        if dirty {
+            try? eventStore.commit()
+        }
     }
 
     private func fetchReminders(matching predicate: NSPredicate) async -> [EKReminder] {
@@ -566,7 +647,13 @@ final class RemindersStore: ObservableObject {
         // and no longer says anything about the occurrence that was finished.
         let wasRecurringSeries = reminder.hasRecurrenceRules
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
-        reminder.isCompleted = (status == .done)
+        // Only written when it actually changes: the setter also touches
+        // `completionDate`, and a lateral move has no business rewriting
+        // completion fields on a live recurring series.
+        let completed = (status == .done)
+        if reminder.isCompleted != completed {
+            reminder.isCompleted = completed
+        }
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
@@ -592,6 +679,11 @@ final class RemindersStore: ObservableObject {
             recurringHandoff.completed(cardID: cardID, isRecurringSeries: wasRecurringSeries)
         } else if feedback {
             recurringHandoff.movedDeliberately(cardID: cardID)
+        }
+        // A hand on the card outranks bookkeeping: the tag release must not
+        // touch anything the user placed themselves this refresh cycle.
+        if feedback {
+            deliberatelyMovedSinceRefresh.insert(cardID)
         }
 
         // Optimistic UI update; the EventKit change notification will
