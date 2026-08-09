@@ -166,9 +166,12 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
 - [ ] TestFlight für macOS einrichten; 5–10 Tester (Freunde/Familie + 2–3 Fremde,
       z. B. über r/macapps)
 - [ ] Gezielt testen, was nie mit Echtdaten lief: **wiederkehrende Erinnerungen beim
-      Abhaken** (dokumentierter blinder Fleck, BACKLOG.md „Wiederkehrende Aufgaben";
-      inkl. Alarm-Mitführung und Wiederkehrer-Ablehnung aus FINDINGS B10/B11),
-      Drag & Drop mit WIP-Rückfrage, englische UI vollständig
+      Abhaken** (inkl. Alarm-Mitführung und Wiederkehrer-Ablehnung aus FINDINGS B10/B11),
+      Drag & Drop mit WIP-Rückfrage, englische UI vollständig. Das externe Abhaken
+      getaggter Wiederkehrer ist seit 09.08.2026 gemessen und abgedeckt
+      (`RecurringTagRelease`, SPEC.md „Extern abgehakt", FINDINGS-2026-08) — in der Beta
+      bleibt zu bestätigen, dass die Freigabe auch auf fremden Boards greift und die
+      Kaltstart-Restlücke im Alltag nicht stört
 - [ ] Mindestens ein Tester mit englischem System, einer mit wiederkehrenden
       Erinnerungen samt Alarmen
 - [ ] Kriterium für Einreichung: eine crash-freie Beta-Woche

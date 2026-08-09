@@ -82,6 +82,15 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   Das setzt voraus, dass die App die Wiederholungsregel korrekt rückwärts rechnet („jeden
   3. Dienstag") und einen Datensatz löscht, den sie nie angelegt hat — ein Rateschritt mit
   Datenverlust als Fehlerfall, für einen Sonderfall, den ein Satz Text ehrlich erklärt.
+  **Nachtrag 09.08.2026:** Antwort (2) galt nur fürs Erledigen *in der App*. Extern
+  abgehakt (iPhone, geteilte Liste) bleibt der Tag auf der weiterlaufenden Serie stehen —
+  gemessen und behoben, siehe SPEC.md „Extern abgehakt" (`RecurringTagRelease`).
+- **Restlücke der Tag-Freigabe: Abhaken bei geschlossener App** (09.08.2026) — die
+  Freigabe-Regel braucht den vorigen Refresh als Beweis, dass niemand frisch gezogen hat
+  (Bedingung 2). Passiert das externe Abhaken, während die App zu ist, bleibt der Tag bis
+  zum nächsten Abhaken oder einem Handgriff stehen. Bewusst offen gelassen: Beim Kaltstart
+  aus Zeitstempeln zu raten hieße, ohne Beweis Karten zu verschieben — dieselbe Abwägung,
+  an der schon das „Rückwärtsrechnen der Wiederholungsregel" oben gescheitert ist.
 - ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt und am
   27.07.2026 grundlegend neu entschieden: solche Karten werden **nicht mehr ausgeblendet**,
   sondern sinken ans Ende des Backlogs, wo der Falz schneidet („N noch nicht fällig"). Grund:
