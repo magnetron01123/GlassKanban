@@ -107,8 +107,18 @@ final class RemindersStore: ObservableObject {
     /// Identifiers the user moved themselves since the last completed
     /// refresh. A pull made in the window between an external completion
     /// syncing in and the refresh seeing it must stay a pull (see
-    /// `RecurringTagRelease`, condition 4).
+    /// `RecurringTagRelease`, condition 4). Deliberately not persisted: a
+    /// move the final refresh never saw is also missing from the persisted
+    /// memory below, so condition 2 already keeps its tag after a restart.
     private var deliberatelyMovedSinceRefresh: Set<String> = []
+
+    /// The release rule's memory of the previous session, loaded once and
+    /// used to seed the very first refresh after a cold start — a completion
+    /// that happened during downtime still meets its proof. Never cleared on
+    /// load: a first refresh that a newer one supersedes must find the seed
+    /// intact on the next attempt. Overwritten (and saved, on change) at the
+    /// end of every completed refresh.
+    private var releaseMemory = RecurringTagRelease.Memory.load()
 
     struct SaveFailure: Identifiable {
         let cardID: String
@@ -470,6 +480,19 @@ final class RemindersStore: ObservableObject {
         recurringHandoff.retain(Set(refreshed.map(\.id)))
         lastFetchedReminderIDs = Set((incomplete + completed).map(\.calendarItemIdentifier))
         deliberatelyMovedSinceRefresh.removeAll()
+        // Rebuilt from this fetch, never merged — the fetch window is the
+        // retention policy. Saved only on change: the seen set is a list of
+        // every open and recently completed reminder, not worth rewriting for
+        // a refresh that moved nothing.
+        let memory = RecurringTagRelease.Memory(
+            seenIDs: lastFetchedReminderIDs,
+            taggedStatusByID: Dictionary(
+                refreshed.filter { $0.status == .next || $0.status == .inProgress }
+                    .map { ($0.id, $0.status) }) { first, _ in first })
+        if memory != releaseMemory {
+            releaseMemory = memory
+            memory.save()
+        }
         hasLoadedOnce = true
     }
 
@@ -491,9 +514,16 @@ final class RemindersStore: ObservableObject {
                 isRecurring: reminder.hasRecurrenceRules,
                 status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted))
         }
+        // The very first refresh after a cold start has no previous board —
+        // `cards` and `lastFetchedReminderIDs` are still empty. The persisted
+        // memory of the last session stands in, exactly once (`hasLoadedOnce`
+        // flips after this runs); from then on the live state is strictly
+        // fresher and takes over. Never a union of both.
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: Dictionary(cards.map { ($0.id, $0.status) }) { first, _ in first },
-            previouslySeenIDs: lastFetchedReminderIDs,
+            previousStatusByID: hasLoadedOnce
+                ? Dictionary(cards.map { ($0.id, $0.status) }) { first, _ in first }
+                : releaseMemory.taggedStatusByID,
+            previouslySeenIDs: hasLoadedOnce ? lastFetchedReminderIDs : releaseMemory.seenIDs,
             refreshed: snapshots,
             deliberatelyMoved: deliberatelyMovedSinceRefresh)
         guard !released.isEmpty else { return }

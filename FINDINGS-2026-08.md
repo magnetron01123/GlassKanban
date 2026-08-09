@@ -33,5 +33,30 @@ dieser Session nicht freigegeben war.
 - **Kaltstart-Raten über Zeitstempel** (Tag freigeben, wenn `completionDate` des
   Durchgangs nach der letzten Tag-Änderung liegt): Das Weiterrollen der Serie setzt
   selbst `lastModifiedDate` neu; es gibt keinen verlässlichen Zeugen. Ohne Beweis keine
-  Kartenbewegung — Restlücke stattdessen in BACKLOG.md dokumentiert.
+  Kartenbewegung — die Restlücke wurde stattdessen anders geschlossen, siehe unten.
 - **`eventStore.reset()` bei `EKEventStoreChanged`**: siehe H4.
+
+## Nachtrag, gleicher Tag: Kaltstart-Restlücke geschlossen (`gemessen`)
+
+Die zunächst akzeptierte Restlücke — Abhaken bei geschlossener App lässt den Tag stehen,
+weil der „vorige Refresh" als Beweis fehlt — ist ohne Raten geschlossen: Der **Beweis
+überlebt den Neustart**. `RecurringTagRelease.Memory` persistiert am Ende jedes Refreshs
+die geladenen IDs und die getaggten Karten (ein UserDefaults-Schlüssel,
+`tagReleaseMemory`, plist-nativ wie `wipLimits`/`excludedCalendarIDs`); der erste Refresh
+nach einem Kaltstart wird damit geseedet, die reine Regel bleibt unverändert. Fehlender,
+beschädigter oder fremder Speicher degradiert still zu leer → Verhalten wie zuvor
+(fail closed; zugleich der Upgrade-Pfad).
+
+Gemessen gegen echtes iCloud, App-Neustarts per `open`/`pkill`:
+
+- **Positiv:** Serie mit `#next`, der App vor dem Beenden bekannt → extern abgehakt bei
+  geschlossener App → Tag im **ersten Refresh nach dem Kaltstart** freigegeben.
+- **Negativ:** Tag erst bei geschlossener App gesetzt, dann extern abgehakt → Tag bleibt
+  nach dem Start stehen (kein Beweis, keine Freigabe).
+- **Stabilität:** zweiter Neustart ohne neue Erledigung → keine weitere Freigabe, kein
+  Save-Loop.
+
+Dazu 9 neue reine Tests (`RecurringTagReleaseMemoryTests` + Kaltstart-Szenarien über die
+bestehende API), Gesamtsuite grün. Verbleibende, kleinere Restlücke (Hand-getippter Tag
+auf anderem Gerät nach externem Abhaken, ununterscheidbar vom überlebenden Tag) in
+SPEC.md dokumentiert.

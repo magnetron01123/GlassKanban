@@ -178,4 +178,128 @@ final class RecurringTagReleaseTests: XCTestCase {
             deliberatelyMoved: [])
         XCTAssertEqual(released, ["shop", "bath"])
     }
+
+    // MARK: - Cold start, seeded from the persisted memory
+
+    /// The gap the memory closes: the completion happened while the app was
+    /// closed. Seeding the first refresh with the last session's memory makes
+    /// it look exactly like any other refresh to the rule.
+    func testColdStartWithMemoryOfTheTagReleases() {
+        let memory = RecurringTagRelease.Memory(
+            seenIDs: ["series", "old-done"],
+            taggedStatusByID: ["series": .next])
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            previousStatusByID: memory.taggedStatusByID,
+            previouslySeenIDs: memory.seenIDs,
+            refreshed: [series(), detachedOccurrence()],
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, ["series"])
+    }
+
+    /// A tag that only came into being while the app was closed has no entry
+    /// in the memory — nothing can prove it predates the completion, so it
+    /// stays. This is also the upgrade path: no memory yet, no release.
+    func testColdStartWithoutMemoryOfTheTagKeepsIt() {
+        let memory = RecurringTagRelease.Memory(
+            seenIDs: ["series"], taggedStatusByID: [:])
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            previousStatusByID: memory.taggedStatusByID,
+            previouslySeenIDs: memory.seenIDs,
+            refreshed: [series(), detachedOccurrence()],
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [])
+    }
+
+    /// The lane changed during downtime — someone re-pulled the card
+    /// somewhere. That decision is fresher than the memory; the tag stays.
+    func testColdStartWithAChangedLaneKeepsTheTag() {
+        let memory = RecurringTagRelease.Memory(
+            seenIDs: ["series"], taggedStatusByID: ["series": .inProgress])
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            previousStatusByID: memory.taggedStatusByID,
+            previouslySeenIDs: memory.seenIDs,
+            refreshed: [series(status: .next), detachedOccurrence()],
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [])
+    }
+}
+
+/// The persisted half of the release rule: what survives a restart, and how
+/// reading degrades when the stored data is missing, foreign, or from another
+/// build.
+final class RecurringTagReleaseMemoryTests: XCTestCase {
+
+    /// The suite writes into the developer's real defaults — whatever was
+    /// there before has to survive the test run (pattern from
+    /// `AppAppearanceTests`).
+    private var savedValue: Any?
+
+    override func setUp() {
+        super.setUp()
+        savedValue = UserDefaults.standard.object(forKey: RecurringTagRelease.Memory.storageKey)
+    }
+
+    override func tearDown() {
+        if let savedValue {
+            UserDefaults.standard.set(savedValue, forKey: RecurringTagRelease.Memory.storageKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: RecurringTagRelease.Memory.storageKey)
+        }
+        super.tearDown()
+    }
+
+    func testMemoryRoundTripsThroughDefaults() {
+        let memory = RecurringTagRelease.Memory(
+            seenIDs: ["a", "b", "c"],
+            taggedStatusByID: ["a": .next, "b": .inProgress])
+        memory.save()
+        XCTAssertEqual(RecurringTagRelease.Memory.load(), memory)
+    }
+
+    /// Fresh install, or first launch of the build that introduced the
+    /// memory: nothing stored means an empty memory, which makes the first
+    /// session behave like the app always did.
+    func testMissingKeyLoadsEmpty() {
+        UserDefaults.standard.removeObject(forKey: RecurringTagRelease.Memory.storageKey)
+        let memory = RecurringTagRelease.Memory.load()
+        XCTAssertTrue(memory.seenIDs.isEmpty)
+        XCTAssertTrue(memory.taggedStatusByID.isEmpty)
+    }
+
+    func testForeignTypesUnderTheKeyLoadEmpty() {
+        UserDefaults.standard.set("not a dictionary", forKey: RecurringTagRelease.Memory.storageKey)
+        let memory = RecurringTagRelease.Memory.load()
+        XCTAssertTrue(memory.seenIDs.isEmpty)
+        XCTAssertTrue(memory.taggedStatusByID.isEmpty)
+    }
+
+    /// A raw value from a build that renamed a case must cost only that
+    /// entry, not the whole memory.
+    func testUnknownStatusRawValueDropsOnlyThatEntry() {
+        UserDefaults.standard.set(
+            [
+                "seen": ["a", "b"],
+                "tagged": ["a": "next", "b": "someFutureLane"],
+            ],
+            forKey: RecurringTagRelease.Memory.storageKey)
+        let memory = RecurringTagRelease.Memory.load()
+        XCTAssertEqual(memory.seenIDs, ["a", "b"])
+        XCTAssertEqual(memory.taggedStatusByID, ["a": .next])
+    }
+
+    /// Only working-lane tags are proof material; Backlog and Done entries
+    /// never reach the persisted form no matter what the caller passes.
+    func testMemoryKeepsOnlyWorkingLaneTags() {
+        let memory = RecurringTagRelease.Memory(
+            seenIDs: [],
+            taggedStatusByID: ["a": .next, "b": .backlog, "c": .done, "d": .inProgress])
+        XCTAssertEqual(memory.taggedStatusByID, ["a": .next, "d": .inProgress])
+    }
+
+    /// The stored raw values are a persisted contract — renaming a case
+    /// silently voids every install's proof (same pin as `wipLimits`).
+    func testStatusRawValuesAreStable() {
+        XCTAssertEqual(KanbanStatus.next.rawValue, "next")
+        XCTAssertEqual(KanbanStatus.inProgress.rawValue, "inProgress")
+    }
 }

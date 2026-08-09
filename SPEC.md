@@ -347,11 +347,26 @@ kostet einen Zug, eine still zurückgeschobene gezogene Karte bräche das Pull-P
 
 Die Freigabe ist bewusst **nicht widerrufbar** und ohne Dialog: Es wird keine
 Nutzer-Entscheidung zurückgenommen, und ein ⌘Z, das ungezogene Arbeit wieder taggt, ist
-genau das, was `RecurringHandoff` auf der Replay-Seite verhindert. **Akzeptierte
-Restlücke:** Ein Abhaken bei geschlossener App hinterlässt keinen „vorigen Refresh" für
-Bedingung 2 — der Tag bleibt dann bis zum nächsten Abhaken oder einem Handgriff stehen.
-Aus Zeitstempeln zu raten wurde verworfen: Das Weiterrollen der Serie setzt selbst
-`lastModifiedDate` neu, es gibt dort nichts Verlässliches.
+genau das, was `RecurringHandoff` auf der Replay-Seite verhindert.
+
+**Der Beweis überlebt den Neustart** (`RecurringTagRelease.Memory`, 09.08.2026): Am Ende
+jedes Refreshs speichert die App, was die Bedingungen 2 und 3 brauchen — welche IDs
+geladen waren und welche Karten einen Arbeits-Tag trugen (ein UserDefaults-Schlüssel,
+`tagReleaseMemory`). Der erste Refresh nach einem Kaltstart wird damit geseedet; ein
+Abhaken, während die App zu war, findet seinen Beweis also beim nächsten Start vor. Die
+Regel selbst ändert sich dadurch nicht, nur ihr Gedächtnis. Fehlt der Speicher, ist er
+beschädigt oder stammt er von einem Build mit anderen Statusnamen, fällt betroffenes
+still weg — ein leeres Gedächtnis heißt nur: Die erste Sitzung verhält sich wie früher
+(Upgrade-Pfad; die Freigabe greift ab der zweiten Sitzung). Aus Zeitstempeln zu raten
+bleibt verworfen: Das Weiterrollen der Serie setzt selbst `lastModifiedDate` neu, es
+gibt dort nichts Verlässliches — der gespeicherte Beweis ist kein Raten.
+
+**Verbleibende, akzeptierte Restlücke:** Wird der Tag *nach* einem externen Abhaken von
+Hand auf einem anderen Gerät erneut in die Notizen getippt, während die App zu ist, ist
+er von einem überlebenden Tag nicht zu unterscheiden und wird freigegeben. Das verlangt
+Hashtag-Handarbeit abseits dieses Macs, ist selbstheilend (ein Zug) und fällt in
+dieselbe Richtung wie jeder andere Zweifelsfall — Karte im Backlog, nie in einer
+Arbeitsspalte.
 
 Im selben Zug abgesichert: `move` schreibt `isCompleted` nur noch, wenn sich der Wert
 tatsächlich ändert — ein seitlicher Zug hat auf einer laufenden Serie keine

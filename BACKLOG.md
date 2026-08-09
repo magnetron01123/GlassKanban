@@ -85,12 +85,16 @@ Begründung, warum später (oder warum grundsätzlich nicht).
   **Nachtrag 09.08.2026:** Antwort (2) galt nur fürs Erledigen *in der App*. Extern
   abgehakt (iPhone, geteilte Liste) bleibt der Tag auf der weiterlaufenden Serie stehen —
   gemessen und behoben, siehe SPEC.md „Extern abgehakt" (`RecurringTagRelease`).
-- **Restlücke der Tag-Freigabe: Abhaken bei geschlossener App** (09.08.2026) — die
-  Freigabe-Regel braucht den vorigen Refresh als Beweis, dass niemand frisch gezogen hat
-  (Bedingung 2). Passiert das externe Abhaken, während die App zu ist, bleibt der Tag bis
-  zum nächsten Abhaken oder einem Handgriff stehen. Bewusst offen gelassen: Beim Kaltstart
-  aus Zeitstempeln zu raten hieße, ohne Beweis Karten zu verschieben — dieselbe Abwägung,
-  an der schon das „Rückwärtsrechnen der Wiederholungsregel" oben gescheitert ist.
+- ~~**Restlücke der Tag-Freigabe: Abhaken bei geschlossener App**~~ (09.08.2026, noch am
+  selben Tag geschlossen) — die Freigabe-Regel braucht den vorigen Refresh als Beweis,
+  dass niemand frisch gezogen hat (Bedingung 2). Statt beim Kaltstart aus Zeitstempeln zu
+  raten (das hieße, ohne Beweis Karten zu verschieben — dieselbe Abwägung, an der schon
+  das „Rückwärtsrechnen der Wiederholungsregel" oben gescheitert ist), **überlebt der
+  Beweis jetzt den Neustart**: `RecurringTagRelease.Memory` persistiert am Ende jedes
+  Refreshs die geladenen IDs und die getaggten Karten und seedet damit den ersten Refresh
+  nach dem Start. Positiv- und Negativfall live gemessen (FINDINGS-2026-08). Verbleibende,
+  kleinere Restlücke (Hand-getippter Tag auf anderem Gerät nach externem Abhaken) steht in
+  SPEC.md, „Extern abgehakt".
 - ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt und am
   27.07.2026 grundlegend neu entschieden: solche Karten werden **nicht mehr ausgeblendet**,
   sondern sinken ans Ende des Backlogs, wo der Falz schneidet („N noch nicht fällig"). Grund:

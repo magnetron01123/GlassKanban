@@ -38,13 +38,63 @@ import Foundation
 /// 5. Exactly one series matches the finished occurrence. Two same-titled
 ///    live series in one list make the match ambiguous, so nothing happens.
 ///
-/// Known limit, accepted: a completion that happened while the app was closed
-/// leaves no "previous refresh" to compare against (condition 2), so its tag
-/// survives until the next completion or a manual drag. Guessing from
-/// timestamps instead was already rejected once in this area — the roll-on
-/// itself bumps `lastModifiedDate`, so there is nothing reliable to guess
-/// from.
+/// A completion that happens while the app is closed is covered by `Memory`:
+/// the end of every refresh persists what condition 2 and 3 need — which
+/// identifiers were fetched, which cards carried a tag — and the first
+/// refresh after a cold start is seeded from it. The rule itself never
+/// changes; only its memory survives the restart. Guessing from timestamps
+/// instead was rejected — the roll-on itself bumps `lastModifiedDate`, so
+/// there is nothing reliable to guess from; a missing or stale memory simply
+/// keeps the tag.
+///
+/// Remaining limit, accepted: a tag typed onto the series by hand on another
+/// device *after* an external completion, while the app is closed, is
+/// indistinguishable from a tag that merely survived — it is released. Rare
+/// (it takes hand-editing the hashtag away from this Mac) and self-healing
+/// with one drag.
 enum RecurringTagRelease {
+
+    /// What the release rule remembers between refreshes, persisted so a
+    /// completion during downtime still meets its proof after a cold start.
+    ///
+    /// One defaults key holding both halves: they are a single proof and must
+    /// not drift apart. Reading tolerates anything — a missing key, foreign
+    /// types, a status raw value from a build that renamed a case — by
+    /// dropping what it cannot vouch for; an empty memory just means the
+    /// first session behaves like the app always did before it existed.
+    struct Memory: Equatable {
+        let seenIDs: Set<String>
+        let taggedStatusByID: [String: KanbanStatus]
+
+        /// Only working-lane tags are proof material (condition 2 never asks
+        /// about anything else); enforcing that here keeps every persisted
+        /// entry meaningful regardless of what the caller passes.
+        init(seenIDs: Set<String>, taggedStatusByID: [String: KanbanStatus]) {
+            self.seenIDs = seenIDs
+            self.taggedStatusByID = taggedStatusByID.filter {
+                $0.value == .next || $0.value == .inProgress
+            }
+        }
+
+        static let storageKey = "tagReleaseMemory"
+
+        static func load(from defaults: UserDefaults = .standard) -> Memory {
+            let stored = defaults.dictionary(forKey: storageKey)
+            let seen = stored?["seen"] as? [String] ?? []
+            let tagged = (stored?["tagged"] as? [String: String] ?? [:])
+                .compactMapValues(KanbanStatus.init(rawValue:))
+            return Memory(seenIDs: Set(seen), taggedStatusByID: tagged)
+        }
+
+        func save(to defaults: UserDefaults = .standard) {
+            defaults.set(
+                [
+                    "seen": Array(seenIDs),
+                    "tagged": taggedStatusByID.mapValues(\.rawValue),
+                ] as [String: Any],
+                forKey: Self.storageKey)
+        }
+    }
 
     /// One fetched reminder, reduced to the values the rule reads. Built from
     /// `EKReminder` by the store; a plain value here so the rule stays
