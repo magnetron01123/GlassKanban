@@ -287,6 +287,16 @@ SPEC.md):
   strikt schlechter als das Anlegedatum allein.
 - **`calendarItemExternalIdentifier` als Identität** — verworfen, gemessen: Die abgelöste
   Kopie bekommt eine eigene, und auf lokalen Listen fehlt das Feld ganz.
+- **Für die Tag-Freigabe nur unter den getaggten Serien auf Eindeutigkeit prüfen** —
+  verworfen: Diese eine Regel bewegt eine Karte, ohne dass jemand hinsieht. Sie prüft
+  deshalb unter *allen* lebenden Serien der Liste; ein zusätzlicher Zweifel kostet dort
+  einen Zug, ein übersehener eine gezogene Karte.
+
+Akzeptierte Restlücke: Trügen zwei Serien einer Liste bitgenau dasselbe Anlegedatum, wäre
+kein Durchgang zuzuordnen. Gemessen tritt das nicht ein — selbst fünf in einem Commit
+geschriebene Erinnerungen kamen mit verschiedenen Anlegedaten heraus —, und der Ausgang
+wäre ohnehin die sichere Richtung: kein Beweis, also keine Freigabe und kein verweigerter
+Zug, sondern nur ein Tag, der einen Zug länger stehen bleibt.
 
 ## Fensterverhalten
 

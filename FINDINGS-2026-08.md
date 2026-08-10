@@ -172,3 +172,18 @@ geprüft, nie auf Nähe — ein Toleranzfenster machte daraus wieder eine Ähnli
 kurz nacheinander angelegte Aufgaben würden einander zu Durchgängen erklären (siehe M0:
 Mikrosekunden trennen sie). Mehrdeutigkeit fällt zu „kein Beweis": Der Zug aus „Erledigt"
 ist dann erlaubt, der Tag bleibt stehen.
+
+### Live-Prüfung der stillen Hälfte (10.08.2026, 22:30–22:38)
+
+Die Tag-Freigabe ist die einzige Regel, die eine Karte bewegt, ohne dass jemand hinsieht —
+Unit-Tests allein tragen sie deshalb nicht. Auf der Scratch-Liste, gegen echtes iCloud,
+beide Richtungen gefahren:
+
+| Schritt | Erwartet | Beobachtet |
+| --- | --- | --- |
+| Wochenserie „Waesche" mit `#next` angelegt | Karte in „Als Nächstes" | ✅ 4/5, Herkunft GK-Messung |
+| Gleichnamige einmalige Aufgabe extern **angelegt und erledigt** | Tag bleibt | ✅ Erledigt 9→10, Serie unverändert in „Als Nächstes", `notes="#next"` |
+| Serie selbst extern abgehakt | Tag binnen eines Syncs weg | ✅ abgelöste Kopie mit dem Anlegedatum der Serie (808086833.731228), danach `notes=""` auf beiden, Karte im Backlog (12→13) |
+
+Die zweite Zeile ist der Fall, den die Titel-Regel falsch entschied: Sie hätte der
+gezogenen Karte den Tag entzogen und sie still ins Backlog geschoben.

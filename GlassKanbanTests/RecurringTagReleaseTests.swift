@@ -10,21 +10,28 @@ import XCTest
 /// still be the user's.
 final class RecurringTagReleaseTests: XCTestCase {
 
+    /// The creation date a series and its own occurrences share — measured to
+    /// be bit-identical against real EventKit (10.08.2026).
+    private static let seriesCreated = Date(timeIntervalSinceReferenceDate: 808_083_284.719828010)
+
     private func series(
         id: String = "series", title: String = "Einkaufen", listID: String = "shared",
-        status: KanbanStatus = .next, isRecurring: Bool = true
+        status: KanbanStatus = .next, isRecurring: Bool = true, created: Date? = nil
     ) -> RecurringTagRelease.Snapshot {
         RecurringTagRelease.Snapshot(
             id: id, title: title, listID: listID,
-            isCompleted: false, isRecurring: isRecurring, status: status)
+            isCompleted: false, isRecurring: isRecurring, status: status,
+            createdAt: created ?? Self.seriesCreated)
     }
 
     private func detachedOccurrence(
-        id: String = "detached", title: String = "Einkaufen", listID: String = "shared"
+        id: String = "detached", title: String = "Einkaufen", listID: String = "shared",
+        created: Date? = nil
     ) -> RecurringTagRelease.Snapshot {
         RecurringTagRelease.Snapshot(
             id: id, title: title, listID: listID,
-            isCompleted: true, isRecurring: false, status: .done)
+            isCompleted: true, isRecurring: false, status: .done,
+            createdAt: created ?? Self.seriesCreated)
     }
 
     func testExternallyCompletedOccurrenceReleasesTheSeriesTag() {
@@ -94,10 +101,10 @@ final class RecurringTagReleaseTests: XCTestCase {
         XCTAssertEqual(released, [])
     }
 
-    /// Two same-titled live series in one list make the match ambiguous.
-    /// Fail closed: a kept tag costs one drag, a wrongly released one breaks
-    /// the pull principle.
-    func testTwoSameTitledSeriesInOneListReleaseNothing() {
+    /// Two live series of one list sharing the occurrence's creation date make
+    /// the match ambiguous. Fail closed: a kept tag costs one drag, a wrongly
+    /// released one breaks the pull principle.
+    func testTwoSeriesSharingTheCreationDateReleaseNothing() {
         let released = RecurringTagRelease.releasedSeriesIDs(
             previousStatusByID: ["series-a": .next, "series-b": .next],
             previouslySeenIDs: ["series-a", "series-b"],
@@ -171,9 +178,11 @@ final class RecurringTagReleaseTests: XCTestCase {
             previouslySeenIDs: ["shop", "bath"],
             refreshed: [
                 series(id: "shop", title: "Einkaufen"),
-                series(id: "bath", title: "Joris baden", status: .inProgress),
+                series(id: "bath", title: "Joris baden", status: .inProgress,
+                       created: Self.seriesCreated.addingTimeInterval(1)),
                 detachedOccurrence(id: "shop-done", title: "Einkaufen"),
-                detachedOccurrence(id: "bath-done", title: "Joris baden"),
+                detachedOccurrence(id: "bath-done", title: "Joris baden",
+                                   created: Self.seriesCreated.addingTimeInterval(1)),
             ],
             deliberatelyMoved: [])
         XCTAssertEqual(released, ["shop", "bath"])
@@ -219,6 +228,60 @@ final class RecurringTagReleaseTests: XCTestCase {
             previousStatusByID: memory.taggedStatusByID,
             previouslySeenIDs: memory.seenIDs,
             refreshed: [series(status: .next), detachedOccurrence()],
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [])
+    }
+
+    // MARK: - Identity by creation date (10.08.2026)
+
+    /// The headline case, and the forbidden direction: a task created *and*
+    /// completed on another device between two refreshes has an identifier
+    /// nobody has seen, so it passes the freshness filter. Under the old title
+    /// rule it then took the tag off a card somebody had pulled. Its creation
+    /// date is its own, so it is not an occurrence of anything.
+    func testAForeignSameTitledTaskDoesNotReleaseTheTag() {
+        let foreign = detachedOccurrence(
+            id: "from-phone", created: Self.seriesCreated.addingTimeInterval(9_999))
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            previousStatusByID: ["series": .next],
+            previouslySeenIDs: ["series"],
+            refreshed: [series(), foreign],
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [], "a namesake must never take a pulled card's tag")
+    }
+
+    /// The other half: renaming the series after the completion used to switch
+    /// the rule off entirely, so the chore kept its tag every cycle.
+    func testARenamedSeriesStillReleases() {
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            previousStatusByID: ["series": .next],
+            previouslySeenIDs: ["series"],
+            refreshed: [series(title: "Einkaufen neu"), detachedOccurrence(title: "Einkaufen")],
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, ["series"])
+    }
+
+    /// Uniqueness is judged among all live series of the list now, not only
+    /// the tagged ones — stricter is the right direction for the one rule that
+    /// can move a card without anybody seeing it.
+    func testAnUntaggedSeriesSharingTheDateBlocksTheRelease() {
+        let twin = series(id: "twin", title: "Etwas anderes", status: .backlog)
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            previousStatusByID: ["series": .next],
+            previouslySeenIDs: ["series"],
+            refreshed: [series(), twin, detachedOccurrence()],
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [], "ambiguous identity means no proof")
+    }
+
+    func testAnOccurrenceWithoutACreationDateReleasesNothing() {
+        let dateless = RecurringTagRelease.Snapshot(
+            id: "detached", title: "Einkaufen", listID: "shared",
+            isCompleted: true, isRecurring: false, status: .done, createdAt: nil)
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            previousStatusByID: ["series": .next],
+            previouslySeenIDs: ["series"],
+            refreshed: [series(), dateless],
             deliberatelyMoved: [])
         XCTAssertEqual(released, [])
     }
@@ -302,4 +365,5 @@ final class RecurringTagReleaseMemoryTests: XCTestCase {
         XCTAssertEqual(KanbanStatus.next.rawValue, "next")
         XCTAssertEqual(KanbanStatus.inProgress.rawValue, "inProgress")
     }
+
 }

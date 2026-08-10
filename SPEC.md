@@ -516,6 +516,12 @@ Sekunde angelegte Aufgaben trennen nur Mikrosekunden, ein Toleranzfenster machte
 einander zu Durchgängen. Passt keine oder mehr als eine Serie, gilt „kein Beweis": Der Zug
 ist dann erlaubt (`RecurringSeriesMatch`).
 
+Dieselbe Identität trägt seit 10.08.2026 auch die **stille** Hälfte — die Tag-Freigabe
+weiter unten, Bedingungen 3 und 5. Dort ist „kein Beweis" die andere Richtung: Der Tag
+bleibt stehen. Live gegen echte iCloud-Daten geprüft, beide Richtungen: eine gleichnamige
+fremde Aufgabe, angelegt und erledigt zwischen zwei Refreshes, ließ den Tag der gezogenen
+Karte stehen; die Serie selbst extern abgehakt gab ihn binnen eines Syncs zurück.
+
 **Extern abgehakt (09.08.2026 gegen echtes iCloud gemessen, nachdem eine wöchentliche
 Karte nach jedem Abhaken erneut in „Als Nächstes" stand):** Nur diese App entfernt den
 Status-Tag *vor* dem Erledigen. Wird eine getaggte wiederkehrende Erinnerung außerhalb
@@ -533,14 +539,17 @@ kostet einen Zug, eine still zurückgeschobene gezogene Karte bräche das Pull-P
 1. Die Serie ist offen, wiederkehrend und trägt einen Status-Tag.
 2. Der vorige Refresh sah **denselben Tag auf derselben ID** — der Tag ist älter als
    dieser Refresh, niemand hat gerade erst gezogen.
-3. Eine erledigte Erinnerung gleichen Titels in derselben Liste ist aufgetaucht, deren
-   **ID nie zuvor geladen wurde** — der Fingerabdruck eines frisch abgelösten Durchgangs.
-   (Eine gewöhnliche Erledigung behält ihre ID; das Abhaken einer gleichnamigen
-   einmaligen Aufgabe kann die Regel darum nicht auslösen.)
+3. Eine erledigte Erinnerung ist aufgetaucht, deren **ID nie zuvor geladen wurde** — der
+   Fingerabdruck eines frisch abgelösten Durchgangs — und deren **Anlegedatum** sie als
+   Durchgang genau dieser Serie ausweist (dieselbe Liste, bitgenau dasselbe Datum; siehe
+   „Erkannt wird ein Durchgang am Anlegedatum" oben). Bis 10.08.2026 stand hier der
+   Titel: Eine auf einem anderen Gerät zwischen zwei Refreshes angelegte **und** erledigte
+   gleichnamige Aufgabe konnte damit einer gezogenen Karte den Tag entziehen.
 4. Der Nutzer hat die Serie seit dem letzten Refresh nicht selbst bewegt — ein Zug im
    Fenster zwischen Sync und Refresh bleibt ein Zug.
-5. Genau **eine** Serie passt auf den Durchgang; bei zwei gleichnamigen Serien in einer
-   Liste passiert nichts.
+5. Genau **eine** lebende Serie der Liste trägt das Anlegedatum des Durchgangs. Geprüft
+   wird das unter *allen* Serien der Liste, nicht nur den getaggten — strenger, weil dies
+   die einzige Regel ist, die eine Karte bewegt, ohne dass jemand hinsieht.
 
 Die Freigabe ist bewusst **nicht widerrufbar** und ohne Dialog: Es wird keine
 Nutzer-Entscheidung zurückgenommen, und ein ⌘Z, das ungezogene Arbeit wieder taggt, ist
@@ -910,8 +919,8 @@ Nicht-Sehen.
     mit „Seit …"-Fußnote
   - **Durchlaufzeit bewusst gefenstert und ohne Wiederkehrer:** erledigte Instanzen
     wiederkehrender Erinnerungen tragen in EventKit das Anlegedatum der *Serie* (ggf. Jahre
-    alt) und keine `hasRecurrenceRules` mehr — erkannt werden sie über den Titel der noch
-    offenen Serie. Und über die ganze Historie gemessen dominierten Backlog-Altlasten den
+    alt) und keine `hasRecurrenceRules` mehr — genau dieses geteilte Anlegedatum erkennt sie
+    (`RecurringSeriesMatch`, seit 10.08.2026; vorher der Titel der noch offenen Serie). Und über die ganze Historie gemessen dominierten Backlog-Altlasten den
     Median (ehrlich, aber eine dauerhafte Anklage — Regel „belohnen, nie bestrafen"). Im
     30-Tage-Fenster beschreibt die Zahl das aktuelle Verhalten und verbessert sich mit ihm
   - Alles aus den Erinnerungen abgeleitet, die die App ohnehin lädt — keine zweite
