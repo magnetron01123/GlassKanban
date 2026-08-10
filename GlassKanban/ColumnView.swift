@@ -36,7 +36,17 @@ struct ColumnView: View {
     /// is a later, and there is more of the same", the other is "there is a
     /// past".
     private var restingCards: [KanbanCard] {
-        Self.restingCut(cards, for: status, foldsNotYetDue: store.foldNotYetDue)
+        // No fold while the board is narrowed down. The fold answers "what
+        // does the resting board need?" — but a search has already answered
+        // that question, and cutting the answer away afterwards leaves the
+        // lane showing nothing at all: not the card, and not "Keine Treffer"
+        // either, because the card *was* found. Searching for a ticket that
+        // is sitting right there and being shown an empty lane is the worst
+        // thing Finden can do. The board makes this same call in two other
+        // places already — it reveals a card whose editor just closed, and it
+        // resets the whole filter rather than let a brand-new ticket hide.
+        guard !store.isFiltering else { return cards }
+        return Self.restingCut(cards, for: status, foldsNotYetDue: store.foldNotYetDue)
     }
 
     /// The resting cut as a function, because two places must agree on it:

@@ -868,7 +868,13 @@ final class RemindersStore: ObservableObject {
     /// mark where the card went, which is wayfinding, and remote moves get
     /// them too.
     @discardableResult
-    func move(cardID: String, to status: KanbanStatus, undoManager: UndoManager? = nil, feedback: Bool = true) -> KanbanStatus? {
+    func move(
+        cardID: String,
+        to status: KanbanStatus,
+        undoManager: UndoManager? = nil,
+        feedback: Bool = true,
+        restoredCompletion: Date? = nil
+    ) -> KanbanStatus? {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
         guard origin != status else { return nil }
@@ -910,8 +916,20 @@ final class RemindersStore: ObservableObject {
         // `completionDate`, and a lateral move has no business rewriting
         // completion fields on a live recurring series.
         let completed = (status == .done)
+        // The day something was finished on is a fact, not a side effect of
+        // where its card sits. Clearing `isCompleted` drops `completionDate`,
+        // and setting it again stamps *now* — so pulling last week's card
+        // back out of Erledigt and pressing ⌘Z filed it as finished today,
+        // moving it to the top of the lane and counting it into the streak,
+        // the weekly figure and the lead-time median. In Reminders the old
+        // date was gone for good. Carried through the move instead, and
+        // handed to the undo below so the way back restores it too.
+        let previousCompletionDate = reminder.completionDate
         if reminder.isCompleted != completed {
             reminder.isCompleted = completed
+            if completed, let restoredCompletion {
+                reminder.completionDate = restoredCompletion
+            }
         }
         do {
             try eventStore.save(reminder, commit: true)
@@ -937,7 +955,9 @@ final class RemindersStore: ObservableObject {
         // that never happened spends itself doing nothing, and the *next* ⌘Z
         // then reaches back past it into an edit the user did mean to keep.
         register(undoManager, name: String(localized: "Move")) { store in
-            store.move(cardID: cardID, to: origin, undoManager: undoManager, feedback: false)
+            store.move(
+                cardID: cardID, to: origin, undoManager: undoManager,
+                feedback: false, restoredCompletion: previousCompletionDate)
         }
         // Who this identifier belongs to from here on. Completing a repeating
         // card hands it to the next turn of the series; a move the user made
@@ -977,7 +997,7 @@ final class RemindersStore: ObservableObject {
         if let index = cards.firstIndex(where: { $0.id == cardID }),
            !(status == .done && wasRecurringSeries) {
             cards[index].status = status
-            cards[index].completionDate = (status == .done) ? .now : nil
+            cards[index].completionDate = (status == .done) ? (restoredCompletion ?? .now) : nil
         }
         // Not for a repeating card: this id is the next turn of the series by
         // now, so the strike-through would be drawn across a Backlog card that
@@ -1054,9 +1074,13 @@ final class RemindersStore: ObservableObject {
 
         let cardID = reminder.calendarItemIdentifier
         newlyCreatedCardID = cardID
-        register(undoManager, name: String(localized: "Create Ticket")) { store in
-            store.deleteTicket(cardID: cardID, undoManager: undoManager)
-        }
+        // Deliberately *not* registered here. A creation that gets taken back
+        // must leave no trace on the stack, and there is no way to withdraw a
+        // single entry once it is on it — the previous attempt cleared the
+        // whole stack instead, which silently threw away every undo the
+        // session had, including a card the user had just deleted while the
+        // confirmation promised ⌘Z would bring it back. The entry is booked
+        // when the ticket is kept (see `finalizeNewTicket`).
         // Optimistic, like `move`: the editor opens on this card immediately,
         // it cannot wait out the debounced refresh.
         if let card = Self.card(from: reminder) {
@@ -1075,6 +1099,7 @@ final class RemindersStore: ObservableObject {
         guard newlyCreatedCardID == cardID else { return }
         newlyCreatedCardID = nil
         guard !keep, let ticket = loadEditableTicket(cardID: cardID) else {
+            registerCreation(cardID: cardID, undoManager: undoManager)
             keepNewTicketInSight(cardID: cardID)
             return
         }
@@ -1084,6 +1109,7 @@ final class RemindersStore: ObservableObject {
             && ticket.dueDate == nil
             && ticket.priority == 0
         guard isEmpty else {
+            registerCreation(cardID: cardID, undoManager: undoManager)
             keepNewTicketInSight(cardID: cardID)
             return
         }
@@ -1100,6 +1126,15 @@ final class RemindersStore: ObservableObject {
     /// The find settings lose that argument: they were set before this ticket
     /// existed, and the lane's own fold already bends the same way to keep a
     /// just-closed card visible (see `ColumnView.onChange(of:editingCardID)`).
+    /// Books the undo entry for a creation that is being kept. Both routes
+    /// out of "kept" come through here, so ⌘Z reaches a new ticket whether it
+    /// was filled in or handed over to Reminders.
+    private func registerCreation(cardID: String, undoManager: UndoManager?) {
+        register(undoManager, name: String(localized: "Create Ticket")) { store in
+            store.deleteTicket(cardID: cardID, undoManager: undoManager)
+        }
+    }
+
     private func keepNewTicketInSight(cardID: String) {
         guard isFiltering else { return }
         let isVisible = KanbanStatus.allCases.contains { status in
@@ -1128,12 +1163,10 @@ final class RemindersStore: ObservableObject {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         try? eventStore.remove(reminder, commit: true)
         cards.removeAll { $0.id == cardID }
-        // The "Create Ticket" entry the "+" registered describes a creation
-        // that has just been taken back, so its undo would find nothing and
-        // return silently — spending a ⌘Z that then failed to reach the edit
-        // the user actually meant to undo. Removing the reminder is not a
-        // change to undo; it is the change never having happened.
-        undoManager?.removeAllActions(withTarget: self)
+        // Nothing to withdraw: the creation was never booked (see
+        // `createTicketForEditing`). Removing the reminder is not a change to
+        // undo, it is the change never having happened — and every earlier
+        // entry on the stack stays exactly where it was.
         scheduleRefreshAfterWrite()
     }
 

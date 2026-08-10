@@ -133,7 +133,14 @@ struct TicketEditSheet: View {
             EditorKeyCommands(
                 isEnabled: !isDuePopoverPresented,
                 onCommit: onClose,
-                onCancel: cancel))
+                onCancel: cancel,
+                // Closing the window is the other route AppKit takes without
+                // SwiftUI running a disappear pass — and unlike quitting, the
+                // app stays alive, so nothing later cleans up. Measured:
+                // ⌘N followed by ⌘W left an untitled reminder in the user's
+                // list for good, exactly the ghost `finalizeNewTicket` exists
+                // to prevent.
+                onWindowClose: closeAndPersist))
         .task { load() }
         .onDisappear { closeAndPersist() }
         // Quitting is the one close that does not go through `onDisappear`:
@@ -146,6 +153,7 @@ struct TicketEditSheet: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
             closeAndPersist()
         }
+
     }
 
     /// Everything a close has to do, on either route in. Runs at most once:
@@ -936,6 +944,9 @@ private struct EditorKeyCommands: NSViewRepresentable {
     var isEnabled: Bool
     var onCommit: () -> Void
     var onCancel: () -> Void
+    /// Called when the window this view lives in is about to close. The view
+    /// is the one place that knows which window that is.
+    var onWindowClose: () -> Void
 
     func makeNSView(context: Context) -> NSView {
         let view = MonitoringView()
@@ -952,13 +963,16 @@ private struct EditorKeyCommands: NSViewRepresentable {
         view.isEnabled = isEnabled
         view.onCommit = onCommit
         view.onCancel = onCancel
+        view.onWindowClose = onWindowClose
     }
 
     final class MonitoringView: NSView {
         var isEnabled = true
         var onCommit: () -> Void = {}
         var onCancel: () -> Void = {}
+        var onWindowClose: () -> Void = {}
         private var monitor: Any?
+        private var windowObserver: Any?
         /// Set the moment this card has been given its answer.
         ///
         /// A closed card takes a third of a second to animate off the board
@@ -971,7 +985,14 @@ private struct EditorKeyCommands: NSViewRepresentable {
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
-            guard window != nil else { return removeMonitor() }
+            guard let window else { return removeMonitor() }
+            if windowObserver == nil {
+                windowObserver = NotificationCenter.default.addObserver(
+                    forName: NSWindow.willCloseNotification, object: window, queue: .main
+                ) { [weak self] _ in
+                    self?.onWindowClose()
+                }
+            }
             guard monitor == nil else { return }
             monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                 guard let self else { return event }
@@ -984,6 +1005,8 @@ private struct EditorKeyCommands: NSViewRepresentable {
         private func removeMonitor() {
             monitor.map(NSEvent.removeMonitor)
             monitor = nil
+            windowObserver.map(NotificationCenter.default.removeObserver)
+            windowObserver = nil
         }
 
         /// Returns nil to swallow the key, the event itself to let it travel
