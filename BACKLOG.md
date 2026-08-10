@@ -273,6 +273,21 @@ Verworfen beim Umbau des Replay-Zauns auf eine Reihenfolge (Regel in SPEC.md,
   war es, und vier von sechs Schreibpfaden prüften nicht. Eine Invariante, die jeder neue
   Pfad erneut befolgen muss, ist keine.
 
+## Zuordnung von Durchgang und Serie (10.08.2026)
+
+Verworfen beim Umstieg von Titel auf Anlegedatum (Messung in FINDINGS-2026-08, Regel in
+SPEC.md):
+
+- **Ein Toleranzfenster auf das Anlegedatum** („innerhalb von N Sekunden") — verworfen: Das
+  machte aus einer Identität eine Ähnlichkeit. Gemessen trennen zwei in einem Rutsch
+  angelegte Aufgaben nur Mikrosekunden; sie würden einander zu Durchgängen erklären.
+  Gleichheit oder nichts, Mehrdeutigkeit fällt zu „kein Beweis".
+- **Den Titel als zusätzliche UND-Bedingung behalten** — verworfen: Das ließe den
+  Umbenennen-Fall offen (Serie nach dem Erledigen umbenannt → Schutz weg) und wäre damit
+  strikt schlechter als das Anlegedatum allein.
+- **`calendarItemExternalIdentifier` als Identität** — verworfen, gemessen: Die abgelöste
+  Kopie bekommt eine eigene, und auf lokalen Listen fehlt das Feld ganz.
+
 ## Fensterverhalten
 
 - **Menüleisten-Modus / Always-on-Top** — MVP nutzt ein normales Fenster.

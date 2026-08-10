@@ -504,6 +504,18 @@ Das Gegenstück bleibt bestehen: Eine erledigte Ausführung aus „Erledigt" **h
 lehnt die App weiterhin mit „Nicht zurückgeholt" ab, weil das die Aufgabe doppelt aufs
 Board legen würde.
 
+**Erkannt wird ein Durchgang am Anlegedatum, nicht am Titel** (seit 10.08.2026): Der
+abgelöste Durchgang trägt bitgenau das Anlegedatum seiner Serie — gemessen über den
+App-Weg, über einen iCloud-Roundtrip und beim Abhaken auf dem iPhone (FINDINGS-2026-08).
+Eine gewöhnliche Aufgabe trägt ihr eigenes. Damit fällt beides weg, was die Titel-Regel
+falsch machte: Eine einmalige Aufgabe, die zufällig genauso heißt wie eine Serie, **lässt
+sich wieder zurückholen** (vorher nie, mit einer Begründung, die über diese Karte schlicht
+nicht stimmte); und ein **Umbenennen der Serie** nach dem Erledigen setzt den Schutz nicht
+mehr außer Kraft. Verglichen wird auf **Gleichheit, nie auf Nähe** — zwei in derselben
+Sekunde angelegte Aufgaben trennen nur Mikrosekunden, ein Toleranzfenster machte sie
+einander zu Durchgängen. Passt keine oder mehr als eine Serie, gilt „kein Beweis": Der Zug
+ist dann erlaubt (`RecurringSeriesMatch`).
+
 **Extern abgehakt (09.08.2026 gegen echtes iCloud gemessen, nachdem eine wöchentliche
 Karte nach jedem Abhaken erneut in „Als Nächstes" stand):** Nur diese App entfernt den
 Status-Tag *vor* dem Erledigen. Wird eine getaggte wiederkehrende Erinnerung außerhalb
