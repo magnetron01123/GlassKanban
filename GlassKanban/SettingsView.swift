@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import EventKit
 import ServiceManagement
 
@@ -115,7 +116,15 @@ struct GeneralSettingsView: View {
 
             Toggle("Start at Login", isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { _, enabled in
-                    guard !isSyncingLaunchAtLogin else { return }
+                    // The flag alone did not hold: SwiftUI delivers this after
+                    // the sync has already cleared it, so pulling the real
+                    // state in looked like a user decision and unregistered
+                    // the login item the user had just switched on. Comparing
+                    // against the system is the guard that cannot race —
+                    // if it already stands this way, there is nothing to do.
+                    guard !isSyncingLaunchAtLogin,
+                          (SMAppService.mainApp.status == .enabled) != enabled
+                    else { return }
                     do {
                         if enabled {
                             try SMAppService.mainApp.register()
@@ -128,7 +137,13 @@ struct GeneralSettingsView: View {
                         // broken switch; the usual cause is macOS blocking the
                         // registration in "Anmeldeobjekte", which the user can
                         // only act on if they are told.
-                        launchAtLoginError = error.localizedDescription
+                        // Not `error.localizedDescription`: that is
+                        // "SMAppServiceErrorDomain error 1", in English, in a
+                        // German app, naming neither cause nor remedy. The
+                        // cause is nearly always the same one, and it is
+                        // actionable — so the app says that instead.
+                        launchAtLoginError = String(
+                            localized: "macOS blocks the login item. Allow Glass Kanban under Login Items in System Settings.")
                         syncLaunchAtLogin()
                     }
                 }
@@ -138,7 +153,14 @@ struct GeneralSettingsView: View {
                         get: { launchAtLoginError != nil },
                         set: { if !$0 { launchAtLoginError = nil } })
                 ) {
-                    Button("OK") {}
+                    // A way there, not just the news — the same shape the
+                    // access notice uses.
+                    Button("Open System Settings") {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    Button("OK", role: .cancel) {}
                 } message: {
                     Text(launchAtLoginError ?? "")
                 }

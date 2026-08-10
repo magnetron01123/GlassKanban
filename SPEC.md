@@ -185,6 +185,39 @@ ist das von einem Rückschieber nicht zu unterscheiden und wird überschrieben. 
 *anderer* Wert — der häufigere Fall — zieht den Eintrag dagegen sofort und endgültig
 zurück.
 
+### Ehrliche Zustände und Belohnungen (10.08.2026, aus dem Nutzer-Review)
+
+- **Vor der ersten Antwort sagt das Board nichts.** Bisher blitzte bei jedem Start
+  „Nichts zu tun" auf, auf großen oder frisch synchronisierenden Datenbanken sekundenlang.
+- **„Keine Erinnerungslisten" ist ein eigener Fall.** Gibt es auf dem Mac überhaupt keine
+  Liste, führte der Weg bisher in ein Einstellungs-Register, das die schlechte Nachricht
+  nur wiederholen konnte; jetzt führt er in die Erinnerungen-App, wo eine Liste entsteht.
+- **Leere Spalten laden nicht ein, während gefiltert wird.** „Fertigwerden beginnt hier"
+  über einer Spalte, die drei Karten hält, ist eine falsche Aussage über das Board.
+- **Die Wochenzahl erscheint erst nach einer Woche.** Acht Aufgaben am ersten Tag wurden
+  zu „56 pro Woche", zwei Zeilen unter „8 Aufgaben dieses Jahr" und neben einem Diagramm
+  mit 29 leeren Tagen. Der Tipp nennt jetzt den tatsächlich beobachteten Zeitraum.
+- **„Deine längste Folge bisher" steht nur, wenn es etwas heißt** — ab drei Tagen und
+  während der Rekord entsteht, nicht ab der allerersten Aufgabe und nicht wochenlang.
+  Aufmerksamkeit gehört Ereignissen, nicht Dauerzuständen.
+- **Die Flamme nickt nur bei einer Erledigung** — nicht beim Rückgängigmachen und nicht um
+  Mitternacht, wenn der Tageszähler auf null springt.
+- **„Erst abschließen" ist eine Korrektur, kein Zug:** kein Erledigt-Klang, kein zweiter
+  Undo-Schritt. Vorher stellte ⌘Z danach genau die eben abgelehnte Überlastung wieder her.
+- **Der WIP-Dialog nennt die Zahl, mit der entschieden wurde** (die ganze Spalte), nicht
+  die gefilterte Ansicht. Der Spaltenkopf zeigt weiterhin, was auf dem Schirm ist.
+- **Ein neues Ticket landet nur in einer beschreibbaren Liste.** War die Zielliste
+  schreibgeschützt, tat das „+" sichtbar nichts — beliebig oft, ohne Meldung.
+- **Umbenennen schreibt nur bei echter Änderung.** Ein gespeicherter Titel mit
+  Randleerzeichen galt sonst als geändert und setzte die Verweildauer der Karte zurück.
+- **Anlegen und erstes Befüllen sind ein Undo-Schritt.**
+- **Finden durchsucht die ganze Notiz und das URL-Feld**, nicht nur die drei Zeilen, die
+  die Karte zeigt.
+- **„Beim Anmelden starten" nimmt sich nicht mehr selbst zurück.** Das Nachziehen des
+  Systemzustands galt als Nutzeraktion und meldete den Eintrag ab; im Fehlerfall stand
+  eine rohe englische Systemmeldung ohne Ursache. Jetzt: ein eigener Satz und ein Knopf in
+  die Anmeldeobjekte.
+
 ### Das Sicherheitsnetz (10.08.2026, aus dem Nutzer-Review)
 
 - **⌘Z verliert nie mehr als den einen Schritt.** Eine zurückgenommene Neuanlage („+"

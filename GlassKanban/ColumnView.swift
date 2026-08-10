@@ -138,7 +138,10 @@ struct ColumnView: View {
     /// already says so once, in the middle, and four ghosts murmuring behind
     /// that panel would be the same news four more times.
     private var showsEmptySlot: Bool {
-        guard cards.isEmpty, store.emptiness == nil else { return false }
+        // Not while the board is narrowed down: the lane is not empty, it is
+        // filtered, and "Fertigwerden beginnt hier" over a lane that holds
+        // three cards is the app stating something untrue about the board.
+        guard cards.isEmpty, store.emptiness == nil, !store.isFiltering else { return false }
         switch status {
         case .inProgress:
             return !(store.cards(for: .next).isEmpty && store.cards(for: .backlog).isEmpty)

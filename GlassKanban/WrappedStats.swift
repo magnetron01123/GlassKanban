@@ -57,6 +57,9 @@ struct WrappedStats: Equatable {
     /// Completions per day over the trend window — the pace behind the
     /// forecast, not a lifetime average a long quiet stretch would flatten.
     var throughputPerDay: Double = 0
+    /// Days of history the pace was measured over — the weekly figure is only
+    /// stated once this reaches `minObservedDaysForWeekly`.
+    var observedDays: Int = 0
     /// Sample size behind `throughputPerDay`, and the forecast's data guard.
     var throughputSampleCount: Int = 0
     /// Days in the trend window with at least one completion.
@@ -101,6 +104,14 @@ struct WrappedStats: Equatable {
     /// Below this many completions in the trend window the forecast hides:
     /// a fortnight with two lucky days would produce a wild estimate.
     static let minSampleForForecast = 5
+
+    /// How much history a *weekly* figure needs before it is stated. The
+    /// per-day pace stays honest from the first day — it says how fast the
+    /// board has been. Multiplying it by seven turns that into a claim about
+    /// a week that has not happened: eight tasks on a first day read as "56
+    /// pro Woche", two lines under "8 Aufgaben dieses Jahr" and beside a
+    /// chart of 29 empty days.
+    static let minObservedDaysForWeekly = 7
 
     /// Round numbers worth a nod. They start at 50 because the first weeks of
     /// a year should not fire one every other day.
@@ -190,6 +201,7 @@ struct WrappedStats: Equatable {
             totalCompleted: records.count,
             historyStart: dates.min(),
             throughputPerDay: Double(sampleCount) / Double(observedDays),
+            observedDays: observedDays,
             throughputSampleCount: sampleCount,
             consistencyActiveDays: last30.filter(\.didComplete).count,
             last30: last30,

@@ -1,1324 +1,3135 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "“%@” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "„%@“ wiederholt sich, und die Serie läuft bereits weiter. Die erledigte Ausführung zurückzuholen würde sie doppelt auf das Board legen." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "“%@” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice." } }
+  "sourceLanguage": "en",
+  "strings": {
+    "%@, %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %@"
+          }
+        }
       }
     },
-    "“%@” repeats. The turn you finished is filed away and this card is already the next one — undoing would change work that has not even been pulled yet." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "„%@“ wiederholt sich. Der erledigte Durchgang ist abgelegt und diese Karte ist bereits der nächste — rückgängig würde also Arbeit ändern, die noch niemand gezogen hat." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "“%@” repeats. The turn you finished is filed away and this card is already the next one — undoing would change work that has not even been pulled yet." } }
-      }
-    },
-    "1 task" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "1 Aufgabe" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "1 task" } }
-      }
-    },
-    "1 day to the record" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch 1 Tag bis zum Rekord" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "1 day to the record" } }
-      }
-    },
-    "Accessing Reminders…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zugriff auf Erinnerungen…" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Accessing Reminders…" } }
-      }
-    },
-    "Add a new card" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neue Karte anlegen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add a new card" } }
-      }
-    },
-    "All" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "All" } }
-      }
-    },
-    "Appearance" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erscheinungsbild" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Appearance" } }
-      }
-    },
-    "Backlog" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Backlog" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Backlog" } }
-      }
-    },
-    "Best Day" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bester Tag" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Best Day" } }
-      }
-    },
-    "Board" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Board" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Board" } }
-      }
-    },
-    "Board is filtered — %lld active (⌘F)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Board ist gefiltert — %lld aktiv (⌘F)" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Board is filtered — %lld active (⌘F)" } }
-      }
-    },
-    "Cancel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Abbrechen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } }
-      }
-    },
-    "Captured" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erfasst" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Captured" } }
-      }
-    },
-    "Choose Lists" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Listen wählen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose Lists" } }
-      }
-    },
-    "Choose, don't collect" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wählen statt sammeln" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose, don't collect" } }
-      }
-    },
-    "Clear search" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Suche löschen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear search" } }
-      }
-    },
-    "Click to edit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Klick öffnet Bearbeiten" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Click to edit" } }
-      }
-    },
-    "Close card" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Karte schließen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close card" } }
-      }
-    },
-    "Collapse Not-Yet-Due Items" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch nicht Fälliges einklappen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Collapse Not-Yet-Due Items" } }
-      }
-    },
-    "Couldn't Start at Login" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beim Anmelden starten nicht möglich" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't Start at Login" } }
-      }
-    },
-    "Create Ticket" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ticket anlegen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create Ticket" } }
-      }
-    },
-    "Dark" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dunkel" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dark" } }
-      }
-    },
-    "Delete" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Löschen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
-      }
-    },
-    "Delete “%@”?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "„%@“ löschen?" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete “%@”?" } }
-      }
-    },
-    "Delete Ticket" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ticket löschen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete Ticket" } }
-      }
-    },
-    "Get it out of your head" : {
-      "comment" : "Empty-lane appeal for Backlog. Four different sentence shapes across the four lanes, all under ~28 characters and single-line; deliberately avoids repeating a word its neighbour \"Choose, don't collect\" uses.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nichts im Kopf behalten" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get it out of your head" } }
-      }
-    },
-    "Done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erledigt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } }
-      }
-    },
-    "Due" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fällig" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Due" } }
-      }
-    },
-    "Due %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fällig %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Due %@" } }
-      }
-    },
-    "Due Date" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fälligkeit" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Due Date" } }
-      }
-    },
-    "Edit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bearbeiten" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } }
-      }
-    },
-    "Find …" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Finden …" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Find …" } }
-      }
-    },
-    "Find a task" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aufgabe finden" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Find a task" } }
-      }
-    },
-    "Find a task (⌘F)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aufgabe finden (⌘F)" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Find a task (⌘F)" } }
-      }
-    },
-    "Find, board is filtered, %lld restrictions active" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "Finden, Board ist gefiltert, 1 Einschränkung aktiv" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "Finden, Board ist gefiltert, %lld Einschränkungen aktiv" } }
+    "%lld cards": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Karte"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Karten"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "Find, board is filtered, 1 restriction active" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "Find, board is filtered, %lld restrictions active" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld card"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld cards"
+                }
+              }
             }
           }
         }
       }
     },
-    "Finish First" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erst abschließen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Finish First" } }
-      }
-    },
-    "Finish before you stack" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lieber abschließen als stapeln" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Finish before you stack" } }
-      }
-    },
-    "Finishing starts here" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fertigwerden beginnt hier" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Finishing starts here" } }
-      }
-    },
-    "General" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Allgemein" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "General" } }
-      }
-    },
-    "Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Glass Kanban benötigt Vollzugriff auf deine Erinnerungen, um das Board anzuzeigen. Erlaube den Zugriff in den Systemeinstellungen unter Datenschutz & Sicherheit → Erinnerungen." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders." } }
-      }
-    },
-    "Hide older" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ältere ausblenden" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hide older" } }
-      }
-    },
-    "High" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hoch" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "High" } }
-      }
-    },
-    "High priority" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hohe Priorität" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "High priority" } }
-      }
-    },
-    "In Progress" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "In Bearbeitung" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "In Progress" } }
-      }
-    },
-    "In this column for %lld days" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Seit %lld Tagen in dieser Spalte" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "In this column for %lld days" } }
-      }
-    },
-    "Last %lld Days" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzte %lld Tage" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last %lld Days" } }
-      }
-    },
-    "Last %lld days: something done on %lld of them" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzte %lld Tage: an %lld davon etwas erledigt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last %lld days: something done on %lld of them" } }
-      }
-    },
-    "Lead Time" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Durchlaufzeit" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lead Time" } }
-      }
-    },
-    "Less at once, more done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Weniger gleichzeitig, mehr fertig" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Less at once, more done" } }
-      }
-    },
-    "Light" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hell" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Light" } }
-      }
-    },
-    "List" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Liste" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "List" } }
-      }
-    },
-    "List %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Liste %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "List %@" } }
-      }
-    },
-    "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Little's Law: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten %lld Tage — eine Schätzung, kein Versprechen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise" } }
-      }
-    },
-    "Lists" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Listen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lists" } }
-      }
-    },
-    "Longest Streak" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Längste Folge" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Longest Streak" } }
-      }
-    },
-    "Low" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Niedrig" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Low" } }
-      }
-    },
-    "Low priority" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Niedrige Priorität" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Low priority" } }
-      }
-    },
-    "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Median von „erfasst“ bis „erledigt“ bei einmaligen Aufgaben der letzten %lld Tage — mit Auslastung und Tempo die dritte Größe in Little's Law" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law" } }
-      }
-    },
-    "Medium" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mittel" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Medium" } }
-      }
-    },
-    "Medium priority" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mittlere Priorität" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Medium priority" } }
-      }
-    },
-    "Milestone reached: %lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Meilenstein erreicht: %lld" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Milestone reached: %lld" } }
-      }
-    },
-    "Milestone reached: %lld tasks done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Meilenstein erreicht: %lld erledigte Aufgaben" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Milestone reached: %lld tasks done" } }
-      }
-    },
-    "Most Used List" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Häufigste Liste" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Most Used List" } }
-      }
-    },
-    "Move" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verschieben" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Move" } }
-      }
-    },
-    "Move to" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verschieben nach" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Move to" } }
-      }
-    },
-    "Move to %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verschieben nach %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Move to %@" } }
-      }
-    },
-    "New Ticket" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neues Ticket" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "New Ticket" } }
-      }
-    },
-    "Next Up" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Als Nächstes" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next Up" } }
-      }
-    },
-    "No Access to Reminders" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Zugriff auf Erinnerungen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Access to Reminders" } }
-      }
-    },
-    "No Date" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Datum" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Date" } }
-      }
-    },
-    "No Limit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Limit" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Limit" } }
-      }
-    },
-    "No List Selected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Liste ausgewählt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No List Selected" } }
-      }
-    },
-    "No Matches" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Treffer" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Matches" } }
-      }
-    },
-    "No Notes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Notizen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Notes" } }
-      }
-    },
-    "No URL" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine URL" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No URL" } }
-      }
-    },
-    "No access to Reminders. Allow it in System Settings under “Privacy & Security”." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kein Zugriff auf Erinnerungen. In den Systemeinstellungen unter „Datenschutz & Sicherheit“ freigeben." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No access to Reminders. Allow it in System Settings under “Privacy & Security”." } }
-      }
-    },
-    "No reminder lists found" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Erinnerungslisten gefunden" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No reminder lists found" } }
-      }
-    },
-    "None" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "None" } }
-      }
-    },
-    "Not Deleted" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht gelöscht" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Deleted" } }
-      }
-    },
-    "Not Moved" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht verschoben" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Moved" } }
-      }
-    },
-    "Not Renamed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht umbenannt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Renamed" } }
-      }
-    },
-    "Not Restored" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht zurückgeholt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Restored" } }
-      }
-    },
-    "Not Saved" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht gespeichert" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Saved" } }
-      }
-    },
-    "Not Undone" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht rückgängig gemacht" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Undone" } }
-      }
-    },
-    "Notes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Notizen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notes" } }
-      }
-    },
-    "Nothing to Do" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nichts zu tun" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing to Do" } }
-      }
-    },
-    "Now" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jetzt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Now" } }
-      }
-    },
-    "OK" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "OK" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } }
-      }
-    },
-    "%@, %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%@, %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@, %@" } }
-      }
-    },
-    "Older items live in Reminders" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Älteres liegt in Erinnerungen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Older items live in Reminders" } }
-      }
-    },
-    "One task keeps the streak alive" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine Aufgabe hält die Folge" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "One task keeps the streak alive" } }
-      }
-    },
-    "One task starts a new streak" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eine Aufgabe startet eine neue Folge" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "One task starts a new streak" } }
-      }
-    },
-    "Only finished counts" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur Fertiges zählt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Only finished counts" } }
-      }
-    },
-    "Open Apple Reminders to create or edit tasks (⌘N)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Apple Reminders to create or edit tasks (⌘N)" } }
-      }
-    },
-    "Open System Settings" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Systemeinstellungen öffnen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open System Settings" } }
-      }
-    },
-    "Open in Reminders" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "In Erinnerungen öffnen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open in Reminders" } }
-      }
-    },
-    "Over your limit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Über deinem Limit" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Over your limit" } }
-      }
-    },
-    "Overdue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Überfällig" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Overdue" } }
-      }
-    },
-    "Per Week" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pro Woche" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Per Week" } }
-      }
-    },
-    "Recap" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rückblick" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recap" } }
-      }
-    },
-    "Recurring tasks whose next due date hasn't arrived yet rest behind the fold at the bottom of the Backlog — one click brings them forward, nothing is ever hidden for good. Beyond %lld cards, the rest folds regardless." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wiederkehrende Aufgaben, deren nächster Termin noch nicht erreicht ist, ruhen hinter der Falz-Zeile am Fuß des Backlogs — ein Klick holt sie hervor, ausgeblendet wird nie etwas. Über %lld Karten klappt der Rest unabhängig davon ein." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recurring tasks whose next due date hasn't arrived yet rest behind the fold at the bottom of the Backlog — one click brings them forward, nothing is ever hidden for good. Beyond %lld cards, the rest folds regardless." } }
-      }
-    },
-    "Refresh" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisieren" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh" } }
-      }
-    },
-    "Remove Date" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Datum entfernen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove Date" } }
-      }
-    },
-    "Rename" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Umbenennen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rename" } }
-      }
-    },
-    "Reminders" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erinnerungen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reminders" } }
-      }
-    },
-    "Repeats" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wiederholend" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Repeats" } }
-      }
-    },
-    "Reset All" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles zurücksetzen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset All" } }
-      }
-    },
-    "Reset Filters" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Filter zurücksetzen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset Filters" } }
-      }
-    },
-    "Same day" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Am selben Tag" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Same day" } }
-      }
-    },
-    "Show %lld more" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld weitere anzeigen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show %lld more" } }
-      }
-    },
-    "Show %lld older" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld ältere anzeigen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show %lld older" } }
-      }
-    },
-    "Show All" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle anzeigen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show All" } }
-      }
-    },
-    "Show These Lists on the Board" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese Listen im Board anzeigen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show These Lists on the Board" } }
-      }
-    },
-    "Show less" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Weniger anzeigen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show less" } }
-      }
-    },
-    "Since %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Seit %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Since %@" } }
-      }
-    },
-    "Sound on Completion" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ton beim Erledigen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sound on Completion" } }
-      }
-    },
-    "Start at Login" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beim Anmelden starten" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start at Login" } }
-      }
-    },
-    "Statistics" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Statistiken" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Statistics" } }
-      }
-    },
-    "Statistics. No current streak" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Statistiken. Zurzeit keine Folge" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Statistics. No current streak" } }
-      }
-    },
-    "Statistics. Streak: %lld days in a row with at least one task done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "Statistiken. Folge: %lld Tag mit mindestens einer erledigten Aufgabe" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "Statistiken. Folge: %lld Tage nacheinander mit mindestens einer erledigten Aufgabe" } }
+    "%lld days": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tage"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "Statistics. Streak: %lld day with at least one task done" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "Statistics. Streak: %lld days in a row with at least one task done" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days"
+                }
+              }
             }
           }
         }
       }
     },
-    "Strongest Weekday" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stärkster Wochentag" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Strongest Weekday" } }
-      }
-    },
-    "System" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach System" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "System" } }
-      }
-    },
-    "That's Fine" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Passt schon" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "That's Fine" } }
-      }
-    },
-    "This Week" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese Woche" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This Week" } }
-      }
-    },
-    "This task" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diese Aufgabe" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This task" } }
-      }
-    },
-    "Time" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Uhrzeit" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time" } }
-      }
-    },
-    "Time Left" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bis fertig" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time Left" } }
-      }
-    },
-    "Title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Titel" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Title" } }
-      }
-    },
-    "Title, done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Titel, erledigt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Title, done" } }
-      }
-    },
-    "Today" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Heute" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today" } }
-      }
-    },
-    "Tomorrow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Morgen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tomorrow" } }
-      }
-    },
-    "URL" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "URL" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "URL" } }
-      }
-    },
-    "Untitled" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ohne Titel" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Untitled" } }
-      }
-    },
-    "Urgency" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dringlichkeit" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Urgency" } }
-      }
-    },
-    "View" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ansicht" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "View" } }
-      }
-    },
-    "Work-in-Progress Limits" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Work-in-Progress-Limits" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Work-in-Progress Limits" } }
-      }
-    },
-    "Yesterday" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gestern" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Yesterday" } }
-      }
-    },
-    "Your average on active days: %lld tasks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "Dein Schnitt an aktiven Tagen: %lld Aufgabe" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "Dein Schnitt an aktiven Tagen: %lld Aufgaben" } }
+    "%lld days in a row": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag in Folge"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tage in Folge"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "Your average on active days: %lld task" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "Your average on active days: %lld tasks" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day in a row"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days in a row"
+                }
+              }
             }
           }
         }
       }
     },
-    "Your longest streak yet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Deine längste Folge bisher" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your longest streak yet" } }
+    "%lld days to the record": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %lld Tage bis zum Rekord"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days to the record"
+          }
+        }
       }
     },
-    "Your limit: %lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein Limit: %lld" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your limit: %lld" } }
+    "%lld done today": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld heute erledigt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld done today"
+          }
+        }
       }
     },
-    "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten %lld Tage — das Tempo in Little's Law" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law" } }
-      }
-    },
-    "day" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tag" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "day" } }
-      }
-    },
-    "day in a row" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tag in Folge" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "day in a row" } }
-      }
-    },
-    "days" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tage" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "days" } }
-      }
-    },
-    "days in a row" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tage in Folge" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "days in a row" } }
-      }
-    },
-    "task this year" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aufgabe dieses Jahr" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "task this year" } }
-      }
-    },
-    "tasks this year" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aufgaben dieses Jahr" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "tasks this year" } }
-      }
-    },
-    "%lld cards" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Karte" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Karten" } }
+    "%lld lists": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Liste"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Listen"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld card" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld cards" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld list"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld lists"
+                }
+              }
             }
           }
         }
       }
     },
-    "%lld days" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Tag" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Tage" } }
+    "%lld not yet due": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld noch nicht fällig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld not yet due"
+          }
+        }
+      }
+    },
+    "%lld of %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld von %lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of %lld"
+          }
+        }
+      }
+    },
+    "%lld of %lld cards": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld von %lld Karten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of %lld cards"
+          }
+        }
+      }
+    },
+    "%lld of them not yet due": {
+      "comment": "Lane tooltip detail, sits under \"N of M cards\" and refers back to it. The fold line uses \"%lld not yet due\", which stands alone.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld davon noch nicht fällig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of them not yet due"
+          }
+        }
+      }
+    },
+    "%lld older cards": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ältere Karte"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ältere Karten"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld day" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld days" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld older card"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld older cards"
+                }
+              }
             }
           }
         }
       }
     },
-    "%lld days in a row" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Tag in Folge" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Tage in Folge" } }
+    "%lld tasks": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgabe"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgaben"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld day in a row" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld days in a row" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld task"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tasks"
+                }
+              }
             }
           }
         }
       }
     },
-    "%lld days to the record" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch %lld Tage bis zum Rekord" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld days to the record" } }
-      }
-    },
-    "%lld done today" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld heute erledigt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld done today" } }
-      }
-    },
-    "%lld lists" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Liste" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Listen" } }
+    "%lld tasks done this year": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgabe dieses Jahr erledigt"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgaben dieses Jahr erledigt"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld list" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld lists" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld task done this year"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tasks done this year"
+                }
+              }
             }
           }
         }
       }
     },
-    "%lld of them not yet due" : {
-      "comment" : "Lane tooltip detail, sits under \"N of M cards\" and refers back to it. The fold line uses \"%lld not yet due\", which stands alone.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld davon noch nicht fällig" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld of them not yet due" } }
-      }
-    },
-    "%lld not yet due" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld noch nicht fällig" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld not yet due" } }
-      }
-    },
-    "%lld of %lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld von %lld" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld of %lld" } }
-      }
-    },
-    "%lld of %lld cards" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld von %lld Karten" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld of %lld cards" } }
-      }
-    },
-    "%lld older cards" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld ältere Karte" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld ältere Karten" } }
+    "%lld tasks in progress right now": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgabe gerade in Bearbeitung"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgaben gerade in Bearbeitung"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld older card" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld older cards" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld task in progress right now"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tasks in progress right now"
+                }
+              }
             }
           }
         }
       }
     },
-    "%lld tasks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben" } }
+    "%lld tasks — more than any other weekday": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgabe — mehr als an jedem anderen Wochentag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgaben — mehr als an jedem anderen Wochentag"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld task — more than any other weekday"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tasks — more than any other weekday"
+                }
+              }
             }
           }
         }
       }
     },
-    "%lld tasks — more than any other weekday" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe — mehr als an jedem anderen Wochentag" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben — mehr als an jedem anderen Wochentag" } }
+    "1 day to the record": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch 1 Tag bis zum Rekord"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day to the record"
+          }
+        }
+      }
+    },
+    "1 task": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Aufgabe"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 task"
+          }
+        }
+      }
+    },
+    "Accessing Reminders…": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugriff auf Erinnerungen…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accessing Reminders…"
+          }
+        }
+      }
+    },
+    "Add a new card": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Karte anlegen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a new card"
+          }
+        }
+      }
+    },
+    "All": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erscheinungsbild"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        }
+      }
+    },
+    "Backlog": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backlog"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backlog"
+          }
+        }
+      }
+    },
+    "Best Day": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bester Tag"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best Day"
+          }
+        }
+      }
+    },
+    "Board": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Board"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Board"
+          }
+        }
+      }
+    },
+    "Board is filtered — %lld active (⌘F)": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Board ist gefiltert — %lld aktiv (⌘F)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Board is filtered — %lld active (⌘F)"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Captured": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfasst"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured"
+          }
+        }
+      }
+    },
+    "Choose Lists": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen wählen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Lists"
+          }
+        }
+      }
+    },
+    "Choose, don't collect": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen statt sammeln"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose, don't collect"
+          }
+        }
+      }
+    },
+    "Clear search": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche löschen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear search"
+          }
+        }
+      }
+    },
+    "Click to edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klick öffnet Bearbeiten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click to edit"
+          }
+        }
+      }
+    },
+    "Close card": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karte schließen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close card"
+          }
+        }
+      }
+    },
+    "Collapse Not-Yet-Due Items": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nicht Fälliges einklappen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse Not-Yet-Due Items"
+          }
+        }
+      }
+    },
+    "Couldn't Start at Login": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Anmelden starten nicht möglich"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't Start at Login"
+          }
+        }
+      }
+    },
+    "Create Ticket": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket anlegen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create Ticket"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dunkel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "Delete Ticket": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket löschen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Ticket"
+          }
+        }
+      }
+    },
+    "Delete “%@”?": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ löschen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete “%@”?"
+          }
+        }
+      }
+    },
+    "Done": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erledigt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Due": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fällig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due"
+          }
+        }
+      }
+    },
+    "Due %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fällig %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due %@"
+          }
+        }
+      }
+    },
+    "Due Date": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fälligkeit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due Date"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearbeiten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
+    "Find a task": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe finden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find a task"
+          }
+        }
+      }
+    },
+    "Find a task (⌘F)": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe finden (⌘F)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find a task (⌘F)"
+          }
+        }
+      }
+    },
+    "Find …": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finden …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find …"
+          }
+        }
+      }
+    },
+    "Find, board is filtered, %lld restrictions active": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Finden, Board ist gefiltert, 1 Einschränkung aktiv"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Finden, Board ist gefiltert, %lld Einschränkungen aktiv"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task — more than any other weekday" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks — more than any other weekday" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Find, board is filtered, 1 restriction active"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Find, board is filtered, %lld restrictions active"
+                }
+              }
             }
           }
         }
       }
     },
-    "%lld tasks done this year" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe dieses Jahr erledigt" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben dieses Jahr erledigt" } }
+    "Finish First": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erst abschließen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish First"
+          }
+        }
+      }
+    },
+    "Finish before you stack": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lieber abschließen als stapeln"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish before you stack"
+          }
+        }
+      }
+    },
+    "Finishing starts here": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertigwerden beginnt hier"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finishing starts here"
+          }
+        }
+      }
+    },
+    "General": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        }
+      }
+    },
+    "Get it out of your head": {
+      "comment": "Empty-lane appeal for Backlog. Four different sentence shapes across the four lanes, all under ~28 characters and single-line; deliberately avoids repeating a word its neighbour \"Choose, don't collect\" uses.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts im Kopf behalten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get it out of your head"
+          }
+        }
+      }
+    },
+    "Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glass Kanban benötigt Vollzugriff auf deine Erinnerungen, um das Board anzuzeigen. Erlaube den Zugriff in den Systemeinstellungen unter Datenschutz & Sicherheit → Erinnerungen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders."
+          }
+        }
+      }
+    },
+    "Hide older": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ältere ausblenden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide older"
+          }
+        }
+      }
+    },
+    "High": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoch"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High"
+          }
+        }
+      }
+    },
+    "High priority": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hohe Priorität"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High priority"
+          }
+        }
+      }
+    },
+    "In Progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Bearbeitung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Progress"
+          }
+        }
+      }
+    },
+    "In this column for %lld days": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seit %lld Tagen in dieser Spalte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In this column for %lld days"
+          }
+        }
+      }
+    },
+    "Last %lld Days": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte %lld Tage"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last %lld Days"
+          }
+        }
+      }
+    },
+    "Last %lld days: something done on %lld of them": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte %lld Tage: an %lld davon etwas erledigt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last %lld days: something done on %lld of them"
+          }
+        }
+      }
+    },
+    "Lead Time": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durchlaufzeit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead Time"
+          }
+        }
+      }
+    },
+    "Less at once, more done": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weniger gleichzeitig, mehr fertig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Less at once, more done"
+          }
+        }
+      }
+    },
+    "Light": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hell"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        }
+      }
+    },
+    "List": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List"
+          }
+        }
+      }
+    },
+    "List %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List %@"
+          }
+        }
+      }
+    },
+    "Lists": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lists"
+          }
+        }
+      }
+    },
+    "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Little's Law: Aufgaben in Bearbeitung geteilt durch dein Tempo der letzten %lld Tage — eine Schätzung, kein Versprechen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Little's Law: tasks in progress divided by your pace over the last %lld days — an estimate, not a promise"
+          }
+        }
+      }
+    },
+    "Longest Streak": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Längste Folge"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Longest Streak"
+          }
+        }
+      }
+    },
+    "Low": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niedrig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low"
+          }
+        }
+      }
+    },
+    "Low priority": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niedrige Priorität"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low priority"
+          }
+        }
+      }
+    },
+    "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Median von „erfasst“ bis „erledigt“ bei einmaligen Aufgaben der letzten %lld Tage — mit Auslastung und Tempo die dritte Größe in Little's Law"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Median time from “Captured” to “Done” for one-off tasks over the last %lld days — with load and pace, the third figure in Little's Law"
+          }
+        }
+      }
+    },
+    "Medium": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mittel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium"
+          }
+        }
+      }
+    },
+    "Medium priority": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mittlere Priorität"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium priority"
+          }
+        }
+      }
+    },
+    "Milestone reached: %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meilenstein erreicht: %lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Milestone reached: %lld"
+          }
+        }
+      }
+    },
+    "Milestone reached: %lld tasks done": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meilenstein erreicht: %lld erledigte Aufgaben"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Milestone reached: %lld tasks done"
+          }
+        }
+      }
+    },
+    "Most Used List": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Häufigste Liste"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most Used List"
+          }
+        }
+      }
+    },
+    "Move": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschieben"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move"
+          }
+        }
+      }
+    },
+    "Move to": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschieben nach"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to"
+          }
+        }
+      }
+    },
+    "Move to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschieben nach %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to %@"
+          }
+        }
+      }
+    },
+    "New Ticket": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neues Ticket"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Ticket"
+          }
+        }
+      }
+    },
+    "Next Up": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als Nächstes"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next Up"
+          }
+        }
+      }
+    },
+    "No Access to Reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Zugriff auf Erinnerungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Access to Reminders"
+          }
+        }
+      }
+    },
+    "No Date": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Datum"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Date"
+          }
+        }
+      }
+    },
+    "No Limit": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Limit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Limit"
+          }
+        }
+      }
+    },
+    "No List Selected": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Liste ausgewählt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No List Selected"
+          }
+        }
+      }
+    },
+    "No Matches": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Treffer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Matches"
+          }
+        }
+      }
+    },
+    "No Notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Notizen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Notes"
+          }
+        }
+      }
+    },
+    "No Reminder Lists": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Erinnerungslisten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Reminder Lists"
+          }
+        }
+      }
+    },
+    "No URL": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine URL"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No URL"
+          }
+        }
+      }
+    },
+    "No access to Reminders. Allow it in System Settings under “Privacy & Security”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Zugriff auf Erinnerungen. In den Systemeinstellungen unter „Datenschutz & Sicherheit“ freigeben."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No access to Reminders. Allow it in System Settings under “Privacy & Security”."
+          }
+        }
+      }
+    },
+    "No reminder lists found": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Erinnerungslisten gefunden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reminder lists found"
+          }
+        }
+      }
+    },
+    "None": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        }
+      }
+    },
+    "Not Deleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht gelöscht"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Deleted"
+          }
+        }
+      }
+    },
+    "Not Moved": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht verschoben"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Moved"
+          }
+        }
+      }
+    },
+    "Not Renamed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht umbenannt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Renamed"
+          }
+        }
+      }
+    },
+    "Not Restored": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht zurückgeholt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Restored"
+          }
+        }
+      }
+    },
+    "Not Saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht gespeichert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Saved"
+          }
+        }
+      }
+    },
+    "Not Undone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht rückgängig gemacht"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Undone"
+          }
+        }
+      }
+    },
+    "Notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notizen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes"
+          }
+        }
+      }
+    },
+    "Nothing to Do": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts zu tun"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to Do"
+          }
+        }
+      }
+    },
+    "Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now"
+          }
+        }
+      }
+    },
+    "OK": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Older items live in Reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Älteres liegt in Erinnerungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older items live in Reminders"
+          }
+        }
+      }
+    },
+    "One task keeps the streak alive": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Aufgabe hält die Folge"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One task keeps the streak alive"
+          }
+        }
+      }
+    },
+    "One task starts a new streak": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Aufgabe startet eine neue Folge"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One task starts a new streak"
+          }
+        }
+      }
+    },
+    "Only finished counts": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Fertiges zählt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only finished counts"
+          }
+        }
+      }
+    },
+    "Open Apple Reminders to create or edit tasks (⌘N)": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Apple Reminders to create or edit tasks (⌘N)"
+          }
+        }
+      }
+    },
+    "Open Reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Reminders"
+          }
+        }
+      }
+    },
+    "Open System Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemeinstellungen öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        }
+      }
+    },
+    "Open in Reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Erinnerungen öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Reminders"
+          }
+        }
+      }
+    },
+    "Over your limit": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über deinem Limit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over your limit"
+          }
+        }
+      }
+    },
+    "Overdue": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überfällig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overdue"
+          }
+        }
+      }
+    },
+    "Per Week": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro Woche"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per Week"
+          }
+        }
+      }
+    },
+    "Recap": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rückblick"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recap"
+          }
+        }
+      }
+    },
+    "Recurring tasks whose next due date hasn't arrived yet rest behind the fold at the bottom of the Backlog — one click brings them forward, nothing is ever hidden for good. Beyond %lld cards, the rest folds regardless.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederkehrende Aufgaben, deren nächster Termin noch nicht erreicht ist, ruhen hinter der Falz-Zeile am Fuß des Backlogs — ein Klick holt sie hervor, ausgeblendet wird nie etwas. Über %lld Karten klappt der Rest unabhängig davon ein."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recurring tasks whose next due date hasn't arrived yet rest behind the fold at the bottom of the Backlog — one click brings them forward, nothing is ever hidden for good. Beyond %lld cards, the rest folds regardless."
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
+          }
+        }
+      }
+    },
+    "Reminders": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders"
+          }
+        }
+      }
+    },
+    "Remove Date": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datum entfernen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Date"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umbenennen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        }
+      }
+    },
+    "Repeats": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederholend"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeats"
+          }
+        }
+      }
+    },
+    "Reset All": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles zurücksetzen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset All"
+          }
+        }
+      }
+    },
+    "Reset Filters": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter zurücksetzen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset Filters"
+          }
+        }
+      }
+    },
+    "Same day": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am selben Tag"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same day"
+          }
+        }
+      }
+    },
+    "Show %lld more": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld weitere anzeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show %lld more"
+          }
+        }
+      }
+    },
+    "Show %lld older": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ältere anzeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show %lld older"
+          }
+        }
+      }
+    },
+    "Show All": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle anzeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show All"
+          }
+        }
+      }
+    },
+    "Show These Lists on the Board": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Listen im Board anzeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show These Lists on the Board"
+          }
+        }
+      }
+    },
+    "Show less": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weniger anzeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show less"
+          }
+        }
+      }
+    },
+    "Since %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seit %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Since %@"
+          }
+        }
+      }
+    },
+    "Sound on Completion": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton beim Erledigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound on Completion"
+          }
+        }
+      }
+    },
+    "Start at Login": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Anmelden starten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start at Login"
+          }
+        }
+      }
+    },
+    "Statistics": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistiken"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistics"
+          }
+        }
+      }
+    },
+    "Statistics. No current streak": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistiken. Zurzeit keine Folge"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistics. No current streak"
+          }
+        }
+      }
+    },
+    "Statistics. Streak: %lld days in a row with at least one task done": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Statistiken. Folge: %lld Tag mit mindestens einer erledigten Aufgabe"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Statistiken. Folge: %lld Tage nacheinander mit mindestens einer erledigten Aufgabe"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task done this year" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks done this year" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Statistics. Streak: %lld day with at least one task done"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Statistics. Streak: %lld days in a row with at least one task done"
+                }
+              }
             }
           }
         }
       }
     },
-    "%lld tasks in progress right now" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgabe gerade in Bearbeitung" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Aufgaben gerade in Bearbeitung" } }
+    "Strongest Weekday": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stärkster Wochentag"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strongest Weekday"
+          }
+        }
+      }
+    },
+    "System": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach System"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "That's Fine": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passt schon"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's Fine"
+          }
+        }
+      }
+    },
+    "This Week": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Woche"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Week"
+          }
+        }
+      }
+    },
+    "This task": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aufgabe"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This task"
+          }
+        }
+      }
+    },
+    "Time": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uhrzeit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        }
+      }
+    },
+    "Time Left": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis fertig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time Left"
+          }
+        }
+      }
+    },
+    "Title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        }
+      }
+    },
+    "Title, done": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel, erledigt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title, done"
+          }
+        }
+      }
+    },
+    "Today": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        }
+      }
+    },
+    "Tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow"
+          }
+        }
+      }
+    },
+    "URL": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL"
+          }
+        }
+      }
+    },
+    "Untitled": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Titel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled"
+          }
+        }
+      }
+    },
+    "Urgency": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dringlichkeit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urgency"
+          }
+        }
+      }
+    },
+    "View": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ansicht"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View"
+          }
+        }
+      }
+    },
+    "Work-in-Progress Limits": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Work-in-Progress-Limits"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Work-in-Progress Limits"
+          }
+        }
+      }
+    },
+    "Yesterday": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestern"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday"
+          }
+        }
+      }
+    },
+    "Your average on active days: %lld tasks": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dein Schnitt an aktiven Tagen: %lld Aufgabe"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dein Schnitt an aktiven Tagen: %lld Aufgaben"
+                }
+              }
             }
           }
         },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld task in progress right now" } },
-              "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld tasks in progress right now" } }
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Your average on active days: %lld task"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Your average on active days: %lld tasks"
+                }
+              }
             }
           }
         }
       }
     },
-    "⌘Z brings the ticket back — but not its subtasks or attachments." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "⌘Z holt das Ticket zurück — Unteraufgaben und Anhänge aber nicht." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "⌘Z brings the ticket back — but not its subtasks or attachments." } }
+    "Your limit: %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Limit: %lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your limit: %lld"
+          }
+        }
+      }
+    },
+    "Your longest streak yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine längste Folge bisher"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your longest streak yet"
+          }
+        }
+      }
+    },
+    "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Durchsatz: erledigte Aufgaben pro Woche, Durchschnitt der letzten %lld Tage — das Tempo in Little's Law"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law"
+          }
+        }
+      }
+    },
+    "day": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "day"
+          }
+        }
+      }
+    },
+    "day in a row": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag in Folge"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "day in a row"
+          }
+        }
+      }
+    },
+    "days": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tage"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days"
+          }
+        }
+      }
+    },
+    "days in a row": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tage in Folge"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days in a row"
+          }
+        }
+      }
+    },
+    "macOS blocks the login item. Allow Glass Kanban under Login Items in System Settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS blockiert den Anmeldeeintrag. Erlaube Glass Kanban in den Systemeinstellungen unter „Anmeldeobjekte“."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS blocks the login item. Allow Glass Kanban under Login Items in System Settings."
+          }
+        }
+      }
+    },
+    "task this year": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe dieses Jahr"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "task this year"
+          }
+        }
+      }
+    },
+    "tasks this year": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgaben dieses Jahr"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tasks this year"
+          }
+        }
+      }
+    },
+    "“%@” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ wiederholt sich, und die Serie läuft bereits weiter. Die erledigte Ausführung zurückzuholen würde sie doppelt auf das Board legen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice."
+          }
+        }
+      }
+    },
+    "“%@” repeats. The turn you finished is filed away and this card is already the next one — undoing would change work that has not even been pulled yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ wiederholt sich. Der erledigte Durchgang ist abgelegt und diese Karte ist bereits der nächste — rückgängig würde also Arbeit ändern, die noch niemand gezogen hat."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” repeats. The turn you finished is filed away and this card is already the next one — undoing would change work that has not even been pulled yet."
+          }
+        }
+      }
+    },
+    "⌘Z brings the ticket back — but not its subtasks or attachments.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘Z holt das Ticket zurück — Unteraufgaben und Anhänge aber nicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘Z brings the ticket back — but not its subtasks or attachments."
+          }
+        }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

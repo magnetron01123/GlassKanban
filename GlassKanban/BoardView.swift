@@ -42,7 +42,10 @@ struct BoardView: View {
         // silent — only the whole board being blank is worth a sentence, and
         // then exactly one, laid over the lanes rather than inside them.
         .overlay {
-            if let emptiness = store.emptiness {
+            // `.loading` draws nothing at all: before the first answer is in,
+            // the board has no verdict to state, and the one it used to flash
+            // was "Nichts zu tun".
+            if let emptiness = store.emptiness, emptiness != .loading {
                 EmptyBoardNotice(
                     emptiness: emptiness,
                     onReset: { store.resetFilters() })
@@ -113,7 +116,14 @@ struct BoardView: View {
             // action is the prominent one, carries Return, and — via the
             // cancel role — Escape too. Overloading takes a deliberate click.
             Button("Finish First", role: .cancel) {
-                store.move(cardID: overflow.cardID, to: overflow.origin, undoManager: undoManager)
+                // Taking the card back is part of *this* decision, not a move
+                // of its own: it registered a second undo entry, so ⌘Z after
+                // declining first restored the very overload that was just
+                // declined. And it played the completion chime when the card
+                // went home to Erledigt — the board celebrating a correction.
+                store.move(
+                    cardID: overflow.cardID, to: overflow.origin,
+                    undoManager: nil, feedback: false)
             }
             .keyboardShortcut(.defaultAction)
             // "That's Fine" rather than "Anyway": the board does not get to
@@ -269,8 +279,13 @@ struct BoardView: View {
         guard let limit = store.wipLimit(for: overflow.status) else {
             return overflow.status.displayName
         }
+        // The number the *rule* used, not the one the filtered view happens to
+        // show. Asking "over your limit?" above the line "2 of 3" left the
+        // question unanswerable — the lane really held four, two of them
+        // hidden by a filter. The lane header keeps showing what is on
+        // screen; a question has to show what it decided on.
         return "\(overflow.status.displayName): "
-            + String(localized: "\(store.cards(for: overflow.status).count) of \(limit)")
+            + String(localized: "\(store.totalCount(for: overflow.status)) of \(limit)")
     }
 
     // MARK: - Streak pill + popover
