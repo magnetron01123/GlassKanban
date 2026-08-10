@@ -54,7 +54,9 @@ struct ColumnView: View {
             return BacklogFold.restingCut(cards, foldsNotYetDue: foldsNotYetDue)
         case .done:
             return DoneWindow.recent(cards)
-        default:
+        // Listed rather than defaulted: a lane added later must fail to
+        // compile here, not silently inherit "no fold".
+        case .next, .inProgress:
             return cards
         }
     }
@@ -343,16 +345,19 @@ struct ColumnView: View {
         .onChange(of: store.editingCardID) { previous, current in
             guard current == nil, let closed = previous,
                   status == .backlog || status == .done else { return }
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(450))
-                let laneCards = store.cards(for: status)
-                guard !expanded,
-                      laneCards.contains(where: { $0.id == closed }),
-                      !Self.restingCut(laneCards, for: status, foldsNotYetDue: store.foldNotYetDue)
-                          .contains(where: { $0.id == closed })
-                else { return }
-                fold { expanded = true }
-            }
+            revealBelowFold(closed, after: .milliseconds(450))
+        }
+        // The same promise for a card that was dragged here: a recurring
+        // ticket with a future date is "not yet due" the moment it lands in
+        // Backlog, so the fold swallows it in the very frame it arrives —
+        // the card fades out of the lane it left and is never drawn in the
+        // one it went to. Nothing on screen says it worked except a number
+        // in the fold line going up by one, which reads as a drop that
+        // missed. The lane opens instead, exactly as it does for a card
+        // whose editor just closed.
+        .onChange(of: store.lastLandedCardID) { _, landed in
+            guard let landed, status == .backlog || status == .done else { return }
+            revealBelowFold(landed, after: Board.settleDelay)
         }
         // Without this a card announces its title and nothing about where it
         // is — on a board, the lane is half the meaning.
@@ -613,6 +618,22 @@ struct ColumnView: View {
     /// The flag is cleared by the animation's own completion rather than by
     /// a timer set to roughly the same length — a duration written down
     /// twice is a duration that drifts apart.
+    /// Opens the fold if the named card would otherwise be hidden by it — the
+    /// one promise this board makes about cards the user just handled: they
+    /// never vanish without a trace.
+    private func revealBelowFold(_ cardID: String, after delay: Duration) {
+        Task { @MainActor in
+            try? await Task.sleep(for: delay)
+            let laneCards = store.cards(for: status)
+            guard !expanded,
+                  laneCards.contains(where: { $0.id == cardID }),
+                  !Self.restingCut(laneCards, for: status, foldsNotYetDue: store.foldNotYetDue)
+                      .contains(where: { $0.id == cardID })
+            else { return }
+            fold { expanded = true }
+        }
+    }
+
     private func fold(_ change: @escaping () -> Void) {
         guard !reduceMotion else {
             change()

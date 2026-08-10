@@ -33,11 +33,14 @@ enum TextSanitizer {
         return raw
             .components(separatedBy: .newlines)
             .map { line in
-                var cleaned = line
+                // Tags come off through the same standalone rule the rest of
+                // the app reads by. Applying the patterns raw deleted text
+                // that is provably not a tag — "#next-steps" showed as
+                // "-steps", "#progress-report" as "-report" — and, because
+                // this text also feeds the card's search haystack, made those
+                // cards unfindable by the very words they contain.
+                var cleaned = StatusTagger.removingTags(line)
                 cleaned.replace(urlRegex, with: "")
-                for regex in StatusTagger.allTagRegexes {
-                    cleaned.replace(regex, with: "")
-                }
                 cleaned.replace(#/\s{2,}/#, with: " ")
                 return cleaned.trimmingCharacters(in: .whitespaces)
             }

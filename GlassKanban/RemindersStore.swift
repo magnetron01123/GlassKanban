@@ -38,6 +38,11 @@ final class RemindersStore: ObservableObject {
     /// payload is not readable while merely hovering — so a lane can tell
     /// whether a drop would actually move anything.
     @Published private(set) var draggingCardID: String?
+
+    /// The card the user last placed by hand, so the lane it landed in can
+    /// make sure it is actually visible there (see `ColumnView`). Cleared
+    /// right after, because it marks an event, not a state.
+    @Published private(set) var lastLandedCardID: String?
     /// Measured height of the top card in "Als Nächstes", reported by that
     /// lane as it lays out. The empty "In Bearbeitung" lane sizes its pull
     /// slot with it, so the promised spot is exactly as tall as the ticket
@@ -235,6 +240,14 @@ final class RemindersStore: ObservableObject {
     /// to put stale cards on the board.
     private var refreshGeneration = 0
 
+    /// Counts every write the board makes. A refresh reads it before its
+    /// fetches and discards its result if it changed in the meantime: those
+    /// fetches then predate the write and would publish a board without it,
+    /// undoing the optimistic update. Visible as a card that jumps back to
+    /// where it came from and forward again a moment later — or, for a new
+    /// ticket, as the editor closing by itself mid-typing.
+    private var writeGeneration = 0
+
     deinit {
         // Block-based observers are only removed by their token. Without this
         // a store that goes away leaves live blocks behind holding it.
@@ -273,11 +286,17 @@ final class RemindersStore: ObservableObject {
     }
 
     /// Whether a lane currently holds more cards than its limit allows.
-    /// Counts what the board actually shows (filters included) so the number
-    /// on screen and the rule always agree.
+    ///
+    /// Counts the whole lane, not the filtered view. Begun work is begun
+    /// whether or not a filter happens to be hiding it, and a limit that a
+    /// view setting can switch off is not a limit — with a list filtered out,
+    /// a lane at 3/3 silently accepted a fourth and fifth card. The lane
+    /// header keeps showing the filtered figure, since that is what is on
+    /// screen; when the two disagree, the rule follows the board, not the
+    /// view (decision 10.08.2026, see SPEC.md).
     func isOverWIPLimit(_ status: KanbanStatus) -> Bool {
         guard let limit = wipLimit(for: status) else { return false }
-        return cards(for: status).count > limit
+        return totalCount(for: status) > limit
     }
 
     // MARK: - Access & lifecycle
@@ -389,6 +408,14 @@ final class RemindersStore: ObservableObject {
         observers.append(observer)
     }
 
+    /// Records that the board just wrote, then schedules the refresh that
+    /// confirms it. The counter is what lets a refresh whose fetches predate
+    /// the write recognise itself as stale (see `writeGeneration`).
+    private func scheduleRefreshAfterWrite() {
+        writeGeneration += 1
+        scheduleRefresh()
+    }
+
     /// Debounced refresh — EKEventStoreChanged can fire in bursts.
     func scheduleRefresh() {
         refreshTask?.cancel()
@@ -405,6 +432,7 @@ final class RemindersStore: ObservableObject {
         guard accessState == .granted else { return }
         refreshGeneration += 1
         let generation = refreshGeneration
+        let writesBefore = writeGeneration
         let calendar = Calendar.current
 
         let calendars = eventStore.calendars(for: .reminder)
@@ -445,6 +473,10 @@ final class RemindersStore: ObservableObject {
         // A newer refresh started while these fetches were in flight; it is
         // reading fresher data, so this run stops rather than writing over it.
         guard generation == refreshGeneration else { return }
+        // A write landed while these fetches were in flight, so they are
+        // older than the board. The write scheduled its own refresh; this one
+        // steps aside rather than publishing a state the user already changed.
+        guard writesBefore == writeGeneration else { return }
 
         performTagHygiene(on: incomplete + completed)
         noteTagsTakenOffElsewhere(incomplete + completed)
@@ -485,7 +517,19 @@ final class RemindersStore: ObservableObject {
         let doneWindowStart = DoneWindow.keptCutoff(calendar: calendar)
         let visibleCompleted = completed.filter { ($0.completionDate ?? .distantPast) >= doneWindowStart }
 
-        let refreshed = (incomplete + visibleCompleted).compactMap(Self.card(from:))
+        // De-duplicated by identifier, later wins. The two fetches above are
+        // timed independently: a reminder ticked off between them matches the
+        // incomplete predicate in the first and the completed one in the
+        // second, and would reach the board twice under the same id — which
+        // SwiftUI answers with blank rows and broken transitions, not with an
+        // error. "Later wins" is also the right answer on content: the
+        // completed fetch is the fresher read.
+        var seen: Set<String> = []
+        let refreshed = (incomplete + visibleCompleted)
+            .reversed()
+            .compactMap { seen.insert($0.calendarItemIdentifier).inserted ? Self.card(from: $0) : nil }
+            .reversed()
+            .map { $0 }
 
         // Work finished elsewhere (a shared list on another device) gets the
         // same settle animation as our own. Skipped on the very first load,
@@ -790,13 +834,21 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
+            // Put the record back the way it was. EventKit hands out cached
+            // instances by identifier, so a reminder left carrying an unsaved
+            // tag would place the card in the target lane while the alert
+            // says it did not move.
+            reminder.notes = replacedNotes
+            if reminder.isCompleted != (origin == .done) {
+                reminder.isCompleted = (origin == .done)
+            }
             // Say so. A move that fails leaves the card where it was, which
             // on a board that animates every real move looks exactly like a
             // drop that missed — so the user tries again instead of learning
             // that this list is read-only.
             pendingSaveFailure = SaveFailure(
                 cardID: cardID, title: String(localized: "Not Moved"), message: error.localizedDescription)
-            scheduleRefresh()
+            scheduleRefreshAfterWrite()
             return nil
         }
         // Registered after the save, not before: an undo entry for a move
@@ -826,7 +878,15 @@ final class RemindersStore: ObservableObject {
 
         // Optimistic UI update; the EventKit change notification will
         // confirm it with a full refresh shortly after.
-        if let index = cards.firstIndex(where: { $0.id == cardID }) {
+        //
+        // Completing a repeating card is the exception, for the same reason
+        // the settle below is skipped: this identifier already belongs to the
+        // *next* turn of the series. Showing it as done parks an unstarted
+        // chore in Erledigt, struck through, until the refresh moves it to
+        // Backlog a moment later. The finished occurrence arrives in Erledigt
+        // on its own, with its own identifier.
+        if let index = cards.firstIndex(where: { $0.id == cardID }),
+           !(status == .done && wasRecurringSeries) {
             cards[index].status = status
             cards[index].completionDate = (status == .done) ? .now : nil
         }
@@ -842,6 +902,11 @@ final class RemindersStore: ObservableObject {
         if status == .inProgress {
             flagRecentlyPulled([cardID])
         }
+        // A card the user placed by hand must be visible where it landed,
+        // even when the target lane folds it away (see `ColumnView`).
+        if feedback {
+            flagLanded(cardID)
+        }
         // Feedback lives here, at the single point every route into a move
         // converges — drag & drop, context menu, VoiceOver action — because
         // a reward that only fires for mouse users is as broken as a limit
@@ -855,10 +920,15 @@ final class RemindersStore: ObservableObject {
         }
         // Asked after the move, never before it: the board does not block a
         // drop, it lets the work land and then offers to put it back.
-        if status.asksBeforeExceedingLimit, isOverWIPLimit(status) {
+        // Only for a move the user just made. Replaying a decision is not
+        // making one — the same rule the delete dialog already follows — and
+        // answering "Erst abschließen" on a replayed move registered a fresh
+        // undo entry of its own, so ⌘Z bounced the card between two lanes,
+        // asking every time.
+        if feedback, status.asksBeforeExceedingLimit, isOverWIPLimit(status) {
             pendingOverflow = PendingOverflow(cardID: cardID, origin: origin, status: status)
         }
-        scheduleRefresh()
+        scheduleRefreshAfterWrite()
         return origin
     }
 
@@ -889,7 +959,7 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
-            scheduleRefresh()
+            scheduleRefreshAfterWrite()
             return nil
         }
 
@@ -903,7 +973,7 @@ final class RemindersStore: ObservableObject {
         if let card = Self.card(from: reminder) {
             cards.append(card)
         }
-        scheduleRefresh()
+        scheduleRefreshAfterWrite()
         return cardID
     }
 
@@ -975,7 +1045,7 @@ final class RemindersStore: ObservableObject {
         // the user actually meant to undo. Removing the reminder is not a
         // change to undo; it is the change never having happened.
         undoManager?.removeAllActions(withTarget: self)
-        scheduleRefresh()
+        scheduleRefreshAfterWrite()
     }
 
     /// `defaultCalendarForNewReminders()`, unless that list is excluded from
@@ -1067,14 +1137,14 @@ final class RemindersStore: ObservableObject {
         } catch {
             pendingSaveFailure = SaveFailure(
                 cardID: cardID, title: String(localized: "Not Deleted"), message: error.localizedDescription)
-            scheduleRefresh()
+            scheduleRefreshAfterWrite()
             return
         }
         register(undoManager, name: String(localized: "Delete Ticket")) { store in
             store.restoreTicket(snapshot, undoManager: undoManager)
         }
         cards.removeAll { $0.id == cardID }
-        scheduleRefresh()
+        scheduleRefreshAfterWrite()
     }
 
     /// Writes a deleted ticket back, and registers the redo that removes it
@@ -1106,7 +1176,7 @@ final class RemindersStore: ObservableObject {
         do {
             try eventStore.save(reminder, commit: true)
         } catch {
-            scheduleRefresh()
+            scheduleRefreshAfterWrite()
             return nil
         }
 
@@ -1114,7 +1184,7 @@ final class RemindersStore: ObservableObject {
         register(undoManager, name: String(localized: "Delete Ticket")) { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
-        scheduleRefresh()
+        scheduleRefreshAfterWrite()
         return cardID
     }
 
@@ -1139,7 +1209,7 @@ final class RemindersStore: ObservableObject {
         } catch {
             pendingSaveFailure = SaveFailure(
                 cardID: cardID, title: String(localized: "Not Renamed"), message: error.localizedDescription)
-            scheduleRefresh()
+            scheduleRefreshAfterWrite()
             return
         }
         register(undoManager, name: String(localized: "Rename")) { store in
@@ -1150,7 +1220,7 @@ final class RemindersStore: ObservableObject {
             // to go through the same sanitizer the refresh would apply.
             cards[index].title = TextSanitizer.displayTitle(title)
         }
-        scheduleRefresh()
+        scheduleRefreshAfterWrite()
     }
 
     /// Whether a replayed write (undo/redo) has to be turned away because this
@@ -1400,7 +1470,7 @@ final class RemindersStore: ObservableObject {
         } catch {
             pendingSaveFailure = SaveFailure(
                 cardID: cardID, title: String(localized: "Not Saved"), message: error.localizedDescription)
-            scheduleRefresh()
+            scheduleRefreshAfterWrite()
             return
         }
         // Booked after the save, like every other write: an entry for a write
@@ -1420,7 +1490,7 @@ final class RemindersStore: ObservableObject {
             }
         }
         guard let index else {
-            scheduleRefresh()
+            scheduleRefreshAfterWrite()
             return
         }
         // Only what was written is reflected — a field left alone on the
@@ -1436,7 +1506,7 @@ final class RemindersStore: ObservableObject {
             cards[index].listName = newCalendar.title
             cards[index].listColor = Color(nsColor: newCalendar.color ?? .controlAccentColor)
         }
-        scheduleRefresh()
+        scheduleRefreshAfterWrite()
     }
 
     /// Marks cards as just-completed for ~0.7 s so their views can play the
@@ -1464,11 +1534,27 @@ final class RemindersStore: ObservableObject {
         draggingCardID = cardID
     }
 
-    /// A drag that ends outside any lane leaves this set; that is harmless,
-    /// because lanes only read it while a drag is hovering, and the next
-    /// drag overwrites it.
+    /// Ends the drag. Called from the drop target and from the gesture that
+    /// runs alongside it — but neither fires when a drag is released over the
+    /// toolbar, the gap between two lanes, or outside the window. The card
+    /// then stayed ghosted at 40 % and every board tooltip stayed suppressed
+    /// until the next drag happened to end inside a lane, so the window also
+    /// clears it whenever it stops being the drag's target (see `BoardView`).
     func endDrag() {
         draggingCardID = nil
+    }
+
+    /// Notes that the user just placed a card themselves. The lane it landed
+    /// in uses this to make sure the card is visible there rather than hidden
+    /// under a fold.
+    private func flagLanded(_ cardID: String) {
+        lastLandedCardID = cardID
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(50))
+            if self?.lastLandedCardID == cardID {
+                self?.lastLandedCardID = nil
+            }
+        }
     }
 
     /// Opens one reminder in the Reminders app, for everything the board's

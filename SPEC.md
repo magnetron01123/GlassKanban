@@ -168,6 +168,45 @@ Karte dauerhaft in der Spalte, in die der Nutzer sie gelegt hatte — die Rücks
 (14:21, 14:22, 14:37 Uhr) wurden jeweils so schnell beantwortet, dass der Tag zwischen zwei
 Messungen im Zehn-Sekunden-Takt nicht einmal sichtbar wurde.
 
+### Was das Board gegen sich selbst absichert (10.08.2026)
+
+Aus einem Review der Spaltenlogik entstanden; jeder Punkt hatte ein reproduzierbares
+Fehlerbild:
+
+- **Ein Sync, dessen Abfragen älter sind als ein Zug des Nutzers, wird verworfen.** Sonst
+  veröffentlichte er den Stand von vor dem Zug: Die Karte sprang sichtbar zurück und einen
+  Wimpernschlag später wieder vor — und bei einem neuen Ticket schloss sich der Editor
+  mitten im Tippen von selbst.
+- **Doppelte Datensätze werden verworfen, der spätere gewinnt.** Offene und erledigte
+  Aufgaben werden in zwei getrennten Abfragen geholt; wird eine Karte genau dazwischen
+  abgehakt, war sie in beiden und erreichte das Board zweimal unter derselben ID.
+- **Das WIP-Limit zählt die ganze Spalte, nicht die gefilterte Ansicht.** Begonnene Arbeit
+  ist begonnen, auch wenn ein Filter sie gerade verbirgt; ein Limit, das eine
+  Ansichtseinstellung abschaltet, ist keins. Der Spaltenkopf zeigt weiterhin die sichtbare
+  Zahl — wo beide auseinandergehen, folgt die Regel dem Board, nicht der Ansicht.
+- **Die WIP-Rückfrage erscheint nur bei einem Zug, den der Nutzer gerade macht.** Bei ⌘Z
+  fragte sie zu einer Entscheidung, die niemand traf, und „Erst abschließen" legte dabei
+  einen neuen Undo-Schritt an — die Karte pendelte zwischen zwei Spalten.
+- **Eine gezogene Karte bleibt sichtbar, wo sie landet.** Eine wiederkehrende Karte mit
+  künftigem Termin ist im selben Moment „noch nicht fällig", in dem sie im Backlog
+  ankommt, und verschwand hinter dem Falz — sichtbar blieb nur eine Zahl in der Falzzeile.
+  Die Spalte klappt jetzt auf, genau wie für eine Karte, deren Editor sich schließt.
+- **Ein Zug, der ins Leere endet, hinterlässt keinen halben Zustand.** Über der Symbolleiste
+  oder außerhalb des Fensters losgelassen, blieb die Karte ausgegraut und alle Tooltips des
+  Boards stumm, bis irgendwann ein Zug in einer Spalte endete.
+- **Ein fehlgeschlagener Zug lässt den Datensatz unverändert zurück.** EventKit gibt
+  zwischengespeicherte Objekte heraus; ein Reminder mit ungespeichertem Tag hätte die Karte
+  in der Zielspalte gezeigt, während die Meldung „Nicht verschoben" lautet.
+- **Erledigen einer wiederkehrenden Karte parkt sie nicht kurz in „Erledigt".** Die ID
+  gehört zu dem Zeitpunkt bereits dem nächsten Durchgang.
+- **Nutzertext übersteht auch ungewöhnliche Zeilentrenner.** Notizen aus PDF- oder
+  Web-Quellen trennen mit U+2028, ältere mit einem einzelnen `\r`; die galten als *eine*
+  Zeile, worauf die Aufräumroutine über den ganzen Text lief und doppelte Leerzeichen in
+  Zeilen fraß, die nie ein Tag trugen. Die Trenner selbst bleiben erhalten.
+- **Die Kartenanzeige löscht nichts, was nur wie ein Tag aussieht.** `#next-steps` wurde als
+  `-steps` angezeigt — und weil dieser Text auch die Suche speist, war die Karte über genau
+  ihr eigenes Wort nicht mehr auffindbar.
+
 ### Listen-Filter
 
 In den Einstellungen wird gewählt, welche vorhandenen Listen als Quelle einbezogen werden
