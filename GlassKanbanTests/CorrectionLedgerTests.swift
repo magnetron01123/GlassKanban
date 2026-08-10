@@ -242,3 +242,56 @@ final class CorrectionLedgerPersistenceTests: XCTestCase {
         XCTAssertNotNil(ledger.pendingEcho(for: "good", current: "#next", now: now))
     }
 }
+
+/// The wake-up call: an answer the cooldown deferred must still be given, and
+/// only the ledger knows when it is due.
+final class CorrectionLedgerWakeUpTests: XCTestCase {
+
+    private let t0 = Date(timeIntervalSince1970: 1_000_000)
+
+    func testNothingIsDueWithoutEntries() {
+        XCTAssertNil(CorrectionLedger().nextAnswerDue(now: t0))
+    }
+
+    func testAnUnansweredEntryNeedsNoWakeUp() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0)
+        XCTAssertNil(ledger.nextAnswerDue(now: t0), "it can be answered right away")
+    }
+
+    func testAnAnsweredEntryComesDueAfterTheCooldown() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0)
+        ledger.markAnswered(cardID: "shop", at: t0)
+        let due = ledger.nextAnswerDue(now: t0.addingTimeInterval(60))
+        XCTAssertEqual(due ?? 0, CorrectionLedger.cooldown - 60, accuracy: 0.5)
+    }
+
+    /// The wake-up follows whichever card comes due first.
+    func testTheEarliestAnswerWins() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "early", replaced: "#next", wrote: nil, at: t0)
+        ledger.markAnswered(cardID: "early", at: t0)
+        ledger.record(cardID: "late", replaced: "#next", wrote: nil, at: t0)
+        ledger.markAnswered(cardID: "late", at: t0.addingTimeInterval(120))
+        let due = ledger.nextAnswerDue(now: t0.addingTimeInterval(120))
+        XCTAssertEqual(due ?? 0, CorrectionLedger.cooldown - 120, accuracy: 0.5)
+    }
+
+    /// Once the cooldown has passed nothing is pending — the next sync will
+    /// answer on its own.
+    func testNothingIsDueOnceTheCooldownHasPassed() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0)
+        ledger.markAnswered(cardID: "shop", at: t0)
+        XCTAssertNil(ledger.nextAnswerDue(now: t0.addingTimeInterval(CorrectionLedger.cooldown + 1)))
+    }
+
+    /// A stale entry is nobody's business any more, so it never wakes the app.
+    func testAStaleEntryNeverWakesTheApp() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0)
+        ledger.markAnswered(cardID: "shop", at: t0.addingTimeInterval(CorrectionLedger.staleAfter - 1))
+        XCTAssertNil(ledger.nextAnswerDue(now: t0.addingTimeInterval(CorrectionLedger.staleAfter + 1)))
+    }
+}

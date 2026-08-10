@@ -146,6 +146,25 @@ struct CorrectionLedger: Equatable {
         entries[cardID]?.answeredAt = at
     }
 
+    /// How long until the earliest card whose answer is only waiting for the
+    /// cooldown may be answered again, or nil when nothing is waiting.
+    ///
+    /// Corrections only ever run during a sync, and a sync only happens when
+    /// something changes — so without this, an answer deferred by the
+    /// cooldown would simply never be given: nobody would look again. The
+    /// store turns this into a wake-up call.
+    func nextAnswerDue(now: Date) -> TimeInterval? {
+        entries.values
+            .compactMap { entry -> TimeInterval? in
+                guard let answeredAt = entry.answeredAt,
+                      now.timeIntervalSince(entry.at) < Self.staleAfter
+                else { return nil }
+                let due = Self.cooldown - now.timeIntervalSince(answeredAt)
+                return due > 0 ? due : nil
+            }
+            .min()
+    }
+
     /// Forgets cards that are no longer on the board and entries that have
     /// gone stale, so a session left open for days cannot grow without bound.
     mutating func retain(_ liveCardIDs: Set<String>, now: Date) {

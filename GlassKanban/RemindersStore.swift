@@ -118,6 +118,12 @@ final class RemindersStore: ObservableObject {
     /// measurement behind it.
     private var corrections = CorrectionLedger.load()
 
+    /// The notes of every card that carried a working-lane tag at the last
+    /// refresh. Small by construction — a board only has so much work in
+    /// flight — and the reason a tag can be defended no matter who took it
+    /// off: without it, only the app's own moves would ever be noticed.
+    private var taggedNotesByID: [String: String] = [:]
+
     /// The release rule's memory of the previous session, loaded once and
     /// used to seed the very first refresh after a cold start — a completion
     /// that happened during downtime still meets its proof. Never cleared on
@@ -214,6 +220,11 @@ final class RemindersStore: ObservableObject {
 
     private let eventStore = EKEventStore()
     private var refreshTask: Task<Void, Never>?
+
+    /// Wakes the store when an answer the cooldown deferred comes due (see
+    /// `scheduleCooldownWakeUp`). Nothing else would: a state that stays
+    /// wrong produces no change notification.
+    private var cooldownTask: Task<Void, Never>?
     private var midnightTimer: Timer?
     private var hasLoadedOnce = false
     private var hasStarted = false
@@ -436,6 +447,7 @@ final class RemindersStore: ObservableObject {
         guard generation == refreshGeneration else { return }
 
         performTagHygiene(on: incomplete + completed)
+        noteTagsTakenOffElsewhere(incomplete + completed)
         healEchoesOfOwnWrites(incomplete + completed)
         releaseTagsSpentByDetachedOccurrences(incomplete: incomplete, completed: completed)
 
@@ -504,7 +516,26 @@ final class RemindersStore: ObservableObject {
         // scale of tens of minutes, and the app may well be quit in between.
         corrections.retain(lastFetchedReminderIDs, now: .now)
         corrections.save()
+        // An answer the cooldown deferred has to be given eventually, and
+        // nothing else would ever ask: a sync runs when the data changes, and
+        // a state that is simply *staying* wrong changes nothing. So the
+        // store wakes itself once the cooldown is up. The chain ends by
+        // itself — either the answer sticks, or the entry goes stale.
+        scheduleCooldownWakeUp()
         hasLoadedOnce = true
+    }
+
+    /// Schedules the refresh that will give an answer the cooldown deferred.
+    private func scheduleCooldownWakeUp() {
+        cooldownTask?.cancel()
+        guard let due = corrections.nextAnswerDue(now: .now) else { return }
+        cooldownTask = Task { [weak self] in
+            // A second of slack so the wake-up lands past the boundary, not
+            // exactly on it.
+            try? await Task.sleep(for: .seconds(due + 1))
+            guard !Task.isCancelled else { return }
+            await self?.refresh()
+        }
     }
 
     /// Strips the status tag from recurring series whose tagged occurrence
@@ -574,10 +605,38 @@ final class RemindersStore: ObservableObject {
         return true
     }
 
-    /// Undoes, exactly once, an echo of the app's own write — a state it
-    /// displaced that came back without anybody deciding so. Runs on the
-    /// freshly fetched reminders before the cards are built, so the same
-    /// refresh already shows the corrected card.
+    /// Books a tag that came off somewhere else — on the phone, in
+    /// Reminders, by another program — as a displacement like any other.
+    ///
+    /// Without this, only the board's own moves could ever be defended, and
+    /// a stale writer would win every card the user happened to file from
+    /// another device. What matters for the rule is not *who* replaced a
+    /// state but *that* it was replaced: a state that comes back afterwards
+    /// is an echo either way. Bookings made here can only ever be spent
+    /// removing a tag again (see `healEchoesOfOwnWrites`), so treating a
+    /// stranger's edit as our own can never push a card into a working lane.
+    private func noteTagsTakenOffElsewhere(_ reminders: [EKReminder], now: Date = .now) {
+        var stillTagged: [String: String] = [:]
+        for reminder in reminders {
+            let cardID = reminder.calendarItemIdentifier
+            let notes = reminder.notes
+            let status = StatusTagger.status(fromNotes: notes, isCompleted: reminder.isCompleted)
+            if status == .next || status == .inProgress, let notes {
+                stillTagged[cardID] = notes
+                continue
+            }
+            // It carried a tag at the last refresh and does not now: whoever
+            // did it, that is a displacement this board will stand by.
+            if let previous = taggedNotesByID[cardID], previous != notes {
+                corrections.record(cardID: cardID, replaced: previous, wrote: notes, at: now)
+            }
+        }
+        taggedNotesByID = stillTagged
+    }
+
+    /// Undoes an echo — a state the board displaced that came back without
+    /// anybody deciding so. Runs on the freshly fetched reminders before the
+    /// cards are built, so the same refresh already shows the corrected card.
     ///
     /// **Only ever removes a tag, never sets one.** The two cases are
     /// indistinguishable in the data — "a stale writer put the tag back" and
