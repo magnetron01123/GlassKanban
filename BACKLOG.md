@@ -254,6 +254,25 @@ Thema selbst öffnet:
   „Legacy-Altlast" mehr, sondern akzeptierte Eingabe für alle, die den Tag unterwegs von
   Hand tippen.
 
+## Undo bei Wiederholungen (10.08.2026)
+
+Verworfen beim Umbau des Replay-Zauns auf eine Reihenfolge (Regel in SPEC.md,
+„Wiederkehrende Aufgaben beim Erledigen"):
+
+- **Undo-Einträge mit einem `Date` statt einer Ordnung stempeln** — verworfen: Eine Dauer
+  müsste gegen Sync-Latenz und Arbeitstempo kalibriert werden und liegt auf beiden Seiten
+  des gewählten Werts falsch; Zeitumstellung, Uhrabweichung und ein zurückgespieltes
+  Einstellungsfile brechen sie zusätzlich. Vor allem ist die Fehlerrichtung falsch: Ein
+  Zeitfenster läuft still ab und lässt den Schreibvorgang landen, eine Ordnung lehnt im
+  Zweifel ab.
+- **Den Undo-Stapel nach einer Wiederholungs-Erledigung abschalten** — verworfen (stand
+  bisher nur im Code-Kommentar): Der Eintrag muss auf dem Stapel bleiben und von der
+  Erklärung verbraucht werden, sonst greift das *nächste* ⌘Z in eine Änderung, die der
+  Nutzer behalten wollte.
+- **Den Zaun an den Aufrufstellen prüfen statt an der Registrierung** — verworfen: Genau so
+  war es, und vier von sechs Schreibpfaden prüften nicht. Eine Invariante, die jeder neue
+  Pfad erneut befolgen muss, ist keine.
+
 ## Fensterverhalten
 
 - **Menüleisten-Modus / Always-on-Top** — MVP nutzt ein normales Fenster.

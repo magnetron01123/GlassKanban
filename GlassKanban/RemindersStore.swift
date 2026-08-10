@@ -104,6 +104,10 @@ final class RemindersStore: ObservableObject {
     /// it only decides which replayed writes are allowed to land.
     private var recurringHandoff = RecurringHandoff()
 
+    /// Position of the newest board write, handed to undo entries and to the
+    /// handoff so both speak of the same order (see `RecurringHandoff`).
+    private var writeOrder = RecurringHandoff.Generation.first
+
     /// Every identifier the last completed refresh fetched — wider than
     /// `cards`, which only keeps recent Done cards. `RecurringTagRelease`
     /// reads this to tell a freshly detached occurrence from an old
@@ -561,7 +565,11 @@ final class RemindersStore: ObservableObject {
             flagRecentlyCompleted(isDone.subtracting(wasDone))
         }
         cards = refreshed
-        recurringHandoff.retain(Set(refreshed.map(\.id)))
+        // Bounded by count, not by the board: a series whose list is switched
+        // off in Settings leaves the refresh while its undo entries stay on
+        // the stack, and dropping the fence there let exactly the measured
+        // write land.
+        recurringHandoff.retain()
         lastFetchedReminderIDs = Set((incomplete + completed).map(\.calendarItemIdentifier))
         deliberatelyMovedSinceRefresh.removeAll()
         // Rebuilt from this fetch, never merged — the fetch window is the
@@ -712,7 +720,7 @@ final class RemindersStore: ObservableObject {
             // the *next* turn. Undo refuses to write through it and says so;
             // an automatic correction has even less business there, and must
             // stay silent about it (no dialog, ever).
-            guard !recurringHandoff.refusesReplay(of: cardID) else { continue }
+            guard !recurringHandoff.refusesUnattributedWrite(to: cardID) else { continue }
 
             var targetNotes = reminder.notes
             var targetTitle = reminder.title
@@ -884,6 +892,7 @@ final class RemindersStore: ObservableObject {
     ) -> KanbanStatus? {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
+        let writeStamp = beginWrite()
         guard origin != status else { return nil }
         // Un-completing a repeating reminder is the one move EventKit cannot
         // express. Completing one detaches the finished occurrence and lets
@@ -901,16 +910,6 @@ final class RemindersStore: ObservableObject {
                 message: String(localized: "“\(name)” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice."))
             return nil
         }
-        // The other half of the same truth, and the one the guard above cannot
-        // see: after a repeating card is completed here, this identifier
-        // belongs to the *next* turn of the series — an ordinary, open,
-        // untagged card. So `origin` reads `.backlog` and nothing above
-        // objects, while a replayed move would tag work nobody has pulled.
-        // See `RecurringHandoff`.
-        if !feedback, refuseReplayOnRolledOnSeries(reminder) {
-            return nil
-        }
-
         // Read before the save: afterwards this record is the rolled-on series
         // and no longer says anything about the occurrence that was finished.
         let wasRecurringSeries = reminder.hasRecurrenceRules
@@ -961,7 +960,7 @@ final class RemindersStore: ObservableObject {
         // Registered after the save, not before: an undo entry for a move
         // that never happened spends itself doing nothing, and the *next* ⌘Z
         // then reaches back past it into an edit the user did mean to keep.
-        register(undoManager, name: String(localized: "Move")) { store in
+        register(undoManager, name: String(localized: "Move"), for: cardID, at: writeStamp) { store in
             store.move(
                 cardID: cardID, to: origin, undoManager: undoManager,
                 feedback: false, restoredCompletion: previousCompletionDate)
@@ -970,7 +969,8 @@ final class RemindersStore: ObservableObject {
         // card hands it to the next turn of the series; a move the user made
         // themselves hands it back (see `RecurringHandoff`).
         if status == .done {
-            recurringHandoff.completed(cardID: cardID, isRecurringSeries: wasRecurringSeries)
+            recurringHandoff.completed(
+                cardID: cardID, isRecurringSeries: wasRecurringSeries, at: writeStamp)
         } else if feedback {
             recurringHandoff.movedDeliberately(cardID: cardID)
         }
@@ -1137,7 +1137,7 @@ final class RemindersStore: ObservableObject {
     /// out of "kept" come through here, so ⌘Z reaches a new ticket whether it
     /// was filled in or handed over to Reminders.
     private func registerCreation(cardID: String, undoManager: UndoManager?) {
-        register(undoManager, name: String(localized: "Create Ticket")) { store in
+        register(undoManager, name: String(localized: "Create Ticket"), for: cardID, at: beginWrite()) { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
     }
@@ -1247,6 +1247,7 @@ final class RemindersStore: ObservableObject {
     /// Deletes a ticket and registers the undo that puts it back. The
     /// question is asked by `requestDelete`; this is the write itself.
     func deleteTicket(cardID: String, undoManager: UndoManager? = nil) {
+        let writeStamp = beginWrite()
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         let snapshot = DeletedTicket(
             // `EKCalendarItem.calendar` is null_unspecified — it arrives as an
@@ -1273,7 +1274,7 @@ final class RemindersStore: ObservableObject {
             scheduleRefreshAfterWrite()
             return
         }
-        register(undoManager, name: String(localized: "Delete Ticket")) { store in
+        register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
             store.restoreTicket(snapshot, undoManager: undoManager)
         }
         cards.removeAll { $0.id == cardID }
@@ -1284,6 +1285,7 @@ final class RemindersStore: ObservableObject {
     /// again — so ⌘Z / ⇧⌘Z can be pressed as often as the user likes.
     @discardableResult
     func restoreTicket(_ snapshot: DeletedTicket, undoManager: UndoManager? = nil) -> String? {
+        let writeStamp = beginWrite()
         guard let calendar = reminderCalendars.first(where: { $0.calendarIdentifier == snapshot.calendarID })
                 ?? eventStore.defaultCalendarForNewReminders() else { return nil }
 
@@ -1314,7 +1316,7 @@ final class RemindersStore: ObservableObject {
         }
 
         let cardID = reminder.calendarItemIdentifier
-        register(undoManager, name: String(localized: "Delete Ticket")) { store in
+        register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
         scheduleRefreshAfterWrite()
@@ -1334,6 +1336,7 @@ final class RemindersStore: ObservableObject {
     /// short, has no formatting, and the round trip via a deep link for a
     /// single-line edit was worse than just doing it.
     func renameTicket(cardID: String, title: String, undoManager: UndoManager? = nil) {
+        let writeStamp = beginWrite()
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         let previousTitle = reminder.title ?? ""
         // Nothing typed, nothing written. The board shows a trimmed title, so
@@ -1355,7 +1358,7 @@ final class RemindersStore: ObservableObject {
         corrections.record(
             cardID: cardID, field: .title,
             replaced: .text(previousTitle), wrote: .text(reminder.title), at: .now)
-        register(undoManager, name: String(localized: "Rename")) { store in
+        register(undoManager, name: String(localized: "Rename"), for: cardID, at: writeStamp) { store in
             store.renameTicket(cardID: cardID, title: previousTitle, undoManager: undoManager)
         }
         if let index = cards.firstIndex(where: { $0.id == cardID }) {
@@ -1373,10 +1376,13 @@ final class RemindersStore: ObservableObject {
     ///
     /// One place for both replay paths — the move and the edit — so ⌘Z means
     /// the same thing whichever kind of change it lands on.
-    private func refuseReplayOnRolledOnSeries(_ reminder: EKReminder) -> Bool {
-        let cardID = reminder.calendarItemIdentifier
-        guard recurringHandoff.refusesReplay(of: cardID) else { return false }
-        let name = reminder.title ?? String(localized: "This task")
+    private func refuseReplayOnRolledOnSeries(
+        cardID: String,
+        recordedAt: RecurringHandoff.Generation
+    ) -> Bool {
+        guard recurringHandoff.refusesReplay(of: cardID, recordedAt: recordedAt) else { return false }
+        let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder
+        let name = reminder?.title ?? String(localized: "This task")
         pendingSaveFailure = SaveFailure(
             cardID: cardID,
             title: String(localized: "Not Undone"),
@@ -1406,19 +1412,40 @@ final class RemindersStore: ObservableObject {
     /// Registers the inverse of a write with the window's undo manager.
     ///
     /// Every board write goes through here, so ⌘Z means the same thing
-    /// wherever it is pressed. The handler runs on the main thread — that is
-    /// where the undo manager posted from — which is what lets it call back
-    /// into this main-actor store.
+    /// wherever it is pressed — and since the recurring fence lives *inside*
+    /// this wrapper, that sentence is now structural rather than a promise.
+    /// A future write path cannot forget the guard, because there is nothing
+    /// to remember: it is guarded by registering. Before, two of six sites
+    /// checked it and four did not, which is why undoing an edit made in the
+    /// card editor was refused while the identical inline rename went
+    /// through.
+    ///
+    /// The handler runs on the main thread — that is where the undo manager
+    /// posted from — which is what lets it call back into this main-actor
+    /// store.
     private func register(
         _ undoManager: UndoManager?,
         name: String,
+        for cardID: String,
+        at generation: RecurringHandoff.Generation,
         _ undo: @escaping (RemindersStore) -> Void
     ) {
         guard let undoManager else { return }
         undoManager.setActionName(name)
         undoManager.registerUndo(withTarget: self) { store in
-            MainActor.assumeIsolated { undo(store) }
+            MainActor.assumeIsolated {
+                guard !store.refuseReplayOnRolledOnSeries(cardID: cardID, recordedAt: generation) else { return }
+                undo(store)
+            }
         }
+    }
+
+    /// Where the write currently being made sits in this session's order.
+    /// Taken once at the top of every board write, so everything that write
+    /// stamps — its undo entry, a handover it causes — carries the same value.
+    private func beginWrite() -> RecurringHandoff.Generation {
+        writeOrder = writeOrder.next()
+        return writeOrder
     }
 
     /// Working copy for `TicketEditSheet`, read fresh from EventKit rather
@@ -1528,19 +1555,18 @@ final class RemindersStore: ObservableObject {
     /// This is the same care `status` below already took, applied to the rest
     /// of the ticket.
     ///
-    /// `isReplay` is true only when undo/redo runs this, the same way `move`
-    /// uses `feedback` — a replayed edit on a card whose identifier has since
-    /// rolled on to the next turn of a series would put an old due date on a
-    /// chore that has not come round yet.
+    /// A replayed edit on a card whose identifier has since rolled on to the
+    /// next turn of a series would put an old due date on a chore that has not
+    /// come round yet — which is why every undo entry, this one included, is
+    /// fenced at the single point it is registered (see `register`).
     func updateTicket(
         cardID: String,
         edited: EditableTicket,
         baseline: EditableTicket,
-        undoManager: UndoManager? = nil,
-        isReplay: Bool = false
+        undoManager: UndoManager? = nil
     ) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
-        if isReplay, refuseReplayOnRolledOnSeries(reminder) { return }
+        let writeStamp = beginWrite()
         // Not a guard: the index only drives the optimistic redraw below. A
         // card can leave `cards` while its editor is open — its list gets
         // excluded in Settings, or it is deleted on another device — and the
@@ -1660,10 +1686,10 @@ final class RemindersStore: ObservableObject {
         // The inverse write: back to `previous`, measured against what was
         // just written, so undo touches exactly the fields this edit did.
         if let previous, !isFirstFillOfNewTicket {
-            register(undoManager, name: String(localized: "Edit")) { store in
+            register(undoManager, name: String(localized: "Edit"), for: cardID, at: writeStamp) { store in
                 store.updateTicket(
                     cardID: cardID, edited: previous, baseline: edited,
-                    undoManager: undoManager, isReplay: true)
+                    undoManager: undoManager)
             }
         }
         guard let index else {
