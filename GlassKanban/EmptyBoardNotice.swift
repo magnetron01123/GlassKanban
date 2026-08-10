@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// The one line the board says when it has nothing to show at all.
 ///
@@ -126,6 +127,12 @@ struct EmptyBoardNotice: View {
         // Not "Nothing to Do": the board has no source, which is a setting,
         // not an achievement.
         case .noListsSelected: String(localized: "No List Selected")
+        // The board has nothing to draw from because this Mac has no
+        // reminder lists at all. Sending someone to Settings here would only
+        // repeat the news in a second place.
+        case .noListsAtAll: String(localized: "No Reminder Lists")
+        // Nothing is claimed before the first answer is in.
+        case .loading: ""
         }
     }
 
@@ -136,6 +143,12 @@ struct EmptyBoardNotice: View {
         case .nothingToDo: nil
         case .filteredAway: (String(localized: "Reset Filters"), onReset)
         case .noListsSelected: (String(localized: "Choose Lists"), { openSettings() })
+        // The way out is the Reminders app, where a list can actually be
+        // made — not this app's settings, which would have nothing to list.
+        case .noListsAtAll: (String(localized: "Open Reminders"), {
+            NSWorkspace.shared.open(URL(string: "x-apple-reminderkit://")!)
+        })
+        case .loading: nil
         }
     }
 }

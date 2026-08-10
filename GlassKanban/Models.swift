@@ -95,6 +95,11 @@ struct KanbanCard: Identifiable, Equatable {
     var notesPreview: String
     /// Several lines, for the roomier cards in the working lanes.
     var notesExcerpt: String
+    /// Everything about this card that Find should be able to match:
+    /// the whole note, not the first three lines the card happens to show,
+    /// plus the link. Searching a word that is provably in a reminder and
+    /// being told there is no such card is the one thing Find must not do.
+    var searchText: String = ""
     var dueDate: Date?
     var priority: Int
     var status: KanbanStatus
@@ -120,7 +125,7 @@ struct KanbanCard: Identifiable, Equatable {
     /// notes the board itself would show. Computed per call — on a personal
     /// board that is a handful of string joins per keystroke, and keeping it
     /// derived means it can never disagree with the fields it comes from.
-    var searchHaystack: String { "\(title)\n\(notesExcerpt)" }
+    var searchHaystack: String { "\(title)\n\(notesExcerpt)\n\(searchText)" }
 
     /// Whether this card matches a search term. Case- and diacritic-insensitive
     /// like the Reminders app, and forgiving about word order: every word has
@@ -412,8 +417,17 @@ enum BoardEmptiness: Equatable {
     /// lists" must not be read as "you are finished". Excluding every list
     /// left the board congratulating someone on work it could not see.
     case noListsSelected
+    /// There is no reminder list at all on this Mac. Distinct from
+    /// `noListsSelected`: telling someone they chose no lists, when there was
+    /// never anything to choose, sends them into a settings pane that can
+    /// only repeat the bad news.
+    case noListsAtAll
+    /// The first fetch has not come back yet. Saying anything before then —
+    /// "Nichts zu tun", of all things — flashed a verdict on every launch,
+    /// and on a large or freshly syncing database it stood for a second.
+    case loading
 
-    /// Pure, so the three-way decision can be tested without EventKit.
+    /// Pure, so the decision can be tested without EventKit.
     ///
     /// There used to be a fourth case, `recurringOnly`, for a board holding
     /// nothing but recurring cards that were not due yet. It went with the
@@ -423,9 +437,16 @@ enum BoardEmptiness: Equatable {
     static func evaluate(
         hasVisibleCards: Bool,
         isFiltering: Bool,
-        hasSelectedLists: Bool = true
+        hasSelectedLists: Bool = true,
+        hasAnyList: Bool = true,
+        hasLoaded: Bool = true
     ) -> BoardEmptiness? {
         guard !hasVisibleCards else { return nil }
+        // Before every verdict: an unanswered question is not an answer.
+        guard hasLoaded else { return .loading }
+        // Ahead of "you chose none": if there is nothing to choose from,
+        // the settings pane has nothing to offer either.
+        if !hasAnyList { return .noListsAtAll }
         // Ahead of the filter check: with no source, a filter cannot be what
         // is hiding anything.
         if !hasSelectedLists { return .noListsSelected }

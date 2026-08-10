@@ -843,6 +843,13 @@ final class RemindersStore: ObservableObject {
             title: TextSanitizer.displayTitle(reminder.title),
             notesPreview: TextSanitizer.notesPreview(reminder.notes),
             notesExcerpt: TextSanitizer.notesExcerpt(reminder.notes),
+            // The full note with the status tag taken out, plus the link —
+            // what the card shows is a preview, what Find searches is the
+            // reminder.
+            searchText: [
+                reminder.notes.map(StatusTagger.removingTags),
+                reminder.url?.absoluteString,
+            ].compactMap { $0 }.joined(separator: "\n"),
             dueDate: reminder.dueDateComponents.flatMap { Foundation.Calendar.current.date(from: $0) },
             priority: reminder.priority,
             status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted),
@@ -1174,8 +1181,12 @@ final class RemindersStore: ObservableObject {
     /// the board — then the first included calendar, so the new ticket is
     /// visible immediately. Nil only if there are no reminder calendars at all.
     private func targetCalendarForNewTicket() -> EKCalendar? {
+        // Writable only. A read-only shared list as the default target made
+        // the "+" do visibly nothing, however often it was pressed, with no
+        // message — the save failed after the placeholder had already been
+        // created. The editor's own list picker has always filtered this way.
         let includedIDs = reminderCalendars
-            .filter { !excludedCalendarIDs.contains($0.calendarIdentifier) }
+            .filter { !excludedCalendarIDs.contains($0.calendarIdentifier) && $0.allowsContentModifications }
             .map(\.calendarIdentifier)
         guard let targetID = BacklogTicketTargeting.targetCalendarIdentifier(
             defaultCalendarID: eventStore.defaultCalendarForNewReminders()?.calendarIdentifier,
@@ -1325,6 +1336,13 @@ final class RemindersStore: ObservableObject {
     func renameTicket(cardID: String, title: String, undoManager: UndoManager? = nil) {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         let previousTitle = reminder.title ?? ""
+        // Nothing typed, nothing written. The board shows a trimmed title, so
+        // a stored " Einkaufen" came back from the field as "Einkaufen" and
+        // counted as a change: the reminder was rewritten, its modification
+        // date bumped, and the card's dwell-time chip reset to zero for
+        // opening a rename and pressing Return. The editor already refuses
+        // this; the inline rename must too.
+        guard title != previousTitle else { return }
         reminder.title = title
         do {
             try eventStore.save(reminder, commit: true)
@@ -1632,9 +1650,16 @@ final class RemindersStore: ObservableObject {
                     hasTime: reminder.dueDateComponents?.hour != nil),
                 at: .now)
         }
+        // Filling in a brand-new ticket is part of making it, not a second
+        // change on top: with its own entry, ⌘Z right after creating a ticket
+        // only emptied the title and left "Ohne Titel" lying on the board,
+        // and it took a second ⌘Z to undo what felt like one action. The
+        // creation's own entry (booked when the ticket is kept) removes the
+        // whole card, which is what "undo that" means here.
+        let isFirstFillOfNewTicket = newlyCreatedCardID == cardID
         // The inverse write: back to `previous`, measured against what was
         // just written, so undo touches exactly the fields this edit did.
-        if let previous {
+        if let previous, !isFirstFillOfNewTicket {
             register(undoManager, name: String(localized: "Edit")) { store in
                 store.updateTicket(
                     cardID: cardID, edited: previous, baseline: edited,
@@ -1793,7 +1818,9 @@ final class RemindersStore: ObservableObject {
             hasVisibleCards: KanbanStatus.allCases.contains { !cards(for: $0).isEmpty },
             isFiltering: isFiltering,
             hasSelectedLists: !reminderCalendars.isEmpty
-                && !reminderCalendars.allSatisfy { excludedCalendarIDs.contains($0.calendarIdentifier) })
+                && !reminderCalendars.allSatisfy { excludedCalendarIDs.contains($0.calendarIdentifier) },
+            hasAnyList: !reminderCalendars.isEmpty,
+            hasLoaded: hasLoadedOnce)
     }
 
     /// URL that opens this card's reminder directly in the Reminders app,

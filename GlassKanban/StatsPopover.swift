@@ -17,6 +17,8 @@ struct FlameIcon: View {
     var beat: Int = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Counts only the moments worth acknowledging — see the bounce below.
+    @State private var celebrated = 0
 
     var body: some View {
         Image(systemName: level == 0 ? "flame" : "flame.fill")
@@ -29,11 +31,18 @@ struct FlameIcon: View {
             // never changes is how it is switched off without a second code
             // path drifting out of sync with this one.
             //
-            // `level + beat` only ever increases within a day, so every
-            // completion bounces exactly once — whether or not it also
-            // changed the flame's fill.
+            // Only an *increase* bounces. `level + beat` also moves when a
+            // completion is taken back and when the day rolls over at
+            // midnight — so the acknowledgement for "just finished
+            // something" fired for undoing one, and once more at 00:00 for
+            // nobody. A reward that celebrates its own withdrawal is worse
+            // than no reward.
             .contentTransition(.symbolEffect(.replace))
-            .symbolEffect(.bounce, value: reduceMotion ? 0 : level + beat)
+            .symbolEffect(.bounce, value: reduceMotion ? 0 : celebrated)
+            .onChange(of: level + beat) { previous, current in
+                guard current > previous else { return }
+                celebrated += 1
+            }
             // The button around it carries the spoken label.
             .accessibilityHidden(true)
     }
@@ -322,6 +331,10 @@ struct StatsPopover: View {
     /// It never reports a shortfall. "Heute 0 erledigt" would be the one line
     /// in this window that reads as an accusation, and a board whose rule is
     /// to reward and never punish does not get to say that.
+    /// Below this, "longest streak" describes an accident rather than an
+    /// achievement — every first day is a personal best.
+    private static let minStreakWorthNaming = 3
+
     private var heroNote: (text: String, isReward: Bool)? {
         guard streak.todayCount > 0 else {
             return (streak.current == 0
@@ -330,7 +343,12 @@ struct StatsPopover: View {
                     false)
         }
         guard streak.current > 0, streak.best > 0 else { return nil }
-        if streak.current >= streak.best {
+        // Only while the record is actually being set — and only once there
+        // is a record worth the word. After the very first task the line
+        // stood there truthfully and meaninglessly, and on a long streak it
+        // then stayed for weeks: a reward that never leaves is furniture, and
+        // attention belongs to what just happened, not to a standing state.
+        if streak.current >= streak.best, streak.best >= Self.minStreakWorthNaming {
             return (String(localized: "Your longest streak yet"), true)
         }
         // Goal-gradient (Hull): closeness to the goal is what accelerates
@@ -411,7 +429,7 @@ struct StatsPopover: View {
                     if let weekly = weeklyThroughput {
                         row("Per Week",
                             String(localized: "\(weekly) tasks"),
-                            help: String(localized: "Your throughput: tasks completed per week, averaged over the last \(WrappedStats.trendWindowDays) days — the pace in Little's Law"))
+                            help: String(localized: "Your throughput: tasks completed per week, averaged over the last \(wrapped.observedDays) days — the pace in Little's Law"))
                     }
                     if let lead = wrapped.medianLeadTimeDays {
                         row("Lead Time",
@@ -534,6 +552,12 @@ struct StatsPopover: View {
     /// disagree about when the data is thin.
     private var weeklyThroughput: Int? {
         guard wrapped.throughputSampleCount >= WrappedStats.minSampleForForecast else { return nil }
+        // And enough calendar to speak of a week at all. Multiplying a first
+        // day's pace by seven produced "56 pro Woche" beside "8 Aufgaben
+        // dieses Jahr" — a number the board's own chart, showing 29 empty
+        // days, immediately contradicted. Until a week has passed, the row
+        // stays away rather than guessing.
+        guard wrapped.observedDays >= WrappedStats.minObservedDaysForWeekly else { return nil }
         return max(1, Int((wrapped.throughputPerDay * 7).rounded()))
     }
 
