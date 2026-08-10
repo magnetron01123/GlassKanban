@@ -1,197 +1,308 @@
 import XCTest
 
-/// The rule that stops the board from arguing with other software.
+/// The rule that lets the board stand by what the user entered here, next to
+/// other software writing into the same reminders.
 ///
-/// Every correction the app makes to data it did not change itself happens
-/// once; if the same state comes back, the app accepts it. Measured origin
-/// (10.08.2026): a stale snapshot pushed back every 30–55 minutes had the tag
-/// hygiene rewriting the same four reminders three times in three hours.
+/// Measured origin (10.08.2026): a calendar client with its own database
+/// pushed a stale copy of records back every 19 to 55 minutes.
 final class CorrectionLedgerTests: XCTestCase {
 
     private let t0 = Date(timeIntervalSince1970: 1_000_000)
 
-    private func ledgerAfterBacklogMove() -> CorrectionLedger {
+    private func state(
+        title: String? = "Einkaufen",
+        notes: String? = nil,
+        url: String? = nil,
+        due: Date? = nil,
+        hasDueTime: Bool = false,
+        isCompleted: Bool = false,
+        isRecurring: Bool = false
+    ) -> CorrectionLedger.CardState {
+        CorrectionLedger.CardState(
+            title: title, notes: notes, url: url, due: due,
+            hasDueTime: hasDueTime, isCompleted: isCompleted, isRecurring: isRecurring)
+    }
+
+    /// The board pulled a card to "Als Nächstes": notes went from nothing to
+    /// the tag.
+    private func ledgerAfterPull() -> CorrectionLedger {
         var ledger = CorrectionLedger()
-        ledger.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0)
+        ledger.record(cardID: "shop", field: .notes,
+                      replaced: .text(nil), wrote: .text("#next"), at: t0)
         return ledger
     }
 
-    func testTheStateTheAppDisplacedComingBackIsCorrectedOnce() {
-        let ledger = ledgerAfterBacklogMove()
-        let correction = ledger.pendingEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(60))
-        XCTAssertNotNil(correction, "an echo of our own write must be recognised")
-        XCTAssertEqual(correction ?? "unexpected", nil, "the correction restores what the app wrote")
+    // MARK: - The basic rule
+
+    func testTheDisplacedValueComingBackIsAnEcho() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", field: .notes,
+                      replaced: .text("#next"), wrote: .text(nil), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "shop", state: state(notes: "#next"), now: t0.addingTimeInterval(60))
+        XCTAssertEqual(echoes[.notes], .text(nil))
     }
 
-    /// Within the cooldown the board stays quiet — that is what stops a
-    /// storm across the dozens of refreshes in an hour.
-    func testASecondEchoInsideTheCooldownIsIgnored() {
-        var ledger = ledgerAfterBacklogMove()
-        XCTAssertNotNil(ledger.pendingEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(60)))
-        ledger.markAnswered(cardID: "shop", at: t0.addingTimeInterval(60))
-        XCTAssertNil(ledger.pendingEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(120)))
+    func testAThirdStateIsNotAnEcho() {
+        let ledger = ledgerAfterPull()
+        let echoes = ledger.pendingEchoes(
+            for: "shop", state: state(notes: "etwas anderes"), now: t0.addingTimeInterval(60))
+        XCTAssertTrue(echoes.isEmpty)
     }
 
-    /// ...but the decision is not abandoned: once the cooldown is over, the
-    /// board restores it again. A stale writer keeps losing.
-    func testTheEchoIsAnsweredAgainAfterTheCooldown() {
-        var ledger = ledgerAfterBacklogMove()
-        ledger.markAnswered(cardID: "shop", at: t0.addingTimeInterval(60))
+    func testAStaleEntryIsSilent() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", field: .title,
+                      replaced: .text("Alt"), wrote: .text("Neu"), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "shop", state: state(title: "Alt"),
+            now: t0.addingTimeInterval(CorrectionLedger.staleAfter + 1))
+        XCTAssertTrue(echoes.isEmpty)
+    }
+
+    /// An entry stamped in the future — a clock change, a file from another
+    /// machine — is not something to act on.
+    func testAnEntryFromTheFutureIsSilent() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", field: .title,
+                      replaced: .text("Alt"), wrote: .text("Neu"), at: t0.addingTimeInterval(3600))
+        XCTAssertTrue(ledger.pendingEchoes(for: "shop", state: state(title: "Alt"), now: t0).isEmpty)
+    }
+
+    func testWithinTheCooldownTheBoardStaysQuietAndAfterwardsAnswersAgain() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", field: .title,
+                      replaced: .text("Alt"), wrote: .text("Neu"), at: t0)
+        ledger.markAnswered(cardID: "shop", field: .title, at: t0.addingTimeInterval(60))
+        XCTAssertTrue(ledger.pendingEchoes(
+            for: "shop", state: state(title: "Alt"), now: t0.addingTimeInterval(120)).isEmpty)
         let later = t0.addingTimeInterval(60 + CorrectionLedger.cooldown + 1)
-        XCTAssertNotNil(ledger.pendingEcho(for: "shop", current: "#next", now: later))
+        XCTAssertEqual(
+            ledger.pendingEchoes(for: "shop", state: state(title: "Alt"), now: later)[.title],
+            .text("Neu"))
     }
 
-    /// Two Macs on one account cannot spin: each side answers at most once
-    /// per cooldown, so the exchange stays slow and bounded.
-    func testTwoMacsStayBoundedByTheCooldown() {
-        var mac = ledgerAfterBacklogMove()
-        mac.markAnswered(cardID: "shop", at: t0.addingTimeInterval(60))
-        XCTAssertNil(mac.pendingEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(120)))
-        // A fresh move by this Mac's own user arms it again immediately.
-        mac.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0.addingTimeInterval(180))
-        XCTAssertNotNil(mac.pendingEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(200)))
-    }
-
-    /// Byte-exact, not status-exact: someone typing the tag by hand on their
-    /// phone writes a different string than the one the app replaced, and
-    /// their decision stands.
-    func testAHandTypedTagIsNotMistakenForAnEcho() {
+    /// The pace is per field: an answered title does not silence notes.
+    func testPacingIsPerField() {
         var ledger = CorrectionLedger()
-        ledger.record(cardID: "shop", replaced: "Kontrolltext\n#next", wrote: "Kontrolltext", at: t0)
-        XCTAssertNil(ledger.pendingEcho(
-            for: "shop", current: "Kontrolltext\n#NEXT", now: t0.addingTimeInterval(60)))
-        XCTAssertNil(ledger.pendingEcho(
-            for: "shop", current: "Kontrolltext #next", now: t0.addingTimeInterval(60)))
-        XCTAssertNil(ledger.pendingEcho(
-            for: "shop", current: "Kontrolltext\n#alsnächstes", now: t0.addingTimeInterval(60)))
+        ledger.record(cardID: "c", field: .title, replaced: .text("Alt"), wrote: .text("Neu"), at: t0)
+        ledger.record(cardID: "c", field: .notes, replaced: .text("#next"), wrote: .text(nil), at: t0)
+        ledger.markAnswered(cardID: "c", field: .title, at: t0)
+        let s = state(title: "Alt", notes: "#next")
+        XCTAssertFalse(ledger.permitsWrite(cardID: "c", field: .title, state: s, now: t0))
+        XCTAssertTrue(ledger.permitsWrite(cardID: "c", field: .notes, state: s, now: t0))
     }
 
-    /// The legacy spellings are exactly what the measured snapshot pushed
-    /// back, and they are recognised — because the ledger compares against
-    /// what was *replaced*, whatever that happened to be.
-    func testAnEchoInALegacySpellingIsRecognised() {
+    // MARK: - Withdrawal
+
+    /// Somebody decided something new: the old displacement is history, and
+    /// the board must not fight a user who changed their mind.
+    func testAThirdStateWithdrawsTheEntry() {
         var ledger = CorrectionLedger()
-        ledger.record(cardID: "chore", replaced: "#alsnächstes", wrote: nil, at: t0)
-        XCTAssertNotNil(ledger.pendingEcho(
-            for: "chore", current: "#alsnächstes", now: t0.addingTimeInterval(60)))
+        ledger.record(cardID: "shop", field: .title,
+                      replaced: .text("Alt"), wrote: .text("Neu"), at: t0)
+        ledger.observe(cardID: "shop", state: state(title: "Ganz was anderes"), now: t0)
+        XCTAssertTrue(ledger.pendingEchoes(
+            for: "shop", state: state(title: "Alt"), now: t0.addingTimeInterval(60)).isEmpty)
     }
 
-    /// Any other state is a decision someone made, not an echo.
-    func testAnUnrelatedStateIsLeftAlone() {
-        let ledger = ledgerAfterBacklogMove()
-        XCTAssertNil(ledger.pendingEcho(for: "shop", current: "#inprogress", now: t0.addingTimeInterval(60)))
-        XCTAssertNil(ledger.pendingEcho(for: "shop", current: "Neuer Text", now: t0.addingTimeInterval(60)))
-    }
-
-    func testACardTheAppNeverWroteIsNeverCorrected() {
-        let ledger = CorrectionLedger()
-        XCTAssertNil(ledger.pendingEcho(for: "unknown", current: "#next", now: t0))
-    }
-
-    /// Preferences restored from a backup must not hand the app a target
-    /// state for a board that has moved on for weeks.
-    func testStaleEntriesExpire() {
-        let ledger = ledgerAfterBacklogMove()
-        let farLater = t0.addingTimeInterval(CorrectionLedger.staleAfter + 1)
-        XCTAssertNil(ledger.pendingEcho(for: "shop", current: "#next", now: farLater))
-    }
-
-    /// A write that changed nothing displaced nothing.
-    func testANoOpWriteIsNotRecorded() {
+    /// Seeing the displaced value is exactly the echo — observing must not
+    /// eat it.
+    func testObservingTheDisplacedValueKeepsTheEntry() {
         var ledger = CorrectionLedger()
-        ledger.record(cardID: "shop", replaced: "#next", wrote: "#next", at: t0)
-        XCTAssertNil(ledger.pendingEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(60)))
+        ledger.record(cardID: "shop", field: .title,
+                      replaced: .text("Alt"), wrote: .text("Neu"), at: t0)
+        ledger.observe(cardID: "shop", state: state(title: "Alt"), now: t0)
+        XCTAssertFalse(ledger.pendingEchoes(
+            for: "shop", state: state(title: "Alt"), now: t0.addingTimeInterval(60)).isEmpty)
     }
 
-    /// The user's hand outranks the bookkeeping: a later write on the same
-    /// card ends the older displacement even when it changes no text — which
-    /// is exactly what Backlog → Erledigt looks like, both being tagless.
-    func testALaterNoOpWriteEndsAnOlderDisplacement() {
-        var ledger = ledgerAfterBacklogMove()
-        ledger.record(cardID: "shop", replaced: nil, wrote: nil, at: t0.addingTimeInterval(60))
-        XCTAssertNil(ledger.pendingEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(120)))
-        XCTAssertTrue(ledger.permitsAutomaticWrite(
-            for: "shop", current: "#next", now: t0.addingTimeInterval(120)))
-    }
-
-    func testRetainDropsVanishedCardsAndStaleEntries() {
+    func testObservingOurOwnValueKeepsTheEntry() {
         var ledger = CorrectionLedger()
-        ledger.record(cardID: "live", replaced: "#next", wrote: nil, at: t0)
-        ledger.record(cardID: "deleted", replaced: "#next", wrote: nil, at: t0)
-        ledger.record(cardID: "ancient", replaced: "#next", wrote: nil,
+        ledger.record(cardID: "shop", field: .title,
+                      replaced: .text("Alt"), wrote: .text("Neu"), at: t0)
+        ledger.observe(cardID: "shop", state: state(title: "Neu"), now: t0)
+        XCTAssertFalse(ledger.pendingEchoes(
+            for: "shop", state: state(title: "Alt"), now: t0.addingTimeInterval(60)).isEmpty)
+    }
+
+    /// A later write that displaces nothing still ends this field's entry —
+    /// but only this field's.
+    func testANoOpWriteClearsOnlyItsOwnField() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", field: .title, replaced: .text("A"), wrote: .text("B"), at: t0)
+        ledger.record(cardID: "shop", field: .notes, replaced: .text("#next"), wrote: .text(nil), at: t0)
+        ledger.record(cardID: "shop", field: .notes, replaced: .text(nil), wrote: .text(nil), at: t0)
+        let s = state(title: "A", notes: "#next")
+        let echoes = ledger.pendingEchoes(for: "shop", state: s, now: t0.addingTimeInterval(60))
+        XCTAssertNil(echoes[.notes])
+        XCTAssertEqual(echoes[.title], .text("B"))
+    }
+
+    // MARK: - Direction rules
+
+    /// The card keeps its column: prose restored onto a card in "Als
+    /// Nächstes" is allowed — the case the single-field build refused.
+    func testNotesMayBeRestoredWhenTheColumnStaysTheSame() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "c", field: .notes,
+                      replaced: .text("#next"), wrote: .text("Prosa\n#next"), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(notes: "#next"), now: t0.addingTimeInterval(60))
+        XCTAssertEqual(echoes[.notes], .text("Prosa\n#next"))
+    }
+
+    func testNotesMayBeRestoredWhenTheCardFallsToBacklog() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "c", field: .notes,
+                      replaced: .text("#next"), wrote: .text(nil), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(notes: "#next"), now: t0.addingTimeInterval(60))
+        XCTAssertEqual(echoes[.notes], .text(nil))
+    }
+
+    /// Never into a working lane: that would be pulling work nobody pulled.
+    func testNotesAreNotRestoredIntoAWorkingLane() {
+        let ledger = ledgerAfterPull()
+        let echoes = ledger.pendingEchoes(
+            for: "shop", state: state(notes: nil), now: t0.addingTimeInterval(60))
+        XCTAssertNil(echoes[.notes], "an automatic write must never pull a card into a lane")
+    }
+
+    func testNotesAreNotRestoredFromNextToInProgress() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "c", field: .notes,
+                      replaced: .text("#next"), wrote: .text("#inprogress"), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(notes: "#next"), now: t0.addingTimeInterval(60))
+        XCTAssertNil(echoes[.notes])
+    }
+
+    /// On a completed reminder both sides read as Done, so prose comes back.
+    func testNotesOnACompletedReminderMayBeRestored() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "c", field: .notes,
+                      replaced: .text("alt"), wrote: .text("neu"), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(notes: "alt", isCompleted: true), now: t0.addingTimeInterval(60))
+        XCTAssertEqual(echoes[.notes], .text("neu"))
+    }
+
+    func testAVanishedDueDateComesBack() {
+        var ledger = CorrectionLedger()
+        let due = Date(timeIntervalSince1970: 2_000_000)
+        ledger.record(cardID: "c", field: .due,
+                      replaced: .due(nil, hasTime: false), wrote: .due(due, hasTime: false), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(due: nil), now: t0.addingTimeInterval(60))
+        XCTAssertEqual(echoes[.due], .due(due, hasTime: false))
+    }
+
+    /// A date that was *moved* is never moved back — that would let the board
+    /// delete a deadline the user just set.
+    func testAMovedDueDateIsNotRestored() {
+        var ledger = CorrectionLedger()
+        let older = Date(timeIntervalSince1970: 2_000_000)
+        let newer = Date(timeIntervalSince1970: 3_000_000)
+        ledger.record(cardID: "c", field: .due,
+                      replaced: .due(older, hasTime: false), wrote: .due(newer, hasTime: false), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(due: older), now: t0.addingTimeInterval(60))
+        XCTAssertNil(echoes[.due])
+    }
+
+    func testADueDateIsNeverDeleted() {
+        var ledger = CorrectionLedger()
+        let due = Date(timeIntervalSince1970: 2_000_000)
+        ledger.record(cardID: "c", field: .due,
+                      replaced: .due(due, hasTime: false), wrote: .due(nil, hasTime: false), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(due: due), now: t0.addingTimeInterval(60))
+        XCTAssertNil(echoes[.due])
+    }
+
+    /// EventKit moves a series' date itself when it rolls on — off limits.
+    func testARecurringSeriesKeepsItsDateAlone() {
+        var ledger = CorrectionLedger()
+        let due = Date(timeIntervalSince1970: 2_000_000)
+        ledger.record(cardID: "c", field: .due,
+                      replaced: .due(nil, hasTime: false), wrote: .due(due, hasTime: false), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(due: nil, isRecurring: true), now: t0.addingTimeInterval(60))
+        XCTAssertNil(echoes[.due])
+    }
+
+    func testTitleAndURLAreRestoredInBothDirections() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "c", field: .title, replaced: .text("Alt"), wrote: .text("Neu"), at: t0)
+        ledger.record(cardID: "c", field: .url,
+                      replaced: .text(nil), wrote: .text("https://example.com"), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(title: "Alt", url: nil), now: t0.addingTimeInterval(60))
+        XCTAssertEqual(echoes[.title], .text("Neu"))
+        XCTAssertEqual(echoes[.url], .text("https://example.com"))
+    }
+
+    /// All four at once — one save is the store's business, not the rule's.
+    func testFourFieldsCanEchoTogether() {
+        var ledger = CorrectionLedger()
+        let due = Date(timeIntervalSince1970: 2_000_000)
+        ledger.record(cardID: "c", field: .notes, replaced: .text("alt"), wrote: .text("neu"), at: t0)
+        ledger.record(cardID: "c", field: .title, replaced: .text("A"), wrote: .text("B"), at: t0)
+        ledger.record(cardID: "c", field: .url, replaced: .text(nil), wrote: .text("https://x.test"), at: t0)
+        ledger.record(cardID: "c", field: .due,
+                      replaced: .due(nil, hasTime: false), wrote: .due(due, hasTime: true), at: t0)
+        let echoes = ledger.pendingEchoes(
+            for: "c", state: state(title: "A", notes: "alt", url: nil, due: nil, isCompleted: true),
+            now: t0.addingTimeInterval(60))
+        XCTAssertEqual(echoes.count, 4)
+    }
+
+    // MARK: - Housekeeping
+
+    func testRetainDropsStaleEntriesAndKeepsUnfetchedCards() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "fresh", field: .title, replaced: .text("A"), wrote: .text("B"), at: t0)
+        ledger.record(cardID: "ancient", field: .title, replaced: .text("A"), wrote: .text("B"),
                       at: t0.addingTimeInterval(-CorrectionLedger.staleAfter - 1))
-        ledger.retain(["live", "ancient"], now: t0.addingTimeInterval(60))
-        XCTAssertNotNil(ledger.pendingEcho(for: "live", current: "#next", now: t0.addingTimeInterval(60)))
-        XCTAssertNil(ledger.pendingEcho(for: "deleted", current: "#next", now: t0.addingTimeInterval(60)))
-        XCTAssertNil(ledger.pendingEcho(for: "ancient", current: "#next", now: t0.addingTimeInterval(60)))
+        ledger.retain(now: t0.addingTimeInterval(60))
+        let s = state(title: "A")
+        XCTAssertFalse(ledger.pendingEchoes(for: "fresh", state: s, now: t0.addingTimeInterval(60)).isEmpty)
+        XCTAssertTrue(ledger.pendingEchoes(for: "ancient", state: s, now: t0.addingTimeInterval(60)).isEmpty)
     }
 
-    // MARK: - The storm guard
-
-    /// The measured incident: the hygiene stripped the same legacy tag from
-    /// the same completed reminder three times in three hours. After the
-    /// first answer, it must stop asking.
-    func testHygieneMayCleanAStateOncePerCooldown() {
+    func testRetainCapsTheLedger() {
         var ledger = CorrectionLedger()
-        let stale = "#alsnächstes"
-        // Nothing known about this card yet — the hygiene is free to act.
-        XCTAssertTrue(ledger.permitsAutomaticWrite(for: "chore", current: stale, now: t0))
-        ledger.record(cardID: "chore", replaced: stale, wrote: nil, at: t0)
-        ledger.markAnswered(cardID: "chore", at: t0)
-        // Same refresh cycle, same state: quiet.
-        XCTAssertFalse(ledger.permitsAutomaticWrite(
-            for: "chore", current: stale, now: t0.addingTimeInterval(60)))
-        // After the cooldown the board cleans it again rather than giving up.
-        XCTAssertTrue(ledger.permitsAutomaticWrite(
-            for: "chore", current: stale, now: t0.addingTimeInterval(CorrectionLedger.cooldown + 1)))
+        for i in 0..<(CorrectionLedger.maxCards + 25) {
+            ledger.record(cardID: "card-\(i)", field: .title,
+                          replaced: .text("A"), wrote: .text("B"),
+                          at: t0.addingTimeInterval(Double(i)))
+        }
+        ledger.retain(now: t0.addingTimeInterval(1000))
+        let s = state(title: "A")
+        XCTAssertFalse(ledger.pendingEchoes(
+            for: "card-\(CorrectionLedger.maxCards + 24)", state: s,
+            now: t0.addingTimeInterval(1000)).isEmpty)
+        XCTAssertTrue(ledger.pendingEchoes(
+            for: "card-0", state: s, now: t0.addingTimeInterval(1000)).isEmpty)
     }
 
-    /// The guard is bound to the exact state that was answered. Anything else
-    /// — including a state nobody has seen before — may still be cleaned.
-    func testADifferentStateMayStillBeWritten() {
+    func testNextAnswerDueIsTheEarliestAcrossFieldsAndCards() {
         var ledger = CorrectionLedger()
-        ledger.record(cardID: "chore", replaced: "#alsnächstes", wrote: nil, at: t0)
-        ledger.markAnswered(cardID: "chore", at: t0)
-        XCTAssertTrue(ledger.permitsAutomaticWrite(
-            for: "chore", current: "#inbearbeitung", now: t0.addingTimeInterval(60)))
-    }
-
-    /// Before the one answer is spent, writing is allowed — that write *is*
-    /// the answer.
-    func testAnUnansweredStateMayBeWritten() {
-        var ledger = CorrectionLedger()
-        ledger.record(cardID: "chore", replaced: "#alsnächstes", wrote: nil, at: t0)
-        XCTAssertTrue(ledger.permitsAutomaticWrite(
-            for: "chore", current: "#alsnächstes", now: t0.addingTimeInterval(60)))
-    }
-
-    /// Once the entry itself is stale, the pacing stops mattering too.
-    func testTheEntryExpiresEntirely() {
-        var ledger = CorrectionLedger()
-        ledger.record(cardID: "chore", replaced: "#alsnächstes", wrote: nil, at: t0)
-        ledger.markAnswered(cardID: "chore", at: t0)
-        XCTAssertTrue(ledger.permitsAutomaticWrite(
-            for: "chore", current: "#alsnächstes", now: t0.addingTimeInterval(CorrectionLedger.staleAfter + 1)))
-        XCTAssertNil(ledger.pendingEcho(
-            for: "chore", current: "#alsnächstes", now: t0.addingTimeInterval(CorrectionLedger.staleAfter + 1)))
-    }
-
-    /// Notes that were empty are a state like any other — a card whose only
-    /// content was the tag ends up with none, and that "none" must be
-    /// comparable.
-    func testAbsentNotesAreAComparableState() {
-        var ledger = CorrectionLedger()
-        ledger.record(cardID: "shop", replaced: nil, wrote: "#next", at: t0)
-        let correction = ledger.pendingEcho(for: "shop", current: nil, now: t0.addingTimeInterval(60))
-        XCTAssertEqual(correction ?? nil, "#next")
+        ledger.record(cardID: "a", field: .title, replaced: .text("A"), wrote: .text("B"), at: t0)
+        ledger.record(cardID: "b", field: .notes, replaced: .text("#next"), wrote: .text(nil), at: t0)
+        ledger.markAnswered(cardID: "a", field: .title, at: t0)
+        ledger.markAnswered(cardID: "b", field: .notes, at: t0.addingTimeInterval(120))
+        let due = ledger.nextAnswerDue(now: t0.addingTimeInterval(120))
+        XCTAssertEqual(due ?? 0, CorrectionLedger.cooldown - 120, accuracy: 0.5)
     }
 }
 
-/// The ledger's persisted half: it must survive a restart, because the writer
-/// it defends against works on a scale of tens of minutes and the app may be
-/// quit in between.
+/// The persisted half: it must survive a restart, because the writer it
+/// defends against works on a scale of tens of minutes.
 final class CorrectionLedgerPersistenceTests: XCTestCase {
 
+    private let t0 = Date(timeIntervalSince1970: 1_000_000)
     private var savedValue: Any?
 
     override func setUp() {
@@ -208,11 +319,15 @@ final class CorrectionLedgerPersistenceTests: XCTestCase {
         super.tearDown()
     }
 
-    func testLedgerRoundTripsThroughDefaults() {
-        let t0 = Date(timeIntervalSince1970: 1_000_000)
+    func testAllFourFieldsRoundTrip() {
         var ledger = CorrectionLedger()
-        ledger.record(cardID: "shop", replaced: "Text\n#next", wrote: "Text", at: t0)
-        ledger.record(cardID: "chore", replaced: "#inprogress", wrote: nil, at: t0)
+        let due = Date(timeIntervalSince1970: 2_000_000)
+        ledger.record(cardID: "c", field: .notes, replaced: .text(nil), wrote: .text("Text\n#next"), at: t0)
+        ledger.record(cardID: "c", field: .title, replaced: .text("Alt"), wrote: .text("Neu"), at: t0)
+        ledger.record(cardID: "c", field: .url, replaced: .text("https://a.test"), wrote: .text(nil), at: t0)
+        ledger.record(cardID: "d", field: .due,
+                      replaced: .due(nil, hasTime: false), wrote: .due(due, hasTime: true), at: t0)
+        ledger.markAnswered(cardID: "c", field: .notes, at: t0.addingTimeInterval(30))
         ledger.save()
         XCTAssertEqual(CorrectionLedger.load(), ledger)
     }
@@ -223,75 +338,47 @@ final class CorrectionLedgerPersistenceTests: XCTestCase {
     }
 
     func testForeignTypesLoadEmpty() {
-        UserDefaults.standard.set("not a dictionary", forKey: CorrectionLedger.storageKey)
+        UserDefaults.standard.set("kein Wörterbuch", forKey: CorrectionLedger.storageKey)
         XCTAssertEqual(CorrectionLedger.load(), CorrectionLedger())
     }
 
-    /// A half-written entry says nothing usable and is dropped; the rest of
-    /// the ledger survives.
-    func testEntriesWithoutATimestampAreDropped() {
+    /// A payload from the single-field build carries no version and is
+    /// discarded rather than guessed at.
+    func testAPayloadWithoutAVersionIsDiscarded() {
         UserDefaults.standard.set(
-            [
-                "broken": ["replaced": "#next"],
-                "good": ["replaced": "#next", "at": 1_000_000.0],
-            ],
+            ["shop": ["replaced": "#next", "at": 1_000_000.0]],
             forKey: CorrectionLedger.storageKey)
-        let ledger = CorrectionLedger.load()
-        let now = Date(timeIntervalSince1970: 1_000_060)
-        XCTAssertNil(ledger.pendingEcho(for: "broken", current: "#next", now: now))
-        XCTAssertNotNil(ledger.pendingEcho(for: "good", current: "#next", now: now))
-    }
-}
-
-/// The wake-up call: an answer the cooldown deferred must still be given, and
-/// only the ledger knows when it is due.
-final class CorrectionLedgerWakeUpTests: XCTestCase {
-
-    private let t0 = Date(timeIntervalSince1970: 1_000_000)
-
-    func testNothingIsDueWithoutEntries() {
-        XCTAssertNil(CorrectionLedger().nextAnswerDue(now: t0))
+        XCTAssertEqual(CorrectionLedger.load(), CorrectionLedger())
     }
 
-    func testAnUnansweredEntryNeedsNoWakeUp() {
+    /// A broken field costs that field, not the ledger.
+    func testABrokenFieldIsDroppedAndTheRestSurvives() {
         var ledger = CorrectionLedger()
-        ledger.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0)
-        XCTAssertNil(ledger.nextAnswerDue(now: t0), "it can be answered right away")
+        ledger.record(cardID: "c", field: .title, replaced: .text("A"), wrote: .text("B"), at: t0)
+        ledger.save()
+        var stored = UserDefaults.standard.dictionary(forKey: CorrectionLedger.storageKey)!
+        var cards = stored["cards"] as! [String: [String: Any]]
+        var fields = cards["c"]!
+        fields["notes"] = ["at": 1_000_000.0]        // no values
+        fields["erfunden"] = ["at": 1_000_000.0]     // unknown field name
+        cards["c"] = fields
+        stored["cards"] = cards
+        UserDefaults.standard.set(stored, forKey: CorrectionLedger.storageKey)
+
+        let loaded = CorrectionLedger.load()
+        let s = CorrectionLedger.CardState(
+            title: "A", notes: nil, url: nil, due: nil,
+            hasDueTime: false, isCompleted: false, isRecurring: false)
+        XCTAssertEqual(loaded.pendingEchoes(for: "c", state: s, now: t0.addingTimeInterval(60))[.title],
+                       .text("B"))
     }
 
-    func testAnAnsweredEntryComesDueAfterTheCooldown() {
+    /// "No notes at all" and "empty notes" are different states and must stay
+    /// distinguishable across a save.
+    func testAbsentAndEmptyTextAreDistinguishable() {
         var ledger = CorrectionLedger()
-        ledger.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0)
-        ledger.markAnswered(cardID: "shop", at: t0)
-        let due = ledger.nextAnswerDue(now: t0.addingTimeInterval(60))
-        XCTAssertEqual(due ?? 0, CorrectionLedger.cooldown - 60, accuracy: 0.5)
-    }
-
-    /// The wake-up follows whichever card comes due first.
-    func testTheEarliestAnswerWins() {
-        var ledger = CorrectionLedger()
-        ledger.record(cardID: "early", replaced: "#next", wrote: nil, at: t0)
-        ledger.markAnswered(cardID: "early", at: t0)
-        ledger.record(cardID: "late", replaced: "#next", wrote: nil, at: t0)
-        ledger.markAnswered(cardID: "late", at: t0.addingTimeInterval(120))
-        let due = ledger.nextAnswerDue(now: t0.addingTimeInterval(120))
-        XCTAssertEqual(due ?? 0, CorrectionLedger.cooldown - 120, accuracy: 0.5)
-    }
-
-    /// Once the cooldown has passed nothing is pending — the next sync will
-    /// answer on its own.
-    func testNothingIsDueOnceTheCooldownHasPassed() {
-        var ledger = CorrectionLedger()
-        ledger.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0)
-        ledger.markAnswered(cardID: "shop", at: t0)
-        XCTAssertNil(ledger.nextAnswerDue(now: t0.addingTimeInterval(CorrectionLedger.cooldown + 1)))
-    }
-
-    /// A stale entry is nobody's business any more, so it never wakes the app.
-    func testAStaleEntryNeverWakesTheApp() {
-        var ledger = CorrectionLedger()
-        ledger.record(cardID: "shop", replaced: "#next", wrote: nil, at: t0)
-        ledger.markAnswered(cardID: "shop", at: t0.addingTimeInterval(CorrectionLedger.staleAfter - 1))
-        XCTAssertNil(ledger.nextAnswerDue(now: t0.addingTimeInterval(CorrectionLedger.staleAfter + 1)))
+        ledger.record(cardID: "a", field: .notes, replaced: .text(nil), wrote: .text(""), at: t0)
+        ledger.save()
+        XCTAssertEqual(CorrectionLedger.load(), ledger)
     }
 }
