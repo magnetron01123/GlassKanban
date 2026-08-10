@@ -27,16 +27,17 @@ import Foundation
 /// 1. The series is open, recurring, and carries a status tag.
 /// 2. The previous refresh saw the same tag on the same identifier — the tag
 ///    is older than this refresh, so nobody just pulled it.
-/// 3. A completed reminder with the same title in the same list appeared
-///    whose identifier was never fetched before — the fingerprint of a
-///    freshly detached occurrence. An ordinary completion keeps its
-///    identifier, so finishing a same-titled one-off task can not trigger
-///    this.
+/// 3. A completed reminder appeared whose identifier was never fetched
+///    before — the fingerprint of a freshly detached occurrence — and whose
+///    creation date identifies it as a turn of this very series
+///    (`RecurringSeriesMatch`). Matching on the title instead let a
+///    same-titled task created and completed on another device between two
+///    refreshes take the tag off a card somebody had pulled.
 /// 4. The user has not deliberately moved the series since the last refresh —
 ///    a pull made in the window between the completion syncing in and the
 ///    refresh seeing it stays a pull.
-/// 5. Exactly one series matches the finished occurrence. Two same-titled
-///    live series in one list make the match ambiguous, so nothing happens.
+/// 5. Exactly one live series of that list carries the occurrence's creation
+///    date. Anything ambiguous means no proof, so nothing happens.
 ///
 /// A completion that happens while the app is closed is covered by `Memory`:
 /// the end of every refresh persists what condition 2 and 3 need — which
@@ -106,15 +107,28 @@ enum RecurringTagRelease {
         let isCompleted: Bool
         let isRecurring: Bool
         let status: KanbanStatus
+        /// What says which series a finished turn came from — see
+        /// `RecurringSeriesMatch`. The title stays on the snapshot, but only
+        /// to skip abandoned untitled placeholders; it no longer decides
+        /// identity.
+        let createdAt: Date?
 
         init(id: String, title: String, listID: String,
-             isCompleted: Bool, isRecurring: Bool, status: KanbanStatus) {
+             isCompleted: Bool, isRecurring: Bool, status: KanbanStatus,
+             createdAt: Date? = nil) {
             self.id = id
             self.title = title
             self.listID = listID
             self.isCompleted = isCompleted
             self.isRecurring = isRecurring
             self.status = status
+            self.createdAt = createdAt
+        }
+
+        var matchRecord: RecurringSeriesMatch.Record {
+            RecurringSeriesMatch.Record(
+                id: id, listID: listID, createdAt: createdAt,
+                isCompleted: isCompleted, isRecurring: isRecurring)
         }
     }
 
@@ -139,17 +153,20 @@ enum RecurringTagRelease {
         let freshOccurrences = refreshed.filter {
             $0.isCompleted && !$0.title.isEmpty && !previouslySeenIDs.contains($0.id)
         }
+        let records = refreshed.map(\.matchRecord)
         var released: Set<String> = []
         for occurrence in freshOccurrences {
-            let candidates = refreshed.filter {
-                !$0.isCompleted
-                    && $0.isRecurring
-                    && ($0.status == .next || $0.status == .inProgress)
-                    && $0.title == occurrence.title
-                    && $0.listID == occurrence.listID
-                    && $0.id != occurrence.id
-            }
-            guard candidates.count == 1, let series = candidates.first,
+            // Which series this turn belongs to is decided by the creation
+            // date, not the title (`RecurringSeriesMatch`, measured
+            // 10.08.2026). Uniqueness is judged among *all* live series of
+            // the list sharing that date — stricter than the old title
+            // count, which only weighed tagged ones, and stricter is the
+            // right direction for the one rule here that can move a card
+            // without anybody seeing it.
+            guard let seriesID = RecurringSeriesMatch.seriesID(
+                    of: occurrence.matchRecord, among: records),
+                  let series = refreshed.first(where: { $0.id == seriesID }),
+                  series.status == .next || series.status == .inProgress,
                   previousStatusByID[series.id] == series.status,
                   !deliberatelyMoved.contains(series.id)
             else { continue }

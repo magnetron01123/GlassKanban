@@ -678,7 +678,8 @@ final class RemindersStore: ObservableObject {
                 listID: listID,
                 isCompleted: reminder.isCompleted,
                 isRecurring: reminder.hasRecurrenceRules,
-                status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted))
+                status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted),
+                createdAt: reminder.creationDate)
         }
         // The very first refresh after a cold start has no previous board —
         // `cards` and `lastFetchedReminderIDs` are still empty. The persisted
