@@ -570,7 +570,7 @@ final class RemindersStore: ObservableObject {
         // Recorded and spent in the same breath: the write *is* the one answer
         // this state gets. Whether it survives is not the app's to decide.
         corrections.record(cardID: cardID, replaced: current, wrote: notes, at: now)
-        corrections.markAnswered(cardID: cardID)
+        corrections.markAnswered(cardID: cardID, at: now)
         return true
     }
 
@@ -592,7 +592,7 @@ final class RemindersStore: ObservableObject {
         for reminder in reminders {
             let cardID = reminder.calendarItemIdentifier
             guard !deliberatelyMovedSinceRefresh.contains(cardID),
-                  let restored = corrections.unansweredEcho(
+                  let restored = corrections.pendingEcho(
                     for: cardID, current: reminder.notes, now: now),
                   StatusTagger.status(fromNotes: restored, isCompleted: reminder.isCompleted) == .backlog,
                   // Restoring a tagless text onto a completed reminder is the

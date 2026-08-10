@@ -12,29 +12,35 @@ import Foundation
 ///
 /// The rule that ends that, and the only one this type exists for:
 ///
-/// > **Every correction the app makes to data it did not change itself
-/// > happens once. If the same state comes back, the app accepts it.**
+/// > **A decision the user made is restored whenever something undoes it —
+/// > but never more than once per `cooldown` for the same card.**
 ///
-/// It is deliberately not "try harder", and deliberately not a rule about
-/// hashtags, recurrence or due dates — it is an invariant over every write
-/// the user did not ask for. What it buys, all from the same sentence:
+/// The board has to work next to other software. Reminders, Fantastical, a
+/// home automation bridge, a shortcut: any of them may read and write the
+/// same records, and an app that only works when it is the sole writer would
+/// be no product at all. So the board stands by what the user decided for as
+/// long as something keeps undoing it. The pace is the only thing bounded —
+/// what it rules out is not the fight but the *storm*: two programs writing
+/// at each other faster than a person could notice, or a hygiene pass firing
+/// on every one of the dozens of refreshes an hour.
 ///
-/// - A write storm cannot form. A hostile writer gets one answer, not one
-///   per refresh, forever.
-/// - Two Macs running the board cannot fight. Each corrects at most once per
-///   move its own user made, so the exchange terminates.
-/// - The convergence promise of the sync hygiene holds by construction: a
-///   correction that cannot repeat cannot loop.
-/// - A single sync conflict — the ordinary case on a shared list — is still
-///   healed, which is the whole point of correcting at all.
+/// It is deliberately not a rule about hashtags, recurrence or due dates —
+/// it is an invariant over every write the user did not ask for. What follows
+/// from it:
 ///
-/// What it cannot buy: winning. Against a writer that keeps pushing an old
-/// state, the app loses the column and shows what the data says, because the
-/// data *is* the truth (the app owns no store of its own). That is a
-/// deliberate choice over an endless fight, and it stays invisible: the board
-/// says nothing about it, ever. A notice about column mechanics would be
-/// standing noise on a surface whose whole point is quiet (user decision,
-/// 10.08.2026 — see CONCEPT.md).
+/// - The measured storm cannot recur: a state is answered at most once per
+///   cooldown, no matter how many refreshes see it.
+/// - Two Macs running the board write at each other at most six times an hour
+///   each — bounded and slow enough to stay a curiosity, not a loop.
+/// - A single sync conflict — the ordinary case on a shared list — is healed
+///   immediately, which is the whole point of correcting at all.
+/// - A stale writer that keeps pushing an old state keeps losing: every
+///   occurrence is answered, so the card spends its time in the column the
+///   user put it in.
+///
+/// All of it stays invisible: the board says nothing about any of this, ever.
+/// A notice about column mechanics would be standing noise on a surface whose
+/// whole point is quiet (user decision, 10.08.2026 — see CONCEPT.md).
 ///
 /// **Byte-exact, not status-exact.** An entry remembers the literal note text
 /// that was replaced. A restored snapshot reproduces those bytes; a person
@@ -54,12 +60,25 @@ struct CorrectionLedger: Equatable {
         /// When the write happened. An entry that is old enough to predate
         /// any plausible sync delay has nothing left to say (see `staleAfter`).
         let at: Date
-        /// Whether the one correction this displacement is owed has been
-        /// spent. Kept rather than deleted: a forgotten entry would let the
-        /// next sync start the argument over from the beginning, which is
-        /// what a write storm is.
-        var answered: Bool
+        /// When the app last answered this displacement, if it has. Not a
+        /// one-way flag: the board keeps standing by its decision for as long
+        /// as something keeps undoing it, and this timestamp is only what
+        /// paces the answers (see `cooldown`).
+        var answeredAt: Date?
     }
+
+    /// The shortest gap between two answers to the same card.
+    ///
+    /// Not a retreat, a pace. Another program writing into the same reminders
+    /// is normal — the board must work next to Reminders, Fantastical, a home
+    /// automation bridge, whatever the user runs; being usable only alone
+    /// would be no product at all. So a decision the user made is restored as
+    /// often as something undoes it, and the only thing this limit prevents
+    /// is two programs writing at each other faster than a person could
+    /// notice. Measured against the real case (a stale snapshot returning
+    /// every 19 to 55 minutes), ten minutes restores every single occurrence
+    /// while capping the worst case at six writes an hour per card.
+    static let cooldown: TimeInterval = 10 * 60
 
     /// How long an entry stays actionable. Echoes arrive within minutes to
     /// hours; a day is far past that. The limit matters for a case the
@@ -87,19 +106,19 @@ struct CorrectionLedger: Equatable {
             entries.removeValue(forKey: cardID)
             return
         }
-        entries[cardID] = Entry(replaced: replaced, wrote: wrote, at: at, answered: false)
+        entries[cardID] = Entry(replaced: replaced, wrote: wrote, at: at, answeredAt: nil)
     }
 
     /// The text a correction would restore, or nil to leave the record alone.
     ///
-    /// Answers only when the current text is byte-for-byte the state this app
-    /// displaced, the entry is still fresh, and the one correction it is owed
-    /// has not been spent.
-    func unansweredEcho(for cardID: String, current: String?, now: Date) -> String?? {
+    /// Answers when the current text is byte-for-byte the state this app
+    /// displaced, the entry is still fresh, and the last answer is longer ago
+    /// than `cooldown`.
+    func pendingEcho(for cardID: String, current: String?, now: Date) -> String?? {
         guard let entry = entries[cardID],
-              !entry.answered,
               now.timeIntervalSince(entry.at) < Self.staleAfter,
-              current == entry.replaced
+              current == entry.replaced,
+              entry.answeredAt.map({ now.timeIntervalSince($0) >= Self.cooldown }) ?? true
         else { return nil }
         return .some(entry.wrote)
     }
@@ -107,22 +126,24 @@ struct CorrectionLedger: Equatable {
     /// Whether the app may write to this record on its own initiative — the
     /// data hygiene, a spent pull, an echo.
     ///
-    /// The single "no" is the invariant: this exact state has already been
-    /// answered once. Everything else is allowed, including a state the app
-    /// has never seen and one it displaced but has not yet answered.
+    /// The single "no" is the pace: this exact state was answered less than
+    /// `cooldown` ago. Everything else is allowed, including a state the app
+    /// has never seen.
     func permitsAutomaticWrite(for cardID: String, current: String?, now: Date) -> Bool {
         guard let entry = entries[cardID],
-              entry.answered,
+              let answeredAt = entry.answeredAt,
               now.timeIntervalSince(entry.at) < Self.staleAfter,
-              current == entry.replaced
+              current == entry.replaced,
+              now.timeIntervalSince(answeredAt) < Self.cooldown
         else { return true }
         return false
     }
 
-    /// Spends the correction this displacement was owed, whether or not it
-    /// survives. One answer per displacement is the whole rule.
-    mutating func markAnswered(cardID: String) {
-        entries[cardID]?.answered = true
+    /// Notes that an answer just went out, whether or not it survives. The
+    /// entry stays armed — if the same state returns after the cooldown, the
+    /// board answers again.
+    mutating func markAnswered(cardID: String, at: Date) {
+        entries[cardID]?.answeredAt = at
     }
 
     /// Forgets cards that are no longer on the board and entries that have
@@ -153,7 +174,7 @@ struct CorrectionLedger: Equatable {
                 replaced: fields["replaced"] as? String,
                 wrote: fields["wrote"] as? String,
                 at: Date(timeIntervalSince1970: timestamp),
-                answered: fields["answered"] as? Bool ?? false)
+                answeredAt: (fields["answeredAt"] as? Double).map(Date.init(timeIntervalSince1970:)))
         }
         return CorrectionLedger(entries: entries)
     }
@@ -161,7 +182,10 @@ struct CorrectionLedger: Equatable {
     func save(to defaults: UserDefaults = .standard) {
         var stored: [String: Any] = [:]
         for (id, entry) in entries {
-            var fields: [String: Any] = ["at": entry.at.timeIntervalSince1970, "answered": entry.answered]
+            var fields: [String: Any] = ["at": entry.at.timeIntervalSince1970]
+            if let answeredAt = entry.answeredAt {
+                fields["answeredAt"] = answeredAt.timeIntervalSince1970
+            }
             // nil means "no notes at all", which a plist cannot hold — the key
             // is simply absent, and reading turns that back into nil.
             if let replaced = entry.replaced { fields["replaced"] = replaced }
