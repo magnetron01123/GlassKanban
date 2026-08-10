@@ -38,6 +38,16 @@ struct GlassKanbanApp: App {
         .defaultSize(width: 1280, height: 760)
         .commands {
             CommandMenu("Board") {
+                // Every board command answers the same two questions the
+                // toolbar buttons already answer: is there access, and is a
+                // card being held up in front of the board? A shortcut that
+                // slips past a disabled button is the same bug four times —
+                // ⌘F opened a second panel over the open editor, ⌘N left an
+                // untitled ghost behind, and without access ⌘F and ⌘R were
+                // simply clickable and pointless.
+                let isBusy = store.editingCardID != nil
+                let hasAccess = store.accessState == .granted
+
                 // ⌘F lived only on a toolbar button, so the one shortcut a
                 // Mac user looks for by name was findable only by hovering.
                 // The button keeps its own `.keyboardShortcut`; this entry is
@@ -46,6 +56,7 @@ struct GlassKanbanApp: App {
                     NotificationCenter.default.post(name: .glassKanbanShowFind, object: nil)
                 }
                 .keyboardShortcut("f")
+                .disabled(isBusy || !hasAccess)
 
                 Divider()
 
@@ -56,12 +67,13 @@ struct GlassKanbanApp: App {
                     NotificationCenter.default.post(name: .glassKanbanNewTicket, object: nil)
                 }
                 .keyboardShortcut("n")
-                .disabled(store.accessState != .granted)
+                .disabled(isBusy || !hasAccess)
 
                 Button("Open in Reminders") {
                     store.openRemindersApp()
                 }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
+                .disabled(isBusy)
 
                 Divider()
 
@@ -69,6 +81,7 @@ struct GlassKanbanApp: App {
                     store.scheduleRefresh()
                 }
                 .keyboardShortcut("r")
+                .disabled(!hasAccess)
 
                 Button("Reset Filters") {
                     store.resetFilters()
@@ -77,7 +90,7 @@ struct GlassKanbanApp: App {
                 // The same condition the popover's own reset button uses. A
                 // menu item that is always available but does nothing most of
                 // the time teaches the user to distrust the menu.
-                .disabled(!store.isFiltering)
+                .disabled(isBusy || !store.isFiltering)
             }
         }
 

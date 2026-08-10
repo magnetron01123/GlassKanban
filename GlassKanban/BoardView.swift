@@ -145,6 +145,17 @@ struct BoardView: View {
             Text("⌘Z brings the ticket back — but not its subtasks or attachments.")
         }
         .overlay { editorOverlay }
+        // A card can leave the board while its editor is open — deleted on
+        // another device, its list switched off in Settings, or the creation
+        // undone before a field was even focused. The overlay resolves to
+        // nothing on its own, but the *state* stayed: the board kept its blur
+        // and the toolbar stayed dead, with no way out but opening some other
+        // card and closing it again. Closing here is the same close every
+        // other route runs.
+        .onChange(of: editingCard == nil) { _, isGone in
+            guard isGone, store.editingCardID != nil else { return }
+            closeEditor()
+        }
         // The "Finden …" menu item cannot reach this view's state directly.
         .onReceive(NotificationCenter.default.publisher(for: .glassKanbanShowFind)) { _ in
             showFind = true

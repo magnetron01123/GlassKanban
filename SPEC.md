@@ -185,6 +185,31 @@ ist das von einem Rückschieber nicht zu unterscheiden und wird überschrieben. 
 *anderer* Wert — der häufigere Fall — zieht den Eintrag dagegen sofort und endgültig
 zurück.
 
+### Das Sicherheitsnetz (10.08.2026, aus dem Nutzer-Review)
+
+- **⌘Z verliert nie mehr als den einen Schritt.** Eine zurückgenommene Neuanlage („+"
+  gedrückt, nichts eingetragen, Escape) wird gar nicht erst auf den Stapel gebucht —
+  vorher löschte sie den **gesamten** Undo- und Redo-Verlauf des Fensters, samt einer
+  gerade gelöschten Karte, deren Rückfrage ⌘Z ausdrücklich als Rettung genannt hatte. Der
+  Eintrag entsteht erst, wenn das Ticket behalten wird.
+- **Das Erledigt-Datum überlebt einen Zug.** Wird eine erledigte Karte zurück in eine
+  Arbeitsspalte gezogen und der Zug widerrufen, trägt sie wieder ihr **ursprüngliches**
+  Datum. Vorher stempelte der Rückweg „jetzt" darauf: Die Karte sprang an die Spitze von
+  „Erledigt", zählte erneut für Streak, Wochenschnitt und Durchlaufzeit — und in
+  Reminders war der alte Wert verloren.
+- **Ein leer abgebrochenes Ticket verschwindet auf jedem Weg**, auch wenn statt des
+  Editors das Fenster geschlossen wird (⌘W). Vorher blieb eine titellose Erinnerung
+  dauerhaft in der Liste des Nutzers.
+- **Verschwindet die offene Karte, schließt der Editor.** Wird sie auf einem anderen Gerät
+  gelöscht oder ihre Liste abgewählt, blieb das Board unscharf und die Symbolleiste tot,
+  ohne erkennbaren Ausweg.
+- **Menübefehle sind gesperrt, wo die Symbolleiste es ist.** ⌘F, ⇧⌘F, ⌘N und ⌘R greifen
+  nicht mehr an einer hochgehaltenen Karte oder ohne Erinnerungs-Zugriff vorbei — eine
+  Regel, die nur für die Maus galt, ist keine Regel.
+- **Der Falz weicht dem Filter.** Ein Suchtreffer hinter dem Falz wurde nie gezeichnet:
+  Die Spalte zeigte weder die Karte noch „Keine Treffer", weil gefunden ja etwas wurde.
+  Bei aktiver Einschränkung ruht der Schnitt.
+
 ### Was das Board gegen sich selbst absichert (10.08.2026)
 
 Aus einem Review der Spaltenlogik entstanden; jeder Punkt hatte ein reproduzierbares
