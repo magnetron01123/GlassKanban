@@ -119,54 +119,71 @@ Der Vorgang ist konvergent: Nach einem Umschreiben existiert genau ein Tag der a
 Form (oder keiner), es entsteht also keine Schreibschleife über die
 Änderungs-Benachrichtigung.
 
-### Eine Antwort je Zustand — die Regel für fremde Schreiber
+### Wenn andere Programme dieselben Erinnerungen schreiben
 
-Das Board ist einer von mehreren Schreibern auf denselben Daten: iCloud gleicht ab, in
-geteilten Listen sitzt eine zweite Person, und andere Software (Automatisierungs-Brücken,
-Kalender-Clients, Skripte) schreibt in dieselben Datensätze. Am 10.08.2026 auf einem
-echten Board gemessen: Etwas außerhalb schob alle 30 bis 55 Minuten einen alten Stand
-zurück, und die Tag-Hygiene schrieb dieselben vier Erinnerungen dreimal in drei Stunden um
-— zwölf Schreibzugriffe in fremde Daten, von denen keiner hielt.
+Das Board ist einer von mehreren Schreibern. Erinnerungen synchronisieren über iCloud, in
+geteilten Listen sitzt eine zweite Person, und andere Software — Kalender-Clients,
+Automatisierungs-Brücken, Kurzbefehle — schreibt in dieselben Datensätze. Eine App, die
+nur als alleiniger Schreiber funktioniert, wäre für dieses System kein Produkt.
 
-**Verbindliche Regel, für jeden Schreibvorgang, den der Nutzer nicht angefordert hat:**
+Am 10.08.2026 gemessen: Ein Kalender-Client mit eigener Datenbank schob alle 19 bis 55
+Minuten eine veraltete Kopie von Datensätzen zurück. Sechs Datensätze in dreißig Stunden,
+nur einer davon wiederkehrend — die übrigen fielen bloß deshalb nicht auf, weil ein
+zurückgeschriebener Tag auf einer *erledigten* Erinnerung nichts Sichtbares ändert.
 
-> Eine Spalten-Entscheidung wird wiederhergestellt, **wann immer** jemand sie rückgängig
-> macht — aber höchstens **einmal alle zehn Minuten** je Karte.
+**Verbindliche Regel (`CorrectionLedger`):**
 
-Die App muss neben anderer Software funktionieren; eine, die nur als alleiniger Schreiber
-arbeitet, wäre kein Produkt. Deshalb steht das Board zu dem, was der Nutzer entschieden
-hat, solange etwas dagegen anschreibt. Begrenzt ist nur der **Takt** — er verhindert nicht
-den Widerspruch, sondern das Gewitter: zwei Programme, die schneller aufeinander schreiben,
-als ein Mensch es bemerken könnte, und eine Hygiene, die bei jedem der dutzenden Refreshes
-pro Stunde erneut zuschlägt (`CorrectionLedger`).
+> Das Board merkt sich, welchen Wert es selbst über welchen geschrieben hat. Steht in einem
+> Feld später wieder buchstabengenau der verdrängte Wert, schreibt das Board seinen Wert
+> einmal zurück — höchstens einmal pro zehn Minuten je Feld und Karte, höchstens 24 Stunden
+> lang, und **nie einen Wert, den der Nutzer nicht selbst an diesem Board eingegeben hat**.
 
-- **Es zählt nicht, wer verdrängt hat.** Verschwindet ein Arbeits-Tag — durch einen Zug im
-  Board, von Hand am iPhone, durch die Erinnerungen-App oder ein Skript —, merkt sich die
-  App diesen Vorgang. Kehrt genau der alte Notiztext danach zurück, ist das ein Echo, ganz
-  gleich von wem. Ohne diese Verallgemeinerung wären nur die eigenen Züge des Boards
-  verteidigt gewesen, und eine von einem anderen Gerät abgelegte Karte hätte jeder
-  Rückschieber gewonnen (gemessen am 10.08.2026).
-- **Byte-genau, nicht status-genau.** Verglichen wird der wörtliche Notiztext. Ein
-  zurückgespielter Stand bringt exakt dieselben Zeichen; wer `#next` von Hand tippt,
-  schreibt eine andere Zeichenfolge und behält seine Entscheidung.
-- **Nur in Richtung Backlog.** Eine Heilung darf einen Tag **entfernen, nie setzen**.
-  „Ein alter Stand kam zurück" und „jemand hat den Tag von Hand gelöscht" sind in den Daten
-  nicht zu unterscheiden; in die eine Richtung kostet der Irrtum einen Zug, in die andere
-  zöge er Arbeit in eine Spalte, die niemand gezogen hat. Der Zweifel fällt deshalb dahin,
-  wo jeder Zweifel auf diesem Board hinfällt: ins Backlog.
-- **Ein Wecker gehört dazu.** Korrekturen laufen nur beim Sync, und ein Sync passiert nur
-  bei einer Änderung — ein Zustand, der einfach falsch *bleibt*, löst keinen aus. Nach
-  einer vom Takt aufgeschobenen Antwort weckt sich der Store deshalb selbst.
-- **Der Nutzer erfährt davon nichts.** Kein Hinweis, kein Dialog, kein Badge
-  (Nutzerentscheidung 10.08.2026, Begründung in CONCEPT.md). Ein Eintrag verfällt nach 24
-  Stunden, damit ein aus einem Backup zurückgespieltes Einstellungsfile keine Sollzustände
-  für ein längst weitergelaufenes Board mitbringt.
+Der letzte Halbsatz trägt die ganze Sicherheit: Jeder Wert, den dieser Mechanismus je
+automatisch schreibt, hat der Nutzer hier eingegeben; nie ein erfundener, nie ein
+abgeleiteter, nie ein vom fremden Schreiber übernommener. Bloß *beobachtete* Übergänge zu
+verteidigen wurde entworfen und verworfen — ein Programm, das häufiger schreibt als der
+Nutzer, bekäme so seine alten Werte adoptiert und anschließend mit der Autorität des
+Boards durchgesetzt (Herleitung in CONCEPT.md).
 
-**Gemessen am 10.08.2026** gegen ein echtes Board, auf dem Fantastical alle 20 bis 55
-Minuten einen Datenstand von vor der Tag-Umstellung zurückschob: Nach der Regel blieb die
-Karte dauerhaft in der Spalte, in die der Nutzer sie gelegt hatte — die Rückschreibungen
-(14:21, 14:22, 14:37 Uhr) wurden jeweils so schnell beantwortet, dass der Tag zwischen zwei
-Messungen im Zehn-Sekunden-Takt nicht einmal sichtbar wurde.
+**Geschützte Felder und ihre Richtung:**
+
+| Feld | Richtung | Warum begrenzt |
+|---|---|---|
+| Notizen | Spalte bleibt gleich **oder** fällt nach Backlog | Ein automatischer Schreibvorgang darf eine Karte nie in eine Arbeitsspalte heben |
+| Titel | beide Richtungen | Viele mögliche Werte, ein buchstabengenauer Treffer ist echte Evidenz |
+| URL | beide Richtungen, verglichen in geparster Form | sonst liest die Prozentkodierung sich selbst als Dauerecho |
+| Fälligkeit | **nur ein verschwundenes** Datum kommt zurück, nie ein verschobenes, nie bei Wiederholungen | ein verschobenes Datum zurückzudrehen hieße, eine gerade gesetzte Frist zu löschen; Serien bewegt EventKit selbst |
+
+**Bewusst nicht geschützt:** Priorität (vier Werte — Byte-Gleichheit ist kein Beweis),
+Erledigt-Status (zwei Werte, kein Unterscheidungsmerkmal, und einen Abschluss wegzunehmen
+ist der teuerste Fehlalarm dieser Liste), Listenzugehörigkeit, Wiederholungsregel, Alarme
+(einziges Feld, dessen Wiederherstellung hörbar wäre), Startdatum und Ort. Unterhalb der
+öffentlichen EventKit-API liegen Unteraufgaben, Anhänge und Reminders-eigene Tags — die
+sind in beide Richtungen unsichtbar. „Ganze Karte" heißt also: die ganze Karte, wie
+EventKit sie beschreibt.
+
+**Der eine Zusatz:** Verschwindet ein Arbeits-Tag irgendwo — am iPhone, in der
+Erinnerungen-App, per Skript —, zählt das ebenfalls als Verdrängung. Daraus kann nur die
+*Abwesenheit* eines Tags wiederhergestellt werden, der Irrtum kostet also höchstens einen
+Zug und fällt Richtung Backlog.
+
+**Ein Durchgang, ein Speichern je Karte**, in dieser Reihenfolge: beobachten (ein dritter
+Zustand zieht den Eintrag zurück — wer seine Meinung ändert, wird nie bekämpft) →
+Echo beantworten → verbrauchten Pull freigeben → Hygiene auf das Ergebnis → speichern.
+Grenzen: höchstens fünf Karten je Sync, eine Antwort je (Karte, Feld, Zustand) pro zehn
+Minuten, Verfall nach 24 Stunden, höchstens 200 Karten im Gedächtnis. Ein Wecker holt eine
+vom Takt aufgeschobene Antwort nach, weil ein Zustand, der bloß falsch *bleibt*, keinen
+Sync auslöst. Schreibgeschützte Listen werden übersprungen.
+
+**Der Nutzer erfährt davon nichts** — kein Hinweis, kein Dialog, kein Badge
+(Nutzerentscheidung 10.08.2026). Nachvollziehbar ist es nur über die Konsole
+(`subsystem: com.davidtrogemann.GlassKanban`, `category: corrections`).
+
+**Restschaden, offen benannt:** Stellt jemand auf einem anderen Gerät ein Feld
+buchstabengenau auf den Wert zurück, den das Board dort binnen 24 Stunden verdrängt hat,
+ist das von einem Rückschieber nicht zu unterscheiden und wird überschrieben. Ein
+*anderer* Wert — der häufigere Fall — zieht den Eintrag dagegen sofort und endgültig
+zurück.
 
 ### Was das Board gegen sich selbst absichert (10.08.2026)
 

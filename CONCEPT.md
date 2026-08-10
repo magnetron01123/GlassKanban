@@ -145,6 +145,31 @@ sie rückgängig macht, nur nie schneller als ein Mensch es bemerken würde (Reg
 Messung in SPEC.md, „Eine Antwort je Zustand"). Sie ersetzt keinen der bestehenden
 Mechanismen, sondern zieht eine Grenze um sie alle.
 
+**Ausgeweitet am 10.08.2026 auf vier Felder** (Notizen, Titel, URL, Fälligkeit), nachdem
+gemessen war, dass der fremde Schreiber ganze Datensätze zurücksetzt und dabei auch
+einmalige, längst erledigte Aufgaben trifft — sichtbar wurde es nur an wiederkehrenden,
+weil ein Tag auf einer erledigten Erinnerung nichts bewirkt.
+
+Zwei Spannungen, die dabei bewusst entschieden wurden statt still zu bleiben:
+
+- **„Die App speichert selbst nichts" (Datenmodell) gegen „sie muss neben anderer Software
+  funktionieren".** Das Gedächtnis hält jetzt Inhalte von vier Feldern. Es bleibt Evidenz
+  und keine Schattenkopie, weil ausschließlich board-eigene Verdrängungen hineinkommen, es
+  nach 24 Stunden verfällt, auf 200 Karten gedeckelt ist und nie gerendert wird — die
+  Grenze ist damit aber ausgereizt. Wer das nächste Feld aufnehmen will, muss diese
+  Abwägung neu führen.
+- **Nur eigene Schreibvorgänge, keine bloß beobachteten.** Naheliegend wäre, jede
+  beobachtete Änderung zu verteidigen; erwogen, entworfen und verworfen. Auf einem Board,
+  auf dem ein fremdes Programm häufiger schreibt als der Mensch, würde die App überwiegend
+  dessen alte Werte adoptieren und sie anschließend mit eigener Autorität gegen den
+  echten Nutzerwert durchsetzen. Einzige Ausnahme bleibt das Verschwinden eines
+  Arbeits-Tags, weil daraus nur die Abwesenheit eines Tags folgen kann.
+
+Der Restschaden, der bleibt und nicht wegzukonstruieren ist: Ein bewusster Widerruf auf
+einem anderen Gerät erzeugt definitionsgemäß den Vorzustand und ist von einem Rückschieber
+bitgleich. Er wird überschrieben. Eine *andere* Änderung zieht den Eintrag dagegen sofort
+zurück.
+
 **Koexistenz ist dabei die Grundannahme, nicht der Sonderfall.** Erinnerungen, Fantastical,
 eine Automatisierungs-Brücke, Kurzbefehle: Alle dürfen dieselben Datensätze lesen und
 schreiben. Eine App, die nur als alleiniger Schreiber funktioniert, wäre für ein System, in
