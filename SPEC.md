@@ -130,32 +130,43 @@ zurück, und die Tag-Hygiene schrieb dieselben vier Erinnerungen dreimal in drei
 
 **Verbindliche Regel, für jeden Schreibvorgang, den der Nutzer nicht angefordert hat:**
 
-> Jede Korrektur, die die App an Daten vornimmt, die sie nicht selbst geändert hat,
-> geschieht **einmal**. Kommt derselbe Zustand zurück, akzeptiert die App ihn.
+> Eine Spalten-Entscheidung wird wiederhergestellt, **wann immer** jemand sie rückgängig
+> macht — aber höchstens **einmal alle zehn Minuten** je Karte.
 
-Das gilt für die Hygiene oben, für die Tag-Freigabe verbrauchter Pulls und für die
-**Echo-Heilung**: Kehrt genau der Notiztext zurück, den ein Zug oder eine Bearbeitung
-gerade ersetzt hat, stellt die App ihr Ergebnis einmal wieder her — danach nicht mehr
-(`CorrectionLedger`).
+Die App muss neben anderer Software funktionieren; eine, die nur als alleiniger Schreiber
+arbeitet, wäre kein Produkt. Deshalb steht das Board zu dem, was der Nutzer entschieden
+hat, solange etwas dagegen anschreibt. Begrenzt ist nur der **Takt** — er verhindert nicht
+den Widerspruch, sondern das Gewitter: zwei Programme, die schneller aufeinander schreiben,
+als ein Mensch es bemerken könnte, und eine Hygiene, die bei jedem der dutzenden Refreshes
+pro Stunde erneut zuschlägt (`CorrectionLedger`).
 
-- **Byte-genau, nicht status-genau.** Verglichen wird der wörtliche Notiztext, den die App
-  ersetzt hat. Ein zurückgespielter Stand bringt exakt dieselben Zeichen; wer am iPhone
-  `#next` von Hand tippt, schreibt eine andere Zeichenfolge — andere Zeile, andere
-  Schreibweise, anderer Leerraum — und seine Entscheidung bleibt stehen. Auf Statusebene
-  zu vergleichen würde genau diesen Menschen still überstimmen.
-- **Was die Regel einlöst:** Ein Schreibsturm kann nicht entstehen; zwei Macs mit dem Board
-  können sich nicht endlos gegenseitig korrigieren (jede Seite antwortet höchstens einmal
-  je eigenem Zug); die Konvergenz-Zusage oben gilt konstruktiv, weil eine Korrektur, die
-  sich nicht wiederholen kann, nicht kreisen kann. Ein **einzelner** Sync-Konflikt — der
-  Normalfall auf geteilten Listen — wird weiterhin geheilt.
-- **Was sie nicht einlöst:** gewinnen. Gegen einen Schreiber, der dauerhaft einen alten
-  Stand zurückschiebt, verliert das Board die Spalte und zeigt, was in den Daten steht —
-  die Daten *sind* die Wahrheit, die App hat keinen eigenen Speicher, aus dem sie etwas
-  anderes behaupten könnte. Das ist die bewusste Wahl gegen einen endlosen Kampf.
+- **Es zählt nicht, wer verdrängt hat.** Verschwindet ein Arbeits-Tag — durch einen Zug im
+  Board, von Hand am iPhone, durch die Erinnerungen-App oder ein Skript —, merkt sich die
+  App diesen Vorgang. Kehrt genau der alte Notiztext danach zurück, ist das ein Echo, ganz
+  gleich von wem. Ohne diese Verallgemeinerung wären nur die eigenen Züge des Boards
+  verteidigt gewesen, und eine von einem anderen Gerät abgelegte Karte hätte jeder
+  Rückschieber gewonnen (gemessen am 10.08.2026).
+- **Byte-genau, nicht status-genau.** Verglichen wird der wörtliche Notiztext. Ein
+  zurückgespielter Stand bringt exakt dieselben Zeichen; wer `#next` von Hand tippt,
+  schreibt eine andere Zeichenfolge und behält seine Entscheidung.
+- **Nur in Richtung Backlog.** Eine Heilung darf einen Tag **entfernen, nie setzen**.
+  „Ein alter Stand kam zurück" und „jemand hat den Tag von Hand gelöscht" sind in den Daten
+  nicht zu unterscheiden; in die eine Richtung kostet der Irrtum einen Zug, in die andere
+  zöge er Arbeit in eine Spalte, die niemand gezogen hat. Der Zweifel fällt deshalb dahin,
+  wo jeder Zweifel auf diesem Board hinfällt: ins Backlog.
+- **Ein Wecker gehört dazu.** Korrekturen laufen nur beim Sync, und ein Sync passiert nur
+  bei einer Änderung — ein Zustand, der einfach falsch *bleibt*, löst keinen aus. Nach
+  einer vom Takt aufgeschobenen Antwort weckt sich der Store deshalb selbst.
 - **Der Nutzer erfährt davon nichts.** Kein Hinweis, kein Dialog, kein Badge
   (Nutzerentscheidung 10.08.2026, Begründung in CONCEPT.md). Ein Eintrag verfällt nach 24
   Stunden, damit ein aus einem Backup zurückgespieltes Einstellungsfile keine Sollzustände
   für ein längst weitergelaufenes Board mitbringt.
+
+**Gemessen am 10.08.2026** gegen ein echtes Board, auf dem Fantastical alle 20 bis 55
+Minuten einen Datenstand von vor der Tag-Umstellung zurückschob: Nach der Regel blieb die
+Karte dauerhaft in der Spalte, in die der Nutzer sie gelegt hatte — die Rückschreibungen
+(14:21, 14:22, 14:37 Uhr) wurden jeweils so schnell beantwortet, dass der Tag zwischen zwei
+Messungen im Zehn-Sekunden-Takt nicht einmal sichtbar wurde.
 
 ### Listen-Filter
 

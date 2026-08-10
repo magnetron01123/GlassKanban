@@ -72,9 +72,35 @@ aufgeschobene Termine still aus der Arbeitsspalte geworfen. Er wurde vollständi
   zurückgeschoben → akzeptiert. Ledger zeigt danach `answered = 1`.
 - 237 Tests grün, davon 17 neue für die Regel und ihre Persistenz.
 
-**Grenze, die bleibt:** Gegen einen dauerhaft aktiven Rückschieber gewinnt die App nicht —
-sie hat keinen eigenen Speicher, aus dem sie eine andere Wahrheit behaupten könnte. Sie
-beendet den Schreibsturm und zeigt, was in den Daten steht. Die Quelle gehört abgeklemmt.
+### Nachtrag desselben Tages: „einmal" war zu wenig
+
+Die erste Fassung beantwortete jeden Zustand genau einmal und gab danach nach. Am realen
+Board hieß das: Die Karte steht dauerhaft falsch, sobald ein fremdes Programm dagegenhält —
+und damit wäre Glass Kanban neben Fantastical, der Erinnerungen-App oder einer
+Automatisierungs-Brücke unbrauchbar. Zwei Korrekturen daran:
+
+1. **Aus „einmal" wurde ein Takt.** Die Entscheidung wird wiederhergestellt, wann immer
+   jemand sie rückgängig macht, höchstens einmal alle 10 Minuten je Karte. Der Sturm bleibt
+   ausgeschlossen (eine Antwort je Takt statt eine je Refresh), der Widerspruch nicht.
+2. **Der Täter der Verdrängung ist egal.** Ein Live-Test deckte auf, dass die Heilung nur
+   die *eigenen* Züge des Boards kannte: Der Tag wurde per Skript entfernt (wie von einem
+   iPhone), Fantastical schob ihn zurück — und nichts widersprach. Seither bucht der
+   Refresh jeden Arbeits-Tag, der irgendwo verschwindet, als Verdrängung. Unbedenklich,
+   weil eine Buchung nur zum *Entfernen* eines Tags verwendet werden kann.
+
+Dazu kam ein **Wecker**: Korrekturen laufen nur beim Sync, und ein Zustand, der einfach
+falsch bleibt, löst keinen aus — eine vom Takt aufgeschobene Antwort wäre sonst nie
+gegeben worden. Auch das fiel erst im Live-Test auf, nicht im Entwurf.
+
+**Verifikation gegen das echte Ticket, mit laufendem Fantastical:** Tag entfernt,
+Rückschieber setzte ihn zurück, binnen eines Syncs wieder weg. Danach über 45 Minuten
+stabil, obwohl Fantastical um 14:21, 14:22 und 14:37 Uhr weiter schrieb — die Antworten
+kamen jeweils so schnell, dass der Tag zwischen zwei Messungen im Zehn-Sekunden-Takt nicht
+sichtbar wurde.
+
+**Grenze, die bleibt:** Die App verteidigt die Spaltenzuordnung, nicht die übrigen Daten.
+Derselbe Rückschieber setzt auch Notiztexte und Fälligkeiten zurück; das bleibt ein Defekt
+der fremden App und gehört dort behoben.
 
 ## Verworfen
 

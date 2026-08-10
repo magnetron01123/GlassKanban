@@ -140,9 +140,17 @@ nicht. Er hätte nur sichtbaren Text in fremde Notizen geschrieben: Kosten ohne 
 Backlog bleibt „kein Tag".
 
 **Die Antwort ist stattdessen eine Invariante** über jeden Schreibvorgang, den der Nutzer
-nicht angefordert hat — eine Antwort je Zustand, danach gibt das Board nach (Regel und
+nicht angefordert hat: Das Board stellt eine Entscheidung wieder her, wann immer jemand
+sie rückgängig macht, nur nie schneller als ein Mensch es bemerken würde (Regel und
 Messung in SPEC.md, „Eine Antwort je Zustand"). Sie ersetzt keinen der bestehenden
 Mechanismen, sondern zieht eine Grenze um sie alle.
+
+**Koexistenz ist dabei die Grundannahme, nicht der Sonderfall.** Erinnerungen, Fantastical,
+eine Automatisierungs-Brücke, Kurzbefehle: Alle dürfen dieselben Datensätze lesen und
+schreiben. Eine App, die nur als alleiniger Schreiber funktioniert, wäre für ein System, in
+dem Erinnerungen absichtlich allen Programmen offenstehen, kein Produkt. Das Board
+verteidigt deshalb genau eine Sache — die Spaltenzuordnung, und die auch nur in Richtung
+Backlog. Alles andere, was ein fremdes Programm schreibt, gilt.
 
 **Warum der Nutzer davon nichts erfährt** (Entscheidung vom 10.08.2026): Erwogen war, nach
 dem Nachgeben einmalig zu melden, dass eine Liste von außen zurückgeschrieben wird — im
