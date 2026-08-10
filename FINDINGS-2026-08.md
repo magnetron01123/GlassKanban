@@ -134,3 +134,41 @@ Dazu 9 neue reine Tests (`RecurringTagReleaseMemoryTests` + Kaltstart-Szenarien 
 bestehende API), Gesamtsuite grün. Verbleibende, kleinere Restlücke (Hand-getippter Tag
 auf anderem Gerät nach externem Abhaken, ununterscheidbar vom überlebenden Tag) in
 SPEC.md dokumentiert.
+
+## Messung 10.08.2026: Woran man einen abgelösten Durchgang erkennt
+
+Die Zuordnung „erledigter Durchgang → laufende Serie" lief bis dahin über **Titel + Liste**
+und war damit in beide Richtungen falsch: Eine gewöhnliche Aufgabe, die genauso heißt wie
+eine Serie, ließ sich nie aus „Erledigt" zurückholen, und ein Umbenennen der Serie nach dem
+Erledigen setzte den Schutz komplett außer Kraft.
+
+Die Alternative — das **Anlegedatum** — stand zwar schon im Repo (SPEC.md, Durchlaufzeit),
+war aber nur als „alt" gemessen, nie als *exakte Gleichheit* und nie für den extern
+abgehakten Weg. Verfahren wie gehabt: iCloud-Scratch-Liste „GK-Messung", eigener Prozess je
+Messpunkt (kalter EventKit-Cache), `creationDate` als roher `Double` mit neun
+Nachkommastellen — die Frage ist Bit-Gleichheit, nicht ob zwei formatierte Daten gleich
+aussehen.
+
+| # | Messpunkt | Ergebnis |
+|---|---|---|
+| M0 | Fünf Datensätze in **einem** Commit angelegt | Alle fünf `creationDate` verschieden (Abstände im Mikrosekundenbereich). Eine Kollision ist praktisch ausgeschlossen — `gemessen` |
+| M1 | Serie über den App-Weg erledigt | Abgelöster Durchgang trägt `808083284.719828010`, die weiterlaufende Serie **denselben Wert bitgenau**. Die IDs unterscheiden sich (`72A4F8DE` vs. `083A8BB1`) — `gemessen` |
+| M2 | Nach iCloud-Roundtrip erneut gelesen | Unverändert; keine Rundung, keine Neuvergabe — `gemessen` |
+| M4 | Einmalige Aufgabe **mit byte-identischem Titel** erledigt | Behält ihre ID (keine Ablösung) und ihr **eigenes** Anlegedatum (`…719745040`). Damit ist sie von einem Durchgang unterscheidbar — `gemessen` |
+| M5 | Serie **nach** dem Erledigen umbenannt | Titel laufen auseinander („Serie A neu" gegen „Serie A"), Anlegedaten bleiben gleich. Genau der Fall, in dem die Titel-Zuordnung versagt — `gemessen` |
+| M3 | **Extern abgehakt (iPhone)** | Abgelöster Durchgang `808083284.719773054`, laufende Serie **derselbe Wert bitgenau**. Der Sync stempelt nichts um — `gemessen` |
+
+**Nebenbefund:** `calendarItemExternalIdentifier` taugt nicht als Identität — die abgelöste
+Kopie bekommt eine eigene (`72A4F8DE-…` gegen `083A8BB1-…`), und auf lokalen Listen ist das
+Feld ohnehin leer (siehe `ReminderDeepLink`).
+
+**Das vorab festgelegte Abbruchkriterium für M3 ist nicht eingetreten.** Wäre vom iPhone ein
+frisches Anlegedatum gekommen, hätte der Rückfallplan gegriffen (Titel + Liste +
+`Durchgang.angelegt <= Serie.angelegt`) und der Umbenennen-Fall wäre als Restlücke in SPEC
+gewandert. Da alle sechs Punkte grün sind, wird die Zuordnung wie entworfen gebaut.
+
+**Fazit:** Das Anlegedatum ist eine Identität, kein Indiz. Es wird auf **Gleichheit**
+geprüft, nie auf Nähe — ein Toleranzfenster machte daraus wieder eine Ähnlichkeit, und zwei
+kurz nacheinander angelegte Aufgaben würden einander zu Durchgängen erklären (siehe M0:
+Mikrosekunden trennen sie). Mehrdeutigkeit fällt zu „kein Beweis": Der Zug aus „Erledigt"
+ist dann erlaubt, der Tag bleibt stehen.
