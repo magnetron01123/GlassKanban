@@ -79,7 +79,14 @@ struct CorrectionLedger: Equatable {
     /// gets echoed back by a stale writer, and only a record of it can tell
     /// the echo from a fresh decision.
     mutating func record(cardID: String, replaced: String?, wrote: String?, at: Date) {
-        guard replaced != wrote else { return }
+        // A write that displaced nothing still ends whatever was remembered
+        // here: the user has acted on this card since, so an older
+        // displacement has nothing left to say. Backlog → Erledigt is exactly
+        // that shape — both are tagless, so the notes come out unchanged.
+        guard replaced != wrote else {
+            entries.removeValue(forKey: cardID)
+            return
+        }
         entries[cardID] = Entry(replaced: replaced, wrote: wrote, at: at, answered: false)
     }
 
@@ -116,13 +123,6 @@ struct CorrectionLedger: Equatable {
     /// survives. One answer per displacement is the whole rule.
     mutating func markAnswered(cardID: String) {
         entries[cardID]?.answered = true
-    }
-
-    /// Drops what is remembered about a card because the user acted on it.
-    /// Their hand outranks any bookkeeping: whatever this identifier used to
-    /// stand for, the state they just chose is the one to keep.
-    mutating func forget(cardID: String) {
-        entries.removeValue(forKey: cardID)
     }
 
     /// Forgets cards that are no longer on the board and entries that have

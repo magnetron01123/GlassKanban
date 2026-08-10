@@ -578,13 +578,28 @@ final class RemindersStore: ObservableObject {
     /// displaced that came back without anybody deciding so. Runs on the
     /// freshly fetched reminders before the cards are built, so the same
     /// refresh already shows the corrected card.
+    ///
+    /// **Only ever removes a tag, never sets one.** The two cases are
+    /// indistinguishable in the data — "a stale writer put the tag back" and
+    /// "somebody deleted the tag by hand" both read as *the state we
+    /// displaced has returned*. Healing in the removing direction costs a
+    /// wrongly cleared tag at worst, and the card rests in Backlog; healing
+    /// in the setting direction would drag work into a lane nobody pulled,
+    /// which the board must never do. So the doubt is resolved the way every
+    /// other doubt on this board is resolved — towards Backlog.
     private func healEchoesOfOwnWrites(_ reminders: [EKReminder], now: Date = .now) {
         var dirty = false
         for reminder in reminders {
             let cardID = reminder.calendarItemIdentifier
             guard !deliberatelyMovedSinceRefresh.contains(cardID),
                   let restored = corrections.unansweredEcho(
-                    for: cardID, current: reminder.notes, now: now)
+                    for: cardID, current: reminder.notes, now: now),
+                  StatusTagger.status(fromNotes: restored, isCompleted: reminder.isCompleted) == .backlog,
+                  // Restoring a tagless text onto a completed reminder is the
+                  // hygiene's job, not the healer's — and writing one that
+                  // the hygiene would immediately undo is two writes for
+                  // nothing.
+                  !StatusTagger.needsHygiene(notes: restored, isCompleted: reminder.isCompleted)
             else { continue }
             if correctNotes(on: reminder, to: restored, now: now) {
                 dirty = true
@@ -1285,14 +1300,8 @@ final class RemindersStore: ObservableObject {
         }
 
         if titleChanged { reminder.title = edited.title }
-        if notesChanged {
-            // The user wrote these notes themselves: whatever the ledger
-            // remembered about this card is history, and the new text is what
-            // an echo would have to match from here on.
-            corrections.record(
-                cardID: cardID, replaced: reminder.notes, wrote: rewrittenNotes, at: .now)
-            reminder.notes = rewrittenNotes
-        }
+        let replacedNotes = reminder.notes
+        if notesChanged { reminder.notes = rewrittenNotes }
         if urlChanged { reminder.url = Self.parsedURL(edited.url) }
         if dueChanged {
             // Without a time of day the reminder stays all-day, the way
@@ -1334,6 +1343,13 @@ final class RemindersStore: ObservableObject {
                 cardID: cardID, title: String(localized: "Not Saved"), message: error.localizedDescription)
             scheduleRefresh()
             return
+        }
+        // Booked after the save, like every other write: an entry for a write
+        // that never happened would have the app quietly "restoring" an edit
+        // it just reported as failed, and retrying it on every refresh.
+        if notesChanged {
+            corrections.record(
+                cardID: cardID, replaced: replacedNotes, wrote: reminder.notes, at: .now)
         }
         // The inverse write: back to `previous`, measured against what was
         // just written, so undo touches exactly the fields this edit did.

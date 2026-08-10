@@ -253,8 +253,18 @@ struct KanbanCard: Identifiable, Equatable {
             case (nil, .some):
                 return false
             default:
-                if let l = lhs.creationDate, let r = rhs.creationDate, l != r {
-                    return l < r
+                // Each side gets a value of its own rather than the pair
+                // deciding: comparing only when *both* dates exist made the
+                // order intransitive (A before B by title, B before C by
+                // date, yet C before A), and an intransitive comparison lets
+                // the same cards come out in a different order on every
+                // refresh — the very reshuffling the title tie-break exists
+                // to prevent. A missing creation date sorts last, where a
+                // card of unknown age belongs.
+                let lhsCreated = lhs.creationDate ?? .distantFuture
+                let rhsCreated = rhs.creationDate ?? .distantFuture
+                if lhsCreated != rhsCreated {
+                    return lhsCreated < rhsCreated
                 }
                 return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
             }

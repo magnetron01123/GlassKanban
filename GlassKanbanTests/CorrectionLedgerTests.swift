@@ -88,18 +88,22 @@ final class CorrectionLedgerTests: XCTestCase {
         XCTAssertNil(ledger.unansweredEcho(for: "shop", current: "#next", now: farLater))
     }
 
-    /// The user's hand outranks the bookkeeping.
-    func testAUserActionForgetsWhatWasRemembered() {
-        var ledger = ledgerAfterBacklogMove()
-        ledger.forget(cardID: "shop")
-        XCTAssertNil(ledger.unansweredEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(60)))
-    }
-
     /// A write that changed nothing displaced nothing.
     func testANoOpWriteIsNotRecorded() {
         var ledger = CorrectionLedger()
         ledger.record(cardID: "shop", replaced: "#next", wrote: "#next", at: t0)
         XCTAssertNil(ledger.unansweredEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(60)))
+    }
+
+    /// The user's hand outranks the bookkeeping: a later write on the same
+    /// card ends the older displacement even when it changes no text — which
+    /// is exactly what Backlog → Erledigt looks like, both being tagless.
+    func testALaterNoOpWriteEndsAnOlderDisplacement() {
+        var ledger = ledgerAfterBacklogMove()
+        ledger.record(cardID: "shop", replaced: nil, wrote: nil, at: t0.addingTimeInterval(60))
+        XCTAssertNil(ledger.unansweredEcho(for: "shop", current: "#next", now: t0.addingTimeInterval(120)))
+        XCTAssertTrue(ledger.permitsAutomaticWrite(
+            for: "shop", current: "#next", now: t0.addingTimeInterval(120)))
     }
 
     func testRetainDropsVanishedCardsAndStaleEntries() {
