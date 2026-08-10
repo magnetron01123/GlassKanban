@@ -468,9 +468,31 @@ ein Ticket nach dem Erledigen in „Als Nächstes" stehen blieb:
 Schreibvorgänge (Undo/Redo) über diese ID abgelehnt und erklärt („Nicht rückgängig
 gemacht") statt ausgeführt. Der Eintrag bleibt dabei auf dem Stapel und wird von der
 Erklärung verbraucht — ihn still zu verschlucken, ließe das *nächste* ⌘Z in eine Änderung
-greifen, die der Nutzer behalten wollte. Ein **eigener** Zug des Nutzers — er zieht den
-neuen Durchgang, wenn dessen Termin kommt — gibt die ID zurück, und ⌘Z bedeutet ab da
-wieder, was es sagt (`RecurringHandoff`).
+greifen, die der Nutzer behalten wollte.
+
+**Maßgeblich ist die Reihenfolge, nicht ein Merker** (seit 10.08.2026): Abgelehnt wird ein
+Eintrag, der **vor oder bei** der Erledigung entstanden ist. Was der Nutzer *danach* am
+zurückgekehrten Durchgang tut — ziehen, umbenennen, im Editor ändern —, gehört ihm und ist
+ganz normal widerrufbar. Vorher gab ein eigener Zug die ID pauschal frei, womit das
+*zweite* ⌘Z einen Eintrag von vor der Erledigung erwischte und die nie gezogene Karte still
+nach „In Bearbeitung" schrieb; und umgekehrt wurde eine gerade selbst gemachte
+Editor-Änderung abgelehnt, während dieselbe Änderung inline widerrufbar blieb.
+
+**Der Zaun sitzt an der einen Stelle, an der Undo-Einträge entstehen.** Damit gilt er für
+Verschieben, Umbenennen, Anlegen, Löschen und Bearbeiten gleichermaßen — ⌘Z bedeutet auf
+allen Wegen dasselbe, und ein künftiger Schreibpfad kann den Zaun nicht vergessen, weil es
+nichts zu vergessen gibt. Vergisst er seinen Platz in der Reihenfolge, wird sein Eintrag
+**abgelehnt**; die Regel fällt also zur sicheren Seite (`RecurringHandoff`).
+
+Die Reihenfolge ist bewusst eine Ordnung und keine Uhr: Sie fragt „vorher oder nachher?",
+nie „wie lange her?". Es gibt nichts zu kalibrieren, und sie übersteht Zeitumstellung,
+Uhrabweichung und ein aus einem Backup zurückgespieltes Einstellungsfile — was eine
+Zeitspanne alles nicht tut.
+
+Ein *automatischer* Schreibvorgang — eine Echo-Antwort, die Hygiene, eine verbrauchte
+Freigabe — trägt keinen Undo-Eintrag und damit keinen Platz in dieser Reihenfolge. Für ihn
+gilt weiterhin die einfache Frage, ob die ID noch auf einen ungezogenen Durchgang zeigt;
+dort gibt ein eigener Zug des Nutzers sie tatsächlich zurück.
 
 Ebenfalls an dieser Stelle: Die Erledigt-Settle-Animation wird für wiederkehrende Karten
 **nicht** mehr auf die gezogene ID gelegt — sie gehörte sonst der zurückkehrenden
