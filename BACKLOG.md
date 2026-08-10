@@ -575,3 +575,29 @@ entfernt in `4f83347`).
   habe statt gegen die tatsächliche Feature-History — erst „immer sichtbar mit 0", dann
   wieder „ganz versteckt". Beides falsch. **Vor Änderungen an bestehendem UI-Verhalten
   immer `git log --all` auf die betroffene Datei prüfen.**
+
+## Kleiner Rest aus dem Nutzer-Review (10.08.2026)
+
+Verworfen beim Schließen der fünf verbliebenen Befunde:
+
+- **Prosa aus dem URL-Feld automatisch in die Notizen verschieben** — verworfen: Das rät,
+  was gemeint war, und verschiebt Text hinter dem Rücken des Nutzers. Die Folge benennen
+  und ihn selbst entscheiden lassen ist ehrlicher und billiger.
+- **Den Editor nicht schließen lassen, solange das URL-Feld ungültig ist** — verworfen:
+  Das ist ein Verbot, wo das Board Reibung vorsieht (Muster WIP-Dialog). Der Hinweis
+  erscheint während des Tippens, also vor der Folge — mehr braucht es nicht.
+- **Die Anschläge zwischen ⌘N und dem fertigen Editor puffern und nachreichen** —
+  verworfen: gemessen unnötig. Die Lücke lag nach dem Fix bei etwa 16 ms (16 Zeichen in
+  65 ms getippt, davon kam anfangs keines, danach alle an); ein Mensch braucht für ein
+  Zeichen rund 100 ms. Ein Puffer wäre eine zweite Wahrheit über den Titel, für ein
+  Problem, das nicht mehr auftritt.
+- **Die Felder einer schreibgeschützten Liste bearbeitbar lassen und beim Speichern
+  scheitern** — verworfen: Das war der Zustand, und er kostete die ganze Eingabe für eine
+  Tatsache, die beim Öffnen feststand.
+- **Die WIP-Erklärung auf dem Board statt in den Einstellungen zeigen** — verworfen: Das
+  Board bleibt wortlos (Minimalismus, „kein Dauertext"). Die Einstellungen sind der Ort,
+  an dem eine Regel stehen darf, ohne Rauschen zu werden.
+
+Nicht mehr offen: **Escape schließt den Karten-Editor** — der Befund aus dem Review war ein
+Artefakt der synthetischen Tastendrücke (die Taste ging an eine andere App). Am 10.08.2026
+live nachgeprüft: Escape schließt, und eine gerade angelegte Karte wird dabei verworfen.

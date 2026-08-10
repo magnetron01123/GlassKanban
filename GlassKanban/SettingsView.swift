@@ -20,7 +20,10 @@ import ServiceManagement
 enum SettingsMetrics {
     static let width: CGFloat = 420
     static let listsHeight: CGFloat = 260
-    static let generalHeight: CGFloat = 455
+    /// Measured against the content, not guessed: the pane is a fixed height,
+    /// so a footer that grows silently loses its last line. 455 cut the WIP
+    /// rule off mid-sentence the day it stopped being a hover tip.
+    static let generalHeight: CGFloat = 495
 }
 
 struct SettingsView: View {
@@ -43,15 +46,20 @@ struct ListsSettingsView: View {
     var body: some View {
         Form {
             Section("Show These Lists on the Board") {
-                if store.reminderCalendars.isEmpty {
-                    // Two different states looked the same here. Without
-                    // permission EventKit simply returns nothing, so the
-                    // window blamed the user's lists for what is the app's
-                    // missing access — and the one sentence that could have
-                    // explained it said the opposite.
-                    Text(store.accessState == .denied
-                        ? "No access to Reminders. Allow it in System Settings under “Privacy & Security”."
-                        : "No reminder lists found")
+                // Access first, lists second. Two different states looked the
+                // same here, and asking `isEmpty` first got the order wrong
+                // twice over: without permission EventKit returns nothing, so
+                // the window blamed the user's lists for the app's missing
+                // access — and when access is revoked while the app is
+                // running, the calendars already fetched stay in memory, so
+                // the pane went on offering switches for lists it could no
+                // longer read. The state decides what is shown, never the
+                // leftovers of the last successful fetch.
+                if store.accessState == .denied {
+                    Text("No access to Reminders. Allow it in System Settings under “Privacy & Security”.")
+                        .foregroundStyle(.secondary)
+                } else if store.reminderCalendars.isEmpty {
+                    Text("No reminder lists found")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(store.reminderCalendars, id: \.calendarIdentifier) { calendar in
@@ -205,7 +213,17 @@ struct GeneralSettingsView: View {
                 }
             } header: {
                 Text("Work-in-Progress Limits")
-                    .help("Finish before you stack")
+            } footer: {
+                // The rule was written down in exactly one place: a hover tip
+                // on this header. A limit nobody can read is not an explicit
+                // policy, and "make policies explicit" is the one Kanban rule
+                // this board owes the user in words. The settings pane is
+                // where that costs nothing — the board itself stays wordless.
+                //
+                // Says what happens and what 0 means, and stops there. The
+                // tip it replaces ("Finish before you stack") was a maxim;
+                // this board's chrome names things, it does not coach.
+                Text("When a lane is full, the board asks before another card goes in. 0 means no limit.")
             }
         }
         .formStyle(.grouped)

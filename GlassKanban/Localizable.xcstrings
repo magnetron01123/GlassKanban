@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ (read-only)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (nur lesbar)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (read-only)"
+          }
+        }
+      }
+    },
     "%@, %@": {
       "extractionState": "manual",
       "localizations": {
@@ -1943,6 +1959,22 @@
         }
       }
     },
+    "Not stored — an address has no spaces": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird nicht gesichert — eine Adresse hat keine Leerzeichen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not stored — an address has no spaces"
+          }
+        }
+      }
+    },
     "Notes": {
       "extractionState": "manual",
       "localizations": {
@@ -2830,6 +2862,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "View"
+          }
+        }
+      }
+    },
+    "When a lane is full, the board asks before another card goes in. 0 means no limit.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ist eine Spalte voll, fragt das Board vor der nächsten Karte nach. 0 heißt: kein Limit."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a lane is full, the board asks before another card goes in. 0 means no limit."
           }
         }
       }
