@@ -40,6 +40,10 @@ weiterentwickelt: Ändert sich Verhalten, ändert sich diese Datei mit.
   „Überfällig" auf einem tagelang offenen Fenster nicht veralten
 - Wird der Erinnerungs-Zugriff nachträglich in den Systemeinstellungen erteilt, übernimmt
   die App das beim nächsten Aktivieren des Fensters — ohne Neustart
+- **Wird er entzogen, sagt das Listen-Register das auch dann, wenn noch Listen im Speicher
+  liegen** (10.08.2026): Es entscheidet am Zugriffszustand, nicht daran, ob die letzte
+  erfolgreiche Abfrage noch etwas hinterlassen hat. Vorher bot es weiter Schalter für
+  Listen an, die es nicht mehr lesen durfte
 - Normales Fenster, kein Always-on-Top
 - Login-Item (Start bei Anmeldung) + gespeicherte Fensterposition/-größe
 - Native Toolbar (SwiftUI `.toolbar`/`NSToolbar`) statt selbstgebauter Titelleiste
@@ -361,6 +365,24 @@ BACKLOG.md, Abschnitt „Explizit abgelehnt"). Karten werden mit der Maus bewegt
 Fokusrahmen betont Karten ohne Not, ein Hover-Text ist Dauerrauschen. VoiceOver ist davon
 unberührt: Karten behalten Labels, Hints und alle Aktionen.
 
+**Das URL-Feld benennt, was es nicht behalten kann** (10.08.2026). Steht dort etwas, das
+keine Adresse sein kann — eine Adresse enthält kein Leerzeichen, Prosa immer eines —,
+erscheint unter dem Feld „Wird nicht gesichert — eine Adresse hat keine Leerzeichen".
+Solange getippt wird, nicht als Dialog und ohne etwas zu blockieren: Schließen bleibt
+erlaubt, das Feld bearbeitbar. Vorher verschwand der Satz beim nächsten Öffnen
+kommentarlos — genau die Fehlerklasse, die dieses Projekt am höchsten gewichtet. Ein
+leeres Feld ist kein Einwand: Die Adresse zu löschen ist eine normale Änderung. Feld und
+Schreibvorgang teilen sich dieselbe Regel (`TicketURL`), damit sie nicht wieder
+auseinanderlaufen können.
+
+**Eine schreibgeschützte Liste sagt es beim Öffnen, nicht beim Schließen** (10.08.2026).
+Sitzt die Karte in einer Liste, die dieser Mac nur lesen darf (abonniert, oder ohne
+Schreibrecht geteilt), sind alle Felder gesperrt und die Zeile „Liste" trägt den Zusatz
+„(nur lesbar)". Vorher nahm der Editor die ganze Eingabe entgegen und erst der
+Schließen-Vorgang meldete „Nicht gesichert" — das ganze Tippen verloren für eine Tatsache,
+die im Moment des Öffnens feststand. Der ↗-Sprung nach Reminders bleibt offen: Er ist der
+Weg, der dort tatsächlich weiterführt.
+
 **Umbenennen** (Kontextmenü, für die schnelle Ein-Zeilen-Korrektur ohne Editor) startet
 immer beim *gespeicherten* Titel, nicht bei dem, was die Karte anzeigt (die Karte blendet
 URLs aus, siehe unten). Ein unverändert gelassenes oder leer gemachtes Feld schreibt
@@ -369,7 +391,12 @@ nichts. Escape verwirft, Return und ein Klick daneben übernehmen.
 **Ticket anlegen = Karten-Editor.** Das „+" im Backlog legt das Ticket an (Standardliste
 bzw. erste eingeschlossene Liste) und öffnet sofort den Karten-Editor mit dem Cursor im
 Titel — Name, Notizen, Datum und alles Weitere entstehen an einem Ort, ohne zweiten
-Schritt. **Return legt das Ticket an, Escape bricht die Anlage ab** und entfernt die
+Schritt. **Der Cursor sitzt vom ersten Bild an**, ohne Lücke, in die getippte Zeichen
+fallen könnten (10.08.2026 gemessen: ⌘N und sofortiges Tippen von 16 Zeichen — vorher kam
+kein einziges an, danach alle). ⌘N ist ein Reflex, dem unmittelbar das Tippen folgt; der
+Schutz, der sonst eine versehentliche Taste vom Titel fernhält, ist für eine gerade
+angelegte Karte deshalb aus — dort gibt es keinen Text, den eine Taste beschädigen
+könnte. **Return legt das Ticket an, Escape bricht die Anlage ab** und entfernt die
 Erinnerung wieder, egal was schon in den Feldern stand — abgebrochen ist abgebrochen. Wird
 der Editor ohne jede Eingabe geschlossen, entfernt die App das Ticket ebenfalls
 rückstandslos; der ↗-Sprung nach Reminders zählt dabei als Behalten.
@@ -871,6 +898,13 @@ Nicht-Sehen.
 
 - Konfigurierbar in den Einstellungen für „Als Nächstes" (Standard 5) und „In Bearbeitung"
   (Standard 3); 0 = kein Limit
+- **Die Regel steht sichtbar unter den Steppern**, nicht mehr in einem Hover-Tipp am
+  Abschnittstitel (10.08.2026): „Ist eine Spalte voll, fragt das Board vor der nächsten
+  Karte nach. 0 heißt: kein Limit." Eine Regel, die nur beim Überfahren erscheint, ist
+  keine explizite Regel — und „make policies explicit" ist die eine Kanban-Zusage, die
+  dieses Board in Worten einlösen muss. Die Einstellungen sind der Ort, an dem das nichts
+  kostet; das Board selbst bleibt wortlos. Der ersetzte Tipp („Finish before you stack")
+  war eine Maxime — das Chrome benennt, es spornt nicht an (CONCEPT.md, „Ton der Texte")
 - Das Limit läuft im Spaltenzähler mit (`1 / 3`), die Kapsel färbt sich beim Überschreiten
   teal
 - **Nur „In Bearbeitung" fragt nach:** Wird das Limit dort überschritten, erscheint *nach*

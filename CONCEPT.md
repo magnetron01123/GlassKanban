@@ -516,6 +516,8 @@ aus den drei bestehenden ab:
 | Reibung | „Weniger gleichzeitig, mehr fertig." | dieselbe Zeile plus „Erst etwas abschließen?" — das steht schon auf dem Knopf |
 | Leistung | „Dein Schnitt an aktiven Tagen" | „Du warst an 4 Tagen untätig" |
 | Zahlenzeile | „Dein Limit: 3" | „Dein Limit: 3." |
+| Regel erklärt (10.08.2026) | „Ist eine Spalte voll, fragt das Board vor der nächsten Karte nach. 0 heißt: kein Limit." | „Finish before you stack" — eine Maxime, dazu nur beim Überfahren sichtbar |
+| Verworfene Eingabe (10.08.2026) | „Wird nicht gesichert — eine Adresse hat keine Leerzeichen" | kommentarlos verschwinden lassen, oder „Ungültige URL" (benennt den Nutzer als im Unrecht, nicht die Folge) |
 
 Für VoiceOver-Beschriftungen gilt dasselbe, nur schärfer: Sie werden bei jedem Anlaufen
 erneut vorgelesen und vertragen kein Wort zu viel. Ein Motivationssatz als Beschriftung ist

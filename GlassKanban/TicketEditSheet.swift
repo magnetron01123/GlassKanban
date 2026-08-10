@@ -82,6 +82,25 @@ struct TicketEditSheet: View {
     /// its first missing thing is the name.
     @FocusState private var titleFocused: Bool
 
+    /// A card the "+" or ⌘N just made, as opposed to one opened to be read.
+    /// Read straight from the store rather than latched in `load()`: the
+    /// neutralizer below is built before `load()` runs, and it has to know.
+    private var isNewlyCreated: Bool { store.newlyCreatedCardID == card.id }
+
+    /// The card sits in a list this Mac may only read — a subscribed list, or
+    /// one shared with the user without editing rights.
+    ///
+    /// Named up front instead of letting the save fail: the fields used to
+    /// take a full edit and only the close reported "Nicht gesichert", which
+    /// is the whole typing wasted for a fact that was knowable the moment the
+    /// card opened.
+    private var isReadOnly: Bool {
+        guard !calendarID.isEmpty else { return false }
+        return store.reminderCalendars
+            .first { $0.calendarIdentifier == calendarID }?
+            .allowsContentModifications == false
+    }
+
     /// One surface, edge to edge.
     ///
     /// The card used to be inset by 20pt inside a popover, which put two
@@ -94,9 +113,9 @@ struct TicketEditSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             zoneDivider
-            notesZone
+            notesZone.disabled(isReadOnly)
             zoneDivider
-            urlZone
+            urlZone.disabled(isReadOnly)
             zoneDivider
             factsZone
         }
@@ -125,7 +144,15 @@ struct TicketEditSheet: View {
         // a stray keystroke while just glancing at a card is safely absorbed
         // rather than landing — silently, permanently, this editor has no
         // Cancel — in the title field.
-        .background(FirstResponderNeutralizer())
+        //
+        // Switched off for a card that was just created, and that is the whole
+        // fix for the gap it used to leave: it took focus away, `load()` gave
+        // it back 120 ms later, and everything typed in between went nowhere.
+        // ⌘N is a reflex followed immediately by typing, so those were real
+        // characters off the front of real titles. Nothing to absorb here
+        // anyway — the card is empty, and there is no text a stray key could
+        // damage.
+        .background(FirstResponderNeutralizer(isActive: !isNewlyCreated))
         // Return and Escape, for whichever field is being typed in — or none.
         // Switched off while the date popover is up: that is a window of its
         // own, and both keys belong to it while it stands.
@@ -211,6 +238,9 @@ struct TicketEditSheet: View {
                     .textFieldStyle(.plain)
                     .font(BoardText.editorTitle)
                     .focused($titleFocused)
+                    // A read-only list cannot take this edit; taking the
+                    // typing anyway and reporting it on close is the defect.
+                    .disabled(isReadOnly)
                     .editableHint(hoveredField == .title, scheme: colorScheme)
                     // The chip beside it is a sibling view, not part of this
                     // field, so the state has to be said here too.
@@ -335,7 +365,22 @@ struct TicketEditSheet: View {
                         hoveredField = hovering ? .url : (hoveredField == .url ? nil : hoveredField)
                     }
                 }
+            // Named while it is being typed, not after it is gone. An address
+            // field cannot hold a sentence (see `TicketURL`), and until now
+            // the sentence simply was not there any more the next time the
+            // card was opened — the one failure this project treats as the
+            // worst kind (FINDINGS A1). It states the consequence and stops:
+            // no dialog, nothing blocked, nothing to acknowledge. Closing the
+            // card is still allowed, and the field is still editable — this
+            // is friction, not a veto.
+            if TicketURL.rejects(url) {
+                Text("Not stored — an address has no spaces")
+                    .font(BoardText.editorCaption)
+                    .foregroundStyle(.secondary)
+                    .transition(.opacity)
+            }
         }
+        .animation(Board.hoverAnimation, value: TicketURL.rejects(url))
         .padding(EdgeInsets(top: 12, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
     }
 
@@ -385,8 +430,8 @@ struct TicketEditSheet: View {
                 }
             }
             factRow("List") { listControl }
-            factRow("Urgency") { priorityControl }
-            factRow("Due Date") { dueDateControl }
+            factRow("Urgency") { priorityControl }.disabled(isReadOnly)
+            factRow("Due Date") { dueDateControl }.disabled(isReadOnly)
         }
         .padding(EdgeInsets(top: 14, leading: Board.openCardInset, bottom: 16, trailing: Board.openCardInset))
     }
@@ -705,16 +750,38 @@ struct TicketEditSheet: View {
     /// Moving a card to another list is the one card property the sheet used
     /// to leave to Reminders.app. It is a plain `EKReminder.calendar` write,
     /// so it belongs here with the rest.
+    @ViewBuilder
     private var listControl: some View {
-        FactPopUpButton(
-            titles: calendarOptions.map(\.title),
-            selectedIndex: calendarOptions.firstIndex { $0.calendarIdentifier == calendarID } ?? 0,
-            width: Self.factControlWidth,
-            accessibilityLabel: String(localized: "List")
-        ) { index in
-            guard calendarOptions.indices.contains(index) else { return }
-            calendarID = calendarOptions[index].calendarIdentifier
+        if isReadOnly {
+            // The one row that can explain the whole card: every field above
+            // is locked, and this is why. Stated where the reason lives
+            // rather than as a banner over the card — and stated on opening
+            // rather than as a failure on closing, which is what it used to
+            // be. Bare text, like "Captured": the stillness says the row is a
+            // fact and not a setting.
+            Text(readOnlyListLabel)
+                .font(BoardText.editorBody)
+                .foregroundStyle(.secondary)
+                .padding(.leading, Self.controlTextInset)
+                .frame(width: Self.factControlWidth, alignment: .leading)
+        } else {
+            FactPopUpButton(
+                titles: calendarOptions.map(\.title),
+                selectedIndex: calendarOptions.firstIndex { $0.calendarIdentifier == calendarID } ?? 0,
+                width: Self.factControlWidth,
+                accessibilityLabel: String(localized: "List")
+            ) { index in
+                guard calendarOptions.indices.contains(index) else { return }
+                calendarID = calendarOptions[index].calendarIdentifier
+            }
         }
+    }
+
+    private var readOnlyListLabel: String {
+        let name = calendarOptions
+            .first { $0.calendarIdentifier == calendarID }?
+            .title ?? ""
+        return String(localized: "\(name) (read-only)")
     }
 
     /// The card's own list is always offered, even when it is read-only or
@@ -750,13 +817,18 @@ struct TicketEditSheet: View {
         calendarID = ticket.calendarID
         loadedTicket = ticket
         isLoaded = true
-        // A brand-new ticket opens ready to type its name. Delayed a beat:
-        // the field is not in the responder chain in the same tick it
-        // appears, and the neutralizer below needs to have done its work
-        // first so this claim lands after it, not before.
-        if store.newlyCreatedCardID == card.id {
+        // A brand-new ticket opens ready to type its name — from the first
+        // frame, not a beat later. The neutralizer is switched off for this
+        // card (see `isNewlyCreated`), so AppKit's own assignment of the first
+        // text field already stands and nothing has to be taken back from it.
+        // The repeat covers the one thing this cannot know: whether the field
+        // was in the responder chain yet in the tick the card appeared. Two
+        // claims of the same focus cost nothing; the wait between them used to
+        // cost keystrokes.
+        if isNewlyCreated {
+            titleFocused = true
             Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(120))
+                await Task.yield()
                 titleFocused = true
             }
         }
@@ -1064,8 +1136,15 @@ private struct EditorKeyCommands: NSViewRepresentable {
 /// parking responder status on the window, which took it out of the SwiftUI
 /// hierarchy altogether and broke view-level key handling with it.
 private struct FirstResponderNeutralizer: NSViewRepresentable {
+    /// False for a card that opens to be written in rather than read. Only
+    /// read at creation: `viewDidMoveToWindow` is the single moment the view
+    /// acts, and it has run long before this value could change.
+    var isActive = true
+
     func makeNSView(context: Context) -> NSView {
-        NeutralizingView()
+        let view = NeutralizingView()
+        view.isActive = isActive
+        return view
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {}
@@ -1083,13 +1162,14 @@ private struct FirstResponderNeutralizer: NSViewRepresentable {
         /// opening, so one ⌘Tab away and back sent the next keystrokes
         /// nowhere, and closing then deleted the ticket as "empty".
         private var hasNeutralized = false
+        var isActive = true
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             observer.map(NotificationCenter.default.removeObserver)
             observer = nil
             hasNeutralized = false
-            guard let window else { return }
+            guard isActive, let window else { return }
             if window.isKeyWindow {
                 window.makeFirstResponder(window.contentView)
                 hasNeutralized = true

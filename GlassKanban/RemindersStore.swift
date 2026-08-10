@@ -1505,34 +1505,12 @@ final class RemindersStore: ObservableObject {
         reminder.addAlarm(EKAlarm(absoluteDate: newDue))
     }
 
-    /// Turns what was typed in the URL field into what EventKit stores.
-    ///
-    /// `URL(string:)` is permissive enough for the way people actually write
-    /// addresses — "example.com" parses and round-trips unchanged, so a
-    /// scheme is not forced onto text the user did not write one into. An
-    /// empty field clears the reminder's URL rather than leaving a stale one
-    /// behind.
-    ///
-    /// The whitespace check is the part that has to be done by hand. This
-    /// comment used to claim that prose "does not parse and therefore is not
-    /// stored" — that stopped being true in macOS 14, where `URL(string:)`
-    /// percent-encodes invalid characters by default. So "Notiz mit
-    /// Leerzeichen" was quietly filed as an address and read back as
-    /// "Notiz%20mit%20Leerzeichen": the user's own words, mangled, in a field
-    /// they could no longer recognise. A space is the one thing no address
-    /// contains, and prose always has one.
-    ///
-    /// What passes may still be normalised — "https://münchen.de" is stored
-    /// as its punycode form and reads back that way. That is a correct,
-    /// resolvable address rather than a mangled sentence, so it is kept;
-    /// rejecting it (`encodingInvalidCharacters: false` returns nil for the
-    /// whole umlaut family) would throw away real links to avoid an unusual
-    /// spelling.
+    /// Turns what was typed in the URL field into what EventKit stores —
+    /// the same rule the field itself shows while it is being typed into
+    /// (`TicketURL`). An empty field clears the reminder's URL rather than
+    /// leaving a stale one behind.
     private static func parsedURL(_ text: String) -> URL? {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
-              !trimmed.contains(where: \.isWhitespace) else { return nil }
-        return URL(string: trimmed)
+        TicketURL.parsed(text)
     }
 
     /// Every list the board actually draws from — what the settings left
