@@ -517,20 +517,23 @@ final class RemindersStore: ObservableObject {
         // series, so `hasRecurrenceRules` is false on exactly the records
         // fetched here — while `creationDate` still points at the day the
         // *series* was set up, years ago for a standing chore. The series
-        // itself, though, lives on in the incomplete fetch. A completed
-        // reminder whose title matches a live recurring series is treated
-        // as one of its occurrences, which is what keeps those series
-        // creation dates out of the lead-time median (see
-        // `CompletionRecord.isRecurring`).
+        // itself, though, lives on in the incomplete fetch, and the detached
+        // copy carries that series' `creationDate` bit for bit (measured
+        // 10.08.2026, see FINDINGS) — which is how an occurrence is told from
+        // an ordinary task that merely shares its name, and what keeps those
+        // series creation dates out of the lead-time median (see
+        // `CompletionRecord.isRecurring` and `RecurringSeriesMatch`).
         let openRecurring = incomplete.filter(\.hasRecurrenceRules)
         openRecurringReminders = openRecurring
-        let recurringTitles = Set(openRecurring.map(\.title))
+        let openRecurringRecords = openRecurring.map(Self.matchRecord)
         let completionRecords: [CompletionRecord] = completed.compactMap { reminder in
             guard let date = reminder.completionDate, let calendar = reminder.calendar else { return nil }
             return CompletionRecord(
                 date: date,
                 created: reminder.creationDate,
-                isRecurring: reminder.hasRecurrenceRules || recurringTitles.contains(reminder.title),
+                isRecurring: reminder.hasRecurrenceRules
+                    || RecurringSeriesMatch.seriesID(
+                        of: Self.matchRecord(reminder), among: openRecurringRecords) != nil,
                 listName: calendar.title,
                 listColor: Color(nsColor: calendar.color ?? .controlAccentColor))
         }
@@ -1399,14 +1402,22 @@ final class RemindersStore: ObservableObject {
     /// `hasRecurrenceRules` is false on it and the recurrence is only visible
     /// on the sibling that is still open.
     private func liveRecurringSibling(of reminder: EKReminder) -> EKReminder? {
-        guard reminder.isCompleted,
-              let calendarID = reminder.calendar?.calendarIdentifier,
-              let title = reminder.title else { return nil }
-        return openRecurringReminders.first {
-            $0.title == title
-                && $0.calendar?.calendarIdentifier == calendarID
-                && $0.calendarItemIdentifier != reminder.calendarItemIdentifier
-        }
+        guard let seriesID = RecurringSeriesMatch.seriesID(
+            of: Self.matchRecord(reminder),
+            among: openRecurringReminders.map(Self.matchRecord))
+        else { return nil }
+        return openRecurringReminders.first { $0.calendarItemIdentifier == seriesID }
+    }
+
+    /// One reminder reduced to what identity reads (see
+    /// `RecurringSeriesMatch`).
+    private static func matchRecord(_ reminder: EKReminder) -> RecurringSeriesMatch.Record {
+        RecurringSeriesMatch.Record(
+            id: reminder.calendarItemIdentifier,
+            listID: reminder.calendar?.calendarIdentifier ?? "",
+            createdAt: reminder.creationDate,
+            isCompleted: reminder.isCompleted,
+            isRecurring: reminder.hasRecurrenceRules)
     }
 
     /// Registers the inverse of a write with the window's undo manager.
