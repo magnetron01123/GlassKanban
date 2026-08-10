@@ -119,6 +119,44 @@ Der Vorgang ist konvergent: Nach einem Umschreiben existiert genau ein Tag der a
 Form (oder keiner), es entsteht also keine Schreibschleife über die
 Änderungs-Benachrichtigung.
 
+### Eine Antwort je Zustand — die Regel für fremde Schreiber
+
+Das Board ist einer von mehreren Schreibern auf denselben Daten: iCloud gleicht ab, in
+geteilten Listen sitzt eine zweite Person, und andere Software (Automatisierungs-Brücken,
+Kalender-Clients, Skripte) schreibt in dieselben Datensätze. Am 10.08.2026 auf einem
+echten Board gemessen: Etwas außerhalb schob alle 30 bis 55 Minuten einen alten Stand
+zurück, und die Tag-Hygiene schrieb dieselben vier Erinnerungen dreimal in drei Stunden um
+— zwölf Schreibzugriffe in fremde Daten, von denen keiner hielt.
+
+**Verbindliche Regel, für jeden Schreibvorgang, den der Nutzer nicht angefordert hat:**
+
+> Jede Korrektur, die die App an Daten vornimmt, die sie nicht selbst geändert hat,
+> geschieht **einmal**. Kommt derselbe Zustand zurück, akzeptiert die App ihn.
+
+Das gilt für die Hygiene oben, für die Tag-Freigabe verbrauchter Pulls und für die
+**Echo-Heilung**: Kehrt genau der Notiztext zurück, den ein Zug oder eine Bearbeitung
+gerade ersetzt hat, stellt die App ihr Ergebnis einmal wieder her — danach nicht mehr
+(`CorrectionLedger`).
+
+- **Byte-genau, nicht status-genau.** Verglichen wird der wörtliche Notiztext, den die App
+  ersetzt hat. Ein zurückgespielter Stand bringt exakt dieselben Zeichen; wer am iPhone
+  `#next` von Hand tippt, schreibt eine andere Zeichenfolge — andere Zeile, andere
+  Schreibweise, anderer Leerraum — und seine Entscheidung bleibt stehen. Auf Statusebene
+  zu vergleichen würde genau diesen Menschen still überstimmen.
+- **Was die Regel einlöst:** Ein Schreibsturm kann nicht entstehen; zwei Macs mit dem Board
+  können sich nicht endlos gegenseitig korrigieren (jede Seite antwortet höchstens einmal
+  je eigenem Zug); die Konvergenz-Zusage oben gilt konstruktiv, weil eine Korrektur, die
+  sich nicht wiederholen kann, nicht kreisen kann. Ein **einzelner** Sync-Konflikt — der
+  Normalfall auf geteilten Listen — wird weiterhin geheilt.
+- **Was sie nicht einlöst:** gewinnen. Gegen einen Schreiber, der dauerhaft einen alten
+  Stand zurückschiebt, verliert das Board die Spalte und zeigt, was in den Daten steht —
+  die Daten *sind* die Wahrheit, die App hat keinen eigenen Speicher, aus dem sie etwas
+  anderes behaupten könnte. Das ist die bewusste Wahl gegen einen endlosen Kampf.
+- **Der Nutzer erfährt davon nichts.** Kein Hinweis, kein Dialog, kein Badge
+  (Nutzerentscheidung 10.08.2026, Begründung in CONCEPT.md). Ein Eintrag verfällt nach 24
+  Stunden, damit ein aus einem Backup zurückgespieltes Einstellungsfile keine Sollzustände
+  für ein längst weitergelaufenes Board mitbringt.
+
 ### Listen-Filter
 
 In den Einstellungen wird gewählt, welche vorhandenen Listen als Quelle einbezogen werden

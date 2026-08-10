@@ -112,6 +112,12 @@ final class RemindersStore: ObservableObject {
     /// memory below, so condition 2 already keeps its tag after a restart.
     private var deliberatelyMovedSinceRefresh: Set<String> = []
 
+    /// What the app has already corrected once. Every write it makes on its
+    /// own initiative asks this first, and every write it makes at all is
+    /// recorded here — see `CorrectionLedger` for the invariant and the
+    /// measurement behind it.
+    private var corrections = CorrectionLedger.load()
+
     /// The release rule's memory of the previous session, loaded once and
     /// used to seed the very first refresh after a cold start — a completion
     /// that happened during downtime still meets its proof. Never cleared on
@@ -430,6 +436,7 @@ final class RemindersStore: ObservableObject {
         guard generation == refreshGeneration else { return }
 
         performTagHygiene(on: incomplete + completed)
+        healEchoesOfOwnWrites(incomplete + completed)
         releaseTagsSpentByDetachedOccurrences(incomplete: incomplete, completed: completed)
 
         // The list a finished task came from is thrown away everywhere else —
@@ -493,6 +500,10 @@ final class RemindersStore: ObservableObject {
             releaseMemory = memory
             memory.save()
         }
+        // Kept across launches: the writer this defends against works on a
+        // scale of tens of minutes, and the app may well be quit in between.
+        corrections.retain(lastFetchedReminderIDs, now: .now)
+        corrections.save()
         hasLoadedOnce = true
     }
 
@@ -529,8 +540,53 @@ final class RemindersStore: ObservableObject {
         guard !released.isEmpty else { return }
         var dirty = false
         for reminder in incomplete where released.contains(reminder.calendarItemIdentifier) {
-            reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: .backlog)
-            if (try? eventStore.save(reminder, commit: false)) != nil {
+            if correctNotes(on: reminder, to: StatusTagger.rewrittenNotes(reminder.notes, for: .backlog)) {
+                dirty = true
+            }
+        }
+        if dirty {
+            try? eventStore.commit()
+        }
+    }
+
+    /// Writes notes the user did not ask for — the data hygiene, a spent
+    /// pull, an echo of the app's own write — through the one gate that
+    /// enforces the invariant: any given state is answered once, and if it
+    /// comes back the app accepts it.
+    ///
+    /// Returns whether anything was written, so callers can batch their
+    /// commit the way `performTagHygiene` always has.
+    private func correctNotes(on reminder: EKReminder, to notes: String?, now: Date = .now) -> Bool {
+        let cardID = reminder.calendarItemIdentifier
+        let current = reminder.notes
+        guard current != notes,
+              corrections.permitsAutomaticWrite(for: cardID, current: current, now: now)
+        else { return false }
+        reminder.notes = notes
+        guard (try? eventStore.save(reminder, commit: false)) != nil else {
+            reminder.notes = current
+            return false
+        }
+        // Recorded and spent in the same breath: the write *is* the one answer
+        // this state gets. Whether it survives is not the app's to decide.
+        corrections.record(cardID: cardID, replaced: current, wrote: notes, at: now)
+        corrections.markAnswered(cardID: cardID)
+        return true
+    }
+
+    /// Undoes, exactly once, an echo of the app's own write — a state it
+    /// displaced that came back without anybody deciding so. Runs on the
+    /// freshly fetched reminders before the cards are built, so the same
+    /// refresh already shows the corrected card.
+    private func healEchoesOfOwnWrites(_ reminders: [EKReminder], now: Date = .now) {
+        var dirty = false
+        for reminder in reminders {
+            let cardID = reminder.calendarItemIdentifier
+            guard !deliberatelyMovedSinceRefresh.contains(cardID),
+                  let restored = corrections.unansweredEcho(
+                    for: cardID, current: reminder.notes, now: now)
+            else { continue }
+            if correctNotes(on: reminder, to: restored, now: now) {
                 dirty = true
             }
         }
@@ -590,8 +646,7 @@ final class RemindersStore: ObservableObject {
             guard StatusTagger.needsHygiene(
                 notes: reminder.notes, isCompleted: reminder.isCompleted) else { continue }
             let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
-            reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
-            if (try? eventStore.save(reminder, commit: false)) != nil {
+            if correctNotes(on: reminder, to: StatusTagger.rewrittenNotes(reminder.notes, for: status)) {
                 dirty = true
             }
         }
@@ -646,6 +701,10 @@ final class RemindersStore: ObservableObject {
         // Read before the save: afterwards this record is the rolled-on series
         // and no longer says anything about the occurrence that was finished.
         let wasRecurringSeries = reminder.hasRecurrenceRules
+        // Read before the rewrite: this exact text is what an echo would
+        // bring back, and only a record of it can tell an echo from someone
+        // deciding otherwise (see `CorrectionLedger`).
+        let replacedNotes = reminder.notes
         reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
         // Only written when it actually changes: the setter also touches
         // `completionDate`, and a lateral move has no business rewriting
@@ -685,6 +744,11 @@ final class RemindersStore: ObservableObject {
         if feedback {
             deliberatelyMovedSinceRefresh.insert(cardID)
         }
+        // What this move displaced, so an echo of it can be told apart from
+        // someone deciding otherwise — and so the one correction it is owed
+        // is available. A replay through undo counts too: it is still this
+        // app writing, and its result deserves the same single defence.
+        corrections.record(cardID: cardID, replaced: replacedNotes, wrote: reminder.notes, at: .now)
 
         // Optimistic UI update; the EventKit change notification will
         // confirm it with a full refresh shortly after.
@@ -1221,7 +1285,14 @@ final class RemindersStore: ObservableObject {
         }
 
         if titleChanged { reminder.title = edited.title }
-        if notesChanged { reminder.notes = rewrittenNotes }
+        if notesChanged {
+            // The user wrote these notes themselves: whatever the ledger
+            // remembered about this card is history, and the new text is what
+            // an echo would have to match from here on.
+            corrections.record(
+                cardID: cardID, replaced: reminder.notes, wrote: rewrittenNotes, at: .now)
+            reminder.notes = rewrittenNotes
+        }
         if urlChanged { reminder.url = Self.parsedURL(edited.url) }
         if dueChanged {
             // Without a time of day the reminder stays all-day, the way

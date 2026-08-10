@@ -28,6 +28,54 @@ dieser Session nicht freigegeben war.
 - Der Alt-Tag auf „Einkaufen" (aus einem Abhaken bei geschlossener App — die
   dokumentierte Restlücke) wurde einmalig manuell entfernt.
 
+## Nachtrag 10.08.2026: Der Fehler war nicht behoben — die Ursache lag außerhalb der App
+
+Das Ticket kam weiter zurück, obwohl der Nutzer weder in der Erinnerungen-App gearbeitet
+noch etwas abgehakt hatte. Erst eine Instrumentierung aller Schreibpfade
+(`os.Logger`, temporär) brachte den Beweis:
+
+| Zeit | Beobachtung |
+|---|---|
+| 08:35:17 | `move WROTE: "Einkaufen" next -> backlog feedback=true notesNow=(leer)` — der Zug des Nutzers, korrekt geschrieben |
+| 09:30:24 | `#next` ist zurück; die App protokolliert **nur** `refresh SAW CHANGE: backlog -> next`, keinen eigenen Schreibvorgang |
+| 09:30 (gleicher Moment) | vier **erledigte** Erinnerungen bekommen Legacy-Tags zurück (`#alsnächstes`, `#inbearbeitung`) — Schreibweisen, die die App seit dem 07.08.2026 nicht mehr erzeugen kann |
+| 08:34 / 09:30 / 11:03 | die Hygiene schreibt dieselben vier Erinnerungen **dreimal** um; kein einziger Schreibvorgang hält |
+
+**Befund:** Ein fremder Schreiber (Verdacht: eine selbstgebaute Brücke zwischen Reminders
+und Home Assistant — dessen Listen laufen über `local_todo`, sprechen also nicht von sich
+aus mit Apple Reminders) schiebt alle 30–55 Minuten einen Datenstand von vor dem 07.08.
+zurück. Die IDs bleiben dabei stabil (über vier Vorfälle gemessen) — Voraussetzung dafür,
+dass eine App-seitige Regel überhaupt greifen kann.
+
+**Zweiter, schwererer Befund:** Die App kämpfte blind. Sie prüfte nie, ob ein
+Schreibvorgang Bestand hatte, und schrieb bei jedem Sync erneut — zwölf Schreibzugriffe in
+fremde Daten in drei Stunden.
+
+### Behebung: eine Invariante statt weiterer Sonderfälle
+
+`CorrectionLedger` — *jede Korrektur an Daten, die die App nicht selbst geändert hat,
+geschieht einmal; kommt derselbe Zustand zurück, akzeptiert die App ihn.* Verglichen wird
+**byte-genau** der ersetzte Notiztext, damit ein von Hand getippter Tag nicht mit einem
+Echo verwechselt wird. Regel in SPEC.md, Herleitung und die verworfenen Alternativen in
+CONCEPT.md und BACKLOG.md.
+
+**Vor dem Bau adversarisch geprüft und daran korrigiert:** Ein erster Entwurf (Vergleich
+auf Statusebene, Rückzug mit Backoff, Pull-Verfall über Fälligkeitssprünge) hätte
+Nutzerentscheidungen vom iPhone verschluckt, zwei Macs in eine Endlosschleife geführt und
+aufgeschobene Termine still aus der Arbeitsspalte geworfen. Er wurde vollständig verworfen.
+
+**Verifikation, gegen echte Daten mit laufender App gemessen:**
+
+- Sturm-Schutz: erledigte Erinnerung mit Legacy-Tag → einmal bereinigt; zweimal
+  zurückgeschoben → die App ließ sie beide Male stehen (vorher: jeder Sync ein Schreibzugriff).
+- Echo-Heilung: verdrängter Zustand kehrt zurück → genau einmal wiederhergestellt; erneut
+  zurückgeschoben → akzeptiert. Ledger zeigt danach `answered = 1`.
+- 237 Tests grün, davon 17 neue für die Regel und ihre Persistenz.
+
+**Grenze, die bleibt:** Gegen einen dauerhaft aktiven Rückschieber gewinnt die App nicht —
+sie hat keinen eigenen Speicher, aus dem sie eine andere Wahrheit behaupten könnte. Sie
+beendet den Schreibsturm und zeigt, was in den Daten steht. Die Quelle gehört abgeklemmt.
+
 ## Verworfen
 
 - **Kaltstart-Raten über Zeitstempel** (Tag freigeben, wenn `completionDate` des
