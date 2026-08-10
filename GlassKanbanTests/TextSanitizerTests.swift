@@ -75,3 +75,25 @@ final class TextSanitizerTests: XCTestCase {
         XCTAssertEqual(TextSanitizer.notesExcerpt(nil), "")
     }
 }
+
+/// Text that only looks like a status tag belongs to the user — it must
+/// survive the card's own display path, which also feeds Find.
+final class TagLookalikeDisplayTests: XCTestCase {
+
+    func testHashtaggedWordsInNotesSurviveTheCardPreview() {
+        let cases = [
+            "Aufgabe fuer #next-steps Meeting",
+            "Thread im Slack: #progress-report lesen",
+            "Kunde: #bearbeitung/2024 Akte",
+        ]
+        for notes in cases {
+            XCTAssertEqual(TextSanitizer.notesPreview(notes), notes, "preview mangled: \(notes)")
+            XCTAssertEqual(TextSanitizer.notesExcerpt(notes), notes, "excerpt mangled: \(notes)")
+        }
+    }
+
+    /// A real tag on its own line still disappears from the card.
+    func testARealTagIsStillHidden() {
+        XCTAssertEqual(TextSanitizer.notesPreview("Kontrolltext\n#next"), "Kontrolltext")
+    }
+}

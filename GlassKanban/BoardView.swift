@@ -26,6 +26,18 @@ struct BoardView: View {
                 ColumnView(status: status)
             }
         }
+        // The board as a whole is the backstop for a drag that ends nowhere:
+        // released over the toolbar, in the gap between two lanes, or outside
+        // the window, neither the drop target nor the card's own gesture
+        // fires, and the card stayed ghosted with every tooltip suppressed
+        // until some later drag happened to land in a lane. This target
+        // accepts nothing — it only notices that the drag stopped being over
+        // the board and lets the store clear the state.
+        .dropDestination(for: String.self) { _, _ in false } isTargeted: { targeted in
+            if !targeted, store.draggingCardID != nil {
+                store.endDrag()
+            }
+        }
         // Four wordless empty lanes read as a broken app. Individual lanes stay
         // silent — only the whole board being blank is worth a sentence, and
         // then exactly one, laid over the lanes rather than inside them.

@@ -37,7 +37,11 @@ enum StatusTagger {
 
     private static var nextRegexes: [Regex<Substring>] { [nextRegex] + legacyNextRegexes }
     private static var progressRegexes: [Regex<Substring>] { [progressRegex] + legacyProgressRegexes }
-    static var allTagRegexes: [Regex<Substring>] { nextRegexes + progressRegexes }
+    /// Private on purpose: applying these raw, without `isStandalone`, is how
+    /// text that merely looks like a tag gets deleted. Everything that needs
+    /// to find or remove a tag goes through `tagRanges` / `removingTags`, so
+    /// reading, counting and removing can never disagree about what a tag is.
+    private static var allTagRegexes: [Regex<Substring>] { nextRegexes + progressRegexes }
 
     static func status(fromNotes notes: String?, isCompleted: Bool) -> KanbanStatus {
         if isCompleted { return .done }
@@ -154,21 +158,46 @@ enum StatusTagger {
     /// hashtag; unlike `TextSanitizer`, URLs are left alone since here
     /// they're real, editable content.
     static func removingTags(_ text: String) -> String {
-        var lines: [String] = []
-        for line in text.components(separatedBy: "\n") {
+        // Every kind of line break splits, and each one is carried along so it
+        // can be put back exactly as it was. Splitting on "\n" alone let a
+        // note separated by U+2028 (what a paste from a PDF or a web page
+        // gives) or by a lone "\r" count as one single line, so the tidy pass
+        // below ran across the whole note and ate the user's double spaces on
+        // lines that never held a tag. Replacing those separators with "\n"
+        // instead would be a smaller edit of someone else's text, but still an
+        // edit — and untouched lines are promised through character for
+        // character (SPEC.md).
+        var kept: [(text: String, separator: String)] = []
+        var rawLines: [String] = []
+        var separators: [String] = []
+        var current = ""
+        for character in text {
+            // CRLF is one Character in Swift, so it stays one separator
+            // rather than being torn in two.
+            if character.isNewline {
+                rawLines.append(current)
+                separators.append(String(character))
+                current = ""
+                continue
+            }
+            current.append(character)
+        }
+        rawLines.append(current)
+        for (index, rawLine) in rawLines.enumerated() {
             // Only standalone tags come out — see `isStandalone`. Removed back
             // to front so the earlier ranges keep their indices, and skipping
             // anything that overlaps what was just cut, since two patterns
             // could in principle land on the same run of characters.
-            let ranges = tagRanges(in: line, of: allTagRegexes).reversed()
-            var cleaned = line
+            let ranges = tagRanges(in: rawLine, of: allTagRegexes).reversed()
+            var cleaned = rawLine
             var cutFrom: String.Index?
             for range in ranges where cutFrom.map({ range.upperBound <= $0 }) ?? true {
                 cleaned.removeSubrange(range)
                 cutFrom = range.lowerBound
             }
-            guard cleaned != line else {
-                lines.append(line)
+            let separator = index < separators.count ? separators[index] : ""
+            guard cleaned != rawLine else {
+                kept.append((rawLine, separator))
                 continue
             }
             cleaned.replace(#/[ \t]{2,}/#, with: " ")
@@ -178,8 +207,18 @@ enum StatusTagger {
             // and stayed as a blank one. `.whitespacesAndNewlines` covers it.
             cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !cleaned.isEmpty else { continue }
-            lines.append(cleaned)
+            kept.append((cleaned, separator))
         }
-        return lines.joined(separator: "\n")
+        // The last surviving line carries no separator: a line that came out
+        // took its own break with it, and a note must not end in a dangling
+        // one.
+        var result = ""
+        for (index, entry) in kept.enumerated() {
+            result += entry.text
+            if index < kept.count - 1 {
+                result += entry.separator
+            }
+        }
+        return result
     }
 }

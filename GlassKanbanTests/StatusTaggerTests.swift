@@ -230,3 +230,30 @@ final class StatusTaggerTests: XCTestCase {
         XCTAssertEqual(StatusTagger.removingTags("Notiz #inprogress"), "Notiz")
     }
 }
+
+/// Notes do not always use "\n". Text pasted from a PDF, a web page or an
+/// older source can be separated by U+2028 or a lone carriage return, and
+/// lines that never held a tag have to survive those byte for byte.
+final class UnusualLineSeparatorTests: XCTestCase {
+
+    func testDoubleSpacesSurviveOnLinesWithoutATagLineSeparator() {
+        let notes = "Rechnung  Nr. 4711\u{2028}Betrag  120,00 EUR\u{2028}#alsnächstes"
+        let rewritten = StatusTagger.rewrittenNotes(notes, for: .next)
+        XCTAssertEqual(rewritten, "Rechnung  Nr. 4711\u{2028}Betrag  120,00 EUR\n#next")
+    }
+
+    func testDoubleSpacesSurviveWithACarriageReturn() {
+        let notes = "Zeile A  mit Abstand\rZeile B #next"
+        XCTAssertEqual(
+            StatusTagger.rewrittenNotes(notes, for: .backlog),
+            "Zeile A  mit Abstand\rZeile B")
+    }
+
+    /// The ordinary case must not change.
+    func testNewlineSeparatedNotesAreUnaffected() {
+        let notes = "Rechnung  Nr. 4711\nBetrag  120,00 EUR\n#next"
+        XCTAssertEqual(
+            StatusTagger.rewrittenNotes(notes, for: .backlog),
+            "Rechnung  Nr. 4711\nBetrag  120,00 EUR")
+    }
+}
