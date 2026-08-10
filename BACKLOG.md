@@ -221,6 +221,39 @@ hierher gehört.
   zwischen zwei Falz-Schnitten — nicht mehr zwischen Sehen und Nicht-Sehen. Siehe SPEC.md,
   „Reifegrad statt Sichtbarkeit".
 
+## Fremde Schreiber auf denselben Daten (10.08.2026)
+
+Entstanden aus einem echten Fehlerbild: Eine selbstgebaute Brücke zwischen Reminders und
+einer Hausautomatisierung schob alle 30–55 Minuten einen alten Datenstand zurück. Regel und
+Messung stehen in SPEC.md („Eine Antwort je Zustand"), die Herleitung in CONCEPT.md. Was
+dabei **geprüft und verworfen** wurde — nicht erneut vorschlagen, ohne dass der Nutzer das
+Thema selbst öffnet:
+
+- **Hinweis an den Nutzer, wenn das Board nachgibt** — verworfen am 10.08.2026 auf
+  ausdrückliche Nutzerentscheidung. Der Nutzer soll von der Spaltenlogik nichts mitbekommen;
+  ein Hinweis auf Datenmechanik zerstört die UX der ruhigen Dauerfläche. Begründung in
+  CONCEPT.md.
+- **Rückzug mit wachsendem Backoff und „Aufgeben"-Zustand** — verworfen: Das Phänomen wird
+  in Perioden des fremden Schreibers gemessen (Dutzende Minuten), nicht in Sekunden; eine
+  Wiederholungsleiter verbraucht sich, bevor der erste Rückschieber überhaupt eintrifft.
+  Die Invariante „eine Antwort je Zustand" leistet dasselbe ohne Zeitkonstanten.
+- **Verfallenen Pull über einen Fälligkeitssprung erkennen** (statt über die abgelöste
+  erledigte Kopie) — verworfen: Ein Mensch verschiebt Fälligkeiten routinemäßig. Die Regel
+  hätte eine Karte, deren Termin jemand von Hand aufschiebt, still aus der Arbeitsspalte
+  geholt — ein Pull-Entzug ohne Beleg, also genau die verbotene Richtung. Der bestehende
+  Mechanismus bleibt, weil sein Auslöser (frisch abgelöster erledigter Durchgang) nur durch
+  eine Erledigung entstehen kann.
+- **Eigener `#backlog`-Tag** — verworfen, siehe CONCEPT.md: verteidigt die Entscheidung
+  nicht, kostet aber sichtbaren Text in fremden Notizen.
+- **Status-Tags optional in der Systemsprache schreiben** — verworfen am 10.08.2026. Ein
+  Hashtag ist ein Datenformat, kein Oberflächentext: In geteilten Listen träfen zwei
+  Sprachen aufeinander, Umlaute sind über fremde Systeme ein Kodierungsrisiko (die
+  `ae`-Ersatzformen der Legacy-Tags sind der gelebte Beweis), und jede Umstellung löste
+  einen Migrationslauf über fremde Daten aus. Geschrieben wird immer Englisch; **gelesen**
+  wird dauerhaft tolerant, auch die deutschen Formen — sie sind damit keine
+  „Legacy-Altlast" mehr, sondern akzeptierte Eingabe für alle, die den Tag unterwegs von
+  Hand tippen.
+
 ## Fensterverhalten
 
 - **Menüleisten-Modus / Always-on-Top** — MVP nutzt ein normales Fenster.

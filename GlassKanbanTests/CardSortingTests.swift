@@ -468,3 +468,52 @@ final class BacklogFoldTests: XCTestCase {
             "a ripe card is in the fold — it must not be reported as merely \"not due yet\"")
     }
 }
+
+/// The lane order has to be a real ordering, not a set of pairwise opinions:
+/// an intransitive comparison makes the same cards come out differently on
+/// every refresh.
+final class LaneOrderTransitivityTests: XCTestCase {
+
+    private func card(_ title: String, created: Date?) -> KanbanCard {
+        KanbanCard(
+            id: title,
+            title: title,
+            notesPreview: "",
+            notesExcerpt: "",
+            dueDate: nil,
+            priority: 0,
+            status: .backlog,
+            listID: "test-list",
+            listName: "Test",
+            listColor: .accentColor,
+            completionDate: nil,
+            isRecurring: false,
+            lastModifiedDate: nil,
+            creationDate: created)
+    }
+
+    private func day(_ month: Int, _ dayOfMonth: Int) -> Date {
+        Calendar.current.date(from: DateComponents(year: 2026, month: month, day: dayOfMonth, hour: 12))!
+    }
+
+    /// A, B, C where the pairwise answers contradict each other unless every
+    /// card contributes a value of its own.
+    func testOrderStaysStableWhenSomeCardsHaveNoCreationDate() {
+        let a = card("Alpha", created: nil)
+        let b = card("beta", created: day(6, 11))
+        let c = card("alpha", created: day(7, 11))
+        let orders = [[a, b, c], [c, b, a], [b, a, c], [a, c, b], [c, a, b], [b, c, a]]
+        let results = orders.map { $0.sorted(by: KanbanCard.openLaneOrder(now: day(7, 18))).map(\.title) }
+        XCTAssertEqual(Set(results).count, 1, "same cards, different input order, different result: \(results)")
+    }
+
+    /// A card whose age is unknown sorts after ones with a known date, rather
+    /// than jumping depending on who it is compared against.
+    func testUnknownCreationDateSortsLast() {
+        let dated = card("Zulu", created: day(6, 11))
+        let undated = card("Alpha", created: nil)
+        XCTAssertEqual(
+            [undated, dated].sorted(by: KanbanCard.openLaneOrder(now: day(7, 18))).map(\.title),
+            ["Zulu", "Alpha"])
+    }
+}

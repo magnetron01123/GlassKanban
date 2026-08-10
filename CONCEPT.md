@@ -119,6 +119,47 @@ immer strikt als letzte, eigene Zeile geschrieben.
 **Kompromiss, den das kostet:** Der Status ist in der nativen Reminders-Listenansicht nicht
 auf den ersten Blick sichtbar, sondern erst beim Öffnen der Erinnerung (Notizen aufklappen).
 
+### Das Board ist einer von mehreren Schreibern (10.08.2026)
+
+Aus dem Datenmodell folgt eine Eigenschaft, die lange unausgesprochen blieb: **Backlog ist
+als *Abwesenheit* eines Tags definiert.** Eine Karte ins Backlog zu ziehen heißt also nicht
+schreiben, sondern löschen — und Löschen ist die schwächste Operation, die es in einem
+verteilten System gibt. Ein fremder Client mit altem Stand weiß nichts davon; er behauptet
+seinen Stand, und der gewinnt. Im Modell gab es nichts, was eine getroffene Entscheidung
+gegen einen überholten Zustand verteidigt.
+
+Gemessen an einem echten Fall: Eine Brücke zwischen Reminders und einer Hausautomatisierung
+schob alle 30–55 Minuten einen alten Stand zurück; ein ins Backlog gezogenes Ticket stand
+danach wieder in „Als Nächstes", und die Tag-Hygiene schrieb dieselben vier Erinnerungen
+dreimal in drei Stunden um, ohne dass ein einziger Schreibvorgang hielt.
+
+**Geprüft und verworfen:** ein eigener `#backlog`-Tag. Er macht die Abwesenheit zwar zur
+Aussage, aber ein Rückschieber überschreibt eine Aussage genauso wie eine Leere — ohne
+Gedächtnis sieht die App danach nur den fremden Wert, mit Gedächtnis braucht sie den Tag
+nicht. Er hätte nur sichtbaren Text in fremde Notizen geschrieben: Kosten ohne Nutzen.
+Backlog bleibt „kein Tag".
+
+**Die Antwort ist stattdessen eine Invariante** über jeden Schreibvorgang, den der Nutzer
+nicht angefordert hat: Das Board stellt eine Entscheidung wieder her, wann immer jemand
+sie rückgängig macht, nur nie schneller als ein Mensch es bemerken würde (Regel und
+Messung in SPEC.md, „Eine Antwort je Zustand"). Sie ersetzt keinen der bestehenden
+Mechanismen, sondern zieht eine Grenze um sie alle.
+
+**Koexistenz ist dabei die Grundannahme, nicht der Sonderfall.** Erinnerungen, Fantastical,
+eine Automatisierungs-Brücke, Kurzbefehle: Alle dürfen dieselben Datensätze lesen und
+schreiben. Eine App, die nur als alleiniger Schreiber funktioniert, wäre für ein System, in
+dem Erinnerungen absichtlich allen Programmen offenstehen, kein Produkt. Das Board
+verteidigt deshalb genau eine Sache — die Spaltenzuordnung, und die auch nur in Richtung
+Backlog. Alles andere, was ein fremdes Programm schreibt, gilt.
+
+**Warum der Nutzer davon nichts erfährt** (Entscheidung vom 10.08.2026): Erwogen war, nach
+dem Nachgeben einmalig zu melden, dass eine Liste von außen zurückgeschrieben wird — im
+Sinne von „make policies explicit". Verworfen: Das Board ist eine ruhige Dauerfläche, keine
+Diagnoseoberfläche. Ein Hinweis über die Mechanik der Spaltenzuordnung wäre genau das
+Dauerrauschen, das der Minimalismus ausschließt, und er beschriebe ein Problem, das der
+Nutzer im Board ohnehin nicht lösen kann. Die Spaltenlogik bleibt unsichtbar; wo sie an
+fremden Schreibern scheitert, zeigt das Board schlicht, was in den Daten steht.
+
 ### Listen-Filter
 
 In den Einstellungen wählt der Nutzer, welche der eigenen, bereits vorhandenen Listen
