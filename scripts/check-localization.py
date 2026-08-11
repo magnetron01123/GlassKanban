@@ -14,8 +14,8 @@ Four checks, in the order the mistakes actually happened:
 3. PLURALS — every key interpolating a count either carries plural variations
    or stands on the exemption list below with a reason. This is the check that
    was missing on 07.08.2026: five keys lost the plural rules that
-   `GermanPlural` used to enforce, and "1 Aufgaben" reappeared — re-breaking
-   what FINDINGS C4 had already fixed once.
+   `GermanPlural` used to enforce, and "1 Aufgaben" reappeared — the same
+   defect class already fixed once in July 2026.
 
 4. NO STRAY GERMAN — no German text in a Swift string literal. Check 1 only
    sees text that *asked* to be localized; a literal that never went through

@@ -209,7 +209,9 @@ hierher gehört.
   das „Rückwärtsrechnen der Wiederholungsregel" oben gescheitert ist), **überlebt der
   Beweis jetzt den Neustart**: `RecurringTagRelease.Memory` persistiert am Ende jedes
   Refreshs die geladenen IDs und die getaggten Karten und seedet damit den ersten Refresh
-  nach dem Start. Positiv- und Negativfall live gemessen (FINDINGS-2026-08). Verbleibende,
+  nach dem Start. Positiv- und Negativfall live gemessen: getaggte Serie extern abgehakt bei
+  geschlossener App → Tag im ersten Refresh nach dem Neustart freigegeben; Tag erst bei
+  geschlossener App gesetzt, dann extern abgehakt → Tag bleibt stehen (kein Beweis). Verbleibende,
   kleinere Restlücke (Hand-getippter Tag auf anderem Gerät nach externem Abhaken) steht in
   SPEC.md, „Extern abgehakt".
 - ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt und am
@@ -223,8 +225,9 @@ hierher gehört.
 
 ## Fremde Schreiber auf denselben Daten (10.08.2026)
 
-Entstanden aus einem echten Fehlerbild: Eine selbstgebaute Brücke zwischen Reminders und
-einer Hausautomatisierung schob alle 30–55 Minuten einen alten Datenstand zurück. Regel und
+Entstanden aus einem echten Fehlerbild: Ein Kalender-Client mit eigener Datenbank schob alle
+19 bis 55 Minuten einen alten Datenstand zurück (erste Vermutung war eine selbstgebaute
+Hausautomatisierungs-Brücke — per TCC geprüft und verworfen, siehe CONCEPT.md). Regel und
 Messung stehen in SPEC.md („Eine Antwort je Zustand"), die Herleitung in CONCEPT.md. Was
 dabei **geprüft und verworfen** wurde — nicht erneut vorschlagen, ohne dass der Nutzer das
 Thema selbst öffnet:
@@ -245,6 +248,10 @@ Thema selbst öffnet:
   eine Erledigung entstehen kann.
 - **Eigener `#backlog`-Tag** — verworfen, siehe CONCEPT.md: verteidigt die Entscheidung
   nicht, kostet aber sichtbaren Text in fremden Notizen.
+- **`eventStore.reset()` bei jeder `EKEventStoreChangedNotification`** — verworfen: Ein
+  Reset würde die gerade gehaltenen `openRecurringReminders` mitten im Flug ungültig
+  machen; alle Messungen mit frischen Prozessen blieben ohnehin konsistent, ein
+  veralteter EventKit-Cache war nie die Ursache.
 - **Status-Tags optional in der Systemsprache schreiben** — verworfen am 10.08.2026. Ein
   Hashtag ist ein Datenformat, kein Oberflächentext: In geteilten Listen träfen zwei
   Sprachen aufeinander, Umlaute sind über fremde Systeme ein Kodierungsrisiko (die
@@ -275,7 +282,7 @@ Verworfen beim Umbau des Replay-Zauns auf eine Reihenfolge (Regel in SPEC.md,
 
 ## Zuordnung von Durchgang und Serie (10.08.2026)
 
-Verworfen beim Umstieg von Titel auf Anlegedatum (Messung in FINDINGS-2026-08, Regel in
+Verworfen beim Umstieg von Titel auf Anlegedatum (Messung und Herleitung in CONCEPT.md, Regel in
 SPEC.md):
 
 - **Ein Toleranzfenster auf das Anlegedatum** („innerhalb von N Sekunden") — verworfen: Das
@@ -429,7 +436,7 @@ nicht möglich)
 
 - **Begleitende iOS-App (iPhone + iPad)** — eigene Glass-Kanban-Ansicht auf iPhone/iPad statt
   nur über die native Reminders-App unterwegs Hashtags zu setzen (das funktioniert schon jetzt
-  ohne eigene App, siehe Bonus-Hinweis in SPEC.md). Eigenes Xcode-Multiplatform-Target, eigene
+  ohne eigene App, siehe Bonus-Hinweis in CONCEPT.md). Eigenes Xcode-Multiplatform-Target, eigene
   UI-Anpassung für kleinere Bildschirme/Touch-Bedienung, eigene App-Store-Überlegungen — klare
   Plattformerweiterung nach dem Mac-MVP, nicht Teil davon.
 - **Ausrichtungsabhängige Ansicht (iPhone)** — Idee (27.07.2026) für die begleitende iOS-App
@@ -527,8 +534,8 @@ entfernt in `4f83347`).
   jede Löschung, um die seltene falsche abzufangen, während ein Undo nur die Person etwas
   kostet, die sich tatsächlich vertan hat. Das Argument trug nicht, weil das Netz ein Loch
   hat: EventKit kennt kein echtes Wiederherstellen, ⌘Z legt eine **neue** Erinnerung an,
-  und **Unteraufgaben, Anhänge, Reminders-Tags und -Flags kommen dabei nicht zurück**
-  (FINDINGS-2026-07.md, A3). Ein Undo, das nicht alles zurückholt, kann eine Rückfrage
+  und **Unteraufgaben, Anhänge, Reminders-Tags und -Flags kommen dabei nicht zurück**. Ein
+  Undo, das nicht alles zurückholt, kann eine Rückfrage
   nicht ersetzen. Der Eintrag bleibt als Vorgeschichte stehen, damit die Rückfrage nicht
   eines Tages unter Berufung auf diese Zeile wieder ausgebaut wird.
 - **Tastaturfokus und Pfeiltasten-Navigation auf Karten** — war im Juli 2026 kurz

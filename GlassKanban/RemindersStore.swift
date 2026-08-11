@@ -519,7 +519,7 @@ final class RemindersStore: ObservableObject {
         // *series* was set up, years ago for a standing chore. The series
         // itself, though, lives on in the incomplete fetch, and the detached
         // copy carries that series' `creationDate` bit for bit (measured
-        // 10.08.2026, see FINDINGS) — which is how an occurrence is told from
+        // 10.08.2026, see CONCEPT.md) — which is how an occurrence is told from
         // an ordinary task that merely shares its name, and what keeps those
         // series creation dates out of the lead-time median (see
         // `CompletionRecord.isRecurring` and `RecurringSeriesMatch`).

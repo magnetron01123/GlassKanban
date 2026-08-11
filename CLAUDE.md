@@ -41,7 +41,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
   Tag-Hygiene. Mit Abstand die größte Datei und die einzige Stelle mit Seiteneffekten.
 - **StatusTagger.swift** — Hashtag lesen/schreiben/migrieren. Wortgrenzen sind hier
-  sicherheitskritisch (siehe FINDINGS A1: eine fehlende Grenze zerstörte Nutzertext).
+  sicherheitskritisch — eine links fehlende Grenze erkannte `#next` mitten in
+  `https://example.com/guide#next` und zerstörte damit echten Nutzertext, ohne dass der
+  Nutzer je etwas getan hatte (behoben 26.07.2026, siehe `StatusTaggerTests`).
 - **Models.swift** — `KanbanStatus`, `KanbanCard`, Filter- und Sortierlogik.
 - **Views** — `BoardView` (Board + Dialoge), `ColumnView` (Spalte, Falz, Drop-Ziele),
   `CardView` (Karte, Settle-Animationen, Durchstrich), `TicketEditSheet` (Karten-Editor),
@@ -50,8 +52,11 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   gehören hierher, nicht in die Views.
 - **Reine, testbare Regeln ohne UI/EventKit** — `TicketRename`, `EditorKeyCommand`,
   `TextSanitizer`, `BacklogTicketTargeting`, `StreakCalculator`, `WrappedStats`,
-  `ReminderDeepLink`. **Muster für neue Logik:** Entscheidung aus der View
-  herausziehen, dann testen.
+  `ReminderDeepLink`, `CorrectionLedger` (Koexistenz mit fremden Schreibern),
+  `RecurringHandoff` (Undo-Zaun bei Wiederholungen), `RecurringSeriesMatch` (Durchgang
+  ↔ Serie über das Anlegedatum), `RecurringTagRelease` (stille Tag-Freigabe),
+  `TicketURL` (was das URL-Feld speichern kann). **Muster für neue Logik:** Entscheidung
+  aus der View herausziehen, dann testen.
 - **`Localizable.xcstrings`/`InfoPlist.xcstrings`** — String Catalogs, Englisch Quelle,
   Deutsch vollwertige Lokalisierung (seit 07.08.2026, siehe RELEASE.md Phase 1). **Regel
   fürs Testziel:** Die reinen Logik-Dateien oben werden ohne App-Host direkt ins
@@ -74,9 +79,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   3. **Plurale** — jeder Schlüssel mit Zähler trägt entweder `variations.plural` oder
      steht mit Begründung auf der Ausnahmeliste im Skript. **Diese Prüfung fehlte beim
      ersten Durchgang und das hat gekostet:** beim Auflösen von `GermanPlural` gingen
-     fünf Pluralregeln verloren, „1 Aufgaben" war zurück — also genau das, was
-     FINDINGS C4 schon einmal behoben hatte. Vollständigkeit allein sagt nichts über
-     Korrektheit.
+     fünf Pluralregeln verloren, „1 Aufgaben" war zurück — ein Fehlerbild, das im Juli
+     2026 schon einmal in genau dieser Form behoben worden war. Vollständigkeit allein
+     sagt nichts über Korrektheit.
 
   **Grenze des Skripts:** Die Ausnahmeliste ist eine *Zusicherung*, keine Messung. Wer
   einen Schlüssel dort einträgt, behauptet „diese Zahl wird nie 1" oder „liest sich bei
@@ -107,6 +112,14 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Textvorschlag ohne Vorher-Nachher-Gegenüberstellung ist keiner.
 - UI-Änderungen selbst per Screenshot prüfen und eigenständig nachbessern; vorher alte
   App-Instanzen aus früheren Sessions beenden.
+- **Tastaturbefunde nie aus synthetischen Tastendrücken ableiten, ohne sie mit einer
+  echten Tastatur gegenzuprüfen.** Am 26.07.2026 blieb der Karten-Editor bei einem
+  synthetischen Escape scheinbar offen (kein Codefehler — der Monitor erreicht solche
+  Ereignisse anders als echte); am 10.08.2026 wiederholte sich dasselbe Muster, als ein
+  per `osascript` gesendetes Escape an ein anderes, gerade fokussiertes Fenster ging statt
+  an die App. Screenshot-Automatisierung, die Tasten sendet, muss Aktivieren, Taste **und**
+  Screenshot in einem Zug ausführen (ein Skript, keine Einzelaufrufe dazwischen) — sonst
+  holt sich Claude zwischen den Aufrufen den Fokus zurück.
 - CLI-Builds/Tests mit `-derivedDataPath` außerhalb von `~/Documents` laufen lassen
   (iCloud-xattrs verursachen sonst CodeSign-Fehler).
 - `Glass Kanban.app` liegt direkt im Projektordner und ist immer ein aktueller,

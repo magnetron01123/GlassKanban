@@ -7,8 +7,9 @@ import Foundation
 /// did not: the store decided what was storable at save time, the field knew
 /// nothing about it, and text it could not store simply disappeared when the
 /// card closed. On this board losing what somebody typed is the worst class of
-/// bug there is (FINDINGS A1), so the field now asks the same question while
-/// it is still being typed into.
+/// bug there is — a missing word boundary in `StatusTagger` once destroyed a
+/// user's own note the same way — so the field now asks the same question
+/// while it is still being typed into.
 enum TicketURL {
 
     /// The address to store, or nil when the text is not one.

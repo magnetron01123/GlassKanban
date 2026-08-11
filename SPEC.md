@@ -94,7 +94,7 @@ Die Regel scheitert bewusst **nach innen**: `#next.` mit Satzpunkt gilt nicht me
 als Tag, die Karte bleibt in „Backlog" und der Text bleibt unangetastet. Ein nicht
 erkanntes Tag kostet einen Zug mit der Maus; ein fälschlich erkanntes kostete bis Juli 2026
 Nutzertext — die Hygiene entfernte den Treffer und hängte einen echten Tag an, ohne Zutun
-und ohne Undo-Eintrag (siehe FINDINGS-2026-07.md, A1).
+und ohne Undo-Eintrag.
 
 **Nutzertext bleibt unangetastet:** Beim Schreiben werden ausschließlich Tags entfernt bzw.
 angehängt. Zeilen ohne Tag werden zeichengenau durchgereicht — auch Leerzeilen, die als
@@ -533,7 +533,9 @@ Board legen würde.
 
 **Erkannt wird ein Durchgang am Anlegedatum, nicht am Titel** (seit 10.08.2026): Der
 abgelöste Durchgang trägt bitgenau das Anlegedatum seiner Serie — gemessen über den
-App-Weg, über einen iCloud-Roundtrip und beim Abhaken auf dem iPhone (FINDINGS-2026-08).
+App-Weg, über einen iCloud-Roundtrip und beim Abhaken auf dem iPhone — Messung, verworfene
+Alternativen und Abbruchkriterium: CONCEPT.md, „Ein Durchgang und seine Serie: Identität
+statt Ähnlichkeit“.
 Eine gewöhnliche Aufgabe trägt ihr eigenes. Damit fällt beides weg, was die Titel-Regel
 falsch machte: Eine einmalige Aufgabe, die zufällig genauso heißt wie eine Serie, **lässt
 sich wieder zurückholen** (vorher nie, mit einer Begründung, die über diese Karte schlicht

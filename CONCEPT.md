@@ -74,7 +74,7 @@ das einzige Feld in EventKit, das (a) nicht überall sichtbar ist wie der Titel 
 auf Siri, Widgets, Benachrichtigungen, Spotlight) und (b) die Listenzugehörigkeit nicht
 anfasst.
 
-**Spalten (final):**
+**Spalten, ursprünglicher Entwurf (deutsche Tags):**
 
 | Spalte (intern/technisch) | Anzeige (Deutsch) | Hashtag in den Notizen |
 |---|---|---|
@@ -83,9 +83,15 @@ anfasst.
 | In Progress | In Bearbeitung | `#inbearbeitung` |
 | Done | Erledigt | — (`isCompleted = true`, kein Tag) |
 
-Backlog bekommt bewusst **keinen** eigenen Hashtag (kein `#backlog`), sondern bedeutet immer
-"kein Status-Tag vorhanden". Zwei verschiedene Darstellungen für denselben Zustand (mit Tag
-und ohne Tag) würden sonst auseinanderlaufen können.
+**Überholt seit der Englisch-Migration (26.07.2026 entschieden, 07.08.2026 umgesetzt,
+RELEASE.md Phase 1):** Ein Hashtag ist ein Datenformat, kein Oberflächentext — in geteilten
+Listen und für einen internationalen Markt muss er sprachunabhängig sein. Geschrieben wird
+seither ausschließlich `#next`/`#inprogress`; die deutschen Formen bleiben dauerhaft als
+akzeptierte Eingabe lesbar, für alle, die den Tag unterwegs von Hand tippen (siehe SPEC.md,
+Migrationstabelle, und BACKLOG.md, „Fremde Schreiber auf denselben Daten"). Die Grundidee
+dieses Abschnitts bleibt unverändert: Backlog bekommt bewusst **keinen** eigenen Hashtag,
+sondern bedeutet immer „kein Status-Tag vorhanden" — zwei verschiedene Darstellungen für
+denselben Zustand würden sonst auseinanderlaufen können.
 
 **Schreiben (beim Verschieben per Drag & Drop in der App):**
 
@@ -128,10 +134,20 @@ verteilten System gibt. Ein fremder Client mit altem Stand weiß nichts davon; e
 seinen Stand, und der gewinnt. Im Modell gab es nichts, was eine getroffene Entscheidung
 gegen einen überholten Zustand verteidigt.
 
-Gemessen an einem echten Fall: Eine Brücke zwischen Reminders und einer Hausautomatisierung
-schob alle 30–55 Minuten einen alten Stand zurück; ein ins Backlog gezogenes Ticket stand
-danach wieder in „Als Nächstes", und die Tag-Hygiene schrieb dieselben vier Erinnerungen
-dreimal in drei Stunden um, ohne dass ein einziger Schreibvorgang hielt.
+Gemessen an einem echten Fall (10.08.2026): Ein Kalender-Client mit eigener Datenbank schob
+alle 19 bis 55 Minuten eine veraltete Kopie von Datensätzen zurück — sechs Datensätze in
+dreißig Stunden, nur einer davon wiederkehrend; die übrigen fielen nur deshalb nicht auf,
+weil ein zurückgeschriebener Tag auf einer *erledigten* Erinnerung nichts Sichtbares
+ändert. Ein ins Backlog gezogenes Ticket stand danach wieder in „Als Nächstes", und die
+Tag-Hygiene schrieb dieselben vier erledigten Erinnerungen dreimal in drei Stunden um, ohne
+dass ein einziger Schreibvorgang hielt.
+
+**Erste Vermutung war eine selbstgebaute Brücke zwischen Reminders und einer
+Hausautomatisierung — geprüft und verworfen:** Die Systemberechtigungen (TCC) zeigten, dass
+diese Automatisierung nie Zugriff auf Erinnerungen hatte, konnte den Rückschreiber also gar
+nicht ausgelöst haben. Tatsächlicher Verursacher war ein am selben Mac laufender
+Kalender-Client mit eigenem Sync. Festgehalten, damit eine spätere Fehlersuche nicht wieder
+bei der falschen Anwendung anfängt.
 
 **Geprüft und verworfen:** ein eigener `#backlog`-Tag. Er macht die Abwesenheit zwar zur
 Aussage, aber ein Rückschieber überschreibt eine Aussage genauso wie eine Leere — ohne
@@ -184,6 +200,49 @@ Diagnoseoberfläche. Ein Hinweis über die Mechanik der Spaltenzuordnung wäre g
 Dauerrauschen, das der Minimalismus ausschließt, und er beschriebe ein Problem, das der
 Nutzer im Board ohnehin nicht lösen kann. Die Spaltenlogik bleibt unsichtbar; wo sie an
 fremden Schreibern scheitert, zeigt das Board schlicht, was in den Daten steht.
+
+### Ein Durchgang und seine Serie: Identität statt Ähnlichkeit (10.08.2026)
+
+Ein zweiter blinder Fleck desselben Datenmodells: Ein erledigter Durchgang einer
+wiederkehrenden Erinnerung trägt in EventKit keine ID, die auf seine Serie zurückweist —
+die App muss selbst herleiten, welche laufende Serie zu einem gerade abgehakten Durchgang
+gehört. Bis 10.08.2026 riet sie über **Titel und Liste**, und das war in beide Richtungen
+falsch: Eine gewöhnliche Aufgabe, die zufällig genauso heißt wie eine Serie, ließ sich nie
+aus „Erledigt" zurückholen — die Ablehnung „die Serie ist bereits weitergelaufen" war über
+diese Karte schlicht falsch. Und ein Umbenennen der Serie nach dem Erledigen hob den Schutz
+komplett auf.
+
+**Geprüft und bestätigt** (iCloud-Scratch-Liste, kalter EventKit-Cache je Messpunkt, damit
+kein Ergebnis an einem warmen In-Memory-Stand hängt): Der abgelöste Durchgang trägt das
+`creationDate` seiner Serie bitgenau weiter — gemessen über den App-Weg, nach einem
+iCloud-Roundtrip und **beim Abhaken auf dem iPhone**, dem einzigen Weg, der den Datensatz
+tatsächlich erzeugt, für den diese Regel überhaupt existiert. Eine gewöhnliche, auch
+gleichnamige Aufgabe trägt ihr eigenes Anlegedatum. Fünf in einem Commit angelegte
+Erinnerungen kamen mit fünf verschiedenen, nur um Mikrosekunden getrennten Anlegedaten
+heraus — genug, um das Datum als **Identität** zu behandeln, nicht als bloßes Indiz.
+
+**Geprüft und verworfen:**
+
+- **`calendarItemExternalIdentifier` als Identität** — die abgelöste Kopie bekommt eine
+  eigene, und auf rein lokalen Listen ist das Feld ohnehin leer.
+- **Ein Toleranzfenster auf das Anlegedatum** — die Mikrosekunden-Messung oben zeigt, dass
+  ein Fenster zwei unabhängig angelegte Aufgaben zu Durchgängen derselben Serie erklären
+  würde. Verglichen wird deshalb auf Gleichheit, nie auf Nähe.
+- **Den Titel als zusätzliche Bedingung behalten** — hätte den Umbenennen-Fall offen
+  gelassen und wäre damit strikt schlechter gewesen als das Anlegedatum allein.
+
+Ein vorab festgelegtes Abbruchkriterium stand für den iPhone-Messpunkt bereit: Hätte der
+Sync dort ein frisches Anlegedatum vergeben, wäre die Identität gescheitert und ein
+Rückfallplan (Titel **und** Liste **und** Anlegedatum-Reihenfolge) hätte greifen müssen. Er
+wurde nicht gebraucht — der Sync stempelt beim Abhaken nichts um.
+
+Passt keine oder mehr als eine lebende Serie auf das Anlegedatum, gilt „kein Beweis". Für
+das Zurückholen aus „Erledigt" heißt das: Der Zug ist erlaubt — ein sichtbarer, von Hand
+aufräumbarer Fehler. Für die stille Tag-Freigabe heißt es das Gegenteil: Der Tag bleibt
+stehen (SPEC.md, Bedingung 5 — dort strenger geprüft, weil diese eine Regel eine Karte
+bewegt, ohne dass jemand hinsieht). **Akzeptierte Restlücke:** Zwei Serien einer Liste mit
+bitgenau demselben Anlegedatum wären nicht unterscheidbar. Gemessen tritt das nicht ein,
+und der Ausgang wäre ohnehin die sichere Richtung — kein Beweis, keine Bewegung.
 
 ### Listen-Filter
 
@@ -310,10 +369,11 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
   bereits vorhandenen `completionDate` aller erledigten Erinnerungen berechnet (an wie vielen
   aufeinanderfolgenden Tagen wurde mindestens eine Karte erledigt) — keine neuen Felder, keine
   neuen Schreibzugriffe.
-- **Täglich wechselnder, motivierender Satz:** kleine, lokal in der App hinterlegte Liste
-  (~20 Sätze, u. a. an die Personal-Kanban-Philosophie angelehnt), Auswahl nach Kalendertag —
-  ändert sich jeden Tag, bleibt am selben Tag stabil. Komplett offline, keine Analyse des
-  Nutzerverhaltens, kein Server.
+- ~~**Täglich wechselnder, motivierender Satz**~~ — ursprünglich hier als zweiter
+  Motivationsbaustein geplant (~20 lokale Sätze, Auswahl nach Kalendertag). **Verworfen**,
+  siehe BACKLOG.md „Explizit abgelehnt" und SPEC.md, Abschnitt Motivation: Ein fest
+  stehender Satz auf einem Board, das den ganzen Tag offen liegt, liest sich nach zwei
+  Tagen wie Bannerwerbung und kostet trotzdem dauerhaft Fläche.
 
 - **Statistik-Fenster:** hinter der Flamme in der Toolbar, zwei Reiter („Jetzt" /
   „Rückblick"), rein lesend aus denselben `completionDate`-Werten plus dem Listennamen der
