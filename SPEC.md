@@ -139,8 +139,40 @@ zurückgeschriebener Tag auf einer *erledigten* Erinnerung nichts Sichtbares än
 
 > Das Board merkt sich, welchen Wert es selbst über welchen geschrieben hat. Steht in einem
 > Feld später wieder buchstabengenau der verdrängte Wert, schreibt das Board seinen Wert
-> einmal zurück — höchstens einmal pro zehn Minuten je Feld und Karte, höchstens 24 Stunden
-> lang, und **nie einen Wert, den der Nutzer nicht selbst an diesem Board eingegeben hat**.
+> zurück — höchstens 24 Stunden lang, und **nie einen Wert, den der Nutzer nicht selbst an
+> diesem Board eingegeben hat**.
+
+**Die Regel fragt nie, *wer* geschrieben hat** — sie kann es nicht, EventKit gibt keine
+Herkunft heraus, und sie soll es auch nicht. Erkannt wird ein *Muster* (ein verdrängter
+Wert kehrt buchstabengenau zurück), nicht ein Programm. Damit gilt sie unverändert für
+jeden zweiten Schreiber: einen Kalender-Client, die Erinnerungen-App, ein iPhone über
+iCloud, eine zweite Person in einer geteilten Liste, einen Kurzbefehl, einen zweiten Mac
+mit derselben App. Es gibt keine Liste bekannter Störer und soll keine geben.
+
+**Die eine Voraussetzung, die der fremde Schreiber erfüllen muss:** Er ändert Datensätze,
+statt sie zu löschen und neu anzulegen. Bleibt die Identität stabil, greift die Regel
+(gemessen über vier Vorfälle, 10.08.2026). Legt ein Programm stattdessen neue Datensätze
+an, ist der Bezug zum verdrängten Wert weg — dann sieht das Board eine neue Karte und hat
+nichts zu verteidigen. Das ist die Grenze der Regel und keine Eigenschaft eines bestimmten
+Programms.
+
+**Wie schnell geantwortet wird, hängt vom Feld ab** (10.08.2026 am laufenden Board
+gemessen, nicht abgeleitet):
+
+| Feld | Takt |
+|---|---|
+| Notizen (Status-Tag) | **jede** Verdrängung, binnen eines Syncs — gemessen unter 2,1 s, auch bei sechs Rückschiebern in Folge |
+| Titel, URL, Fälligkeit | höchstens eine Antwort pro zehn Minuten je Karte und Feld |
+
+Der Unterschied folgt aus dem Mechanismus: Jeder Arbeits-Tag, der irgendwo verschwindet,
+wird bei jedem Refresh neu als Verdrängung gebucht — auch der, den das Board selbst gerade
+entfernt hat. Für die Notizen beginnt damit mit jeder Antwort ein neuer Takt, für die
+übrigen Felder nicht. **Das ist die bessere Hälfte des Handels:** Die Spaltenzuordnung —
+das Einzige, was das Board überhaupt verteidigt — steht binnen Sekunden wieder richtig,
+statt bis zu zehn Minuten falsch. Das Board schreibt dabei nie von sich aus öfter als der
+fremde Schreiber; ohne Gegenschreiben ruht es nachweislich (gemessen: kein einziger
+Schreibvorgang nach der Antwort). Was fehlt, ist eine Obergrenze für ein Programm, das im
+Sekundentakt schreibt — bewusst offen, siehe BACKLOG.md.
 
 Der letzte Halbsatz trägt die ganze Sicherheit: Jeder Wert, den dieser Mechanismus je
 automatisch schreibt, hat der Nutzer hier eingegeben; nie ein erfundener, nie ein
@@ -174,8 +206,9 @@ Zug und fällt Richtung Backlog.
 **Ein Durchgang, ein Speichern je Karte**, in dieser Reihenfolge: beobachten (ein dritter
 Zustand zieht den Eintrag zurück — wer seine Meinung ändert, wird nie bekämpft) →
 Echo beantworten → verbrauchten Pull freigeben → Hygiene auf das Ergebnis → speichern.
-Grenzen: höchstens fünf Karten je Sync, eine Antwort je (Karte, Feld, Zustand) pro zehn
-Minuten, Verfall nach 24 Stunden, höchstens 200 Karten im Gedächtnis. Ein Wecker holt eine
+Grenzen: höchstens fünf Karten je Sync, für Titel/URL/Fälligkeit eine Antwort je (Karte,
+Feld, Zustand) pro zehn Minuten (für den Status-Tag siehe die Takt-Tabelle oben), Verfall
+nach 24 Stunden, höchstens 200 Karten im Gedächtnis. Ein Wecker holt eine
 vom Takt aufgeschobene Antwort nach, weil ein Zustand, der bloß falsch *bleibt*, keinen
 Sync auslöst. Schreibgeschützte Listen werden übersprungen.
 

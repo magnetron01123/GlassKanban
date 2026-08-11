@@ -157,9 +157,18 @@ Backlog bleibt „kein Tag".
 
 **Die Antwort ist stattdessen eine Invariante** über jeden Schreibvorgang, den der Nutzer
 nicht angefordert hat: Das Board stellt eine Entscheidung wieder her, wann immer jemand
-sie rückgängig macht, nur nie schneller als ein Mensch es bemerken würde (Regel und
-Messung in SPEC.md, „Eine Antwort je Zustand"). Sie ersetzt keinen der bestehenden
+sie rückgängig macht (Regel und Messung in SPEC.md). Sie ersetzt keinen der bestehenden
 Mechanismen, sondern zieht eine Grenze um sie alle.
+
+**Bewusst ohne Kenntnis des Gegenübers.** Die Invariante fragt nie, welches Programm
+geschrieben hat — EventKit gibt das nicht her, und eine Liste bekannter Störer wäre die
+falsche Bauform: Sie wäre am Tag ihrer Entstehung unvollständig und müsste für jedes neue
+Programm nachgepflegt werden. Erkannt wird stattdessen ein Muster, das jeder Rückschieber
+erzeugt, egal wer er ist: Ein Wert, den das Board verdrängt hat, steht buchstabengenau
+wieder da. Der Preis dieser Allgemeinheit ist, dass auch die eigene Korrektur des Boards
+in dieses Muster fällt — was den Takt für den Status-Tag mit jeder Antwort neu beginnen
+lässt (in SPEC.md gemessen und beschrieben). Für die Sache, die verteidigt wird, ist das
+die richtige Richtung; die Karte steht schneller richtig.
 
 **Ausgeweitet am 10.08.2026 auf vier Felder** (Notizen, Titel, URL, Fälligkeit), nachdem
 gemessen war, dass der fremde Schreiber ganze Datensätze zurücksetzt und dabei auch

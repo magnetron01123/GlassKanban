@@ -248,6 +248,19 @@ Thema selbst öffnet:
   eine Erledigung entstehen kann.
 - **Eigener `#backlog`-Tag** — verworfen, siehe CONCEPT.md: verteidigt die Entscheidung
   nicht, kostet aber sichtbaren Text in fremden Notizen.
+- **Eine Obergrenze für Antworten je Karte und Stunde** — geprüft, **bewusst offen
+  gelassen** (10.08.2026, nach einer Messung am laufenden Board). Der dokumentierte
+  Zehn-Minuten-Takt greift für den Status-Tag nicht: Sechs Rückschieber im
+  Fünf-Sekunden-Takt wurden alle sechs binnen drei Sekunden beantwortet, weil das Board
+  seine eigene Korrektur als neue Verdrängung bucht. Erwogen wurde, den feinen Takt durch
+  ein grobes Budget zu ersetzen („höchstens N Antworten je Karte und Stunde") — im
+  Normalfall unsichtbar (ein Kalender-Client schreibt 1–3× pro Stunde), aber eine Bremse
+  für ein Programm, das im Sekundentakt schreibt. Nicht gebaut, weil das gemessene
+  Verhalten die bessere Hälfte des Handels ist: Das Board eskaliert nicht von sich aus
+  (es schreibt nur, wenn der Gegner schreibt, und ruht nachweislich, sobald der aufhört),
+  und die Karte steht binnen Sekunden statt binnen Minuten richtig. Der pathologische Fall
+  ist bislang hypothetisch. **Wieder aufgreifen, sobald ein Rückschieber im Sekundentakt
+  tatsächlich auftritt** — dann ist das Budget der Weg, nicht ein längerer Takt.
 - **`eventStore.reset()` bei jeder `EKEventStoreChangedNotification`** — verworfen: Ein
   Reset würde die gerade gehaltenen `openRecurringReminders` mitten im Flug ungültig
   machen; alle Messungen mit frischen Prozessen blieben ohnehin konsistent, ein
