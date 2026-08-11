@@ -1,10 +1,10 @@
 # Glass Kanban — Release-Fahrplan zum Mac App Store
 
 Dieses Dokument ist der **lebende Arbeitsstand** auf dem Weg vom persönlichen Werkzeug
-zur verkäuflichen App. Es wird wie FINDINGS-2026-07.md geführt: Erledigtes wird
-abgehakt und datiert, Entscheidungen wandern in den Entscheidungslog unten, und was
-sich als Ist-Verhalten der App niederschlägt, zieht nach der Umsetzung wie immer nach
-SPEC.md um. BACKLOG.md verweist hierher; es gibt nur diese eine Wahrheit zum Release.
+zur verkäuflichen App: Erledigtes wird abgehakt und datiert, Entscheidungen wandern in
+den Entscheidungslog unten, und was sich als Ist-Verhalten der App niederschlägt, zieht
+nach der Umsetzung wie immer nach SPEC.md um. BACKLOG.md verweist hierher; es gibt nur
+diese eine Wahrheit zum Release.
 
 **Arbeitsweise:** Jede Arbeitssitzung am Release beginnt mit einem Blick auf die
 Statusübersicht. Ein Punkt gilt erst als erledigt, wenn seine Verifikation (unten je
@@ -96,7 +96,7 @@ Fallback-Sprache für alle nicht übersetzten Märkte muss Englisch sein.
   erste Prüflauf prüfte nur *Vollständigkeit*, nicht *Korrektheit* — und dabei
   waren beim Auflösen von `GermanPlural` **fünf Pluralregeln verloren
   gegangen**. „1 Aufgaben gerade in Bearbeitung", „Folge: 1 Tage" und drei
-  weitere waren zurück, also genau das, was FINDINGS **C4** schon einmal behoben
+  weitere waren zurück, also ein Fehlerbild, das im Juli 2026 schon einmal behoben
   hatte; die Streak-Pille stand beim Review selbst auf 1. Behoben durch echte
   `variations.plural` in beiden Sprachen (bzw. einen zahl-neutral formulierten
   Satz), und die Plural-Prüfung ist seither Teil des Skripts. **Lehre:
@@ -166,11 +166,12 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
 - [ ] TestFlight für macOS einrichten; 5–10 Tester (Freunde/Familie + 2–3 Fremde,
       z. B. über r/macapps)
 - [ ] Gezielt testen, was nie mit Echtdaten lief: **wiederkehrende Erinnerungen beim
-      Abhaken** (inkl. Alarm-Mitführung und Wiederkehrer-Ablehnung aus FINDINGS B10/B11),
-      Drag & Drop mit WIP-Rückfrage, englische UI vollständig. Das externe Abhaken
-      getaggter Wiederkehrer ist seit 09.08.2026 gemessen und abgedeckt
-      (`RecurringTagRelease`, SPEC.md „Extern abgehakt", FINDINGS-2026-08) — in der Beta
-      bleibt zu bestätigen, dass die Freigabe auch auf fremden Boards greift und die
+      Abhaken** (inkl. Alarm-Mitführung, SPEC.md „Weckzeiten folgen dem Fälligkeitsdatum",
+      und Wiederkehrer-Ablehnung, SPEC.md „Wiederkehrende Aufgaben lassen sich nicht aus
+      Erledigt zurückholen"), Drag & Drop mit WIP-Rückfrage, englische UI vollständig. Das
+      externe Abhaken getaggter Wiederkehrer ist seit 09.08.2026 gemessen und abgedeckt
+      (`RecurringTagRelease`, SPEC.md „Extern abgehakt") — in der Beta bleibt zu
+      bestätigen, dass die Freigabe auch auf fremden Boards greift und die
       Kaltstart-Restlücke im Alltag nicht stört
 - [ ] Mindestens ein Tester mit englischem System, einer mit wiederkehrenden
       Erinnerungen samt Alarmen

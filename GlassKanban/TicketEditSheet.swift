@@ -369,7 +369,7 @@ struct TicketEditSheet: View {
             // field cannot hold a sentence (see `TicketURL`), and until now
             // the sentence simply was not there any more the next time the
             // card was opened — the one failure this project treats as the
-            // worst kind (FINDINGS A1). It states the consequence and stops:
+            // worst kind. It states the consequence and stops:
             // no dialog, nothing blocked, nothing to acknowledge. Closing the
             // card is still allowed, and the field is still editable — this
             // is friction, not a veto.
