@@ -1397,11 +1397,12 @@ final class RemindersStore: ObservableObject {
     /// The live series instance behind a completed occurrence, if there is
     /// one.
     ///
-    /// Matched on title within the same list — the same rule `refresh` uses
-    /// to keep series creation dates out of the lead-time median, and for the
-    /// same reason: a completed occurrence has already been detached, so
-    /// `hasRecurrenceRules` is false on it and the recurrence is only visible
-    /// on the sibling that is still open.
+    /// Matched by creation date (`RecurringSeriesMatch`, not title — see
+    /// there for why), the same rule `refresh` uses to keep series creation
+    /// dates out of the lead-time median, and for the same underlying reason
+    /// this lookup exists at all: a completed occurrence has already been
+    /// detached, so `hasRecurrenceRules` is false on it and the recurrence is
+    /// only visible on the sibling that is still open.
     private func liveRecurringSibling(of reminder: EKReminder) -> EKReminder? {
         guard let seriesID = RecurringSeriesMatch.seriesID(
             of: Self.matchRecord(reminder),
