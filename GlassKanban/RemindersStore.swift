@@ -552,12 +552,23 @@ final class RemindersStore: ObservableObject {
         // SwiftUI answers with blank rows and broken transitions, not with an
         // error. "Later wins" is also the right answer on content: the
         // completed fetch is the fresher read.
+        // A finished turn somebody re-opened elsewhere is not a second card —
+        // the series standing right beside it already carries the next turn.
+        // Dragging one out of Erledigt is refused here with exactly that
+        // reasoning, so displaying the same thing when the click happened in
+        // Reminders would mean forbidding ourselves what we then show. The
+        // record is left untouched in EventKit; only this board declines to
+        // draw it (see `RecurringSeriesMatch.revivedOccurrenceIDs`).
+        let revived = RecurringSeriesMatch.revivedOccurrenceIDs(
+            among: incomplete.map(Self.matchRecord))
+
+        let drawable: [EKReminder] = (incomplete + visibleCompleted)
+            .filter { !revived.contains($0.calendarItemIdentifier) }
         var seen: Set<String> = []
-        let refreshed = (incomplete + visibleCompleted)
+        let refreshed: [KanbanCard] = drawable
             .reversed()
             .compactMap { seen.insert($0.calendarItemIdentifier).inserted ? Self.card(from: $0) : nil }
             .reversed()
-            .map { $0 }
 
         // Work finished elsewhere (a shared list on another device) gets the
         // same settle animation as our own. Skipped on the very first load,

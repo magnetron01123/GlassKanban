@@ -564,6 +564,26 @@ Das Gegenstück bleibt bestehen: Eine erledigte Ausführung aus „Erledigt" **h
 lehnt die App weiterhin mit „Nicht zurückgeholt" ab, weil das die Aufgabe doppelt aufs
 Board legen würde.
 
+**Und dasselbe Urteil gilt, wenn der Klick woanders passiert ist** (11.08.2026): Wird ein
+erledigter Durchgang außerhalb wieder aufgehakt — in der Erinnerungen-App, am iPhone, per
+Skript —, entsteht genau der Zustand, den die App bei sich selbst verbietet: ein zweiter,
+gleich aussehender Datensatz neben einer Serie, die den nächsten Durchgang längst trägt.
+**Das Board zeichnet ihn nicht.** Die Serie vertritt ihn dort bereits.
+
+Erkannt wird er wie jeder Durchgang — gleiche Liste, bitgenau dasselbe Anlegedatum, genau
+eine passende lebende Serie (`RecurringSeriesMatch.revivedOccurrenceIDs`) —, nur dass er
+offen statt erledigt ist. Gemessen am 11.08.2026: Das Wiederaufhaken ist die **einzige**
+Operation, die einen offenen abgelösten Datensatz erzeugt; Umbenennen der Serie,
+Verschieben ihrer Fälligkeit und das Erledigen selbst erzeugen keinen. Mehrdeutigkeit wird
+angezeigt, nicht verborgen, wie überall sonst in dieser Regel.
+
+**Der Datensatz bleibt unangetastet** — kein Schreibvorgang, kein Tag, kein
+Erledigt-Status wird angefasst; in der Erinnerungen-App steht er unverändert und lässt
+sich dort abhaken oder löschen. Verschwindet die Serie, ist er wieder eine gewöhnliche
+Aufgabe und erscheint sofort. **Bewusste Abweichung vom Grundsatz „das Board zeigt, was in
+den Daten steht":** Die Begründung steht in CONCEPT.md, „Ein wiederbelebter Durchgang ist
+keine zweite Aufgabe" — wer diese Zeile für einen Fehler hält, lese sie zuerst.
+
 **Erkannt wird ein Durchgang am Anlegedatum, nicht am Titel** (seit 10.08.2026): Der
 abgelöste Durchgang trägt bitgenau das Anlegedatum seiner Serie — gemessen über den
 App-Weg, über einen iCloud-Roundtrip und beim Abhaken auf dem iPhone — Messung, verworfene

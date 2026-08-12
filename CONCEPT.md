@@ -253,6 +253,49 @@ bewegt, ohne dass jemand hinsieht). **Akzeptierte Restlücke:** Zwei Serien eine
 bitgenau demselben Anlegedatum wären nicht unterscheidbar. Gemessen tritt das nicht ein,
 und der Ausgang wäre ohnehin die sichere Richtung — kein Beweis, keine Bewegung.
 
+### Ein wiederbelebter Durchgang ist keine zweite Aufgabe (11.08.2026)
+
+Das Board hat eine Meinung, die es bisher nur gegen sich selbst durchsetzte: Eine erledigte
+Ausführung einer Serie zurück aufs Board zu holen, ist nicht möglich — die Serie ist
+weitergelaufen, und was zurückkäme, wäre nicht der alte Durchgang, sondern eine zweite
+Karte neben einer Serie, die den nächsten längst trägt. Deshalb lehnt die App den Zug aus
+„Erledigt" heraus ab und sagt das auch.
+
+Dieselbe Handlung ist außerhalb ein einziger Klick. Wer in der Erinnerungen-App oder am
+iPhone eine versehentlich abgehakte Wiederholung wieder aufhakt, meint „Erledigung
+rückgängig" — und bekommt einen Zustand, den er nie wollte und meist nicht bemerkt.
+Gemessen (11.08.2026, Scratch-Liste): Das Wiederaufhaken ist die *einzige* Operation, die
+einen offenen abgelösten Datensatz erzeugt. Umbenennen, Fälligkeit verschieben und das
+Erledigen selbst erzeugen keinen.
+
+**Die Entscheidung: Das Board zeichnet ihn nicht.** Ein Urteil, das die App gegen sich
+selbst fällt, muss auch dann gelten, wenn jemand anderes gehandelt hat — sonst verbietet
+sie sich, was sie im nächsten Moment darstellt.
+
+**Das weicht bewusst vom Grundsatz ab, dass das Board zeigt, was in den Daten steht.** Die
+Abweichung ist eng und begründet: Es wird nichts *versteckt*, was eine Entscheidung wäre —
+die Aufgabe ist auf dem Board vorhanden, nämlich als die Serie, die sie hervorgebracht hat.
+Verborgen wird ein Duplikat, das aus einer Handlung entstand, die ihr Ziel nicht erreichen
+konnte. Der Datensatz selbst bleibt unberührt in Reminders sichtbar und bearbeitbar; wird
+die Serie gelöscht, ist er wieder eine gewöhnliche Aufgabe und erscheint sofort.
+
+**Geprüft und verworfen:**
+
+- **Den Zustand im Karten-Editor benennen** („Abgeschlossener Durchgang — die Serie läuft
+  weiter"). Erst favorisiert, dann auf Nutzerentscheidung verworfen: Der Nutzer soll von
+  der Mechanik hinter den Spalten nichts mitbekommen — dieselbe Linie wie beim Verzicht auf
+  einen Hinweis über fremde Schreiber. Ein Satz, der ein Datenmodell erklärt, ist auf
+  dieser Fläche Rauschen, auch wenn er nur beim Öffnen erscheint.
+- **Ein Zeichen auf der Karte.** Dauerhaftes Abzeichen auf der Inhaltsebene, gegen
+  „kein Dauer-Badge" und gegen die abgeschaffte Karten-Tooltip-Regel.
+- **Den Durchgang automatisch wieder abhaken.** Das repariert die Daten statt nur die
+  Ansicht — und fasst damit den Erledigt-Status an, das eine Feld, das der
+  `CorrectionLedger` bewusst *nicht* schützt, weil ein Fehlalarm dort einen echten
+  Abschluss kostet. Eine Ansicht, die zu viel verbirgt, kostet einen Blick in Reminders;
+  ein Schreibvorgang, der zu viel abhakt, kostet Arbeit.
+- **Zusätzlich auf den Titel prüfen.** Wäre eine zweite Wahrheit neben dem Anlegedatum und
+  brächte genau die Fehler zurück, die der Umstieg auf die Identität beseitigt hat.
+
 ### Listen-Filter
 
 In den Einstellungen wählt der Nutzer, welche der eigenen, bereits vorhandenen Listen

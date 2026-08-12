@@ -64,4 +64,43 @@ enum RecurringSeriesMatch {
         guard matches.count == 1 else { return nil }
         return matches[0].id
     }
+
+    /// Open records that are really finished turns somebody re-opened — the
+    /// board shows these nowhere.
+    ///
+    /// Un-ticking a completed repeating reminder is one click in Reminders,
+    /// on a phone, anywhere. It reads as "undo that completion", but the
+    /// series rolled on the moment it was ticked and cannot roll back: what
+    /// comes back is not the old turn, it is a second, identical-looking card
+    /// beside a series that is already carrying the next one. Measured
+    /// 11.08.2026 — the only operation that produces an *open* detached
+    /// record. Renaming a series, moving its due date and completing it were
+    /// all measured and produce none.
+    ///
+    /// This board already holds that this state is wrong: dragging a finished
+    /// occurrence out of Erledigt is refused with "die Serie ist bereits
+    /// weitergelaufen — das würde die Aufgabe doppelt aufs Board legen". The
+    /// same judgement has to apply when the click happened elsewhere, or the
+    /// app forbids itself what it then displays.
+    ///
+    /// Identified exactly like a finished turn is (same list, same creation
+    /// date to the microsecond, exactly one live series) — the only
+    /// difference being that this one is open. Anything ambiguous is left
+    /// alone and shown, as everywhere else in this type.
+    static func revivedOccurrenceIDs(among candidates: [Record]) -> Set<String> {
+        var revived: Set<String> = []
+        for record in candidates where !record.isCompleted && !record.isRecurring {
+            guard let created = record.createdAt else { continue }
+            let series = candidates.filter {
+                !$0.isCompleted
+                    && $0.isRecurring
+                    && $0.listID == record.listID
+                    && $0.createdAt == created
+                    && $0.id != record.id
+            }
+            guard series.count == 1 else { continue }
+            revived.insert(record.id)
+        }
+        return revived
+    }
 }
