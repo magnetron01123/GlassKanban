@@ -128,6 +128,50 @@ final class ColumnStateTests: XCTestCase {
         XCTAssertFalse(state.hasImported(listID: "private"), "another list still has to be imported")
     }
 
+    // MARK: - The migration's cleanup list
+
+    /// The bug this list exists for, measured in the running app on
+    /// 14.08.2026: with the cleanup deciding by "a tag is present", typing
+    /// "Notiz mit #inprogress darin" into a note and closing the editor left
+    /// "Notiz mit darin" — the app deleted a word the user had just written.
+    /// Naming the records at import time is what makes that impossible.
+    func testOnlyRecordsNamedAtImportAreEverCleaned() {
+        var state = ColumnState()
+        state.markImported(listID: "shared", at: t0, taggedIDs: ["alt-tag-traeger"])
+        XCTAssertTrue(state.awaitsTagCleanup("alt-tag-traeger"))
+        XCTAssertFalse(
+            state.awaitsTagCleanup("frisch-getippt"),
+            "was der Nutzer später schreibt, gehört ihm — egal wie es aussieht")
+    }
+
+    func testACleanedRecordLeavesTheList() {
+        var state = ColumnState()
+        state.markImported(listID: "shared", at: t0, taggedIDs: ["a", "b"])
+        state.markTagCleaned("a")
+        XCTAssertFalse(state.awaitsTagCleanup("a"))
+        XCTAssertTrue(state.awaitsTagCleanup("b"), "der Rest bleibt Arbeit")
+    }
+
+    /// An empty list means the migration is over and no note is ever cut
+    /// again — the state a board reaches within a refresh or two and then
+    /// keeps forever.
+    func testAFinishedMigrationTouchesNothing() {
+        var state = ColumnState()
+        state.markImported(listID: "shared", at: t0, taggedIDs: ["a"])
+        state.markTagCleaned("a")
+        XCTAssertTrue(state.pendingTagCleanup.isEmpty)
+        XCTAssertFalse(state.awaitsTagCleanup("a"))
+    }
+
+    /// A list without a single tagged record still counts as imported — and
+    /// contributes no cleanup work.
+    func testImportingAListWithoutTagsAddsNoWork() {
+        var state = ColumnState()
+        state.markImported(listID: "shared", at: t0)
+        XCTAssertTrue(state.hasImported(listID: "shared"))
+        XCTAssertTrue(state.pendingTagCleanup.isEmpty)
+    }
+
     // MARK: - Persistence
 
     /// A temporary directory per test: unlike the UserDefaults suites, nothing
@@ -141,12 +185,26 @@ final class ColumnStateTests: XCTestCase {
         return directory.appendingPathComponent("columns.json")
     }
 
+    /// The cleanup list has to survive a restart, or an interrupted migration
+    /// would forget what it still owed — and worse, a later run would have to
+    /// guess again.
+    func testTheCleanupListSurvivesARestart() throws {
+        let url = try temporaryURL()
+        var state = ColumnState()
+        state.markImported(listID: "shared", at: t0, taggedIDs: ["a", "b"])
+        state.markTagCleaned("a")
+        state.save(to: url)
+        let loaded = ColumnState.load(from: url)
+        XCTAssertFalse(loaded.awaitsTagCleanup("a"))
+        XCTAssertTrue(loaded.awaitsTagCleanup("b"))
+    }
+
     func testStateRoundTripsThroughTheFile() throws {
         let url = try temporaryURL()
         var state = ColumnState()
         state.pull("shop", into: .next, at: t0)
         state.pull("bath", into: .inProgress, at: t0.addingTimeInterval(30))
-        state.markImported(listID: "shared", at: t0.addingTimeInterval(60))
+        state.markImported(listID: "shared", at: t0.addingTimeInterval(60), taggedIDs: ["alt"])
         XCTAssertTrue(state.save(to: url))
         XCTAssertEqual(ColumnState.load(from: url), state)
     }

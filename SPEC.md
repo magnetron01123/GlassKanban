@@ -136,9 +136,20 @@ Die Übernahme läuft in zwei Schritten, deren Reihenfolge zwingend ist:
    nicht auseinanderlaufen.
 2. **Entfernen.** Danach schneidet die App den Tag aus den Notizen — getaktet im
    bestehenden Korrekturlauf, nur auf beschreibbaren Listen, jede Entfernung im
-   Korrektur-Ledger gebucht. Es gibt **keine Fortschrittsdatei**: Die Aufgabenliste ist
-   das Vorhandensein eines Tags, der Lauf ist damit idempotent und wiederaufnehmbar, und
-   ein halber Durchlauf hinterlässt nichts zu reparieren.
+   Korrektur-Ledger gebucht. Geschnitten wird **ausschließlich in den Datensätzen, die
+   Schritt 1 beim Lesen namentlich vermerkt hat**; jeder erledigte Datensatz zählt dabei
+   mit. Ein Datensatz verlässt diese Liste, sobald sein Schnitt gespeichert ist, ein
+   abgebrochener Lauf setzt beim nächsten Refresh fort, und eine leere Liste heißt: Die
+   Migration ist vorbei und es wird nie wieder eine Notiz beschnitten.
+
+   **Warum namentlich und nicht „wo ein Tag steht" (gemessen 14.08.2026 in der laufenden
+   App):** Die erste Fassung entschied am Vorhandensein eines Tags — und löschte damit
+   ein Wort, das der Nutzer gerade selbst geschrieben hatte. „Notiz mit #inprogress
+   darin" in den Editor getippt, Editor geschlossen, übrig blieb „Notiz mit darin". Ein
+   Tag aus der alten Form und ein frisch getipptes Wort sehen im Text identisch aus; nur
+   der Zeitpunkt unterscheidet sie, und den kennt allein der Import. Genau deshalb ist
+   die Liste Teil derselben Datei wie die Spalten — sie ist die einzige Stelle, an der
+   „alt" definiert ist.
 
 Gelesen wird ein Tag weiterhin **nur wo er allein steht** — links und rechts Leerraum oder
 Textgrenze. `#inprogressreport` zählt nicht, ebenso wenig ein Treffer mitten in anderem

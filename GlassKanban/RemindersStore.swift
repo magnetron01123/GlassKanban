@@ -700,17 +700,28 @@ final class RemindersStore: ObservableObject {
         let pending = lists.filter { !columns.hasImported(listID: $0.calendarIdentifier) }
         guard !pending.isEmpty else { return }
         let pendingIDs = Set(pending.map(\.calendarIdentifier))
+        var taggedByList: [String: Set<String>] = [:]
         for reminder in reminders {
-            guard !reminder.isCompleted,
-                  let listID = reminder.calendar?.calendarIdentifier,
+            guard let listID = reminder.calendar?.calendarIdentifier,
                   pendingIDs.contains(listID)
             else { continue }
+            let cardID = reminder.calendarItemIdentifier
+            // Every record carrying a tag right now — completed ones too, so
+            // the cleanup below reaches them — is named here and nowhere else.
+            // That naming is what keeps the cleanup from ever touching a word
+            // the user types later (see `ColumnState.pendingTagCleanup`).
+            if StatusTagger.hasStatusTag(reminder.notes) {
+                taggedByList[listID, default: []].insert(cardID)
+            }
+            guard !reminder.isCompleted else { continue }
             let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: false)
             guard let lane = ColumnState.Lane(status) else { continue }
-            columns.pull(reminder.calendarItemIdentifier, into: lane, at: now)
+            columns.pull(cardID, into: lane, at: now)
         }
         for list in pending {
-            columns.markImported(listID: list.calendarIdentifier, at: now)
+            columns.markImported(
+                listID: list.calendarIdentifier, at: now,
+                taggedIDs: taggedByList[list.calendarIdentifier] ?? [])
         }
         persistColumns()
     }
@@ -755,6 +766,9 @@ final class RemindersStore: ObservableObject {
     private func applyCorrections(_ reminders: [EKReminder], now: Date = .now) {
         var answered = 0
         var dirty = false
+        // Which records the migration finished with in this pass — struck off
+        // only after their save landed, so an interrupted run resumes.
+        var cleaned: Set<String> = []
         for reminder in reminders {
             let cardID = reminder.calendarItemIdentifier
             let state = Self.state(of: reminder)
@@ -812,13 +826,16 @@ final class RemindersStore: ObservableObject {
             }
 
             // The one-off cleanup: a status tag left over from the form this
-            // board used until 13.08.2026 is cut out of the notes. The
-            // work-list is the presence of a tag itself, so this needs no
-            // progress file — it is idempotent, resumable, and a half-finished
-            // run leaves nothing to repair.
-            if StatusTagger.hasStatusTag(targetNotes) {
+            // board used until 13.08.2026 is cut out of the notes — but only
+            // from the records the import named when it read them. Deciding by
+            // "a tag is present" instead was measured deleting a user's own
+            // word (14.08.2026): typing "Notiz mit #inprogress darin" and
+            // closing the editor left "Notiz mit darin". Nothing outside that
+            // list is ever cut, whatever it looks like.
+            if columns.awaitsTagCleanup(cardID), StatusTagger.hasStatusTag(targetNotes) {
                 targetNotes = targetNotes.map(StatusTagger.removingTags).flatMap { $0.isEmpty ? nil : $0 }
                 touched.insert(.notes)
+                cleaned.insert(cardID)
             }
 
             guard !touched.isEmpty else { continue }
@@ -861,10 +878,16 @@ final class RemindersStore: ObservableObject {
                 for field in paced {
                     corrections.markAnswered(cardID: cardID, field: field, at: now)
                 }
+                // The migration keeps this record on its list and tries again.
+                cleaned.remove(cardID)
             }
         }
         if dirty {
             try? eventStore.commit()
+        }
+        if !cleaned.isEmpty {
+            for cardID in cleaned { columns.markTagCleaned(cardID) }
+            persistColumns()
         }
     }
 

@@ -104,9 +104,27 @@ struct ColumnState: Equatable {
     /// restored defaults file could claim an import that this state never got.
     private(set) var importedLists: [String: Date]
 
-    init(pulls: [String: Pull] = [:], importedLists: [String: Date] = [:]) {
+    /// Exactly which records still carry an old status tag that the migration
+    /// has to cut out — recorded when their list was imported, and removed
+    /// again as each one is cleaned.
+    ///
+    /// **This list is what makes the cleanup a migration rather than a
+    /// standing rule**, and it exists because the standing version was
+    /// measured destroying a user's text (14.08.2026, in the app): typing
+    /// "Notiz mit #inprogress darin" into a note and closing the editor left
+    /// "Notiz mit darin" — the cleanup could not tell a tag left over from the
+    /// old form from a word somebody had just written. Naming the records up
+    /// front removes the ambiguity entirely: anything not on this list is the
+    /// user's text, whatever it looks like.
+    ///
+    /// Empty means the migration is done and no note will ever be cut again.
+    private(set) var pendingTagCleanup: Set<String>
+
+    init(pulls: [String: Pull] = [:], importedLists: [String: Date] = [:],
+         pendingTagCleanup: Set<String> = []) {
         self.pulls = pulls
         self.importedLists = importedLists
+        self.pendingTagCleanup = pendingTagCleanup
     }
 
     // MARK: - Asking
@@ -159,8 +177,21 @@ struct ColumnState: Equatable {
         pulls[newID] = pull
     }
 
-    mutating func markImported(listID: String, at now: Date) {
+    /// Marks a list as taken over, together with exactly which of its records
+    /// still carry an old tag to be cut out.
+    mutating func markImported(listID: String, at now: Date, taggedIDs: Set<String> = []) {
         importedLists[listID] = now
+        pendingTagCleanup.formUnion(taggedIDs)
+    }
+
+    /// Whether this record is one the migration still has to clean. Anything
+    /// else is the user's text and is never touched.
+    func awaitsTagCleanup(_ cardID: String) -> Bool {
+        pendingTagCleanup.contains(cardID)
+    }
+
+    mutating func markTagCleaned(_ cardID: String) {
+        pendingTagCleanup.remove(cardID)
     }
 
     private mutating func cap() {
@@ -221,7 +252,8 @@ struct ColumnState: Equatable {
         }
         let imported = (root["importedLists"] as? [String: Double] ?? [:])
             .mapValues(Date.init(timeIntervalSince1970:))
-        return ColumnState(pulls: pulls, importedLists: imported)
+        let pending = Set(root["pendingTagCleanup"] as? [String] ?? [])
+        return ColumnState(pulls: pulls, importedLists: imported, pendingTagCleanup: pending)
     }
 
     /// Writes the state atomically, so a crash mid-write cannot leave half a
@@ -238,6 +270,7 @@ struct ColumnState: Equatable {
             "v": Self.formatVersion,
             "pulls": pulls.mapValues { ["lane": $0.lane.rawValue, "at": $0.at.timeIntervalSince1970] },
             "importedLists": importedLists.mapValues(\.timeIntervalSince1970),
+            "pendingTagCleanup": Array(pendingTagCleanup),
         ]
         do {
             let data = try JSONSerialization.data(
