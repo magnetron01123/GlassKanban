@@ -90,6 +90,7 @@ targets:
       - path: GlassKanban/RecurringTagRelease.swift
       - path: GlassKanban/RecurringSeriesMatch.swift
       - path: GlassKanban/CorrectionLedger.swift
+      - path: GlassKanban/ColumnState.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanbanTests
