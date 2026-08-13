@@ -274,9 +274,19 @@ Thema selbst öffnet:
   „Legacy-Altlast" mehr, sondern akzeptierte Eingabe für alle, die den Tag unterwegs von
   Hand tippen.
 
-## Geplanter Formwechsel: Status verlässt die Notizen (13.08.2026 — geplant, nicht umgesetzt)
+## Formwechsel: Status verlässt die Notizen (13.08.2026 — umgesetzt)
 
-**Entscheidung des Nutzers vom 13.08.2026: planen, noch nicht bauen.** Entstanden aus dem
+**Umgesetzt am 13.08.2026.** Gebautes Verhalten in SPEC.md („Spalten = eigener Speicher
+der App", „Einmalige Migration der alten Hashtags"), Herleitung in CONCEPT.md. Der
+Abschnitt bleibt als Begründungsspeicher stehen — vor allem die verworfenen Varianten
+unten, die gegen einen Rückbau schützen.
+
+Zwei Dinge kamen beim Bauen dazu, die hier nicht standen: Der Speicher gehört *einem*
+Mac (zwei Rechner führen getrennte Spalten — dieselbe Eigenschaft, die fremde Programme
+aussperrt), und im Editor musste die Tag-Filterung raus, weil sie sonst beim Speichern
+fremden Notiztext auf schreibgeschützten Listen gelöscht hätte.
+
+**Ursprüngliche Planungsnotiz (13.08.2026):** Entstanden aus dem
 Geisterkarten-Komplex (PR #46): Solange der Spaltenstatus als Hashtag in den Notizen wohnt,
 kann jedes Programm mit Schreibrecht auf Reminders eine Karte bewegen. Die seit 13.08.
 stehende Abwehr (Zustandsregel, Ledger-Kette) deckt alle gemessenen Pfade ab — aber nur ein
@@ -331,8 +341,21 @@ Reminders geschenkt zu bekommen.
    Tags weder geschrieben noch gelesen.
 3. Kein Rollback-Pfad nötig: Der alte Build liest Notizen ohne Tags schlicht als Backlog.
 
-**Geprüft und verworfen (13.08.2026):**
+**Geprüft und verworfen (13.08.2026) — nicht erneut vorschlagen:**
 
+- **Inhaltsbasierte Kartenidentität** (Titel + Anlegedatum statt `calendarItemIdentifier`),
+  um einen ID-Bruch zu „heilen" — verworfen: Eine inhaltsbasierte Identität kann eine
+  Spalte an die *falsche* Karte hängen und damit genau die Bewegung erzeugen, die dieser
+  Umbau unmöglich machen soll. Eine gebrochene ID kostet einen Zug, eine falsch geheilte
+  kostet Vertrauen.
+- **Den Speicher gegen den aktuellen Fetch aufräumen** (Einträge löschen, deren ID gerade
+  nicht geladen ist) — verworfen aus demselben Grund wie beim `CorrectionLedger`: Eine in
+  den Einstellungen abgewählte Liste, ein kurz offline gegangenes Konto oder ein
+  Sync-Schluckauf nähme dem Board damit Arbeit weg, die der Nutzer selbst platziert hat.
+  Verwaiste Einträge sind inert und fallen nur über die Mengengrenze heraus.
+- **Tag-Text dauerhaft aus der Anzeige filtern** (damit auf schreibgeschützten Listen kein
+  `#next` sichtbar wird) — verworfen: Die App versteckt keine Wörter mehr, die sie nicht
+  selbst geschrieben hat. Der Text gehört der Person, der die Liste gehört.
 - **Hybrid: lokal führend, aber neu auftauchende Notizen-Tags einmalig als Pull
   importieren** (hätte den mobilen Pull erhalten) — verworfen: Genau darüber könnte ein
   fremder Schreiber mit altem Notizen-Stand wieder Pulls injizieren; das Loch, das der

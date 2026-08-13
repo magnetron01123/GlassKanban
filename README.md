@@ -10,9 +10,11 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
 ## Funktionsweise
 
 - **Vier Spalten:** Backlog → Als Nächstes → In Bearbeitung → Erledigt
-- **Status als Hashtag in den Notizen** (`#next`, `#inprogress`) — die
-  Listenzugehörigkeit der Erinnerung bleibt unangetastet, Backlog = kein Tag,
-  Erledigt = abgehakt (`isCompleted`)
+- **Die Spalte gehört dem Board** — sie steht in einer eigenen Datei der App, nicht in
+  der Erinnerung. Damit kann kein anderes Programm eine Karte verschieben. Erledigt
+  bleibt `isCompleted` in Reminders, die Listenzugehörigkeit bleibt unangetastet.
+  (Bis 13.08.2026 stand die Spalte als Hashtag in den Notizen; vorhandene Tags werden
+  beim ersten Start einmalig übernommen und danach aus den Notizen entfernt.)
 - **Drag & Drop** zwischen den Spalten; **Klick** auf eine Karte öffnet den Karten-Editor
   direkt auf dem Board (Titel, Notizen, URL, Liste, Dringlichkeit, Fälligkeit)
 - **Tickets anlegen** über das „+" im Backlog — Titel tippen, Return, fertig
@@ -20,8 +22,8 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
   sich mit ⌘Z rückgängig machen; Löschen fragt zusätzlich nach, weil EventKit
   Unteraufgaben und Anhänge nicht wiederherstellen kann
 - **Bidirektionaler Live-Sync**: Änderungen in der Erinnerungen-App (auch auf
-  iPhone/iPad via iCloud) erscheinen sofort im Board — der Status-Hashtag kann auch
-  unterwegs von Hand getippt werden
+  iPhone/iPad via iCloud) erscheinen sofort im Board — Titel, Notizen, Fälligkeit und
+  Erledigt-Status. Die Spalte selbst wird am Mac gezogen, an dem das Board läuft
 - **Finden** (⌘F): Suche, Dringlichkeit, Fälligkeit und wiederkehrende Aufgaben in einem
   Bedienelement; **Listen-Auswahl** und **WIP-Limits** in den Einstellungen
 - **Motivation, dezent:** Streak-Flamme (🔥) mit Statistik-Fenster („Jetzt" und
@@ -76,4 +78,6 @@ App im Finder zu öffnen. Details siehe [CLAUDE.md](CLAUDE.md).
   lokalen Listen —, öffnet sich ersatzweise die Erinnerungen-App selbst. Für die
   1.0-Einreichung wird der Deep-Link entfernt (siehe [RELEASE.md](RELEASE.md), Phase 2)
 - Reminders-Tags, Flags und Unteraufgaben sind über die öffentliche EventKit-API nicht
-  zugänglich — daher die Hashtag-Lösung
+  zugänglich
+- Die Spalte ist in Reminders nicht sichtbar und gilt je Mac — der Preis dafür, dass kein
+  anderes Programm sie ändern kann

@@ -53,75 +53,110 @@ weiterentwickelt: Ändert sich Verhalten, ändert sich diese Datei mit.
 
 ## Datenmodell
 
-### Spalten = Hashtag in den Notizen (kein Listenwechsel)
+### Spalten = eigener Speicher der App (seit 13.08.2026)
 
-`EKReminder.calendar` ist ein einzelnes Objekt, keine Menge — eine Erinnerung kann nur in
-einer Liste gleichzeitig sein. Deshalb: Status wird über einen Hashtag im Notizen-Text
-abgebildet, nicht über die Listenzugehörigkeit. Die ursprüngliche Liste bleibt bei jedem
-Spaltenwechsel unverändert.
+Die Spalte einer Karte steht in einer Datei, die nur diese App kennt:
 
-| Spalte (technisch) | Anzeige (Deutsch) | Hashtag in den Notizen |
-|---|---|---|
-| Backlog | Backlog | kein Tag (Standard/Fallback) |
-| Next | Als Nächstes | `#next` |
-| In Progress | In Bearbeitung | `#inprogress` |
-| Done | Erledigt | — (`isCompleted = true`, kein Tag) |
+`<Container>/Library/Application Support/GlassKanban/columns.json`
 
-Das Tag-Format ist **Englisch und plattformweit einheitlich** — dasselbe `#next`/
-`#inprogress`, das die App in Notizen schreibt, egal in welcher Sprache die Oberfläche
-gerade läuft. Ein sichtbares Datenformat in Notizen internationaler Nutzer:innen muss
-sprachunabhängig sein; die deutschen Formen aus der Zeit vor der Lokalisierung
-(`#alsnächstes`/`#inbearbeitung`) sind Legacy, siehe Migrationstabelle unten.
+Ein Eintrag je Erinnerungs-ID, mit Spur und dem Zeitpunkt des Zugs. Gespeichert werden
+**nur `next` und `inProgress`**:
 
-**Schreiben (bei Drag & Drop bzw. „Verschieben nach"):**
-
-| Ziel-Spalte | Aktion in den Notizen |
+| Spalte | Woher sie kommt |
 |---|---|
-| Backlog | vorhandene Status-Zeile entfernen |
-| Als Nächstes | Status-Zeile entfernen, `#next` als neue, eigene letzte Zeile anhängen |
-| In Bearbeitung | Status-Zeile entfernen, `#inprogress` als neue, eigene letzte Zeile anhängen |
-| Erledigt | `isCompleted = true` setzen, Status-Zeile entfernen |
+| Backlog | **kein Eintrag** — der Ruhezustand, wie zuvor „kein Tag" |
+| Als Nächstes | Eintrag `next` |
+| In Bearbeitung | Eintrag `inProgress` |
+| Erledigt | `isCompleted = true` in EventKit, wie immer |
 
-**Lesen:** Der Hashtag wird an beliebiger Stelle im Notizen-Text gesucht, ohne Rücksicht auf
-Groß-/Kleinschreibung, aber **nur wo er allein steht** — links und rechts Leerraum oder
-Textgrenze. `#inprogressreport` zählt damit nicht, und ebenso wenig ein Treffer mitten
-in anderem Text: `https://example.com/guide#next`, `#next-steps`, `#bearbeitung/2024`,
-`ABC#NEXT!`. Stehen mehrere Tags im Text, gewinnt der
-**zuletzt** im Text stehende. Erinnerungen ohne erkannten Hashtag und ohne `isCompleted`
-fallen automatisch in „Backlog".
+Ein Zug nach Backlog **löscht** den Eintrag; das Format kann also gar nicht zwei Dinge
+ausdrücken, die dieselbe Spalte meinen. Erledigt wird bewusst nicht lokal geführt: Dort
+lesen Reminders, iPhone, Widgets und die eigene Statistik mit, und eine zweite Wahrheit
+liefe von der sichtbaren auseinander.
 
-Die Regel scheitert bewusst **nach innen**: `#next.` mit Satzpunkt gilt nicht mehr
-als Tag, die Karte bleibt in „Backlog" und der Text bleibt unangetastet. Ein nicht
-erkanntes Tag kostet einen Zug mit der Maus; ein fälschlich erkanntes kostete bis Juli 2026
-Nutzertext — die Hygiene entfernte den Treffer und hängte einen echten Tag an, ohne Zutun
-und ohne Undo-Eintrag.
+**Warum überhaupt** (Herleitung in CONCEPT.md, „Spalten gehören dem Board"): Solange die
+Spalte als Hashtag in den Notizen stand, konnte sie jedes Programm mit Reminders-Zugriff
+ändern — gemessen am 12.08.2026, als ein fremder Kalender-Client neun Minuten nach einer
+in der App erledigten Wiederholung `#next` auf die weitergerollte Serie zurückschob. Die
+App konnte das erkennen und beantworten; verhindern kann es nur ein Speicher, den
+niemand sonst erreicht.
 
-**Nutzertext bleibt unangetastet:** Beim Schreiben werden ausschließlich Tags entfernt bzw.
-angehängt. Zeilen ohne Tag werden zeichengenau durchgereicht — auch Leerzeilen, die als
-Absatztrenner gesetzt wurden. Nur die Zeile, auf der ein Tag stand, verschwindet mit ihm;
-nachlaufender Leerraum wird bereinigt, wenn die App am Textende ohnehin arbeitet.
+**Was das für Schreibvorgänge heißt:** Ein Zug zwischen Backlog, Als Nächstes und In
+Bearbeitung fasst EventKit **gar nicht** mehr an. Nur der Übergang nach Erledigt und
+zurück schreibt (`isCompleted`), weil das eine Tatsache über die Aufgabe ist und keine
+über diese Ansicht. Die App schreibt in Reminders damit nur noch: Titel, Notiztext, URL,
+Fälligkeit, Priorität, Liste, `isCompleted` — und einmalig die Aufräumung unten.
 
-**Datenhygiene beim Sync** — die App schreibt eine Erinnerung nur dann um, wenn eines davon
-zutrifft:
+| Zug auf einer **schreibgeschützten** Liste | bis 13.08.2026 | seither |
+|---|---|---|
+| Backlog ↔ Als Nächstes ↔ In Bearbeitung | „Nicht verschoben" | funktioniert, lautlos |
+| → Erledigt und zurück | „Nicht verschoben" | weiter „Nicht verschoben" |
 
-1. `isCompleted = true`, aber es steht noch ein Status-Hashtag in den Notizen (z. B. direkt
-   in Reminders abgehakt)
-2. mehrere Status-Hashtags gleichzeitig vorhanden (z. B. am iPhone von Hand ergänzt)
-3. ein Hashtag in einer alten Schreibweise früherer Builds — wird auf die aktuelle Form
-   migriert:
+Das ist gewollt: Ob die Erinnerung einer anderen Person geändert werden darf, sagt nichts
+darüber, wie dieses Board seine eigene Ansicht sortiert. Die Asymmetrie bleibt erklärbar —
+Erledigen ist eine Aussage über die Aufgabe, Ziehen eine über das Brett.
 
-   | Legacy-Form | Migriert zu |
-   |---|---|
-   | `#alsnächstes`, `#alsnaechstes`, `#nächstes`, `#naechstes` | `#next` |
-   | `#inbearbeitung`, `#bearbeitung`, `#progress` | `#inprogress` |
+**Identität ist `calendarItemIdentifier`.** Gemessen am 13.08.2026 (iCloud-Scratch-Listen):
+Sie überlebt einen Listenwechsel, das Umbenennen von Aufgabe und Liste sowie einen kalten
+EventKit-Cache; drei drei Tage alte gespeicherte IDs lösten weiterhin auf, darunter eine
+seither weitergerollte Serie. Bricht sie doch, verwaist der Eintrag und die Karte steht im
+Backlog — ein Zug. Zwei Brüche werden aktiv behandelt: Das Rückgängigmachen eines Löschens
+legt einen **neuen** Datensatz an (die Spur reist im Snapshot mit), und ein Listenwechsel
+im Editor schreibt den Eintrag auf die neue ID um.
 
-   Die deutschen Formen stammen aus der Zeit vor der DE+EN-Lokalisierung, `#progress`
-   (ohne „in") aus einem noch früheren Build. Ein Board mit deutschen Tags konvergiert
-   dadurch in genau einem Refresh auf die neue Form, ganz ohne Zutun.
+**Verweildauer:** Der Zeitpunkt des Zugs steht im Eintrag, die Anzeige ist damit exakt
+statt genähert. Für Karten, die dieses Board nie bewegt hat, gilt weiterhin die alte
+Näherung über `lastModifiedDate`.
 
-Der Vorgang ist konvergent: Nach einem Umschreiben existiert genau ein Tag der aktuellen
-Form (oder keiner), es entsteht also keine Schreibschleife über die
-Änderungs-Benachrichtigung.
+**Wenn die Datei fehlt oder unlesbar ist:** leerer Speicher, alle Karten im Backlog — die
+sichere Richtung, wiederhergestellt mit je einem Zug. Gelesen wird **eintragsweise
+tolerant**: Ein defekter Eintrag kostet diesen einen, nicht die Datei; nur eine unbekannte
+Formatversion oder ein kaputter Rumpf verwerfen alles. Geschrieben wird atomar. Scheitert
+ein Schreibvorgang, bleibt der Zug in der Sitzung wirksam, es erscheint **kein Dialog**
+(eine Zeile in der Konsole), und der nächste Zug versucht es erneut; nach einem Neustart
+stünde die Karte im Backlog. Grenze: höchstens 200 Einträge, ältester Zug zuerst — kein
+Verfall nach Alter, denn eine Karte darf monatelang in einer Arbeitsspalte stehen.
+
+**Der Speicher ist an diesen Mac gebunden.** Zwei Macs mit dieser App auf denselben Listen
+haben getrennte Spalten; die spätere iOS-App bräuchte eine eigene Synchronisation. Das ist
+der bewusst bezahlte Preis dafür, dass niemand sonst die Spalte erreichen kann.
+
+### Einmalige Migration der alten Hashtags
+
+Bis 13.08.2026 stand die Spalte als `#next`/`#inprogress` (und in älteren Builds
+`#alsnächstes`/`#inbearbeitung`/`#nächstes`/`#bearbeitung`/`#progress`) in den Notizen.
+Die Übernahme läuft in zwei Schritten, deren Reihenfolge zwingend ist:
+
+1. **Lesen, je Liste genau einmal.** Beim ersten Auftauchen einer Liste werden ihre Tags
+   in den Speicher übernommen und die Liste als übernommen gestempelt. Der Stempel gilt
+   **pro Liste**, nicht pro Installation: Ein einzelner Schalter wäre nach dem ersten
+   Refresh gesetzt, und der sieht eine in den Einstellungen abgewählte Liste oder ein
+   später synchronisierendes Konto nicht — deren Tags wären dauerhaft verloren. Stempel
+   und Spalten stehen in derselben Datei und werden in einem Zug geschrieben, können also
+   nicht auseinanderlaufen.
+2. **Entfernen.** Danach schneidet die App den Tag aus den Notizen — getaktet im
+   bestehenden Korrekturlauf, nur auf beschreibbaren Listen, jede Entfernung im
+   Korrektur-Ledger gebucht. Es gibt **keine Fortschrittsdatei**: Die Aufgabenliste ist
+   das Vorhandensein eines Tags, der Lauf ist damit idempotent und wiederaufnehmbar, und
+   ein halber Durchlauf hinterlässt nichts zu reparieren.
+
+Gelesen wird ein Tag weiterhin **nur wo er allein steht** — links und rechts Leerraum oder
+Textgrenze. `#inprogressreport` zählt nicht, ebenso wenig ein Treffer mitten in anderem
+Text (`https://example.com/guide#next`, `#next-steps`, `#bearbeitung/2024`, `ABC#NEXT!`).
+Stehen mehrere im Text, gewinnt der zuletzt stehende. Die Regel scheitert bewusst nach
+innen: `#next.` mit Satzpunkt gilt nicht als Tag, die Karte bleibt im Backlog, der Text
+bleibt unangetastet. **Diese Grenzregel ist die letzte sicherheitskritische Stelle der
+App** — sie ist der einzige verbliebene Ort, an dem Text aus fremden Notizen geschnitten
+wird, und sie hat im Juli 2026 schon einmal echten Nutzertext zerstört. Sie verschwindet
+erst mit der Aufräumung selbst, frühestens eine Version nach 1.0.
+
+**Auf schreibgeschützten Listen bleibt der Tag als Text stehen** und wird ab jetzt auch
+angezeigt — er gehört der Person, der die Liste gehört. Die App versteckt keine Wörter
+mehr, die sie nicht selbst geschrieben hat.
+
+Geprüft am echten Board (13.08.2026): Die Karte, deren Notiz Prosa **und** Tag enthielt,
+behielt ihre Prosa zeichengenau und verlor nur den Tag; die Karte, deren Notiz nur aus dem
+Tag bestand, hat danach gar keine Notiz mehr; beide blieben in ihrer Spalte.
 
 ### Wenn andere Programme dieselben Erinnerungen schreiben
 
@@ -171,8 +206,7 @@ gemessen, nicht abgeleitet):
 
 | Feld | Takt |
 |---|---|
-| Notizen (Status-Tag) | **jede** Verdrängung, binnen eines Syncs — gemessen unter 2,1 s, auch bei sechs Rückschiebern in Folge |
-| Titel, URL, Fälligkeit | höchstens eine Antwort pro zehn Minuten je Karte und Feld |
+| Notizen, Titel, URL, Fälligkeit | höchstens eine Antwort pro zehn Minuten je Karte und Feld |
 
 Der Unterschied folgt aus dem Mechanismus: Jeder Arbeits-Tag, der irgendwo verschwindet,
 wird bei jedem Refresh neu als Verdrängung gebucht — auch der, den das Board selbst gerade
@@ -217,7 +251,7 @@ Zug und fällt Richtung Backlog.
 Zustand zieht den Eintrag zurück — wer seine Meinung ändert, wird nie bekämpft) →
 Echo beantworten → verbrauchten Pull freigeben → Hygiene auf das Ergebnis → speichern.
 Grenzen: höchstens fünf Karten je Sync, für Titel/URL/Fälligkeit eine Antwort je (Karte,
-Feld, Zustand) pro zehn Minuten (für den Status-Tag siehe die Takt-Tabelle oben), Verfall
+Feld, Zustand) pro zehn Minuten, Verfall
 nach 24 Stunden, höchstens 200 Karten im Gedächtnis. Ein Wecker holt eine
 vom Takt aufgeschobene Antwort nach, weil ein Zustand, der bloß falsch *bleibt*, keinen
 Sync auslöst. Schreibgeschützte Listen werden übersprungen.
@@ -338,7 +372,7 @@ der App gewechselt.
 
 ## Interaktion
 
-Die App schreibt: den Status-Hashtag (Spaltenwechsel), die Editor-Felder (Titel, Notizen,
+Die App schreibt: die Editor-Felder (Titel, Notizen,
 URL, Liste, Priorität, Fälligkeit), neue Tickets und Löschungen. Nicht bearbeitbar in der
 App bleiben nur die Felder, die EventKit nicht öffentlich anbietet (Tags, Flags,
 Unteraufgaben, Personen) sowie Wiederholungsregeln — dafür gibt es den Sprung nach
@@ -358,8 +392,9 @@ Karte, näher herangeholt, kein separates Formularfenster. Editierbar: **Titel, 
 (mehrzeilig, Absätze bleiben erhalten), URL-Feld, Liste, Dringlichkeit, Fälligkeit** (mit
 oder ohne Uhrzeit — ohne bleibt die Erinnerung ganztägig). Der
 ↗-Knopf springt zur Aufgabe in der Reminders-App, für alles, was der Editor bewusst
-auslässt. Der Status-Hashtag ist im Notizen-Feld nie sichtbar und wird beim Speichern für
-die aktuelle Spalte wieder angehängt — ein Inhalts-Edit kann eine Karte nie verschieben.
+auslässt. Das Notizen-Feld zeigt die Notiz so, wie sie in Reminders steht — seit
+13.08.2026 auch einen Hashtag darin, denn er ist Nutzertext wie jeder andere. Ein
+Inhalts-Edit kann eine Karte nicht verschieben; die Spalte liegt außerhalb der Notiz.
 Ein Listenwechsel bietet nur beschreibbare, nicht ausgeblendete Listen an.
 
 **„Erfasst" als erste Fakten-Zeile** — Personal Kanbans eigenes Wort für den Akt, den das
@@ -524,15 +559,17 @@ ein Ticket nach dem Erledigen in „Als Nächstes" stehen blieb:
   in der Hand hat. EventKit legt den erledigten Durchgang als **neue, abgelöste**
   Erinnerung ab (eigene ID, keine Wiederholungsregel mehr) und lässt die **Serie unter der
   bisherigen ID** weiterlaufen, nur mit dem nächsten Fälligkeitsdatum.
-- Der Status-Hashtag wird dabei korrekt entfernt: Die zurückkehrende Serie trägt keinen
-  Tag und landet damit im **Backlog** — richtig, denn ihr nächster Durchgang wurde noch
-  nicht gezogen. Ein nachträgliches Zurückschreiben durch iCloud gibt es nicht (90 s
-  beobachtet, unverändert).
+- Die Spalte wird dabei korrekt freigegeben: Die zurückkehrende Serie steht im
+  **Backlog** — richtig, denn ihr nächster Durchgang wurde noch nicht gezogen. (Damals
+  über das Entfernen des Status-Hashtags, seit 13.08.2026 über den eigenen Speicher; das
+  Ergebnis ist dasselbe, und seither kann iCloud es auch nicht mehr zurückschreiben.)
 - **Die ID wechselt also die Bedeutung.** Ab dem Erledigen zeigt sie auf den *nächsten*
   Durchgang. Alles, was vorher auf diese ID gebucht wurde, zielt danach auf Arbeit, die
-  niemand begonnen hat — im Undo-Stapel gleich mehrfach: Das erste ⌘Z schrieb
-  `#inprogress` auf den nächsten Durchgang, das zweite `#next`. So kam eine Karte in eine
-  Arbeitsspalte, ohne je gezogen worden zu sein, und zählte dort gegen das WIP-Limit.
+  niemand begonnen hat — im Undo-Stapel gleich mehrfach: Das erste ⌘Z setzte den nächsten
+  Durchgang auf „In Bearbeitung", das zweite auf „Als Nächstes". So kam eine Karte in eine
+  Arbeitsspalte, ohne je gezogen worden zu sein, und zählte dort gegen das WIP-Limit. Der
+  Zaun dagegen gilt unverändert: Er schützt vor einem falsch gezielten Zug, gleich wohin
+  dieser Zug schreibt.
 
 **Regel daraus:** Ist eine wiederkehrende Karte erledigt worden, werden **wiedergespielte**
 Schreibvorgänge (Undo/Redo) über diese ID abgelehnt und erklärt („Nicht rückgängig
@@ -564,12 +601,9 @@ Undo-Eintrag und damit keinen Platz in dieser Reihenfolge. Für ihn gilt weiterh
 einfache Frage, ob die ID noch auf einen ungezogenen Durchgang zeigt; dort gibt ein
 eigener Zug des Nutzers sie tatsächlich zurück.
 
-**Die eine Ausnahme ist die Tag-Freigabe** (13.08.2026): Sie schreibt genau das, was der
-Zaun schützt — dass der nächste Durchgang ungezogen bleibt. Der Zaun blockierte sie
-trotzdem, weil sie ein automatischer Schreibvorgang ist, und genau daran blieb am
-12.08.2026 ein von einem fremden Schreiber zurückgeschobenes `#next` auf einer in der App
-erledigten Serie stehen, bis der Nutzer zufällig gezogen hätte. Die Freigabe darf deshalb
-durch den Zaun schreiben; Echo-Antworten und Hygiene bleiben davor stehen.
+Eine Ausnahme brauchte der Zaun zwischenzeitlich für die Freigabe eines verbrauchten
+Pulls — sie ist seit dem Formwechsel gegenstandslos: Die Freigabe schreibt nur noch in den
+eigenen Speicher und geht an EventKit gar nicht mehr vorbei.
 
 Ebenfalls an dieser Stelle: Die Erledigt-Settle-Animation wird für wiederkehrende Karten
 **nicht** mehr auf die gezogene ID gelegt — sie gehörte sonst der zurückkehrenden
@@ -615,28 +649,28 @@ Sekunde angelegte Aufgaben trennen nur Mikrosekunden, ein Toleranzfenster machte
 einander zu Durchgängen. Passt keine oder mehr als eine Serie, gilt „kein Beweis": Der Zug
 ist dann erlaubt (`RecurringSeriesMatch`).
 
-Dieselbe Identität trägt seit 10.08.2026 auch die **stille** Hälfte — die Tag-Freigabe
-weiter unten, Bedingungen 2 und 3. Dort ist „kein Beweis" die andere Richtung: Der Tag
-bleibt stehen. Live gegen echte iCloud-Daten geprüft, beide Richtungen: eine gleichnamige
+Dieselbe Identität trägt seit 10.08.2026 auch die **stille** Hälfte — die Pull-Freigabe
+weiter unten, Bedingungen 2 und 3. Dort ist „kein Beweis" die andere Richtung: Die Karte
+bleibt, wo sie steht. Live gegen echte iCloud-Daten geprüft, beide Richtungen: eine gleichnamige
 fremde Aufgabe, angelegt und erledigt zwischen zwei Refreshes, ließ den Tag der gezogenen
 Karte stehen; die Serie selbst extern abgehakt gab ihn binnen eines Syncs zurück.
 
 **Extern abgehakt (09.08.2026 gegen echtes iCloud gemessen, nachdem eine wöchentliche
-Karte nach jedem Abhaken erneut in „Als Nächstes" stand):** Nur diese App entfernt den
-Status-Tag *vor* dem Erledigen. Wird eine getaggte wiederkehrende Erinnerung außerhalb
-abgehakt — Erinnerungen-App, iPhone, Mitteilung, oder von einer anderen Person in einer
-geteilten Liste —, bleiben die Notizen unangetastet: Der abgelöste Durchgang **und** die
-weiterlaufende Serie tragen beide weiterhin den Tag. Der nächste, nie gezogene Durchgang
-stand damit in einer Arbeitsspalte, Woche für Woche.
+Karte nach jedem Abhaken erneut in „Als Nächstes" stand):** Wird eine gezogene
+wiederkehrende Erinnerung außerhalb abgehakt — Erinnerungen-App, iPhone, Mitteilung, oder
+von einer anderen Person in einer geteilten Liste —, rollt die Serie unter derselben ID
+weiter. Der Eintrag des Boards zeigt danach auf den **nächsten**, nie gezogenen Durchgang,
+und der stand damit in einer Arbeitsspalte, Woche für Woche. (Bis 13.08.2026 stand die
+Spalte als Tag in den Notizen; das Fehlerbild ist dasselbe geblieben, nur der Ort nicht.)
 
-**Regel daraus (`RecurringTagRelease`):** Der Pull, für den der Tag stand, wurde vom
-erledigten Durchgang verbraucht — die App gibt den Tag der Serie deshalb still zurück
-(Karte → Backlog), aber nur, wenn das *beweisbar* ist. Seit 13.08.2026 ist die Regel ein
-**stehender Zustand, keine Kante mehr**:
+**Regel daraus (`RecurringTagRelease`):** Der Pull wurde vom erledigten Durchgang
+verbraucht — die App gibt ihn deshalb still zurück (Karte → Backlog), aber nur, wenn das
+*beweisbar* ist. Seit 13.08.2026 ist die Regel ein **stehender Zustand, keine Kante
+mehr**:
 
-> Eine Serie mit Arbeits-Tag, deren jüngster erledigter Durchgang **nach** dem letzten
-> Pull dieser Serie an diesem Board erledigt wurde, trägt einen verbrauchten Tag. Er wird
-> freigegeben — egal, wann der Tag auftaucht, und so oft, wie ihn etwas zurückschreibt.
+> Eine gezogene Serie, deren jüngster erledigter Durchgang **nach** dem letzten Pull
+> dieser Serie an diesem Board erledigt wurde, trägt einen verbrauchten Pull. Er wird
+> freigegeben — so oft, wie etwas ihn wiederherstellt.
 
 Bis dahin prüfte die Regel nur in dem einen Refresh, der die frische Completion zum
 ersten Mal sah („ID nie zuvor geladen"). Diese Form verlor eine echte Karte (gemessen
@@ -653,14 +687,14 @@ Alle Bedingungen müssen gelten, jeder Zweifel lässt den Tag stehen (ein stehen
 gebliebener Tag kostet einen Zug, eine still zurückgeschobene gezogene Karte bräche das
 Pull-Prinzip):
 
-1. Die Serie ist offen, wiederkehrend und trägt einen Arbeits-Tag.
+1. Die Serie ist offen, wiederkehrend und steht in einer Arbeitsspalte.
 2. Eine erledigte Erinnerung derselben Liste trägt bitgenau das **Anlegedatum** der
    Serie — die Identität eines abgelösten Durchgangs (siehe „Erkannt wird ein Durchgang
    am Anlegedatum" oben). Bis 10.08.2026 stand hier der Titel: Eine auf einem anderen
    Gerät angelegte **und** erledigte gleichnamige Aufgabe konnte damit einer gezogenen
    Karte den Tag entziehen.
 3. Genau **eine** lebende Serie der Liste trägt dieses Anlegedatum. Geprüft unter
-   *allen* Serien der Liste, nicht nur den getaggten — strenger, weil dies die einzige
+   *allen* Serien der Liste, nicht nur den gezogenen — strenger, weil dies die einzige
    Regel ist, die eine Karte bewegt, ohne dass jemand hinsieht.
 4. Der jüngste solche Durchgang wurde **nach** dem letzten an diesem Board
    registrierten Pull der Serie erledigt — und **nach** `activeSince`, dem ersten Lauf
@@ -678,27 +712,21 @@ Sekunde nach der jüngsten Completion, die das Board bereits sieht**: Eine Compl
 die vor dem Pull da war, kann ihn damit nie überstimmen — auch dann nicht, wenn die Uhr
 des erledigenden Geräts vorgeht. Die Gegenrichtung fällt zur sicheren Seite: Geht eine
 Uhr so weit nach, dass eine echte spätere Completion vor dem Pull gestempelt ist, bleibt
-der Tag stehen und kostet nichts. Das alte Gedächtnis der Kantenform (geladene IDs,
+die Karte stehen und kostet nichts. Das alte Gedächtnis der Kantenform (geladene IDs,
 getaggte Spalten) wird beim Upgrade verworfen; `activeSince` beginnt dann jetzt.
 
 Die Freigabe ist bewusst **nicht widerrufbar** und ohne Dialog: Es wird keine
-Nutzer-Entscheidung zurückgenommen, und ein ⌘Z, das ungezogene Arbeit wieder taggt, ist
-genau das, was `RecurringHandoff` auf der Replay-Seite verhindert. Getaktet wird sie wie
-jede andere automatische Antwort über den Korrektur-Ledger (höchstens eine Antwort je
-Karte und Zustand pro zehn Minuten; der Wecker holt Aufgeschobenes nach): Ein Schreiber,
-der den Tag immer wieder zurücklegt, wird ruhig korrigiert, nicht bekämpft.
+Nutzer-Entscheidung zurückgenommen, und ein ⌘Z, das ungezogene Arbeit wieder zöge, ist
+genau das, was `RecurringHandoff` auf der Replay-Seite verhindert. Seit dem Formwechsel
+(13.08.2026) braucht sie auch keine Taktung mehr: Sie schreibt ausschließlich in den
+eigenen Speicher, fasst also weder eine fremde Notiz an noch kann ein fremder Schreiber
+ihr widersprechen.
 
-**Verbleibende, akzeptierte Restlücken:** Wird der Tag *nach* einem Abhaken von Hand auf
-einem anderen Gerät erneut in die Notizen getippt, ist er von einem zurückgeschobenen
-alten Stand nicht zu unterscheiden und wird freigegeben — jetzt auch wiederholt, solange
-niemand an diesem Board zieht. Das verlangt Hashtag-Handarbeit abseits dieses Macs, ist
-selbstheilend (ein Zug hier) und fällt in dieselbe Richtung wie jeder andere
-Zweifelsfall — Karte im Backlog, nie in einer Arbeitsspalte. Dasselbe gilt für ein
-zweites Board (zweiter Mac mit dieser App auf derselben Liste): Pulls leben auf dem
-Board, auf dem sie gemacht wurden; ein dort gemachter Pull nach einer Completion sähe
-hier wie ein fremd zurückgelegter Tag aus. Das Speicherformat (Tag in den Notizen) kennt
-keinen Autor — wer Boards teilt, teilt sie über *eine* Maschine. Festgehalten am
-13.08.2026, abgewogen gegen den gemessenen Schaden der Geisterkarte.
+**Verbleibende, akzeptierte Restlücke:** Ein zweiter Mac mit dieser App auf denselben
+Listen führt seine eigenen Spalten. Pulls leben auf dem Board, auf dem sie gemacht
+wurden; ein dort gemachter Pull ist hier unsichtbar. Wer Boards teilen will, teilt sie
+über *eine* Maschine — der Preis dafür, dass die Spalte niemandem sonst zugänglich ist.
+Festgehalten am 13.08.2026, abgewogen gegen den gemessenen Schaden der Geisterkarte.
 
 Im selben Zug abgesichert: `move` schreibt `isCompleted` nur noch, wenn sich der Wert
 tatsächlich ändert — ein seitlicher Zug hat auf einer laufenden Serie keine
@@ -801,7 +829,7 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   Anzeige aus Titel und Notizen entfernt. Das betrifft **nur die Karten-Darstellung** — in
   EventKit wird nichts zurückgeschrieben, auch nicht beim Umbenennen, und der Editor zeigt
   Notizen und URL-Feld ungefiltert
-- **Status-Hashtag** wird aus der Notizen-Anzeige immer herausgefiltert
+- **Hashtags in Notizen** werden angezeigt wie jedes andere Wort (seit 13.08.2026; vorher filterte die App ihr eigenes Steuerzeichen heraus)
 - **Backlog klappt ab 15 Karten ein** („N weitere anzeigen")
 - **Keine Tooltips auf Karten** (siehe Interaktion) — Tooltips gibt es nur am Chrome:
   Spaltenkopf (Zähler/Regeln) und „+"-Button
@@ -1166,9 +1194,11 @@ Nicht-Sehen.
 ## Bekannte Einschränkungen (Apple-Plattform-Grenzen, kein Designfehler)
 
 - Reminders-Tags, Flags und Unteraufgaben sind nicht über die öffentliche EventKit-API
-  zugänglich — daher die Hashtag-in-Notizen-Lösung statt echter Tags
-- Status ist in der nativen Reminders-Listenansicht nicht auf den ersten Blick sichtbar,
-  erst beim Öffnen der Notizen
+  zugänglich — deshalb war die Spalte bis 13.08.2026 ein Hashtag in den Notizen
+- Die Spalte ist in Reminders gar nicht sichtbar (seit 13.08.2026, siehe „Spalten =
+  eigener Speicher der App"): Sie gehört diesem Board, nicht der Aufgabe. Vorher stand
+  sie als Hashtag in den Notizen und war dort immerhin lesbar — der Preis dafür war, dass
+  jedes andere Programm sie ändern konnte
 - Der Deep-Link zum Bearbeiten-Popover nutzt ein undokumentiertes URL-Schema; fällt es weg,
   öffnet sich ersatzweise die Reminders-App selbst
 - Ausgeschlossene Listen werden über `calendarIdentifier` gemerkt. Wird ein Konto entfernt

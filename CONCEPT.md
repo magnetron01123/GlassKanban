@@ -93,8 +93,9 @@ dieses Abschnitts bleibt unverändert: Backlog bekommt bewusst **keinen** eigene
 sondern bedeutet immer „kein Status-Tag vorhanden" — zwei verschiedene Darstellungen für
 denselben Zustand würden sonst auseinanderlaufen können.
 
-**Geplanter Formwechsel (13.08.2026, entschieden zu planen — nicht gebaut): Der Status
-verlässt die Notizen.** Der Geisterkarten-Komplex (SPEC.md, „Regel daraus"; PR #46) hat
+**Vollzogener Formwechsel (13.08.2026 geplant und gebaut): Der Status verlässt die
+Notizen.** Dieser Abschnitt beschreibt ab hier die Herleitung; das gebaute Verhalten
+steht in SPEC.md („Spalten = eigener Speicher der App"). Der Geisterkarten-Komplex (SPEC.md, „Regel daraus"; PR #46) hat
 die Grenze dieses Datenmodells vermessen: Ein Status, der in einem Feld wohnt, das auch
 anderen Programmen gehört, kann von jedem davon bewegt werden. Die App kann das erkennen
 und beantworten — verhindern kann sie es nur, wenn der Status in einem Speicher liegt,
@@ -111,14 +112,21 @@ benannt:
   (unterwegs den Tag von Hand tippen) und die geschenkte Gerätesynchronisation für eine
   spätere iOS-App.
 
-Die Abwägung fiel für den Wechsel, **unter einer Vorbedingung**: Der Nutzer bestätigt
-vor dem Bau, dass er den mobilen Pull real nicht nutzt. Zielbild, Messplan, Migration
-und die verworfenen Zwischenformen (insbesondere der Hybrid-Import, der das Loch als
-„Import-Kanal" zurückgebracht hätte) stehen in BACKLOG.md („Geplanter Formwechsel").
+Die Abwägung fiel für den Wechsel, unter einer Vorbedingung, die der Nutzer am
+13.08.2026 bestätigt hat: Der mobile Pull wird real nicht genutzt. Die verworfenen
+Zwischenformen — insbesondere der Hybrid-Import, der das Loch als „Import-Kanal"
+zurückgebracht hätte — stehen in BACKLOG.md.
+
+**Ein zweiter Preis kam beim Bauen dazu:** Der Speicher gehört *einem Mac*. Zwei Rechner
+mit dieser App auf denselben Listen führen getrennte Spalten. Das ist keine Nachlässigkeit,
+sondern dieselbe Eigenschaft von vorne gelesen: Ein Speicher, den ein zweites Gerät
+erreichen kann, ist ein Speicher, den auch ein zweites *Programm* erreichen kann.
+
 Ausdrücklich festgehalten: Der Wechsel löst den Spaltensprung, **nicht den
 Notizverlust** — der Notiztext bleibt gemeinsames Territorium, und gegen einen fremden
-Schreiber, der ihn überschreibt, hilft nur das Abstellen der Quelle. Bis zum Umbau
-beschreibt dieser Abschnitt das gebaute Verhalten.
+Schreiber, der ihn überschreibt, hilft nur das Abstellen der Quelle. Immerhin wird er
+seither *ganz* verteidigt: Die Halbregel, die einen Notiz-Restore nie in eine
+Arbeitsspalte heben durfte, ist mit ihrem Grund entfallen.
 
 **Schreiben (beim Verschieben per Drag & Drop in der App):**
 
