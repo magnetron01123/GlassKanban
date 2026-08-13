@@ -274,6 +274,73 @@ Thema selbst öffnet:
   „Legacy-Altlast" mehr, sondern akzeptierte Eingabe für alle, die den Tag unterwegs von
   Hand tippen.
 
+## Geplanter Formwechsel: Status verlässt die Notizen (13.08.2026 — geplant, nicht umgesetzt)
+
+**Entscheidung des Nutzers vom 13.08.2026: planen, noch nicht bauen.** Entstanden aus dem
+Geisterkarten-Komplex (PR #46): Solange der Spaltenstatus als Hashtag in den Notizen wohnt,
+kann jedes Programm mit Schreibrecht auf Reminders eine Karte bewegen. Die seit 13.08.
+stehende Abwehr (Zustandsregel, Ledger-Kette) deckt alle gemessenen Pfade ab — aber nur ein
+Status, den kein fremdes Programm erreichen kann, macht Spaltensprünge **strukturell
+unmöglich**. Herleitung und Prinzipien-Abwägung in CONCEPT.md („Geplanter Formwechsel").
+
+**Zielbild:**
+
+- Status (`next`/`inProgress`) liegt in einem app-eigenen, lokalen Speicher je
+  Erinnerungs-ID (Application Support, gebundelt und tolerant gelesen wie
+  `tagReleaseMemory`). Backlog bleibt „kein Eintrag", Erledigt bleibt `isCompleted` —
+  gespeichert ist also nur, welche ein bis drei Karten gerade gezogen sind (das WIP-Limit
+  begrenzt genau diese Menge). Unbekannte oder verwaiste IDs fallen nach Backlog — die
+  sichere Richtung, die die App überall wählt.
+- Die Notizen werden reiner Nutzerinhalt. Die App schreibt nie wieder in ein Feld, das
+  auch anderen gehört (einzige Ausnahme bleibt `isCompleted` beim Erledigen).
+- Die **stehende Freigaberegel bleibt**, nur lokal: Ein externes Abhaken lässt den lokalen
+  Status der Serie zurück wie heute den Tag — jüngste Completion nach letztem Pull ⇒
+  lokaler Status wird gelöscht. Ohne Reminders-Schreibung, ohne Zaun-Frage, ohne fremde
+  Interferenz.
+- Der `CorrectionLedger` bleibt unverändert für Titel, Notiztext, URL und Fälligkeit —
+  der Formwechsel löst den Spaltensprung, **nicht den Notizverlust** (der Notiztext bleibt
+  in Reminders und damit im Zugriff jedes Schreibers; das löst nur das Abstellen der
+  Quelle, siehe „Fremde Schreiber").
+
+**Was ersatzlos stirbt:** das Schreiben von Status-Tags, die Tag-Hygiene, die
+Wortgrenzen-Erkennung als sicherheitskritische Stelle, die Notes-Richtungsregel des
+Ledgers für Tags — ein erheblicher Teil der kompliziertesten Logik der App existiert nur,
+weil der Status in fremdem Territorium wohnt.
+
+**Was der Nutzer verliert (der Preis, ausdrücklich):** der mobile Pull — unterwegs
+`#next` in die Reminders-Notizen tippen zieht dann nichts mehr. **Vorbedingung vor dem
+Bau: der Nutzer bestätigt, dass er diesen Weg real nicht nutzt.** Die spätere iOS-App
+(unten) bräuchte eigene Status-Synchronisation (CloudKit/iCloud-KV) statt sie über
+Reminders geschenkt zu bekommen.
+
+**Messungen vor dem Bau** (Projektregel: erst messen, dann bauen):
+
+1. Stabilität von `calendarItemIdentifier` über iCloud-Resync, Geräteneustart,
+   Listen-Umbenennung und **Listenwechsel** einer Erinnerung (bekannt riskant — Apple
+   dokumentiert Wechsel als möglichen ID-Bruch). Fallrichtung bei Bruch ist Backlog,
+   kostet einen Zug; gemessen werden muss, *wie oft* das praktisch eintritt.
+2. Verhalten beim Weiterrollen einer Serie (ID bleibt laut Messung vom 08.08. erhalten —
+   gegenprüfen, dass das auch über einen Resync gilt).
+
+**Migrationsplan (einmalig, beim ersten Start des neuen Builds):**
+
+1. Bestehende Tags lesen (kanonische und Legacy-Formen) und in den lokalen Speicher
+   importieren.
+2. Danach ein einmaliger, getakteter Aufräumlauf, der die Tags aus den Notizen entfernt
+   (nur beschreibbare Listen; dieselbe Rücksicht wie jede Korrektur heute). Ab dann werden
+   Tags weder geschrieben noch gelesen.
+3. Kein Rollback-Pfad nötig: Der alte Build liest Notizen ohne Tags schlicht als Backlog.
+
+**Geprüft und verworfen (13.08.2026):**
+
+- **Hybrid: lokal führend, aber neu auftauchende Notizen-Tags einmalig als Pull
+  importieren** (hätte den mobilen Pull erhalten) — verworfen: Genau darüber könnte ein
+  fremder Schreiber mit altem Notizen-Stand wieder Pulls injizieren; das Loch, das der
+  Formwechsel schließen soll, wäre als „Import-Kanal" zurück. Der Wert des Formwechsels
+  ist die harte Kante, nicht ein weiterer Filter.
+- **Backup/Export des Pull-Zustands** — verworfen als unnötig: Der maximale Verlust ist
+  der Inhalt zweier Arbeitsspalten unter WIP-Limit, wiederhergestellt in zwei Zügen.
+
 ## Undo bei Wiederholungen (10.08.2026)
 
 Verworfen beim Umbau des Replay-Zauns auf eine Reihenfolge (Regel in SPEC.md,

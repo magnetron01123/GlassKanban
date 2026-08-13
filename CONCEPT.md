@@ -93,6 +93,33 @@ dieses Abschnitts bleibt unverändert: Backlog bekommt bewusst **keinen** eigene
 sondern bedeutet immer „kein Status-Tag vorhanden" — zwei verschiedene Darstellungen für
 denselben Zustand würden sonst auseinanderlaufen können.
 
+**Geplanter Formwechsel (13.08.2026, entschieden zu planen — nicht gebaut): Der Status
+verlässt die Notizen.** Der Geisterkarten-Komplex (SPEC.md, „Regel daraus"; PR #46) hat
+die Grenze dieses Datenmodells vermessen: Ein Status, der in einem Feld wohnt, das auch
+anderen Programmen gehört, kann von jedem davon bewegt werden. Die App kann das erkennen
+und beantworten — verhindern kann sie es nur, wenn der Status in einem Speicher liegt,
+den nur sie erreicht. Hier stehen zwei Prinzipien gegeneinander, und die Spannung gehört
+benannt:
+
+- **Für den Wechsel** sprechen Minimalismus und psychologische Wirksamkeit: `#next` in
+  den Notizen ist internes Datenformat, das in Nutzerinhalt leckt — sichtbar in
+  Reminders, am iPhone, für die zweite Person der geteilten Liste. Und eine Karte, die
+  sich strukturell nicht von fremder Hand bewegen kann, ist die stärkste Form von
+  „Bewegung gehört Ereignissen": Vertrauen entsteht, wenn Bewegung nur von der eigenen
+  Hand kommt.
+- **Dagegen** spricht der eine reale Nutzen des Notizen-Formats: der mobile Pull
+  (unterwegs den Tag von Hand tippen) und die geschenkte Gerätesynchronisation für eine
+  spätere iOS-App.
+
+Die Abwägung fiel für den Wechsel, **unter einer Vorbedingung**: Der Nutzer bestätigt
+vor dem Bau, dass er den mobilen Pull real nicht nutzt. Zielbild, Messplan, Migration
+und die verworfenen Zwischenformen (insbesondere der Hybrid-Import, der das Loch als
+„Import-Kanal" zurückgebracht hätte) stehen in BACKLOG.md („Geplanter Formwechsel").
+Ausdrücklich festgehalten: Der Wechsel löst den Spaltensprung, **nicht den
+Notizverlust** — der Notiztext bleibt gemeinsames Territorium, und gegen einen fremden
+Schreiber, der ihn überschreibt, hilft nur das Abstellen der Quelle. Bis zum Umbau
+beschreibt dieser Abschnitt das gebaute Verhalten.
+
 **Schreiben (beim Verschieben per Drag & Drop in der App):**
 
 | Ziel-Spalte | Aktion in den Notizen |
