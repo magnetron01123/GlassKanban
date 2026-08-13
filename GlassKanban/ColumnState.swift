@@ -47,6 +47,24 @@ struct ColumnState: Equatable {
     /// Pinned by test.
     enum Lane: String, CaseIterable {
         case next, inProgress
+
+        /// The lane a column corresponds to, or nil for the two columns this
+        /// format deliberately cannot hold: Backlog is the absence of an
+        /// entry, and completion belongs to EventKit.
+        init?(_ status: KanbanStatus) {
+            switch status {
+            case .next: self = .next
+            case .inProgress: self = .inProgress
+            case .backlog, .done: return nil
+            }
+        }
+
+        var status: KanbanStatus {
+            switch self {
+            case .next: .next
+            case .inProgress: .inProgress
+            }
+        }
     }
 
     struct Pull: Equatable {
