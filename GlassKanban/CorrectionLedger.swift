@@ -278,18 +278,18 @@ struct CorrectionLedger: Equatable {
     /// the direction whose false positive is cheap and quiet.
     private static func restoring(_ value: Value, over state: CardState, field: Field) -> Bool {
         switch field {
-        case .title, .url:
+        case .title, .url, .notes:
             // Both directions. High-cardinality text: an exact byte match is
             // real evidence, and being wrong costs a word the user retypes.
+            //
+            // Notes joined this group on 13.08.2026. While the column lived in
+            // the notes, restoring them could lift a card into a working lane
+            // nobody pulled it into, so the rule only allowed a restore that
+            // left the column alone or let the card fall to Backlog. The
+            // column has its own storage now; the notes are the user's text
+            // and nothing else, so half a defence is no longer the careful
+            // choice — it is just half a defence.
             return true
-        case .notes:
-            // An automatic write may leave the column alone or let the card
-            // fall to Backlog — it must never lift it into a working lane.
-            // That is the same doubt the whole board resolves the same way.
-            guard case let .text(restored) = value else { return false }
-            let current = StatusTagger.status(fromNotes: state.notes, isCompleted: state.isCompleted)
-            let target = StatusTagger.status(fromNotes: restored, isCompleted: state.isCompleted)
-            return target == current || target == .backlog
         case .due:
             // Only a date that *vanished* comes back. Restoring a *moved*
             // date would let the board delete a deadline the user just set,

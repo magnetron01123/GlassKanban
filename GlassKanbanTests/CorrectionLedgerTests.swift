@@ -212,39 +212,45 @@ final class CorrectionLedgerTests: XCTestCase {
 
     /// The card keeps its column: prose restored onto a card in "Als
     /// Nächstes" is allowed — the case the single-field build refused.
-    func testNotesMayBeRestoredWhenTheColumnStaysTheSame() {
+    /// Notes are defended in both directions since 13.08.2026. While the
+    /// column lived in them, a restore could lift a card into a working lane
+    /// nobody pulled it into, so only a restore that left the column alone or
+    /// let the card fall to Backlog was allowed. The column has its own
+    /// storage now, and the note is the user's text — half a defence would
+    /// just be half a defence.
+    func testNotesAreRestoredInBothDirections() {
         var ledger = CorrectionLedger()
         ledger.record(cardID: "c", field: .notes,
-                      replaced: .text("#next"), wrote: .text("Prosa\n#next"), at: t0)
-        let echoes = ledger.pendingEchoes(
-            for: "c", state: state(notes: "#next"), now: t0.addingTimeInterval(60))
-        XCTAssertEqual(echoes[.notes], .text("Prosa\n#next"))
+                      replaced: .text("Alter Text"), wrote: .text("Neuer Text"), at: t0)
+        XCTAssertEqual(
+            ledger.pendingEchoes(for: "c", state: state(notes: "Alter Text"),
+                                 now: t0.addingTimeInterval(60))[.notes],
+            .text("Neuer Text"))
     }
 
-    func testNotesMayBeRestoredWhenTheCardFallsToBacklog() {
+    /// The direction that used to be forbidden: text this board wrote comes
+    /// back even when a foreign writer emptied the field. Nothing about it can
+    /// move a card any more, so there is nothing left to fear here.
+    func testAnEmptiedNoteIsFilledBackIn() {
         var ledger = CorrectionLedger()
         ledger.record(cardID: "c", field: .notes,
-                      replaced: .text("#next"), wrote: .text(nil), at: t0)
-        let echoes = ledger.pendingEchoes(
-            for: "c", state: state(notes: "#next"), now: t0.addingTimeInterval(60))
-        XCTAssertEqual(echoes[.notes], .text(nil))
+                      replaced: .text(nil), wrote: .text("Die Notiz des Nutzers"), at: t0)
+        XCTAssertEqual(
+            ledger.pendingEchoes(for: "c", state: state(notes: nil),
+                                 now: t0.addingTimeInterval(60))[.notes],
+            .text("Die Notiz des Nutzers"))
     }
 
-    /// Never into a working lane: that would be pulling work nobody pulled.
-    func testNotesAreNotRestoredIntoAWorkingLane() {
-        let ledger = ledgerAfterPull()
-        let echoes = ledger.pendingEchoes(
-            for: "shop", state: state(notes: nil), now: t0.addingTimeInterval(60))
-        XCTAssertNil(echoes[.notes], "an automatic write must never pull a card into a lane")
-    }
-
-    func testNotesAreNotRestoredFromNextToInProgress() {
+    /// A hashtag in a note is now ordinary text like any other — it carries no
+    /// meaning for this board and gets no special treatment.
+    func testAHashtagInANoteIsJustText() {
         var ledger = CorrectionLedger()
         ledger.record(cardID: "c", field: .notes,
                       replaced: .text("#next"), wrote: .text("#inprogress"), at: t0)
-        let echoes = ledger.pendingEchoes(
-            for: "c", state: state(notes: "#next"), now: t0.addingTimeInterval(60))
-        XCTAssertNil(echoes[.notes])
+        XCTAssertEqual(
+            ledger.pendingEchoes(for: "c", state: state(notes: "#next"),
+                                 now: t0.addingTimeInterval(60))[.notes],
+            .text("#inprogress"))
     }
 
     /// On a completed reminder both sides read as Done, so prose comes back.

@@ -136,12 +136,6 @@ final class RemindersStore: ObservableObject {
     /// on every single refresh.
     private var lastSavedCorrections = CorrectionLedger.load()
 
-    /// The notes of every card that carried a working-lane tag at the last
-    /// refresh. Small by construction — a board only has so much work in
-    /// flight — and the reason a tag can be defended no matter who took it
-    /// off: without it, only the app's own moves would ever be noticed.
-    private var taggedNotesByID: [String: String] = [:]
-
     /// The release rule's persisted memory: when each series was last pulled
     /// on this board, and since when the standing rule has been counting.
     /// Written when the user pulls (see `move`) and pinned once on the first
@@ -540,9 +534,14 @@ final class RemindersStore: ObservableObject {
         for reminder in fetched where reminder.isCompleted {
             columns.release(reminder.calendarItemIdentifier)
         }
-        noteWorkingTagsTakenOffElsewhere(fetched)
-        let released = releasedSeriesIDs(incomplete: incomplete, completed: completed)
-        applyCorrections(fetched, releasing: released)
+        // A pull the series has already spent gives its lane back — the same
+        // standing rule as before, now written into the board's own record
+        // instead of into somebody's notes. No pacing, no undo fence, no
+        // regard for write permissions: nothing outside this app is touched.
+        for seriesID in releasedSeriesIDs(incomplete: incomplete, completed: completed) {
+            columns.release(seriesID)
+        }
+        applyCorrections(fetched)
 
         // The list a finished task came from is thrown away everywhere else —
         // a completed card only needs its title. The stats view is the one
@@ -716,34 +715,6 @@ final class RemindersStore: ObservableObject {
         persistColumns()
     }
 
-    /// Books a working-lane tag that came off somewhere else — on the phone,
-    /// in Reminders, by another program — as a displacement like any other.
-    ///
-    /// Deliberately the *only* place where something the board did not write
-    /// itself enters the ledger, and only because the direction is safe: all
-    /// that can ever be restored from such a booking is the absence of a tag.
-    /// Booking observed changes in general was designed and discarded — a
-    /// writer that pushes more often than the user would get its stale values
-    /// adopted and then enforced with the board's own authority.
-    private func noteWorkingTagsTakenOffElsewhere(_ reminders: [EKReminder], now: Date = .now) {
-        var stillTagged: [String: String] = [:]
-        for reminder in reminders {
-            let cardID = reminder.calendarItemIdentifier
-            let notes = reminder.notes
-            let status = StatusTagger.status(fromNotes: notes, isCompleted: reminder.isCompleted)
-            if status == .next || status == .inProgress, let notes {
-                stillTagged[cardID] = notes
-                continue
-            }
-            if let previous = taggedNotesByID[cardID], previous != notes {
-                corrections.record(
-                    cardID: cardID, field: .notes,
-                    replaced: .text(previous), wrote: .text(notes), at: now)
-            }
-        }
-        taggedNotesByID = stillTagged
-    }
-
     /// Which recurring series have a tag left over from a turn that has
     /// already been completed. Pure decision; the writing happens in
     /// `applyCorrections` with everything else.
@@ -771,16 +742,17 @@ final class RemindersStore: ObservableObject {
             deliberatelyMoved: deliberatelyMovedSinceRefresh)
     }
 
-    /// The one place the board writes without being asked: an echo of its own
-    /// write, a pull the series has spent, and the data hygiene — applied in
-    /// that order, then saved once per card.
+    /// The one place the board writes to Reminders without being asked: an
+    /// echo of its own write, and the one-off removal of the old status tags.
     ///
-    /// Order matters and carries three fixes: booking runs before answering
-    /// (a third state withdraws the entry, so a user who changed their mind
-    /// is never fought); hygiene runs *last, on the result*, so a restored
-    /// value is normalised rather than refused and no second pass has to
-    /// rewrite what this one just wrote.
-    private func applyCorrections(_ reminders: [EKReminder], releasing released: Set<String>, now: Date = .now) {
+    /// Since 13.08.2026 columns are not part of this any more — they live in
+    /// the board's own file, so a spent pull and a completed card are handled
+    /// there, without touching anybody's reminder. What is left here defends
+    /// the four fields the *editor* writes.
+    ///
+    /// Order matters: booking runs before answering, so a third state
+    /// withdraws the entry and a user who changed their mind is never fought.
+    private func applyCorrections(_ reminders: [EKReminder], now: Date = .now) {
         var answered = 0
         var dirty = false
         for reminder in reminders {
@@ -799,14 +771,10 @@ final class RemindersStore: ObservableObject {
             // After a repeating card is completed, this identifier belongs to
             // the *next* turn. Undo refuses to write through it and says so;
             // an automatic correction has even less business there, and must
-            // stay silent about it (no dialog, ever). The one exception is
-            // the tag release: it writes precisely what the fence protects —
-            // that the next turn stays unpulled — and blocking it here is
-            // what once left a stale `#next` standing on a series completed
-            // in-app until the user happened to drag it (measured
-            // 12.–13.08.2026, "Einkaufen").
-            let fenced = recurringHandoff.refusesUnattributedWrite(to: cardID)
-            guard !fenced || released.contains(cardID) else { continue }
+            // stay silent about it (no dialog, ever). No exception is needed
+            // any more: the one write that used to need one — releasing a
+            // spent pull — no longer goes through Reminders at all.
+            guard !recurringHandoff.refusesUnattributedWrite(to: cardID) else { continue }
 
             var targetNotes = reminder.notes
             var targetTitle = reminder.title
@@ -814,7 +782,7 @@ final class RemindersStore: ObservableObject {
             var targetDue = reminder.dueDateComponents
             var touched: Set<CorrectionLedger.Field> = []
 
-            if !fenced, answered < Self.maxAnsweredCardsPerRefresh {
+            if answered < Self.maxAnsweredCardsPerRefresh {
                 let echoes = corrections.pendingEchoes(for: cardID, state: state, now: now)
                 for (field, value) in echoes {
                     switch (field, value) {
@@ -843,29 +811,18 @@ final class RemindersStore: ObservableObject {
                 if !touched.isEmpty { answered += 1 }
             }
 
-            // A pull the series has spent. A standing condition since
-            // 13.08.2026, so it needs no edge exemption anymore: it is
-            // re-decided on every refresh and paced below like every other
-            // answer — a writer that keeps restoring the tag is corrected
-            // calmly, at most once per cooldown.
-            if released.contains(cardID) {
-                targetNotes = StatusTagger.rewrittenNotes(targetNotes, for: .backlog)
-                touched.insert(.notes)
-            }
-
-            // Hygiene last, on the result: one tag of the current spelling,
-            // and none at all on a completed reminder.
-            if StatusTagger.needsHygiene(notes: targetNotes, isCompleted: reminder.isCompleted) {
-                let status = StatusTagger.status(fromNotes: targetNotes, isCompleted: reminder.isCompleted)
-                targetNotes = StatusTagger.rewrittenNotes(targetNotes, for: status)
+            // The one-off cleanup: a status tag left over from the form this
+            // board used until 13.08.2026 is cut out of the notes. The
+            // work-list is the presence of a tag itself, so this needs no
+            // progress file — it is idempotent, resumable, and a half-finished
+            // run leaves nothing to repair.
+            if StatusTagger.hasStatusTag(targetNotes) {
+                targetNotes = targetNotes.map(StatusTagger.removingTags).flatMap { $0.isEmpty ? nil : $0 }
                 touched.insert(.notes)
             }
 
             guard !touched.isEmpty else { continue }
-            // Every field that is about to change has to be allowed to. The
-            // release too: its write books into the ledger like any other,
-            // so a byte-identical restoration inside the cooldown is
-            // deferred, and the cooldown wake-up re-decides it.
+            // Every field that is about to change has to be allowed to.
             let paced = touched.filter { field in
                 corrections.permitsWrite(cardID: cardID, field: field, state: state, now: now)
             }
