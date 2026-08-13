@@ -19,17 +19,6 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
         }
     }
 
-    /// The hashtag written into the reminder notes for this status.
-    /// Backlog and Done deliberately have no tag: Backlog means "no tag",
-    /// Done is expressed via `isCompleted`.
-    var tag: String? {
-        switch self {
-        case .next: "#next"
-        case .inProgress: "#inprogress"
-        case .backlog, .done: nil
-        }
-    }
-
     /// How much a card in this lane reveals. The information gradient is the
     /// board's focus mechanism: the working lanes carry everything, the
     /// backlog carries what you need to decide, and finished work carries

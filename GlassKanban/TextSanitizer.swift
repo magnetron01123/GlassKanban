@@ -27,19 +27,19 @@ enum TextSanitizer {
         cleanedNoteLines(raw).prefix(maxLines).joined(separator: "\n")
     }
 
-    /// Note lines with URLs and status tags stripped, blanks dropped.
+    /// Note lines with URLs stripped, blanks dropped.
+    ///
+    /// Status tags were stripped here too until 13.08.2026, back when the
+    /// board wrote them: hiding its own control token was the honest thing to
+    /// do. The board writes no tags any more, so anything that looks like one
+    /// is the user's own text — and quietly hiding a word somebody typed is
+    /// the opposite of honest.
     private static func cleanedNoteLines(_ raw: String?) -> [String] {
         guard let raw else { return [] }
         return raw
             .components(separatedBy: .newlines)
             .map { line in
-                // Tags come off through the same standalone rule the rest of
-                // the app reads by. Applying the patterns raw deleted text
-                // that is provably not a tag — "#next-steps" showed as
-                // "-steps", "#progress-report" as "-report" — and, because
-                // this text also feeds the card's search haystack, made those
-                // cards unfindable by the very words they contain.
-                var cleaned = StatusTagger.removingTags(line)
+                var cleaned = line
                 cleaned.replace(urlRegex, with: "")
                 cleaned.replace(#/\s{2,}/#, with: " ")
                 return cleaned.trimmingCharacters(in: .whitespaces)

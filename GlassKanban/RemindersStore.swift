@@ -927,7 +927,7 @@ final class RemindersStore: ObservableObject {
             // what the card shows is a preview, what Find searches is the
             // reminder.
             searchText: [
-                reminder.notes.map(StatusTagger.removingTags),
+                reminder.notes,
                 reminder.url?.absoluteString,
             ].compactMap { $0 }.joined(separator: "\n"),
             dueDate: reminder.dueDateComponents.flatMap { Foundation.Calendar.current.date(from: $0) },
@@ -1567,7 +1567,7 @@ final class RemindersStore: ObservableObject {
         let components = reminder.dueDateComponents
         return EditableTicket(
             title: reminder.title ?? "",
-            notes: StatusTagger.removingTags(reminder.notes ?? ""),
+            notes: reminder.notes ?? "",
             url: reminder.url?.absoluteString ?? "",
             dueDate: components.flatMap { Foundation.Calendar.current.date(from: $0) },
             hasDueTime: components?.hour != nil,
