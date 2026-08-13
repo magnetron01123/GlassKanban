@@ -137,10 +137,20 @@ zurückgeschriebener Tag auf einer *erledigten* Erinnerung nichts Sichtbares än
 
 **Verbindliche Regel (`CorrectionLedger`):**
 
-> Das Board merkt sich, welchen Wert es selbst über welchen geschrieben hat. Steht in einem
-> Feld später wieder buchstabengenau der verdrängte Wert, schreibt das Board seinen Wert
-> zurück — höchstens 24 Stunden lang, und **nie einen Wert, den der Nutzer nicht selbst an
-> diesem Board eingegeben hat**.
+> Das Board merkt sich, welche Werte es selbst überschrieben hat — je Feld eine **Kette**
+> der zuletzt verdrängten Werte, nicht nur den letzten (seit 13.08.2026, höchstens acht).
+> Steht in einem Feld später wieder buchstabengenau *einer* dieser verdrängten Werte,
+> schreibt das Board seinen jüngsten Wert zurück — höchstens 24 Stunden lang, und **nie
+> einen Wert, den der Nutzer nicht selbst an diesem Board eingegeben hat**.
+
+**Warum eine Kette (gemessen 12.–13.08.2026):** Das Board schreibt ein Feld mehrfach um —
+ein Zug bucht eine Verdrängung, die Tag-Hygiene eine zweite, ein Edit eine dritte —,
+während der fremde Schreiber irgendeine ältere Kopie zurückschiebt. Mit nur einem
+gemerkten Wert las sich genau diese Kopie als „dritter Zustand", der Eintrag zog sich
+zurück, und die Verteidigung löste sich in dem Moment auf, in dem sie gebraucht wurde.
+Die Kette erweitert nur, was als Echo *erkannt* wird — zurückgeschrieben wird weiterhin
+ausschließlich der jüngste eigene Wert, unter denselben Richtungsregeln. Ein Wert, der in
+keiner Kette steht, bleibt ein dritter Zustand und zieht den Eintrag zurück wie bisher.
 
 **Die Regel fragt nie, *wer* geschrieben hat** — sie kann es nicht, EventKit gibt keine
 Herkunft heraus, und sie soll es auch nicht. Erkannt wird ein *Muster* (ein verdrängter
@@ -549,10 +559,17 @@ nie „wie lange her?". Es gibt nichts zu kalibrieren, und sie übersteht Zeitum
 Uhrabweichung und ein aus einem Backup zurückgespieltes Einstellungsfile — was eine
 Zeitspanne alles nicht tut.
 
-Ein *automatischer* Schreibvorgang — eine Echo-Antwort, die Hygiene, eine verbrauchte
-Freigabe — trägt keinen Undo-Eintrag und damit keinen Platz in dieser Reihenfolge. Für ihn
-gilt weiterhin die einfache Frage, ob die ID noch auf einen ungezogenen Durchgang zeigt;
-dort gibt ein eigener Zug des Nutzers sie tatsächlich zurück.
+Ein *automatischer* Schreibvorgang — eine Echo-Antwort, die Hygiene — trägt keinen
+Undo-Eintrag und damit keinen Platz in dieser Reihenfolge. Für ihn gilt weiterhin die
+einfache Frage, ob die ID noch auf einen ungezogenen Durchgang zeigt; dort gibt ein
+eigener Zug des Nutzers sie tatsächlich zurück.
+
+**Die eine Ausnahme ist die Tag-Freigabe** (13.08.2026): Sie schreibt genau das, was der
+Zaun schützt — dass der nächste Durchgang ungezogen bleibt. Der Zaun blockierte sie
+trotzdem, weil sie ein automatischer Schreibvorgang ist, und genau daran blieb am
+12.08.2026 ein von einem fremden Schreiber zurückgeschobenes `#next` auf einer in der App
+erledigten Serie stehen, bis der Nutzer zufällig gezogen hätte. Die Freigabe darf deshalb
+durch den Zaun schreiben; Echo-Antworten und Hygiene bleiben davor stehen.
 
 Ebenfalls an dieser Stelle: Die Erledigt-Settle-Animation wird für wiederkehrende Karten
 **nicht** mehr auf die gezogene ID gelegt — sie gehörte sonst der zurückkehrenden
@@ -599,7 +616,7 @@ einander zu Durchgängen. Passt keine oder mehr als eine Serie, gilt „kein Bew
 ist dann erlaubt (`RecurringSeriesMatch`).
 
 Dieselbe Identität trägt seit 10.08.2026 auch die **stille** Hälfte — die Tag-Freigabe
-weiter unten, Bedingungen 3 und 5. Dort ist „kein Beweis" die andere Richtung: Der Tag
+weiter unten, Bedingungen 2 und 3. Dort ist „kein Beweis" die andere Richtung: Der Tag
 bleibt stehen. Live gegen echte iCloud-Daten geprüft, beide Richtungen: eine gleichnamige
 fremde Aufgabe, angelegt und erledigt zwischen zwei Refreshes, ließ den Tag der gezogenen
 Karte stehen; die Serie selbst extern abgehakt gab ihn binnen eines Syncs zurück.
@@ -613,48 +630,75 @@ weiterlaufende Serie tragen beide weiterhin den Tag. Der nächste, nie gezogene 
 stand damit in einer Arbeitsspalte, Woche für Woche.
 
 **Regel daraus (`RecurringTagRelease`):** Der Pull, für den der Tag stand, wurde vom
-erledigten Durchgang verbraucht — die App gibt den Tag der Serie deshalb beim nächsten
-Sync still zurück (Karte → Backlog), aber nur, wenn das *beweisbar* ist. Alle fünf
-Bedingungen müssen gelten, jeder Zweifel lässt den Tag stehen (ein stehen gebliebener Tag
-kostet einen Zug, eine still zurückgeschobene gezogene Karte bräche das Pull-Prinzip):
+erledigten Durchgang verbraucht — die App gibt den Tag der Serie deshalb still zurück
+(Karte → Backlog), aber nur, wenn das *beweisbar* ist. Seit 13.08.2026 ist die Regel ein
+**stehender Zustand, keine Kante mehr**:
 
-1. Die Serie ist offen, wiederkehrend und trägt einen Status-Tag.
-2. Der vorige Refresh sah **denselben Tag auf derselben ID** — der Tag ist älter als
-   dieser Refresh, niemand hat gerade erst gezogen.
-3. Eine erledigte Erinnerung ist aufgetaucht, deren **ID nie zuvor geladen wurde** — der
-   Fingerabdruck eines frisch abgelösten Durchgangs — und deren **Anlegedatum** sie als
-   Durchgang genau dieser Serie ausweist (dieselbe Liste, bitgenau dasselbe Datum; siehe
-   „Erkannt wird ein Durchgang am Anlegedatum" oben). Bis 10.08.2026 stand hier der
-   Titel: Eine auf einem anderen Gerät zwischen zwei Refreshes angelegte **und** erledigte
-   gleichnamige Aufgabe konnte damit einer gezogenen Karte den Tag entziehen.
-4. Der Nutzer hat die Serie seit dem letzten Refresh nicht selbst bewegt — ein Zug im
-   Fenster zwischen Sync und Refresh bleibt ein Zug.
-5. Genau **eine** lebende Serie der Liste trägt das Anlegedatum des Durchgangs. Geprüft
-   wird das unter *allen* Serien der Liste, nicht nur den getaggten — strenger, weil dies
-   die einzige Regel ist, die eine Karte bewegt, ohne dass jemand hinsieht.
+> Eine Serie mit Arbeits-Tag, deren jüngster erledigter Durchgang **nach** dem letzten
+> Pull dieser Serie an diesem Board erledigt wurde, trägt einen verbrauchten Tag. Er wird
+> freigegeben — egal, wann der Tag auftaucht, und so oft, wie ihn etwas zurückschreibt.
+
+Bis dahin prüfte die Regel nur in dem einen Refresh, der die frische Completion zum
+ersten Mal sah („ID nie zuvor geladen"). Diese Form verlor eine echte Karte (gemessen
+12.–13.08.2026, „Einkaufen"): Durchgang um 22:40 in der App erledigt, Tag sauber
+entfernt — um 22:49 schob ein fremder Schreiber (der Kalender-Client aus der Messung vom
+10.08.) den alten Stand mit `#next` auf die weitergerollte Serie zurück. Die App hatte
+den sauberen Zwischenzustand nie gesehen, die Completion-ID galt fortan als bekannt, die
+Kante war verbraucht — und keine Instanz stellte die Frage je wieder. Der nie gezogene
+nächste Durchgang stand dauerhaft in „Als Nächstes". Ein Zustand kennt dieses Problem
+nicht: Kaltstart, Schlaf-Lücke oder ein Stunden später zurückgeschobener Tag landen alle
+in derselben Prüfung.
+
+Alle Bedingungen müssen gelten, jeder Zweifel lässt den Tag stehen (ein stehen
+gebliebener Tag kostet einen Zug, eine still zurückgeschobene gezogene Karte bräche das
+Pull-Prinzip):
+
+1. Die Serie ist offen, wiederkehrend und trägt einen Arbeits-Tag.
+2. Eine erledigte Erinnerung derselben Liste trägt bitgenau das **Anlegedatum** der
+   Serie — die Identität eines abgelösten Durchgangs (siehe „Erkannt wird ein Durchgang
+   am Anlegedatum" oben). Bis 10.08.2026 stand hier der Titel: Eine auf einem anderen
+   Gerät angelegte **und** erledigte gleichnamige Aufgabe konnte damit einer gezogenen
+   Karte den Tag entziehen.
+3. Genau **eine** lebende Serie der Liste trägt dieses Anlegedatum. Geprüft unter
+   *allen* Serien der Liste, nicht nur den getaggten — strenger, weil dies die einzige
+   Regel ist, die eine Karte bewegt, ohne dass jemand hinsieht.
+4. Der jüngste solche Durchgang wurde **nach** dem letzten an diesem Board
+   registrierten Pull der Serie erledigt — und **nach** `activeSince`, dem ersten Lauf
+   dieser Regelform. Ältere Completions sind keine Evidenz: Die Pulls, gegen die sie
+   abzuwägen wären, wurden nie aufgezeichnet, und sie zu werten hätte beim Upgrade
+   einmalig jede legitim gezogene wiederkehrende Karte boardweit zurückgestuft.
+5. Der Nutzer hat die Serie im laufenden Refresh-Zyklus nicht selbst bewegt — eine Hand
+   an der Karte schlägt jede Buchhaltung.
+
+**Das Pull-Gedächtnis** (`RecurringTagRelease.Memory`, ein UserDefaults-Schlüssel
+`tagReleaseMemory`): Jeder Zug einer Serie in eine Arbeitsspalte wird dauerhaft mit
+Zeitpunkt vermerkt (höchstens 200, älteste zuerst verdrängt) — auch ein Replay über
+⌘Z/⇧⌘Z, denn auch das schreibt dieses Board. Gestempelt wird **nie früher als eine
+Sekunde nach der jüngsten Completion, die das Board bereits sieht**: Eine Completion,
+die vor dem Pull da war, kann ihn damit nie überstimmen — auch dann nicht, wenn die Uhr
+des erledigenden Geräts vorgeht. Die Gegenrichtung fällt zur sicheren Seite: Geht eine
+Uhr so weit nach, dass eine echte spätere Completion vor dem Pull gestempelt ist, bleibt
+der Tag stehen und kostet nichts. Das alte Gedächtnis der Kantenform (geladene IDs,
+getaggte Spalten) wird beim Upgrade verworfen; `activeSince` beginnt dann jetzt.
 
 Die Freigabe ist bewusst **nicht widerrufbar** und ohne Dialog: Es wird keine
 Nutzer-Entscheidung zurückgenommen, und ein ⌘Z, das ungezogene Arbeit wieder taggt, ist
-genau das, was `RecurringHandoff` auf der Replay-Seite verhindert.
+genau das, was `RecurringHandoff` auf der Replay-Seite verhindert. Getaktet wird sie wie
+jede andere automatische Antwort über den Korrektur-Ledger (höchstens eine Antwort je
+Karte und Zustand pro zehn Minuten; der Wecker holt Aufgeschobenes nach): Ein Schreiber,
+der den Tag immer wieder zurücklegt, wird ruhig korrigiert, nicht bekämpft.
 
-**Der Beweis überlebt den Neustart** (`RecurringTagRelease.Memory`, 09.08.2026): Am Ende
-jedes Refreshs speichert die App, was die Bedingungen 2 und 3 brauchen — welche IDs
-geladen waren und welche Karten einen Arbeits-Tag trugen (ein UserDefaults-Schlüssel,
-`tagReleaseMemory`). Der erste Refresh nach einem Kaltstart wird damit geseedet; ein
-Abhaken, während die App zu war, findet seinen Beweis also beim nächsten Start vor. Die
-Regel selbst ändert sich dadurch nicht, nur ihr Gedächtnis. Fehlt der Speicher, ist er
-beschädigt oder stammt er von einem Build mit anderen Statusnamen, fällt betroffenes
-still weg — ein leeres Gedächtnis heißt nur: Die erste Sitzung verhält sich wie früher
-(Upgrade-Pfad; die Freigabe greift ab der zweiten Sitzung). Aus Zeitstempeln zu raten
-bleibt verworfen: Das Weiterrollen der Serie setzt selbst `lastModifiedDate` neu, es
-gibt dort nichts Verlässliches — der gespeicherte Beweis ist kein Raten.
-
-**Verbleibende, akzeptierte Restlücke:** Wird der Tag *nach* einem externen Abhaken von
-Hand auf einem anderen Gerät erneut in die Notizen getippt, während die App zu ist, ist
-er von einem überlebenden Tag nicht zu unterscheiden und wird freigegeben. Das verlangt
-Hashtag-Handarbeit abseits dieses Macs, ist selbstheilend (ein Zug) und fällt in
-dieselbe Richtung wie jeder andere Zweifelsfall — Karte im Backlog, nie in einer
-Arbeitsspalte.
+**Verbleibende, akzeptierte Restlücken:** Wird der Tag *nach* einem Abhaken von Hand auf
+einem anderen Gerät erneut in die Notizen getippt, ist er von einem zurückgeschobenen
+alten Stand nicht zu unterscheiden und wird freigegeben — jetzt auch wiederholt, solange
+niemand an diesem Board zieht. Das verlangt Hashtag-Handarbeit abseits dieses Macs, ist
+selbstheilend (ein Zug hier) und fällt in dieselbe Richtung wie jeder andere
+Zweifelsfall — Karte im Backlog, nie in einer Arbeitsspalte. Dasselbe gilt für ein
+zweites Board (zweiter Mac mit dieser App auf derselben Liste): Pulls leben auf dem
+Board, auf dem sie gemacht wurden; ein dort gemachter Pull nach einer Completion sähe
+hier wie ein fremd zurückgelegter Tag aus. Das Speicherformat (Tag in den Notizen) kennt
+keinen Autor — wer Boards teilt, teilt sie über *eine* Maschine. Festgehalten am
+13.08.2026, abgewogen gegen den gemessenen Schaden der Geisterkarte.
 
 Im selben Zug abgesichert: `move` schreibt `isCompleted` nur noch, wenn sich der Wert
 tatsächlich ändert — ein seitlicher Zug hat auf einer laufenden Serie keine

@@ -32,6 +32,75 @@ final class CorrectionLedgerTests: XCTestCase {
         return ledger
     }
 
+    // MARK: - The displacement chain (13.08.2026)
+
+    /// The measured hole the chain closes: the board rewrites a field more
+    /// than once — here a hygiene pass normalising a legacy tag spelling,
+    /// then the user's drag to Backlog — while the stale writer restores the
+    /// *oldest* copy. With only the last displacement remembered, that copy
+    /// compared as a third state and the defence dissolved.
+    func testAnEchoOfAnEarlierDisplacementIsStillRecognised() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", field: .notes,
+                      replaced: .text("#alsnächstes"), wrote: .text("#next"), at: t0)
+        ledger.record(cardID: "shop", field: .notes,
+                      replaced: .text("#next"), wrote: .text(nil), at: t0.addingTimeInterval(60))
+        let staleCopy = state(notes: "#alsnächstes")
+        var observed = ledger
+        observed.observe(cardID: "shop", state: staleCopy, now: t0.addingTimeInterval(120))
+        XCTAssertEqual(
+            observed.pendingEchoes(for: "shop", state: staleCopy, now: t0.addingTimeInterval(120))[.notes],
+            .text(nil),
+            "a value this board itself wrote over must be answered, not adopted")
+    }
+
+    /// A genuinely new value still withdraws the entry — the chain widens
+    /// recognition of the board's own past, never tolerance for third states.
+    func testAThirdStateStillWithdrawsAChainedEntry() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", field: .notes,
+                      replaced: .text("#alsnächstes"), wrote: .text("#next"), at: t0)
+        ledger.record(cardID: "shop", field: .notes,
+                      replaced: .text("#next"), wrote: .text(nil), at: t0.addingTimeInterval(60))
+        ledger.observe(cardID: "shop", state: state(notes: "etwas Neues"), now: t0.addingTimeInterval(120))
+        XCTAssertTrue(
+            ledger.pendingEchoes(
+                for: "shop", state: state(notes: "#alsnächstes"),
+                now: t0.addingTimeInterval(180)).isEmpty)
+    }
+
+    /// What was just written must never sit in its own chain: an entry that
+    /// "recognised" its own write would answer a state that is already
+    /// correct.
+    func testTheLatestWriteIsNotItsOwnEcho() {
+        var ledger = CorrectionLedger()
+        ledger.record(cardID: "shop", field: .notes,
+                      replaced: .text(nil), wrote: .text("#next"), at: t0)
+        ledger.record(cardID: "shop", field: .notes,
+                      replaced: .text("#next"), wrote: .text(nil), at: t0.addingTimeInterval(60))
+        XCTAssertTrue(
+            ledger.pendingEchoes(
+                for: "shop", state: state(notes: nil), now: t0.addingTimeInterval(120)).isEmpty)
+    }
+
+    /// The chain is bounded: only the newest displacements are kept.
+    func testTheChainIsBounded() {
+        var ledger = CorrectionLedger()
+        let count = CorrectionLedger.maxDisplacedPerField + 3
+        for index in 0..<count {
+            ledger.record(cardID: "shop", field: .title,
+                          replaced: .text("v\(index)"), wrote: .text("v\(index + 1)"),
+                          at: t0.addingTimeInterval(Double(index)))
+        }
+        let now = t0.addingTimeInterval(Double(count))
+        XCTAssertTrue(
+            ledger.pendingEchoes(for: "shop", state: state(title: "v0"), now: now).isEmpty,
+            "the oldest displacement has fallen out of the chain")
+        XCTAssertEqual(
+            ledger.pendingEchoes(for: "shop", state: state(title: "v3"), now: now)[.title],
+            .text("v\(count)"))
+    }
+
     // MARK: - The basic rule
 
     func testTheDisplacedValueComingBackIsAnEcho() {
@@ -340,6 +409,33 @@ final class CorrectionLedgerPersistenceTests: XCTestCase {
     func testForeignTypesLoadEmpty() {
         UserDefaults.standard.set("kein Wörterbuch", forKey: CorrectionLedger.storageKey)
         XCTAssertEqual(CorrectionLedger.load(), CorrectionLedger())
+    }
+
+    /// A version-2 payload (single displaced value) still loads: its one
+    /// value becomes a chain of one, so a defence that was live at upgrade
+    /// time survives it.
+    func testAVersionTwoPayloadLoadsAsAChainOfOne() {
+        UserDefaults.standard.set(
+            [
+                "v": 2,
+                "cards": [
+                    "shop": [
+                        "notes": [
+                            "at": t0.timeIntervalSince1970,
+                            "replaced": ["kind": "text", "text": "#next"],
+                            "wrote": ["kind": "text"],
+                        ],
+                    ],
+                ],
+            ] as [String: Any],
+            forKey: CorrectionLedger.storageKey)
+        let loaded = CorrectionLedger.load()
+        let s = CorrectionLedger.CardState(
+            title: nil, notes: "#next", url: nil, due: nil,
+            hasDueTime: false, isCompleted: false, isRecurring: false)
+        XCTAssertEqual(
+            loaded.pendingEchoes(for: "shop", state: s, now: t0.addingTimeInterval(60))[.notes],
+            .text(nil))
     }
 
     /// A payload from the single-field build carries no version and is

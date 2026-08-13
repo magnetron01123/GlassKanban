@@ -248,10 +248,41 @@ wurde nicht gebraucht — der Sync stempelt beim Abhaken nichts um.
 Passt keine oder mehr als eine lebende Serie auf das Anlegedatum, gilt „kein Beweis". Für
 das Zurückholen aus „Erledigt" heißt das: Der Zug ist erlaubt — ein sichtbarer, von Hand
 aufräumbarer Fehler. Für die stille Tag-Freigabe heißt es das Gegenteil: Der Tag bleibt
-stehen (SPEC.md, Bedingung 5 — dort strenger geprüft, weil diese eine Regel eine Karte
+stehen (SPEC.md, Bedingung 3 — dort strenger geprüft, weil diese eine Regel eine Karte
 bewegt, ohne dass jemand hinsieht). **Akzeptierte Restlücke:** Zwei Serien einer Liste mit
 bitgenau demselben Anlegedatum wären nicht unterscheidbar. Gemessen tritt das nicht ein,
 und der Ausgang wäre ohnehin die sichere Richtung — kein Beweis, keine Bewegung.
+
+### Ein verbrauchter Tag ist ein Zustand, keine Kante (13.08.2026)
+
+Die Tag-Freigabe war als Kante gebaut: geprüft nur in dem Refresh, der die frische
+Completion zum ersten Mal sieht. Eine Kante setzt voraus, dass die App den Übergang
+*miterlebt* — und genau das ist auf Daten, die drei andere Systeme gleichzeitig
+beschreiben, keine haltbare Annahme. Gemessen am realen Board („Einkaufen",
+12.–13.08.2026): Durchgang in der App erledigt, neun Minuten später schob ein
+Kalender-Client den alten Stand mit `#next` auf die weitergerollte Serie zurück; die App
+sah den sauberen Zwischenzustand nie, die Kante war verbraucht, und der Undo-Zaun
+blockierte obendrein jede automatische Korrektur auf der Serien-ID. Die nie gezogene
+nächste Runde stand dauerhaft in „Als Nächstes" — eine Karte, die sich aus Nutzersicht
+von selbst bewegt hatte. Das verletzt beide oberen Prinzipien zugleich: Bewegung gehört
+Ereignissen, und der freie Platz ruft — nicht ein Tag, den niemand vergeben hat.
+
+Die Konsequenz ist ein Formwechsel, kein Patch: **Was aus den Daten jederzeit ableitbar
+ist, wird als stehende Bedingung geprüft, nicht als beobachtetes Ereignis.** „Jüngste
+Completion nach letztem Pull an diesem Board" ist aus jedem Fetch neu beweisbar — dafür
+muss nichts miterlebt worden sein. Der Preis: Das Board muss seine eigenen Pulls dauerhaft
+kennen (das Pull-Gedächtnis in SPEC.md) und eine Aktivierungsgrenze ziehen, weil Pulls
+von vor dem Formwechsel nie aufgezeichnet wurden. Beides steht mit Stempel-Regeln und
+Restlücken in SPEC.md; die Multi-Board-Grenze (Pulls leben auf ihrem Board) ist dort als
+akzeptiert dokumentiert.
+
+Aus demselben Vorfall stammt die zweite Änderung: Der Korrektur-Ledger merkt sich je Feld
+eine **Kette** der zuletzt verdrängten Werte statt nur des letzten. Der fremde Schreiber
+stellt nicht „den vorigen" Stand wieder her, sondern *irgendeinen* alten aus seinem
+Cache — mit nur einem gemerkten Wert las der sich als dritter Zustand und entwaffnete
+genau die Verteidigung, die er auslösen sollte. Die Kette erweitert nur die Erkennung;
+geschrieben wird unverändert allein der jüngste eigene Wert, in den bekannten sicheren
+Richtungen. Der Grundsatz „nie beobachtete Übergänge adoptieren" bleibt damit stehen.
 
 ### Ein wiederbelebter Durchgang ist keine zweite Aufgabe (11.08.2026)
 

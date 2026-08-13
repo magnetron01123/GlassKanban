@@ -108,18 +108,12 @@ final class RemindersStore: ObservableObject {
     /// handoff so both speak of the same order (see `RecurringHandoff`).
     private var writeOrder = RecurringHandoff.Generation.first
 
-    /// Every identifier the last completed refresh fetched — wider than
-    /// `cards`, which only keeps recent Done cards. `RecurringTagRelease`
-    /// reads this to tell a freshly detached occurrence from an old
-    /// completion that was merely in the fetch window again.
-    private var lastFetchedReminderIDs: Set<String> = []
-
     /// Identifiers the user moved themselves since the last completed
     /// refresh. A pull made in the window between an external completion
     /// syncing in and the refresh seeing it must stay a pull (see
-    /// `RecurringTagRelease`, condition 4). Deliberately not persisted: a
-    /// move the final refresh never saw is also missing from the persisted
-    /// memory below, so condition 2 already keeps its tag after a restart.
+    /// `RecurringTagRelease`, condition 5). Working-lane pulls additionally
+    /// land in the persisted release memory (see `move`), which is what
+    /// protects them across restarts.
     private var deliberatelyMovedSinceRefresh: Set<String> = []
 
     /// How many cards may be answered in one refresh. The measured attack
@@ -148,12 +142,11 @@ final class RemindersStore: ObservableObject {
     /// off: without it, only the app's own moves would ever be noticed.
     private var taggedNotesByID: [String: String] = [:]
 
-    /// The release rule's memory of the previous session, loaded once and
-    /// used to seed the very first refresh after a cold start — a completion
-    /// that happened during downtime still meets its proof. Never cleared on
-    /// load: a first refresh that a newer one supersedes must find the seed
-    /// intact on the next attempt. Overwritten (and saved, on change) at the
-    /// end of every completed refresh.
+    /// The release rule's persisted memory: when each series was last pulled
+    /// on this board, and since when the standing rule has been counting.
+    /// Written when the user pulls (see `move`) and pinned once on the first
+    /// refresh, so a completion during downtime is still weighed correctly
+    /// after a cold start.
     private var releaseMemory = RecurringTagRelease.Memory.load()
 
     struct SaveFailure: Identifiable {
@@ -584,20 +577,14 @@ final class RemindersStore: ObservableObject {
         // the stack, and dropping the fence there let exactly the measured
         // write land.
         recurringHandoff.retain()
-        lastFetchedReminderIDs = Set((incomplete + completed).map(\.calendarItemIdentifier))
         deliberatelyMovedSinceRefresh.removeAll()
-        // Rebuilt from this fetch, never merged — the fetch window is the
-        // retention policy. Saved only on change: the seen set is a list of
-        // every open and recently completed reminder, not worth rewriting for
-        // a refresh that moved nothing.
-        let memory = RecurringTagRelease.Memory(
-            seenIDs: lastFetchedReminderIDs,
-            taggedStatusByID: Dictionary(
-                refreshed.filter { $0.status == .next || $0.status == .inProgress }
-                    .map { ($0.id, $0.status) }) { first, _ in first })
-        if memory != releaseMemory {
-            releaseMemory = memory
-            memory.save()
+        // The release memory changes only when the user pulls (see `move`),
+        // but its `activeSince` must be pinned on the very first refresh of
+        // the first session with this rule: left unsaved, every launch would
+        // start counting anew and a completion between two launches would
+        // never become evidence.
+        if !hasLoadedOnce {
+            releaseMemory.save()
         }
         // Kept across launches: the writer this defends against works on a
         // scale of tens of minutes, and the app may well be quit in between.
@@ -677,9 +664,14 @@ final class RemindersStore: ObservableObject {
         taggedNotesByID = stillTagged
     }
 
-    /// Which recurring series have a tag left over from a turn that was
-    /// completed elsewhere. Pure decision; the writing happens in
+    /// Which recurring series have a tag left over from a turn that has
+    /// already been completed. Pure decision; the writing happens in
     /// `applyCorrections` with everything else.
+    ///
+    /// A standing condition, not an edge (see `RecurringTagRelease`): it
+    /// holds on every refresh, so a tag restored hours later by a stale
+    /// writer, or first seen after a sleep gap or cold start, lands in the
+    /// same check as one that survived an external completion directly.
     private func releasedSeriesIDs(incomplete: [EKReminder], completed: [EKReminder]) -> Set<String> {
         let snapshots = (incomplete + completed).compactMap { reminder -> RecurringTagRelease.Snapshot? in
             guard let listID = reminder.calendar?.calendarIdentifier else { return nil }
@@ -690,19 +682,12 @@ final class RemindersStore: ObservableObject {
                 isCompleted: reminder.isCompleted,
                 isRecurring: reminder.hasRecurrenceRules,
                 status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted),
-                createdAt: reminder.creationDate)
+                createdAt: reminder.creationDate,
+                completedAt: reminder.completionDate)
         }
-        // The very first refresh after a cold start has no previous board —
-        // `cards` and `lastFetchedReminderIDs` are still empty. The persisted
-        // memory of the last session stands in, exactly once (`hasLoadedOnce`
-        // flips after this runs); from then on the live state is strictly
-        // fresher and takes over. Never a union of both.
         return RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: hasLoadedOnce
-                ? Dictionary(cards.map { ($0.id, $0.status) }) { first, _ in first }
-                : releaseMemory.taggedStatusByID,
-            previouslySeenIDs: hasLoadedOnce ? lastFetchedReminderIDs : releaseMemory.seenIDs,
             refreshed: snapshots,
+            memory: releaseMemory,
             deliberatelyMoved: deliberatelyMovedSinceRefresh)
     }
 
@@ -734,8 +719,14 @@ final class RemindersStore: ObservableObject {
             // After a repeating card is completed, this identifier belongs to
             // the *next* turn. Undo refuses to write through it and says so;
             // an automatic correction has even less business there, and must
-            // stay silent about it (no dialog, ever).
-            guard !recurringHandoff.refusesUnattributedWrite(to: cardID) else { continue }
+            // stay silent about it (no dialog, ever). The one exception is
+            // the tag release: it writes precisely what the fence protects —
+            // that the next turn stays unpulled — and blocking it here is
+            // what once left a stale `#next` standing on a series completed
+            // in-app until the user happened to drag it (measured
+            // 12.–13.08.2026, "Einkaufen").
+            let fenced = recurringHandoff.refusesUnattributedWrite(to: cardID)
+            guard !fenced || released.contains(cardID) else { continue }
 
             var targetNotes = reminder.notes
             var targetTitle = reminder.title
@@ -743,7 +734,7 @@ final class RemindersStore: ObservableObject {
             var targetDue = reminder.dueDateComponents
             var touched: Set<CorrectionLedger.Field> = []
 
-            if answered < Self.maxAnsweredCardsPerRefresh {
+            if !fenced, answered < Self.maxAnsweredCardsPerRefresh {
                 let echoes = corrections.pendingEchoes(for: cardID, state: state, now: now)
                 for (field, value) in echoes {
                     switch (field, value) {
@@ -772,9 +763,11 @@ final class RemindersStore: ObservableObject {
                 if !touched.isEmpty { answered += 1 }
             }
 
-            // A pull the series has spent. Edge-triggered and one-off, so it
-            // is not paced by the cooldown — a cap here would swallow the
-            // edge and leave the series tagged for good.
+            // A pull the series has spent. A standing condition since
+            // 13.08.2026, so it needs no edge exemption anymore: it is
+            // re-decided on every refresh and paced below like every other
+            // answer — a writer that keeps restoring the tag is corrected
+            // calmly, at most once per cooldown.
             if released.contains(cardID) {
                 targetNotes = StatusTagger.rewrittenNotes(targetNotes, for: .backlog)
                 touched.insert(.notes)
@@ -789,12 +782,12 @@ final class RemindersStore: ObservableObject {
             }
 
             guard !touched.isEmpty else { continue }
-            // Every field that is about to change has to be allowed to — a
-            // release is the one exception, being edge-triggered.
+            // Every field that is about to change has to be allowed to. The
+            // release too: its write books into the ledger like any other,
+            // so a byte-identical restoration inside the cooldown is
+            // deferred, and the cooldown wake-up re-decides it.
             let paced = touched.filter { field in
-                released.contains(cardID) && field == .notes
-                    ? true
-                    : corrections.permitsWrite(cardID: cardID, field: field, state: state, now: now)
+                corrections.permitsWrite(cardID: cardID, field: field, state: state, now: now)
             }
             guard !paced.isEmpty else { continue }
 
@@ -836,6 +829,19 @@ final class RemindersStore: ObservableObject {
         if dirty {
             try? eventStore.commit()
         }
+    }
+
+    /// The newest completion on the current board that belongs to the series
+    /// with this creation date — the same identity the release rule reads.
+    /// The visible Done window is enough here: this only guards a pull
+    /// against completions the board can already see (and against modest
+    /// clock skew on the device that completed them).
+    private func newestVisibleCompletion(matchingCreation creation: Date?, listID: String?) -> Date? {
+        guard let creation, let listID else { return nil }
+        return cards
+            .filter { $0.status == .done && $0.creationDate == creation && $0.listID == listID }
+            .compactMap(\.completionDate)
+            .max()
     }
 
     private func fetchReminders(matching predicate: NSPredicate) async -> [EKReminder] {
@@ -993,6 +999,20 @@ final class RemindersStore: ObservableObject {
         // touch anything the user placed themselves this refresh cycle.
         if feedback {
             deliberatelyMovedSinceRefresh.insert(cardID)
+        }
+        // A pull of a recurring series is recorded durably: the standing
+        // release rule weighs every completion against the last pull, and a
+        // pull it cannot see reads as "nobody pulled". Replays through undo
+        // count too — it is still this board writing. Stamped no earlier
+        // than the newest completion already on the board, so a completion
+        // that synced in before the pull can never outrank it.
+        if wasRecurringSeries, status == .next || status == .inProgress {
+            releaseMemory.recordPull(
+                seriesID: cardID, at: .now,
+                newestVisibleCompletion: newestVisibleCompletion(
+                    matchingCreation: reminder.creationDate,
+                    listID: reminder.calendar?.calendarIdentifier))
+            releaseMemory.save()
         }
         // What this move displaced, so an echo of it can be told apart from
         // someone deciding otherwise — and so the one correction it is owed

@@ -14,10 +14,11 @@ import Foundation
 ///
 /// The rule this type exists for:
 ///
-/// > **The board remembers which value it wrote over which. If a field later
-/// > holds the displaced value again, letter for letter, the board writes its
-/// > own value back once — at most once per ten minutes, for at most a day,
-/// > and never a value the user did not enter here themselves.**
+/// > **The board remembers which values it wrote over. If a field later
+/// > holds one of the recently displaced values again, letter for letter,
+/// > the board writes its own latest value back once — at most once per ten
+/// > minutes, for at most a day, and never a value the user did not enter
+/// > here themselves.**
 ///
 /// That last clause is the whole safety argument. Every value this mechanism
 /// can ever write is one the user typed or dragged into being *on this board*
@@ -103,14 +104,39 @@ struct CorrectionLedger: Equatable {
     }
 
     struct Entry: Equatable {
-        let replaced: Value
+        /// Every value the board's writes have displaced on this field,
+        /// newest first, bounded by `maxDisplacedPerField`.
+        ///
+        /// A *chain* rather than a single value since 13.08.2026, and for a
+        /// measured reason: the board rewrites a field more than once — a
+        /// drag books one displacement, the tag hygiene another, an edit a
+        /// third — while a stale writer restores whichever copy it cached.
+        /// With only the last displacement remembered, that restored copy
+        /// compared as a *third* state, withdrew the entry, and the defence
+        /// dissolved at the exact moment it was needed. Any value this board
+        /// itself wrote over recently is a recognisable echo, not a person
+        /// deciding something new.
+        ///
+        /// The chain widens only what is *recognised* — what can be written
+        /// back stays `wrote`, the newest value the user's own action put
+        /// there, under the same direction rules as always.
+        let displaced: [Value]
         let wrote: Value
         let at: Date
         /// When the board last answered this displacement. Not a one-way
         /// flag: it stands by its write for as long as something undoes it,
         /// and this only paces the answers.
         var answeredAt: Date?
+
+        func recognises(_ value: Value) -> Bool {
+            displaced.contains(value)
+        }
     }
+
+    /// How many displaced values one field remembers. Enough for a drag, a
+    /// hygiene pass and a handful of edits inside one staleness window; a
+    /// hard bound on what lives in UserDefaults.
+    static let maxDisplacedPerField = 8
 
     /// The shortest gap between two answers to the same field of the same
     /// card. Not a retreat, a pace: it rules out two programs writing at each
@@ -154,22 +180,31 @@ struct CorrectionLedger: Equatable {
             if entries[cardID]?.isEmpty == true { entries.removeValue(forKey: cardID) }
             return
         }
+        // The previous chain rides along: those are values this board also
+        // wrote over recently, and a stale copy of any of them returning is
+        // the same echo. What was just written must never sit in its own
+        // chain — an entry that "recognises" its own write would answer a
+        // state that is already correct.
+        let inherited = (entries[cardID]?[field]?.displaced ?? [])
+            .filter { $0 != replaced && $0 != wrote }
+        let chain = Array(([replaced] + inherited).prefix(Self.maxDisplacedPerField))
         entries[cardID, default: [:]][field] = Entry(
-            replaced: replaced, wrote: wrote, at: at, answeredAt: nil)
+            displaced: chain, wrote: wrote, at: at, answeredAt: nil)
     }
 
     /// Notes the state a card is actually in.
     ///
-    /// A value that is neither what the board wrote nor what it displaced is
-    /// a *third* state: somebody decided something new, and the old
-    /// displacement is history. Withdrawing the entry here is what keeps this
-    /// mechanism from fighting a user who changes their mind — only an exact
-    /// reversal is ever contested.
+    /// A value that is neither what the board wrote nor anything it recently
+    /// displaced is a *third* state: somebody decided something new, and the
+    /// old displacement is history. Withdrawing the entry here is what keeps
+    /// this mechanism from fighting a user who changes their mind — only an
+    /// exact reversal of a state this board itself wrote over is ever
+    /// contested.
     mutating func observe(cardID: String, state: CardState, now: Date) {
         guard var fields = entries[cardID] else { return }
         for (field, entry) in fields {
             let current = state[field]
-            if current != entry.replaced && current != entry.wrote {
+            if !entry.recognises(current) && current != entry.wrote {
                 fields.removeValue(forKey: field)
             }
         }
@@ -189,7 +224,7 @@ struct CorrectionLedger: Equatable {
         var due: [Field: Value] = [:]
         for (field, entry) in fields {
             guard isFresh(entry, now: now),
-                  state[field] == entry.replaced,
+                  entry.recognises(state[field]),
                   entry.answeredAt.map({ now.timeIntervalSince($0) >= Self.cooldown }) ?? true,
                   Self.restoring(entry.wrote, over: state, field: field)
             else { continue }
@@ -205,7 +240,7 @@ struct CorrectionLedger: Equatable {
         guard let entry = entries[cardID]?[field],
               let answeredAt = entry.answeredAt,
               isFresh(entry, now: now),
-              state[field] == entry.replaced,
+              entry.recognises(state[field]),
               now.timeIntervalSince(answeredAt) < Self.cooldown
         else { return true }
         return false
@@ -311,13 +346,16 @@ struct CorrectionLedger: Equatable {
     /// before this type existed.
     static let storageKey = "correctionLedger"
 
-    /// Bumped when the stored shape changes. A payload without it comes from
-    /// the single-field build and is discarded rather than guessed at.
-    private static let formatVersion = 2
+    /// Bumped when the stored shape changes. Version 3 turned the single
+    /// displaced value into a chain; a version-2 payload is still read — its
+    /// one value becomes a chain of one, so a live defence survives the
+    /// upgrade. Anything older is discarded rather than guessed at.
+    private static let formatVersion = 3
 
     static func load(from defaults: UserDefaults = .standard) -> CorrectionLedger {
         guard let stored = defaults.dictionary(forKey: storageKey),
-              stored["v"] as? Int == formatVersion,
+              let version = stored["v"] as? Int,
+              version == formatVersion || version == 2,
               let cards = stored["cards"] as? [String: [String: Any]]
         else { return CorrectionLedger() }
         var entries: [String: [Field: Entry]] = [:]
@@ -327,11 +365,16 @@ struct CorrectionLedger: Equatable {
                 guard let field = Field(rawValue: rawField),
                       let dict = rawEntry as? [String: Any],
                       let at = dict["at"] as? Double,
-                      let replaced = decodeValue(dict["replaced"], field: field),
                       let wrote = decodeValue(dict["wrote"], field: field)
                 else { continue }
+                let rawDisplaced: [Any] = dict["displaced"] as? [Any]
+                    ?? (dict["replaced"].map { [$0] } ?? [])
+                let displaced = rawDisplaced
+                    .compactMap { decodeValue($0, field: field) }
+                    .prefix(maxDisplacedPerField)
+                guard !displaced.isEmpty else { continue }
                 fields[field] = Entry(
-                    replaced: replaced,
+                    displaced: Array(displaced),
                     wrote: wrote,
                     at: Date(timeIntervalSince1970: at),
                     answeredAt: (dict["answeredAt"] as? Double).map(Date.init(timeIntervalSince1970:)))
@@ -350,7 +393,7 @@ struct CorrectionLedger: Equatable {
                 if let answeredAt = entry.answeredAt {
                     dict["answeredAt"] = answeredAt.timeIntervalSince1970
                 }
-                dict["replaced"] = Self.encodeValue(entry.replaced)
+                dict["displaced"] = entry.displaced.map(Self.encodeValue)
                 dict["wrote"] = Self.encodeValue(entry.wrote)
                 stored[field.rawValue] = dict
             }

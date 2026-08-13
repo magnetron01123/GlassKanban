@@ -5,14 +5,23 @@ import XCTest
 /// Completing a recurring reminder outside this app leaves the notes
 /// untouched: the finished turn is filed away as a detached copy under a new
 /// identifier, and the series rolls on carrying the status tag (measured
-/// against iCloud, 09.08.2026). The release rule spots that fingerprint and
-/// gives the tag back — and fails toward keeping it whenever the pull might
-/// still be the user's.
+/// against iCloud, 09.08.2026). Since 13.08.2026 the rule is a *standing
+/// condition* — a completion newer than the last pull on this board spends
+/// the tag, however late the tag arrives — because a stale writer restoring
+/// `#next` minutes after an in-app completion defeated the old edge-triggered
+/// form (measured 12.–13.08.2026, "Einkaufen"). It still fails toward keeping
+/// the tag whenever the pull might be the user's.
 final class RecurringTagReleaseTests: XCTestCase {
 
     /// The creation date a series and its own occurrences share — measured to
     /// be bit-identical against real EventKit (10.08.2026).
     private static let seriesCreated = Date(timeIntervalSinceReferenceDate: 808_083_284.719828010)
+
+    /// When the standing rule started counting on this fictional board.
+    private static let activeSince = Date(timeIntervalSinceReferenceDate: 900_000_000)
+
+    /// A completion safely after `activeSince`.
+    private static let completedAt = RecurringTagReleaseTests.activeSince.addingTimeInterval(3_600)
 
     private func series(
         id: String = "series", title: String = "Einkaufen", listID: String = "shared",
@@ -26,111 +35,110 @@ final class RecurringTagReleaseTests: XCTestCase {
 
     private func detachedOccurrence(
         id: String = "detached", title: String = "Einkaufen", listID: String = "shared",
-        created: Date? = nil
+        created: Date? = nil, completed: Date? = nil
     ) -> RecurringTagRelease.Snapshot {
         RecurringTagRelease.Snapshot(
             id: id, title: title, listID: listID,
             isCompleted: true, isRecurring: false, status: .done,
-            createdAt: created ?? Self.seriesCreated)
+            createdAt: created ?? Self.seriesCreated,
+            completedAt: completed ?? Self.completedAt)
     }
 
-    func testExternallyCompletedOccurrenceReleasesTheSeriesTag() {
+    private func memory(pulls: [String: Date] = [:]) -> RecurringTagRelease.Memory {
+        RecurringTagRelease.Memory(lastPullByID: pulls, activeSince: Self.activeSince)
+    }
+
+    // MARK: - The standing condition
+
+    func testACompletionWithNoRecordedPullReleasesTheSeriesTag() {
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next],
-            previouslySeenIDs: ["series"],
             refreshed: [series(), detachedOccurrence()],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, ["series"])
     }
 
     func testInProgressTagIsReleasedTheSameWay() {
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .inProgress],
-            previouslySeenIDs: ["series"],
             refreshed: [series(status: .inProgress), detachedOccurrence()],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, ["series"])
     }
 
-    /// An ordinary completion keeps its identifier — it was on the board as
-    /// an open card. Only an identifier the previous fetch never saw is the
-    /// fingerprint of a detached occurrence.
-    func testCompletionOfAKnownReminderReleasesNothing() {
+    /// The regression this rule's standing form exists for ("Einkaufen",
+    /// 12.–13.08.2026): the occurrence was completed, the tag stripped — and
+    /// minutes later a stale writer restored `#next` onto the rolled-on
+    /// series. The old edge rule had already consumed its one look and never
+    /// asked again. The standing condition does not care *when* the tag
+    /// arrives: the completion is newer than any pull, so it is released.
+    func testATagRestoredLongAfterTheCompletionIsStillReleased() {
+        let pulledBeforeCompletion = Self.completedAt.addingTimeInterval(-7_200)
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next, "one-off": .inProgress],
-            previouslySeenIDs: ["series", "one-off"],
+            refreshed: [series(), detachedOccurrence()],
+            memory: memory(pulls: ["series": pulledBeforeCompletion]),
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, ["series"])
+    }
+
+    /// The user pulled the new turn after the completion. That pull is the
+    /// freshest decision on the card; the tag is theirs.
+    func testAPullAfterTheCompletionKeepsTheTag() {
+        let pulledAfterCompletion = Self.completedAt.addingTimeInterval(60)
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            refreshed: [series(), detachedOccurrence()],
+            memory: memory(pulls: ["series": pulledAfterCompletion]),
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [])
+    }
+
+    /// Completions from before the rule existed are not evidence: the pulls
+    /// they would be weighed against were never recorded, and judging them
+    /// would demote every legitimately pulled recurring card once, board-wide,
+    /// on upgrade.
+    func testACompletionFromBeforeActivationReleasesNothing() {
+        let released = RecurringTagRelease.releasedSeriesIDs(
             refreshed: [
                 series(),
-                detachedOccurrence(id: "one-off"),
+                detachedOccurrence(completed: Self.activeSince.addingTimeInterval(-60)),
             ],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, [])
     }
 
-    /// First load after a cold start: there is no previous board, so nothing
-    /// can prove the tag predates the completion. The tag stays — the
-    /// documented, accepted gap.
-    func testEmptyPreviousBoardReleasesNothing() {
+    /// Only the *newest* completion counts: an old finished turn from before
+    /// the pull says nothing about the turn the user is holding now.
+    func testTheNewestCompletionDecides() {
+        let pulled = Self.completedAt.addingTimeInterval(60)
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: [:],
-            previouslySeenIDs: [],
-            refreshed: [series(), detachedOccurrence()],
+            refreshed: [
+                series(),
+                detachedOccurrence(id: "old-done"),
+                detachedOccurrence(id: "new-done", completed: pulled.addingTimeInterval(60)),
+            ],
+            memory: memory(pulls: ["series": pulled]),
             deliberatelyMoved: [])
-        XCTAssertEqual(released, [])
+        XCTAssertEqual(released, ["series"], "a completion after the pull spends the tag again")
     }
 
-    /// The tag changed since the last refresh — someone pulled or re-lane'd
-    /// the card. That pull is fresher than the completion; it stays.
-    func testATagThatChangedSinceLastRefreshStays() {
-        let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .backlog],
-            previouslySeenIDs: ["series"],
-            refreshed: [series(), detachedOccurrence()],
-            deliberatelyMoved: [])
-        XCTAssertEqual(released, [])
-    }
-
-    /// The user dragged the card between the external completion syncing in
-    /// and the refresh seeing it. A hand on the card outranks bookkeeping.
+    /// The user dragged the card in this refresh cycle. A hand on the card
+    /// outranks bookkeeping, whatever the timestamps say.
     func testADeliberateMoveSinceLastRefreshBlocksTheRelease() {
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next],
-            previouslySeenIDs: ["series"],
             refreshed: [series(), detachedOccurrence()],
+            memory: memory(),
             deliberatelyMoved: ["series"])
         XCTAssertEqual(released, [])
     }
 
-    /// Two live series of one list sharing the occurrence's creation date make
-    /// the match ambiguous. Fail closed: a kept tag costs one drag, a wrongly
-    /// released one breaks the pull principle.
-    func testTwoSeriesSharingTheCreationDateReleaseNothing() {
+    /// Running the rule on the post-release state finds nothing: the series
+    /// no longer carries a tag, so the refresh the release write triggers
+    /// terminates instead of looping.
+    func testReleaseIsIdempotent() {
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series-a": .next, "series-b": .next],
-            previouslySeenIDs: ["series-a", "series-b"],
-            refreshed: [
-                series(id: "series-a"),
-                series(id: "series-b"),
-                detachedOccurrence(),
-            ],
-            deliberatelyMoved: [])
-        XCTAssertEqual(released, [])
-    }
-
-    func testSameTitleInAnotherListReleasesNothing() {
-        let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next],
-            previouslySeenIDs: ["series"],
-            refreshed: [series(), detachedOccurrence(listID: "private")],
-            deliberatelyMoved: [])
-        XCTAssertEqual(released, [])
-    }
-
-    func testAOneOffReminderIsNeverReleased() {
-        let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next],
-            previouslySeenIDs: ["series"],
-            refreshed: [series(isRecurring: false), detachedOccurrence()],
+            refreshed: [series(status: .backlog), detachedOccurrence()],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, [])
     }
@@ -139,33 +147,16 @@ final class RecurringTagReleaseTests: XCTestCase {
     /// speaks for the working lanes.
     func testAnUntaggedSeriesReleasesNothing() {
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .backlog],
-            previouslySeenIDs: ["series"],
             refreshed: [series(status: .backlog), detachedOccurrence()],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, [])
     }
 
-    /// Untitled reminders all share the empty title — matching on it would
-    /// connect records that have nothing to do with each other.
-    func testEmptyTitlesNeverMatch() {
+    func testAOneOffReminderIsNeverReleased() {
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next],
-            previouslySeenIDs: ["series"],
-            refreshed: [series(title: ""), detachedOccurrence(title: "")],
-            deliberatelyMoved: [])
-        XCTAssertEqual(released, [])
-    }
-
-    /// Running the rule on the post-release state finds nothing: the series
-    /// no longer carries a tag, so the refresh the release write triggers
-    /// terminates instead of looping.
-    func testReleaseIsIdempotent() {
-        let afterRelease = [series(status: .backlog), detachedOccurrence()]
-        let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .backlog, "detached": .done],
-            previouslySeenIDs: ["series", "detached"],
-            refreshed: afterRelease,
+            refreshed: [series(isRecurring: false), detachedOccurrence()],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, [])
     }
@@ -174,8 +165,6 @@ final class RecurringTagReleaseTests: XCTestCase {
     /// series gets its own tag back, independently.
     func testTwoIndependentChoresReleaseIndependently() {
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["shop": .next, "bath": .inProgress],
-            previouslySeenIDs: ["shop", "bath"],
             refreshed: [
                 series(id: "shop", title: "Einkaufen"),
                 series(id: "bath", title: "Joris baden", status: .inProgress,
@@ -184,112 +173,110 @@ final class RecurringTagReleaseTests: XCTestCase {
                 detachedOccurrence(id: "bath-done", title: "Joris baden",
                                    created: Self.seriesCreated.addingTimeInterval(1)),
             ],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, ["shop", "bath"])
     }
 
-    // MARK: - Cold start, seeded from the persisted memory
-
-    /// The gap the memory closes: the completion happened while the app was
-    /// closed. Seeding the first refresh with the last session's memory makes
-    /// it look exactly like any other refresh to the rule.
-    func testColdStartWithMemoryOfTheTagReleases() {
-        let memory = RecurringTagRelease.Memory(
-            seenIDs: ["series", "old-done"],
-            taggedStatusByID: ["series": .next])
-        let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: memory.taggedStatusByID,
-            previouslySeenIDs: memory.seenIDs,
-            refreshed: [series(), detachedOccurrence()],
-            deliberatelyMoved: [])
-        XCTAssertEqual(released, ["series"])
-    }
-
-    /// A tag that only came into being while the app was closed has no entry
-    /// in the memory — nothing can prove it predates the completion, so it
-    /// stays. This is also the upgrade path: no memory yet, no release.
-    func testColdStartWithoutMemoryOfTheTagKeepsIt() {
-        let memory = RecurringTagRelease.Memory(
-            seenIDs: ["series"], taggedStatusByID: [:])
-        let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: memory.taggedStatusByID,
-            previouslySeenIDs: memory.seenIDs,
-            refreshed: [series(), detachedOccurrence()],
-            deliberatelyMoved: [])
-        XCTAssertEqual(released, [])
-    }
-
-    /// The lane changed during downtime — someone re-pulled the card
-    /// somewhere. That decision is fresher than the memory; the tag stays.
-    func testColdStartWithAChangedLaneKeepsTheTag() {
-        let memory = RecurringTagRelease.Memory(
-            seenIDs: ["series"], taggedStatusByID: ["series": .inProgress])
-        let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: memory.taggedStatusByID,
-            previouslySeenIDs: memory.seenIDs,
-            refreshed: [series(status: .next), detachedOccurrence()],
-            deliberatelyMoved: [])
-        XCTAssertEqual(released, [])
-    }
-
     // MARK: - Identity by creation date (10.08.2026)
 
-    /// The headline case, and the forbidden direction: a task created *and*
-    /// completed on another device between two refreshes has an identifier
-    /// nobody has seen, so it passes the freshness filter. Under the old title
-    /// rule it then took the tag off a card somebody had pulled. Its creation
+    /// The forbidden direction: a task created *and* completed on another
+    /// device between two refreshes is fresh and completed — but its creation
     /// date is its own, so it is not an occurrence of anything.
     func testAForeignSameTitledTaskDoesNotReleaseTheTag() {
         let foreign = detachedOccurrence(
             id: "from-phone", created: Self.seriesCreated.addingTimeInterval(9_999))
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next],
-            previouslySeenIDs: ["series"],
             refreshed: [series(), foreign],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, [], "a namesake must never take a pulled card's tag")
     }
 
-    /// The other half: renaming the series after the completion used to switch
-    /// the rule off entirely, so the chore kept its tag every cycle.
+    /// Renaming the series after the completion used to switch the old
+    /// title-matching rule off entirely, so the chore kept its tag every
+    /// cycle. Identity is the creation date; the name is free to change.
     func testARenamedSeriesStillReleases() {
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next],
-            previouslySeenIDs: ["series"],
             refreshed: [series(title: "Einkaufen neu"), detachedOccurrence(title: "Einkaufen")],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, ["series"])
     }
 
-    /// Uniqueness is judged among all live series of the list now, not only
-    /// the tagged ones — stricter is the right direction for the one rule that
+    /// Two live series of one list sharing the occurrence's creation date make
+    /// the match ambiguous. Fail closed: a kept tag costs one drag, a wrongly
+    /// released one breaks the pull principle.
+    func testTwoSeriesSharingTheCreationDateReleaseNothing() {
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            refreshed: [
+                series(id: "series-a"),
+                series(id: "series-b"),
+                detachedOccurrence(),
+            ],
+            memory: memory(),
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [])
+    }
+
+    /// Uniqueness is judged among all live series of the list, not only the
+    /// tagged ones — stricter is the right direction for the one rule that
     /// can move a card without anybody seeing it.
     func testAnUntaggedSeriesSharingTheDateBlocksTheRelease() {
         let twin = series(id: "twin", title: "Etwas anderes", status: .backlog)
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next],
-            previouslySeenIDs: ["series"],
             refreshed: [series(), twin, detachedOccurrence()],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, [], "ambiguous identity means no proof")
+    }
+
+    func testSameTitleInAnotherListReleasesNothing() {
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            refreshed: [series(), detachedOccurrence(listID: "private")],
+            memory: memory(),
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [])
+    }
+
+    /// Untitled reminders are abandoned placeholders, not evidence about
+    /// anybody's pull.
+    func testAnUntitledOccurrenceReleasesNothing() {
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            refreshed: [series(), detachedOccurrence(title: "")],
+            memory: memory(),
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [])
     }
 
     func testAnOccurrenceWithoutACreationDateReleasesNothing() {
         let dateless = RecurringTagRelease.Snapshot(
             id: "detached", title: "Einkaufen", listID: "shared",
-            isCompleted: true, isRecurring: false, status: .done, createdAt: nil)
+            isCompleted: true, isRecurring: false, status: .done,
+            createdAt: nil, completedAt: Self.completedAt)
         let released = RecurringTagRelease.releasedSeriesIDs(
-            previousStatusByID: ["series": .next],
-            previouslySeenIDs: ["series"],
             refreshed: [series(), dateless],
+            memory: memory(),
+            deliberatelyMoved: [])
+        XCTAssertEqual(released, [])
+    }
+
+    func testAnOccurrenceWithoutACompletionDateReleasesNothing() {
+        let dateless = RecurringTagRelease.Snapshot(
+            id: "detached", title: "Einkaufen", listID: "shared",
+            isCompleted: true, isRecurring: false, status: .done,
+            createdAt: Self.seriesCreated, completedAt: nil)
+        let released = RecurringTagRelease.releasedSeriesIDs(
+            refreshed: [series(), dateless],
+            memory: memory(),
             deliberatelyMoved: [])
         XCTAssertEqual(released, [])
     }
 }
 
-/// The persisted half of the release rule: what survives a restart, and how
-/// reading degrades when the stored data is missing, foreign, or from another
-/// build.
+/// The persisted half of the release rule: the pull ledger, its stamping
+/// rule, and how reading degrades when the stored data is missing, foreign,
+/// or from another build.
 final class RecurringTagReleaseMemoryTests: XCTestCase {
 
     /// The suite writes into the developer's real defaults — whatever was
@@ -311,59 +298,85 @@ final class RecurringTagReleaseMemoryTests: XCTestCase {
         super.tearDown()
     }
 
+    private static let activeSince = Date(timeIntervalSince1970: 1_700_000_000)
+
     func testMemoryRoundTripsThroughDefaults() {
-        let memory = RecurringTagRelease.Memory(
-            seenIDs: ["a", "b", "c"],
-            taggedStatusByID: ["a": .next, "b": .inProgress])
+        var memory = RecurringTagRelease.Memory(activeSince: Self.activeSince)
+        memory.recordPull(
+            seriesID: "series",
+            at: Self.activeSince.addingTimeInterval(60),
+            newestVisibleCompletion: nil)
         memory.save()
         XCTAssertEqual(RecurringTagRelease.Memory.load(), memory)
     }
 
-    /// Fresh install, or first launch of the build that introduced the
-    /// memory: nothing stored means an empty memory, which makes the first
-    /// session behave like the app always did.
-    func testMissingKeyLoadsEmpty() {
+    /// Fresh install: nothing stored means the rule starts counting from
+    /// now — nothing that already happened is evidence.
+    func testMissingKeyStartsCountingFromNow() {
         UserDefaults.standard.removeObject(forKey: RecurringTagRelease.Memory.storageKey)
-        let memory = RecurringTagRelease.Memory.load()
-        XCTAssertTrue(memory.seenIDs.isEmpty)
-        XCTAssertTrue(memory.taggedStatusByID.isEmpty)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let memory = RecurringTagRelease.Memory.load(now: now)
+        XCTAssertTrue(memory.lastPullByID.isEmpty)
+        XCTAssertEqual(memory.activeSince, now)
     }
 
-    func testForeignTypesUnderTheKeyLoadEmpty() {
-        UserDefaults.standard.set("not a dictionary", forKey: RecurringTagRelease.Memory.storageKey)
-        let memory = RecurringTagRelease.Memory.load()
-        XCTAssertTrue(memory.seenIDs.isEmpty)
-        XCTAssertTrue(memory.taggedStatusByID.isEmpty)
-    }
-
-    /// A raw value from a build that renamed a case must cost only that
-    /// entry, not the whole memory.
-    func testUnknownStatusRawValueDropsOnlyThatEntry() {
+    /// The pre-13.08.2026 payload stored seen identifiers and tagged lanes.
+    /// None of it maps onto the pull ledger; it is dropped, and the rule
+    /// starts counting from now — the documented upgrade path.
+    func testOldEdgeRulePayloadLoadsAsAFreshStart() {
         UserDefaults.standard.set(
-            [
-                "seen": ["a", "b"],
-                "tagged": ["a": "next", "b": "someFutureLane"],
-            ],
+            ["seen": ["a", "b"], "tagged": ["a": "next"]],
             forKey: RecurringTagRelease.Memory.storageKey)
-        let memory = RecurringTagRelease.Memory.load()
-        XCTAssertEqual(memory.seenIDs, ["a", "b"])
-        XCTAssertEqual(memory.taggedStatusByID, ["a": .next])
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let memory = RecurringTagRelease.Memory.load(now: now)
+        XCTAssertTrue(memory.lastPullByID.isEmpty)
+        XCTAssertEqual(memory.activeSince, now)
     }
 
-    /// Only working-lane tags are proof material; Backlog and Done entries
-    /// never reach the persisted form no matter what the caller passes.
-    func testMemoryKeepsOnlyWorkingLaneTags() {
-        let memory = RecurringTagRelease.Memory(
-            seenIDs: [],
-            taggedStatusByID: ["a": .next, "b": .backlog, "c": .done, "d": .inProgress])
-        XCTAssertEqual(memory.taggedStatusByID, ["a": .next, "d": .inProgress])
+    func testForeignTypesUnderTheKeyLoadAsAFreshStart() {
+        UserDefaults.standard.set("not a dictionary", forKey: RecurringTagRelease.Memory.storageKey)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let memory = RecurringTagRelease.Memory.load(now: now)
+        XCTAssertTrue(memory.lastPullByID.isEmpty)
+        XCTAssertEqual(memory.activeSince, now)
     }
 
-    /// The stored raw values are a persisted contract — renaming a case
-    /// silently voids every install's proof (same pin as `wipLimits`).
-    func testStatusRawValuesAreStable() {
-        XCTAssertEqual(KanbanStatus.next.rawValue, "next")
-        XCTAssertEqual(KanbanStatus.inProgress.rawValue, "inProgress")
+    /// A pull is stamped no earlier than one second past the newest
+    /// completion already on the board: a completion that synced in *before*
+    /// the pull — even one stamped by a device whose clock runs ahead — can
+    /// never outrank the pull it preceded.
+    func testAPullOutranksEveryCompletionTheBoardCouldSee() {
+        let now = Self.activeSince.addingTimeInterval(1_000)
+        let skewedCompletion = now.addingTimeInterval(180)
+        var memory = RecurringTagRelease.Memory(activeSince: Self.activeSince)
+        memory.recordPull(seriesID: "series", at: now, newestVisibleCompletion: skewedCompletion)
+        let pulledAt = memory.lastPullByID["series"]
+        XCTAssertNotNil(pulledAt)
+        XCTAssertGreaterThan(pulledAt!, skewedCompletion)
     }
 
+    /// A completion already behind the pull leaves the stamp at "now" — the
+    /// pull's own moment is the honest record.
+    func testAPullAfterAnOlderCompletionIsStampedAtItsOwnTime() {
+        let now = Self.activeSince.addingTimeInterval(1_000)
+        var memory = RecurringTagRelease.Memory(activeSince: Self.activeSince)
+        memory.recordPull(
+            seriesID: "series", at: now,
+            newestVisibleCompletion: now.addingTimeInterval(-600))
+        XCTAssertEqual(memory.lastPullByID["series"], now)
+    }
+
+    /// The ledger is bounded; the oldest pull falls out first.
+    func testThePullLedgerIsBoundedOldestFirst() {
+        var memory = RecurringTagRelease.Memory(activeSince: Self.activeSince)
+        for index in 0...RecurringTagRelease.Memory.maxPulls {
+            memory.recordPull(
+                seriesID: "series-\(index)",
+                at: Self.activeSince.addingTimeInterval(Double(index)),
+                newestVisibleCompletion: nil)
+        }
+        XCTAssertEqual(memory.lastPullByID.count, RecurringTagRelease.Memory.maxPulls)
+        XCTAssertNil(memory.lastPullByID["series-0"], "the oldest pull is the one to go")
+        XCTAssertNotNil(memory.lastPullByID["series-\(RecurringTagRelease.Memory.maxPulls)"])
+    }
 }
