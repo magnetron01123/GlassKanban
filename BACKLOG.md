@@ -661,6 +661,67 @@ ohne Zeitstempel — bei Präferenzen, die man selten anfasst, angemessen.
 mit `at = jetzt` und gewinnt damit gegen ältere, legitime Züge. Ihr Zeitstempel muss aus
 `lastModifiedDate` der Erinnerung kommen. Noch offen (Phase D).
 
+### Wie viel der Nutzer davon sieht (14.08.2026 entschieden)
+
+**Haltung: nichts.** Der Präzedenzfall steht in diesem Dokument unter „Fremde Schreiber" —
+der Hinweis, wenn das Board nachgibt, wurde am 10.08.2026 verworfen, weil der Nutzer von
+der Spaltenlogik nichts mitbekommen soll und ein Hinweis auf Datenmechanik die ruhige
+Dauerfläche zerstört. Synchronisation ist derselbe Fall: Mechanik, die ihre Arbeit tut.
+
+**Einblick hat er an drei Stellen, die alle nicht der App gehören** — und das ist die
+richtige Verteilung: Systemeinstellungen → Apple-ID → iCloud → iCloud Drive → Apps (dort
+liegt auch der Ausschalter), die Datenschutzangaben im App Store, und der zweite Mac
+selbst. Der beste Einblick sieht aus wie ein Ergebnis, nicht wie ein Mechanismus.
+
+**Wird nicht gebaut:**
+
+- **Kein eigener Ein/Aus-Schalter.** Es gibt ihn systemweit bereits; zwei Schalter für
+  dieselbe Sache können sich widersprechen, und der zweite erklärt sich nur über Mechanik.
+  Notizen, Erinnerungen und Freeform halten es genauso.
+- **Keine Statuszeile** („Zuletzt synchronisiert 14:32") — Dauer-Chrome für einen
+  Dauerzustand, gegen „Aufmerksamkeit gehört Ereignissen".
+- **Kein Einrichtungsdialog** beim ersten Start. Es gibt nichts einzurichten.
+- **Keine Fehlermeldung** bei gescheiterter Übertragung. Dieselbe Doktrin wie beim
+  Speicher: kein Dialog, eine Zeile in der Konsole, ein Zug repariert es.
+- **Kein Hinweis**, wenn iCloud aus ist. Es fehlt nichts, was der Nutzer angefordert hätte.
+
+**Die vier Momente, in denen die Technik doch durchschlägt:**
+
+| Moment | Unbehandelt | Maßnahme |
+|---|---|---|
+| Karte wechselt die Spur, weil der andere Mac gezogen hat | wirkt wie ein Geist oder ein Fehler | dieselbe Settle-Animation wie bei einem eigenen Zug |
+| Erststart auf dem zweiten Mac | Board steht kurz falsch, dann springen Karten | kurz auf den Speicher warten, bevor gezeichnet wird — wie bei großen Datenbanken schon üblich |
+| Konflikt oder schiefe Uhr | Karte liegt woanders als erwartet | nichts sagen, ein Zug repariert es |
+| iCloud abgemeldet | — | nichts sagen |
+
+Daraus die Regel, die bei der Umsetzung gilt:
+
+> **Fremde Bewegung wird gezeigt, nicht gemeldet.** Sie bekommt die Animation, damit sie
+> als Vorgang lesbar ist statt als Sprung — aber **nicht** Klang und Haptik aus
+> `MoveFeedback`. Die gehören der eigenen Hand; ein Ton für eine Bewegung, die woanders
+> passiert ist, wäre eine Benachrichtigung, und eigene Benachrichtigungen sind ausdrücklich
+> abgelehnt. Belohnung bleibt an das eigene Tun gekoppelt.
+
+**Die eine Stelle, an der Schweigen unehrlich wäre.** Datenhoheit ist ein Kernversprechen;
+der Nutzer muss *wissen können*, dass die Spalten seine iCloud benutzen, auch wenn er es nie
+sehen muss. Ein Satz in den Einstellungen, kein Schalter, keine Statuszeile:
+
+| Naheliegend (technisch) | Beschlossen |
+|---|---|
+| „iCloud-Synchronisation aktiviert · Zuletzt synchronisiert: 14:32" | *(entfällt)* |
+| „Spalten werden über iCloud mit deinen anderen Macs synchronisiert." | **„Deine Spalten stehen auf allen deinen Macs — über deine iCloud."** |
+| „Synchronisierung fehlgeschlagen. Bitte iCloud-Einstellungen prüfen." | *(entfällt)* |
+| „iCloud ist nicht verfügbar." | *(entfällt)* |
+
+Quelltext (Entwicklungssprache Englisch): „Your columns are on all your Macs, through your
+iCloud." Geprüft gegen „Ton der Texte" in CONCEPT.md: benennt statt zu kommentieren, nennt
+den Besitz, verspricht nichts, verteidigt nichts, Punkt hinter vollständigem Satz. Das Wort
+„iCloud" bleibt bewusst stehen — es ist die eine Mechanik, die man kennen muss, um sie
+abschalten zu können; sie zu verschweigen wäre teurer als ein technisches Wort.
+
+**Offen:** Der Satz sagt „Macs", nicht „Geräte". Sobald die iOS-App existiert, ist er
+umzuformulieren — bis dahin wäre „Geräte" ein Versprechen, das die App nicht einlöst.
+
 ### Phasen
 
 | Phase | Inhalt | Braucht Developer Program? | Stand |
@@ -669,7 +730,7 @@ mit `at = jetzt` und gewinnt damit gegen ältere, legitime Züge. Ihr Zeitstempe
 | ~~B~~ | ~~Umschlüsselung auf externen Bezeichner~~ | — | **entfällt** — Schlüssel sind bereits identisch |
 | C | `released` + `merged(_:_:now:)` als reine Funktion samt Tests | nein | **erledigt 14.08.2026** |
 | A | Speicher in App-Group-Container | zu prüfen | offen |
-| D | KV-Anbindung, Entitlement, Migrations-Zeitstempel | **ja** | offen |
+| D | KV-Anbindung, Entitlement, Migrations-Zeitstempel, fremde Bewegung animiert (s. o.) | **ja** | offen |
 | E | `SettingsSync` nach obiger Tabelle | ja | offen |
 | F | CONCEPT/SPEC/README/PrivacyInfo/RELEASE nachziehen | nein | teilweise |
 
