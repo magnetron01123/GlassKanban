@@ -174,10 +174,16 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
       Abhaken** (inkl. Alarm-Mitführung, SPEC.md „Weckzeiten folgen dem Fälligkeitsdatum",
       und Wiederkehrer-Ablehnung, SPEC.md „Wiederkehrende Aufgaben lassen sich nicht aus
       Erledigt zurückholen"), Drag & Drop mit WIP-Rückfrage, englische UI vollständig. Das
-      externe Abhaken getaggter Wiederkehrer ist seit 09.08.2026 gemessen und abgedeckt
+      externe Abhaken gezogener Wiederkehrer ist seit 09.08.2026 gemessen und abgedeckt
       (`RecurringTagRelease`, SPEC.md „Extern abgehakt") — in der Beta bleibt zu
-      bestätigen, dass die Freigabe auch auf fremden Boards greift und die
-      Kaltstart-Restlücke im Alltag nicht stört
+      bestätigen, dass die Freigabe im Alltag zuverlässig greift. Der frühere Punkt
+      „auch auf fremden Boards" ist seit dem Formwechsel vom 13.08.2026 gegenstandslos:
+      Die Spalte liegt je Mac in der eigenen `columns.json`, ein fremdes Board hat gar
+      keinen Zustand freizugeben
+- [ ] **Migration der Spalten (13.08.2026) auf einem zweiten Rechner beobachten:** Beim
+      ersten Start die Alt-Tags übernehmen lassen und prüfen, dass (a) jede Karte in ihrer
+      Spalte steht, (b) die Tags danach aus den Notizen verschwunden sind, (c) sonst kein
+      Notiztext angefasst wurde. Auf dem Entwicklungsrechner am 13./14.08.2026 so gemessen
 - [ ] Mindestens ein Tester mit englischem System, einer mit wiederkehrenden
       Erinnerungen samt Alarmen
 - [ ] Kriterium für Einreichung: eine crash-freie Beta-Woche

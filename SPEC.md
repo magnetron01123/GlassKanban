@@ -84,8 +84,10 @@ niemand sonst erreicht.
 **Was das für Schreibvorgänge heißt:** Ein Zug zwischen Backlog, Als Nächstes und In
 Bearbeitung fasst EventKit **gar nicht** mehr an. Nur der Übergang nach Erledigt und
 zurück schreibt (`isCompleted`), weil das eine Tatsache über die Aufgabe ist und keine
-über diese Ansicht. Die App schreibt in Reminders damit nur noch: Titel, Notiztext, URL,
-Fälligkeit, Priorität, Liste, `isCompleted` — und einmalig die Aufräumung unten.
+über diese Ansicht. Die App schreibt in Reminders damit nur noch, was der Nutzer im Editor
+oder beim Umbenennen selbst angibt: Titel, Notiztext, URL, Fälligkeit, Priorität, Liste,
+`isCompleted` — dazu die Alarm-Mitführung beim Verschieben eines Datums, die Felder eines
+wiederhergestellten Tickets (beides unten beschrieben) und einmalig die Aufräumung.
 
 | Zug auf einer **schreibgeschützten** Liste | bis 13.08.2026 | seither |
 |---|---|---|
@@ -219,15 +221,14 @@ gemessen, nicht abgeleitet):
 |---|---|
 | Notizen, Titel, URL, Fälligkeit | höchstens eine Antwort pro zehn Minuten je Karte und Feld |
 
-Der Unterschied folgt aus dem Mechanismus: Jeder Arbeits-Tag, der irgendwo verschwindet,
-wird bei jedem Refresh neu als Verdrängung gebucht — auch der, den das Board selbst gerade
-entfernt hat. Für die Notizen beginnt damit mit jeder Antwort ein neuer Takt, für die
-übrigen Felder nicht. **Das ist die bessere Hälfte des Handels:** Die Spaltenzuordnung —
-das Einzige, was das Board überhaupt verteidigt — steht binnen Sekunden wieder richtig,
-statt bis zu zehn Minuten falsch. Das Board schreibt dabei nie von sich aus öfter als der
-fremde Schreiber; ohne Gegenschreiben ruht es nachweislich (gemessen: kein einziger
-Schreibvorgang nach der Antwort). Was fehlt, ist eine Obergrenze für ein Programm, das im
-Sekundentakt schreibt — bewusst offen, siehe BACKLOG.md.
+Ein Takt für alle vier Felder, seit dem Formwechsel vom 13.08.2026. Vorher hatten die
+Notizen einen schnelleren, weil dort die Spalte lag und jeder verschwundene Arbeits-Tag
+bei jedem Refresh neu als Verdrängung gebucht wurde — beides ist entfallen: Die Spalte
+liegt im eigenen Speicher, wo kein fremder Schreiber sie erreicht, und was der Ledger
+heute verteidigt, sind vier gewöhnliche Textfelder. Das Board schreibt nie von sich aus
+öfter als der fremde Schreiber; ohne Gegenschreiben ruht es nachweislich (gemessen: kein
+einziger Schreibvorgang nach der Antwort). Was fehlt, ist eine Obergrenze für ein
+Programm, das im Sekundentakt schreibt — bewusst offen, siehe BACKLOG.md.
 
 Der letzte Halbsatz trägt die ganze Sicherheit: Jeder Wert, den dieser Mechanismus je
 automatisch schreibt, hat der Nutzer hier eingegeben; nie ein erfundener, nie ein
@@ -240,7 +241,7 @@ Boards durchgesetzt (Herleitung in CONCEPT.md).
 
 | Feld | Richtung | Warum begrenzt |
 |---|---|---|
-| Notizen | Spalte bleibt gleich **oder** fällt nach Backlog | Ein automatischer Schreibvorgang darf eine Karte nie in eine Arbeitsspalte heben |
+| Notizen | beide Richtungen (seit 13.08.2026) | Solange die Spalte in den Notizen stand, konnte ein Restore eine Karte in eine Arbeitsspalte heben; die Notiz ist jetzt reiner Nutzertext, und eine halbe Verteidigung wäre nur noch halb |
 | Titel | beide Richtungen | Viele mögliche Werte, ein buchstabengenauer Treffer ist echte Evidenz |
 | URL | beide Richtungen, verglichen in geparster Form | sonst liest die Prozentkodierung sich selbst als Dauerecho |
 | Fälligkeit | **nur ein verschwundenes** Datum kommt zurück, nie ein verschobenes, nie bei Wiederholungen | ein verschobenes Datum zurückzudrehen hieße, eine gerade gesetzte Frist zu löschen; Serien bewegt EventKit selbst |
@@ -253,16 +254,18 @@ ist der teuerste Fehlalarm dieser Liste), Listenzugehörigkeit, Wiederholungsreg
 sind in beide Richtungen unsichtbar. „Ganze Karte" heißt also: die ganze Karte, wie
 EventKit sie beschreibt.
 
-**Der eine Zusatz:** Verschwindet ein Arbeits-Tag irgendwo — am iPhone, in der
-Erinnerungen-App, per Skript —, zählt das ebenfalls als Verdrängung. Daraus kann nur die
-*Abwesenheit* eines Tags wiederhergestellt werden, der Irrtum kostet also höchstens einen
-Zug und fällt Richtung Backlog.
+**Gebucht wird nur, was das Board selbst schreibt** — der Editor, das Umbenennen, eine
+eigene Korrektur. Bis 13.08.2026 gab es einen Zusatz (ein irgendwo verschwundener
+Arbeits-Tag zählte auch als Verdrängung); er ist mit dem Tag entfallen. Ein Zug bucht
+seither gar nichts mehr, weil er kein Feld der Erinnerung anfasst.
 
 **Ein Durchgang, ein Speichern je Karte**, in dieser Reihenfolge: beobachten (ein dritter
 Zustand zieht den Eintrag zurück — wer seine Meinung ändert, wird nie bekämpft) →
-Echo beantworten → verbrauchten Pull freigeben → Hygiene auf das Ergebnis → speichern.
-Grenzen: höchstens fünf Karten je Sync, für Titel/URL/Fälligkeit eine Antwort je (Karte,
-Feld, Zustand) pro zehn Minuten, Verfall
+Echo beantworten → einmalige Tag-Aufräumung der Migration → speichern. Die Freigabe eines
+verbrauchten Pulls gehört nicht mehr dazu: Sie läuft vor diesem Durchgang und schreibt nur
+in den eigenen Speicher. Grenzen: höchstens fünf **Echo-Antworten** je Sync (die
+Aufräumung der Migration ist davon nicht betroffen — sie soll zügig fertig werden), je
+Karte und Feld eine Antwort pro zehn Minuten, Verfall
 nach 24 Stunden, höchstens 200 Karten im Gedächtnis. Ein Wecker holt eine
 vom Takt aufgeschobene Antwort nach, weil ein Zustand, der bloß falsch *bleibt*, keinen
 Sync auslöst. Schreibgeschützte Listen werden übersprungen.
@@ -834,8 +837,9 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
 
 - **Listenfarbe als Akzent:** `EKCalendar.color` als schmaler Streifen an der linken
   Kartenkante
-- **Verweildauer:** ab 3 Tagen in derselben Spalte zeigt die Karte „N Tage" (approximiert
-  über `lastModifiedDate`)
+- **Verweildauer:** ab 3 Tagen in derselben Spalte zeigt die Karte „N Tage" — gerechnet
+  ab dem Zeitpunkt des Zugs aus dem eigenen Speicher; nur für Karten, die dieses Board nie
+  bewegt hat, näherungsweise über `lastModifiedDate` (siehe oben)
 - **Links werden auf der Karte immer ausgeblendet:** URL-artige Textteile werden vor der
   Anzeige aus Titel und Notizen entfernt. Das betrifft **nur die Karten-Darstellung** — in
   EventKit wird nichts zurückgeschrieben, auch nicht beim Umbenennen, und der Editor zeigt
@@ -890,7 +894,7 @@ Ein einziges Bedienelement in der Toolbar (Lupe, ⌘F) enthält alles zum Finden
 
 | Element | Datenquelle |
 |---|---|
-| Suche | Titel + angezeigte Notizen, ohne Groß-/Kleinschreibung und Diakritika, Wortreihenfolge egal |
+| Suche | Titel + **ganze** Notiz + URL-Feld, ohne Groß-/Kleinschreibung und Diakritika, Wortreihenfolge egal |
 | Dringlichkeit | `EKReminder.priority` (Hoch/Mittel/Niedrig/Keine) |
 | Fälligkeit | `EKReminder.dueDateComponents` (Überfällig/Heute/Diese Woche/Ohne Datum) |
 | Listen | `EKCalendar` der Karte, Mehrfachauswahl (ab zwei Listen im Board) |

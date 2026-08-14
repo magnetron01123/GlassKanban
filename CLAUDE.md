@@ -35,7 +35,7 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
 
 ## Code-Landkarte
 
-Ein Xcode-Target (`GlassKanban/`, ~8.000 Zeilen SwiftUI), Projektdatei wird von XcodeGen
+Zwei Targets (App + Tests), `GlassKanban/` mit rund 10.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
@@ -45,7 +45,11 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Seit 13.08.2026 die einzige Quelle dafür; kein Eintrag heißt Backlog, Erledigt bleibt
   `isCompleted`. Kein anderes Programm erreicht diesen Speicher — genau das ist der Zweck.
 - **StatusTagger.swift** — **nur noch Migration**: liest die alten Hashtags einmal je
-  Liste ein und schneidet sie danach aus den Notizen. Wortgrenzen sind hier weiterhin
+  Liste ein und schneidet sie danach aus den Notizen — aber **nur bei den IDs, die der
+  Import namentlich vermerkt hat** (`ColumnState.pendingTagCleanup`). Diese Einschränkung
+  ist nicht kosmetisch: Ohne sie löschte der Lauf am 14.08.2026 ein Wort, das der Nutzer
+  gerade selbst getippt hatte („Notiz mit #inprogress darin" → „Notiz mit darin"), weil
+  ein Alt-Tag und ein frisches Wort im Text nicht zu unterscheiden sind. Wortgrenzen sind hier weiterhin
   sicherheitskritisch — eine links fehlende Grenze erkannte `#next` mitten in
   `https://example.com/guide#next` und zerstörte damit echten Nutzertext, ohne dass der
   Nutzer je etwas getan hatte (behoben 26.07.2026, siehe `StatusTaggerTests`). Die Datei
@@ -53,7 +57,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 - **Models.swift** — `KanbanStatus`, `KanbanCard`, Filter- und Sortierlogik.
 - **Views** — `BoardView` (Board + Dialoge), `ColumnView` (Spalte, Falz, Drop-Ziele),
   `CardView` (Karte, Settle-Animationen, Durchstrich), `TicketEditSheet` (Karten-Editor),
-  `StatsPopover`, `FindPopover`, `SettingsView`, `EmptyBoardNotice`.
+  `StatsPopover`, `FindPopover`, `SettingsView`, `EmptyBoardNotice`, `BoardTooltip`
+  (eigenes Glas-Tooltip statt `.help()`), `MoveFeedback` (Klang und Haptik beim Zug),
+  `HUDGlassMaterial` (Fenstermaterial), dazu `ContentView` und `GlassKanbanApp`.
 - **DesignSystem.swift** — alle Tokens (Farben, Maße, Animationskurven). Neue Werte
   gehören hierher, nicht in die Views.
 - **Reine, testbare Regeln ohne UI/EventKit** — `TicketRename`, `EditorKeyCommand`,
@@ -95,8 +101,8 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `GlassKanbanTests/`, 14 Dateien, benannt nach der Regel statt nach der
-  Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
+- **Tests** — `GlassKanbanTests/`, 20 Dateien mit rund 300 Tests, benannt nach der Regel
+  statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
 
 ## Arbeitsweise
 

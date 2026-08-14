@@ -710,7 +710,14 @@ final class RemindersStore: ObservableObject {
             // the cleanup below reaches them — is named here and nowhere else.
             // That naming is what keeps the cleanup from ever touching a word
             // the user types later (see `ColumnState.pendingTagCleanup`).
-            if StatusTagger.hasStatusTag(reminder.notes) {
+            //
+            // Except on a list the board may not write to: its tags can never
+            // be cut, so naming them would leave entries that outlive every
+            // attempt and quietly deny the promise that an empty list means
+            // the migration is over. Their text stays as it is, which is the
+            // right answer anyway — it belongs to whoever owns that list.
+            if reminder.calendar?.allowsContentModifications == true,
+               StatusTagger.hasStatusTag(reminder.notes) {
                 taggedByList[listID, default: []].insert(cardID)
             }
             guard !reminder.isCompleted else { continue }
@@ -946,9 +953,10 @@ final class RemindersStore: ObservableObject {
             title: TextSanitizer.displayTitle(reminder.title),
             notesPreview: TextSanitizer.notesPreview(reminder.notes),
             notesExcerpt: TextSanitizer.notesExcerpt(reminder.notes),
-            // The full note with the status tag taken out, plus the link —
-            // what the card shows is a preview, what Find searches is the
-            // reminder.
+            // The whole note plus the link — what the card shows is a
+            // preview, what Find searches is the reminder. Nothing is
+            // stripped: the board writes no tags, so every word in there is
+            // the user's and has to be findable.
             searchText: [
                 reminder.notes,
                 reminder.url?.absoluteString,

@@ -29,11 +29,10 @@ import Foundation
 /// discarded, because a writer that pushes more often than the user would get
 /// its stale values adopted and then enforced with the board's own authority.
 ///
-/// One deliberate exception, and only because its direction is safe: when a
-/// working-lane tag disappears anywhere — on the phone, in Reminders, by a
-/// script — that counts as a displacement too. All that can be restored from
-/// it is the *absence* of a tag, so the worst it can cost is one drag, and
-/// the card rests in Backlog rather than in a lane nobody pulled.
+/// Only the board's own writes are booked. Until 13.08.2026 there was one
+/// exception — a working-lane tag disappearing anywhere counted as a
+/// displacement too — and it went with the tag: the column now lives in the
+/// board's own storage, where no foreign writer can take it away.
 struct CorrectionLedger: Equatable {
 
     /// The protected fields. Exhaustive on purpose — what is missing here is

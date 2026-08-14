@@ -1,8 +1,9 @@
 import Foundation
 
 /// Cleans reminder text for display only — nothing is ever written back.
-/// URLs are always hidden (spec), status tags are internal control tokens
-/// and never shown as note content.
+/// URLs are always hidden (spec). Status tags were hidden too until
+/// 13.08.2026, back when the board wrote them; it writes none now, so
+/// anything that looks like one is the user's own word and stays.
 enum TextSanitizer {
 
     private static let urlRegex = #/(?:https?://|www\.)\S+/#.ignoresCase()

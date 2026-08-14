@@ -2,9 +2,10 @@
 
 Ein natives macOS-Kanban-Board für Apple Erinnerungen (Reminders) im Liquid-Glass-Design.
 
-Alle Daten leben ausschließlich in Erinnerungen — Glass Kanban ist reine Visualisierung
-und Steuerung über EventKit. Kein Server, kein Konto, keine Cloud-Komponente, keine
-Zugangsdaten: Die einzige Berechtigung ist der macOS-Systemdialog für den
+Deine Aufgaben leben in Erinnerungen — Glass Kanban liest und schreibt sie über EventKit
+und legt nichts davon woanders ab. Nur die Spalte gehört dem Board selbst und liegt in
+einer eigenen Datei auf diesem Mac (seit 13.08.2026, siehe „Funktionsweise"). Kein Server,
+kein Konto, keine Cloud-Komponente, keine Zugangsdaten: Die einzige Berechtigung ist der macOS-Systemdialog für den
 Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
 
 ## Funktionsweise

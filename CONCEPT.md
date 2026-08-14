@@ -60,9 +60,15 @@ sichtbar: in Glass Kanban und in der nativen Reminders-App.
 
 ## Datenmodell
 
-### Spalten = Hashtag in den Notizen (kein Listenwechsel)
+### Spalten = Hashtag in den Notizen (bis 13.08.2026 — historisch)
 
-Wichtiger technischer Fakt, der die Lösung bestimmt: `EKReminder.calendar` ist ein
+> **Dieser Abschnitt beschreibt die Form, die das Board bis zum 13.08.2026 hatte, und die
+> Überlegungen, die zu ihr führten.** Seither liegt die Spalte im eigenen Speicher der App;
+> die Begründung dafür steht unten unter „Vollzogener Formwechsel", das gebaute Verhalten
+> in SPEC.md („Spalten = eigener Speicher der App"). Die Tabellen und Regeln hier stehen
+> im Präsens, weil sie so beschlossen wurden — sie gelten nicht mehr.
+
+Wichtiger technischer Fakt, der die Lösung damals bestimmte: `EKReminder.calendar` ist ein
 **einzelnes Objekt, keine Menge** — eine Erinnerung kann immer nur in genau **einer** Liste
 gleichzeitig sein. "Liste = Spalte" würde also bedeuten, dass eine Erinnerung beim Verschieben
 durchs Board ihre ursprüngliche, inhaltliche Liste (z. B. "Projekt X") verlässt — ein echter
@@ -150,7 +156,8 @@ immer strikt als letzte, eigene Zeile geschrieben.
 
 **Weitere Eigenschaften:**
 
-- **Bonus:** Der Hashtag lässt sich auch manuell direkt in der nativen Reminders-App auf
+- **Bonus (entfallen am 13.08.2026 — der Preis des Formwechsels):** Der Hashtag ließ sich
+auch manuell direkt in der nativen Reminders-App auf
   iPhone/iPad/Mac eintippen — eine Karte kann so verschoben werden, ohne Glass Kanban zu öffnen.
 - Ursprüngliche Listenzugehörigkeit bleibt bei jedem Spaltenwechsel zu 100 % unverändert.
 - **Datenhygiene:** Erkennt die App eine erledigte Erinnerung (`isCompleted = true`), die noch
@@ -222,8 +229,10 @@ Zwei Spannungen, die dabei bewusst entschieden wurden statt still zu bleiben:
   beobachtete Änderung zu verteidigen; erwogen, entworfen und verworfen. Auf einem Board,
   auf dem ein fremdes Programm häufiger schreibt als der Mensch, würde die App überwiegend
   dessen alte Werte adoptieren und sie anschließend mit eigener Autorität gegen den
-  echten Nutzerwert durchsetzen. Einzige Ausnahme bleibt das Verschwinden eines
-  Arbeits-Tags, weil daraus nur die Abwesenheit eines Tags folgen kann.
+  echten Nutzerwert durchsetzen. Bis 13.08.2026 gab es eine Ausnahme — das Verschwinden
+  eines Arbeits-Tags, weil daraus nur die Abwesenheit eines Tags folgen konnte. Sie ist
+  mit dem Tag entfallen: Die Spalte ist fremdem Zugriff entzogen, der Notiztext wird
+  seither in beide Richtungen verteidigt.
 
 Der Restschaden, der bleibt und nicht wegzukonstruieren ist: Ein bewusster Widerruf auf
 einem anderen Gerät erzeugt definitionsgemäß den Vorzustand und ist von einem Rückschieber
@@ -425,8 +434,9 @@ Erinnerungen-Knopf (anlegen) — zwei klar getrennte Funktionen, keine Sammlung 
   das Board bleibt das Board und schrumpft zusammen.
 - **Durchsucht** werden Titel und Notizen, ohne Groß-/Kleinschreibung und ohne Diakritika
   (`localizedStandardContains`) — dieselbe Nachsicht wie die Reminders-App. Der
-  Status-Hashtag wird vor dem Vergleich entfernt, sonst träfe „bearbeitung" schlagartig
-  eine ganze Spalte.
+  Status-Hashtag wurde bis 13.08.2026 vor dem Vergleich entfernt, sonst hätte
+  „bearbeitung" schlagartig eine ganze Spalte getroffen. Seit die App keine Tags mehr
+  schreibt, ist jedes Wort in der Notiz gewöhnlicher, findbarer Text.
 - **Kein Suchverlauf, keine Vorschläge, kein Index** — wäre sonst der einzige Ort, an dem
   die App etwas über den Nutzer speichert, und widerspräche „lokal, speichert selbst
   nichts". Die Suche existiert nur, solange etwas im Feld steht.
@@ -449,17 +459,23 @@ die Spaltenzähler die *sichtbare*, nicht die tatsächliche Menge (mit WIP-Limit
 einer Suche nur häufiger auf. Der eingefärbte Zustand am Finden-Symbol ist die minimale
 Antwort darauf — eine Markierung an einer Stelle statt an jeder Spalte.
 
-## MVP-Funktionsumfang
+## MVP-Funktionsumfang (Stand der ersten Planung — überholt)
 
-Die App ist im MVP bewusst **überwiegend read-only**. Das Anlegen und inhaltliche Bearbeiten
-von Aufgaben (Titel, Notizen, Fälligkeit, Priorität, Person zuweisen) passiert ausschließlich
-in der nativen Reminders-App. Glass Kanban visualisiert diese Daten live und schön, greift
-aber nicht inhaltlich ein.
+> **Beide Annahmen dieses Abschnitts sind eingeholt worden.** „Überwiegend read-only" galt
+> bis zum Karten-Editor (Juli 2026): Anlegen, Bearbeiten, Umbenennen und Löschen sind
+> gebaut. Und die „einzige Schreib-Interaktion" beschreibt den Hashtag-Mechanismus, den der
+> Formwechsel vom 13.08.2026 abgelöst hat — ein Zug schreibt seither in den eigenen
+> Speicher, in Reminders nur noch `isCompleted` beim Erledigen. Der Abschnitt bleibt als
+> Ausgangspunkt stehen; was gebaut ist, steht in SPEC.md.
 
-**Einzige Schreib-Interaktion in der App:** Drag & Drop einer Karte zwischen den vier Spalten
-(= Hashtag in den Notizen wird im Hintergrund aktualisiert, siehe Datenmodell). Eine Karte
-nach "Erledigt" ziehen setzt automatisch `isCompleted = true` und entfernt einen eventuell
-vorhandenen Status-Hashtag — ein separater Erledigen-Button/Checkbox in der App ist damit
+Die App war im MVP bewusst **überwiegend read-only**. Das Anlegen und inhaltliche Bearbeiten
+von Aufgaben (Titel, Notizen, Fälligkeit, Priorität, Person zuweisen) sollte ausschließlich
+in der nativen Reminders-App passieren. Glass Kanban visualisiert diese Daten live und schön,
+griff aber zunächst nicht inhaltlich ein.
+
+**Einzige Schreib-Interaktion der ersten Fassung:** Drag & Drop einer Karte zwischen den vier
+Spalten (= Hashtag in den Notizen wurde im Hintergrund aktualisiert). Eine Karte nach
+"Erledigt" ziehen setzt `isCompleted = true` — ein separater Erledigen-Button ist damit
 nicht nötig, das deckt der Spaltenwechsel bereits ab.
 
 - 4 feste Spalten (siehe oben)
@@ -747,7 +763,8 @@ Gültig ist deshalb:
 
 - **Was später oder nie kommt** → [BACKLOG.md](BACKLOG.md) (Ausbaustufen, „Explizit
   abgelehnt", Apple-Plattform-Grenzen)
-- **Wie die App mit diesen Fällen heute umgeht** → [SPEC.md](SPEC.md) (Tag-Erkennung
+- **Wie die App mit diesen Fällen umgeht** → [SPEC.md](SPEC.md) (die Tag-Erkennung gilt
+  seit 13.08.2026 nur noch für die einmalige Migration;
   samt Wortgrenzen, Mehrfach-Tags, Datenhygiene, bekannte Einschränkungen)
 
 Der Rest dieses Dokuments bleibt, was er sein soll: die Begründung hinter den

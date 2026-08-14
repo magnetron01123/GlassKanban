@@ -129,12 +129,13 @@ hierher gehört.
   (s. u.), daher zusammen verschoben.
 - **Eigene Hashtags aus den Notizen als Tag auf der Karte anzeigen** — wer Erinnerungen schon
   mit eigenen Hashtags kategorisiert (z. B. `#projektx`), sieht die aktuell nur als rohen Text
-  in der Notizen-Vorschau, sofern es nicht zufällig der Status-Hashtag ist (der schon
-  herausgefiltert wird, siehe SPEC.md). Vorschlag: eigene Hashtags erkennen und als kleine
+  in der Notizen-Vorschau. **Seit 13.08.2026 einfacher geworden:** Die App filtert keine
+  Hashtags mehr heraus und reserviert auch keinen für sich — das damalige Hindernis
+  (Kollision mit dem Status-Tag) ist mit dem Formwechsel weggefallen. Vorschlag: eigene Hashtags erkennen und als kleine
   Tag-Chips auf der Karte anzeigen statt/zusätzlich zur reinen Notizen-Vorschau. Bewusst nicht
-  im MVP: Karte soll reduziert bleiben, und Hashtag-Erkennung im Notiztext ist bereits fürs
-  interne Status-Tag reserviert — Kollision/Abgrenzung zwischen Status-Hashtag und
-  Nutzer-Hashtag (und Darstellung bei mehreren Tags) müsste sauber gelöst werden.
+  im MVP: Karte soll reduziert bleiben. Die frühere Begründung (Kollision mit dem internen
+  Status-Tag) gilt seit dem Formwechsel nicht mehr; offen bleibt nur die Darstellung bei
+  mehreren Tags.
 
 ## Filter
 
@@ -161,8 +162,8 @@ hierher gehört.
   die Spalten. Deutlich größerer Scope als die "Heute-Absatz"-Trennung oben (die ist
   automatisch und ungestaltbar, nur im Backlog) — hier braucht es Verwaltungs-UI (anlegen,
   umbenennen, löschen) und eine Datenquelle für die Zuordnung. Offene Frage: gleicher
-  Hashtag-Mechanismus wie bei den Spalten, oder etwas anderes, das nicht mit dem
-  Status-Hashtag kollidiert.
+  ein zweites Feld im eigenen Spaltenspeicher (`columns.json`) wäre heute der naheliegende
+  Weg — die Spalten selbst benutzen seit 13.08.2026 keinen Hashtag mehr.
 - **Mehrere Boards** — MVP ist bewusst ein einzelnes Board.
 - **Board-/Workflow-Designer (Name noch offen)** — Idee (26.07.2026): Nutzer:innen können ihr
   Board individualisieren, statt nur den MVP-Standard mit vier festen Spalten zu bekommen.
@@ -174,8 +175,9 @@ hierher gehört.
   oder umkonfigurieren lassen, ohne diese Mechanik zu brechen. Erweitert/ersetzt die bisherige
   knappe Notiz "Konfigurierbare Spaltenanzahl/-namen". Noch zu klären: passender Name für das
   Feature, ob sich die Spaltenanzahl selbst auch ändern lässt oder nur Name+Limit der
-  bestehenden mittleren Spalten, und wie der Status-Hashtag-Mechanismus (SPEC.md) mit
-  umbenannten Spalten zusammenspielt.
+  bestehenden mittleren Spalten. Die früher offene Frage nach dem Hashtag-Mechanismus hat
+  sich erledigt: `ColumnState.Lane` speichert Rohwerte (`next`/`inProgress`), die von jedem
+  Anzeigenamen unabhängig sind.
 - **Manuelle Kartenreihenfolge innerhalb einer Spalte** — MVP sortiert automatisch nach
   Fälligkeitsdatum.
 
@@ -187,8 +189,9 @@ hierher gehört.
   offenen Fragen: (1) Der erledigte Durchgang wird als **eigene, abgelöste** Erinnerung
   abgelegt, die Serie läuft **unter derselben ID** mit dem nächsten Termin weiter — der
   „Erledigt"-Moment ist also sichtbar und dauerhaft, nur nicht an der ID, die das Board
-  gezogen hat. (2) Der Status-Hashtag wird sauber entfernt; die zurückkehrende Serie landet
-  korrekt im Backlog, auch nach 90 s Beobachtung ohne iCloud-Rückschreiber. (3) Die
+  gezogen hat. (2) Der Status-Hashtag wurde sauber entfernt; die zurückkehrende Serie
+  landet korrekt im Backlog, auch nach 90 s Beobachtung ohne iCloud-Rückschreiber (seit
+  13.08.2026 über den eigenen Speicher statt über den Tag — Ergebnis unverändert). (3) Die
   Erledigung zählt zum Streak (echtes `completionDate`), fließt aber bewusst nicht in die
   Durchlaufzeit ein — siehe SPEC.md, „Durchlaufzeit bewusst gefenstert".
   Der eigentliche Fehler lag anderswo: Weil die ID nach dem Erledigen den *nächsten*
@@ -243,11 +246,13 @@ Thema selbst öffnet:
 - **Verfallenen Pull über einen Fälligkeitssprung erkennen** (statt über die abgelöste
   erledigte Kopie) — verworfen: Ein Mensch verschiebt Fälligkeiten routinemäßig. Die Regel
   hätte eine Karte, deren Termin jemand von Hand aufschiebt, still aus der Arbeitsspalte
-  geholt — ein Pull-Entzug ohne Beleg, also genau die verbotene Richtung. Der bestehende
-  Mechanismus bleibt, weil sein Auslöser (frisch abgelöster erledigter Durchgang) nur durch
-  eine Erledigung entstehen kann.
+  geholt — ein Pull-Entzug ohne Beleg, also genau die verbotene Richtung. (Der damals
+  verteidigte Auslöser — der frisch abgelöste erledigte Durchgang — ist am 13.08.2026
+  selbst durch eine stehende Bedingung ersetzt worden; die Ablehnung dieser Idee gilt
+  unverändert.)
 - **Eigener `#backlog`-Tag** — verworfen, siehe CONCEPT.md: verteidigt die Entscheidung
-  nicht, kostet aber sichtbaren Text in fremden Notizen.
+  nicht, kostet aber sichtbaren Text in fremden Notizen. (Seit 13.08.2026 ohnehin
+  gegenstandslos — es gibt keine Tags mehr.)
 - **Eine Obergrenze für Antworten je Karte und Stunde** — geprüft, **bewusst offen
   gelassen** (10.08.2026, nach einer Messung am laufenden Board). Der dokumentierte
   Zehn-Minuten-Takt greift für den Status-Tag nicht: Sechs Rückschieber im
@@ -269,10 +274,10 @@ Thema selbst öffnet:
   Hashtag ist ein Datenformat, kein Oberflächentext: In geteilten Listen träfen zwei
   Sprachen aufeinander, Umlaute sind über fremde Systeme ein Kodierungsrisiko (die
   `ae`-Ersatzformen der Legacy-Tags sind der gelebte Beweis), und jede Umstellung löste
-  einen Migrationslauf über fremde Daten aus. Geschrieben wird immer Englisch; **gelesen**
-  wird dauerhaft tolerant, auch die deutschen Formen — sie sind damit keine
-  „Legacy-Altlast" mehr, sondern akzeptierte Eingabe für alle, die den Tag unterwegs von
-  Hand tippen.
+  einen Migrationslauf über fremde Daten aus. (Überholt am 13.08.2026: Die App schreibt
+  überhaupt keine Tags mehr, und gelesen werden sie nur noch von der einmaligen Migration.
+  Die Ablehnung bleibt als Begründung stehen, warum ein sichtbares Datenformat nie
+  lokalisiert werden sollte.)
 
 ## Formwechsel: Status verlässt die Notizen (13.08.2026 — umgesetzt)
 
@@ -460,7 +465,8 @@ nicht möglich)
 ## Onboarding / Ersteinstieg
 
 - **Einführung in die App-Nutzung** — Idee (27.07.2026): eine Einführung für neue Nutzer:innen
-  (z. B. Spaltenbedeutung, Hashtag-Mechanismus, WIP-Limit, Drag & Drop) beim ersten Start.
+  (z. B. Spaltenbedeutung, WIP-Limit, Drag & Drop) beim ersten Start. Ein Erklärgrund
+  weniger seit 13.08.2026: Der Hashtag-Mechanismus, den man hätte erklären müssen, ist weg.
   **Offene Spannung, vor einer Umsetzung zu klären:** CONCEPT.md legt beim Chrome-Hover-Tipp-
   Konzept bewusst den Grundsatz „Wissen entsteht im Moment der Berührung, nicht über
   Onboarding" fest (Design-Anspruch, Abschnitt Hover-Tipps) — ein klassischer
@@ -537,9 +543,10 @@ nicht möglich)
 
 ## Plattform-Erweiterung: iOS-App
 
-- **Begleitende iOS-App (iPhone + iPad)** — eigene Glass-Kanban-Ansicht auf iPhone/iPad statt
-  nur über die native Reminders-App unterwegs Hashtags zu setzen (das funktioniert schon jetzt
-  ohne eigene App, siehe Bonus-Hinweis in CONCEPT.md). Eigenes Xcode-Multiplatform-Target, eigene
+- **Begleitende iOS-App (iPhone + iPad)** — eigene Glass-Kanban-Ansicht auf iPhone/iPad.
+  Seit dem Formwechsel vom 13.08.2026 **die einzige Möglichkeit, unterwegs zu ziehen**: Der
+  Weg über Hashtags in der Reminders-App ist entfallen. Braucht deshalb eine eigene
+  Status-Synchronisation (CloudKit/iCloud-KV), die es vorher geschenkt gab. Eigenes Xcode-Multiplatform-Target, eigene
   UI-Anpassung für kleinere Bildschirme/Touch-Bedienung, eigene App-Store-Überlegungen — klare
   Plattformerweiterung nach dem Mac-MVP, nicht Teil davon.
 - **Ausrichtungsabhängige Ansicht (iPhone)** — Idee (27.07.2026) für die begleitende iOS-App
@@ -596,7 +603,8 @@ Seit dem 26.07.2026 ein aktives Vorhaben mit eigenem Arbeitsdokument:
 und ist die einzige Wahrheit zum Release (dieser Abschnitt hier bleibt bewusst nur ein
 Verweis, damit nichts doppelt gepflegt wird). Beschlossen dort u. a.: Einmalkauf
 9,99–14,99 €, nur Mac App Store, Deutsch + Englisch mit Englisch als
-Entwicklungssprache, Tag-Migration auf `#next`/`#inprogress`.
+Entwicklungssprache, Tag-Migration auf `#next`/`#inprogress` (letzteres am 13.08.2026
+selbst überholt — die Spalte steht seither nicht mehr in den Notizen).
 
 Der ältere Branch `feature/backlog-release-readiness` (21.07.) ist damit obsolet;
 sein Inhalt ist in RELEASE.md aufgegangen bzw. inzwischen umgesetzt (private API

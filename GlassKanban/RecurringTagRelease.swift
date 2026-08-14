@@ -62,9 +62,10 @@ import Foundation
 /// Because the condition stands rather than fires, it needs no memory of
 /// which identifiers were fetched before — a cold start, a sleep gap, or a
 /// stale writer restoring the tag hours later all land in the same check.
-/// The write it produces is paced by the store (one answer per card per
-/// correction cooldown), so a writer that keeps restoring the tag is
-/// answered calmly, not fought.
+/// Since 13.08.2026 the release writes nothing to Reminders at all — it
+/// clears an entry in the board's own storage — so it needs neither pacing
+/// nor the undo fence: there is no foreign writer to answer and no
+/// reminder field to touch.
 ///
 /// Remaining limits, accepted and documented in SPEC.md: a tag typed onto
 /// the series by hand on another device after a completion is
