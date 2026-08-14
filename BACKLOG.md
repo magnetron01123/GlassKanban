@@ -26,15 +26,17 @@ Gemessen am 14.08.2026, damit die Härte dieses Blockers nicht erneut geprüft w
 
 ### Wo welche Arbeit liegt
 
-| Branch | Inhalt | Zustand |
-|---|---|---|
-| `feature/display-affinity-v2` | Bildschirmzuordnung | **fertig und am laufenden Board verifiziert** — mergen |
-| `feature/icloud-sync-foundation` | Grundlage der Gerätesynchronisation | funktionsneutral, in sich abgeschlossen — mergen (Begründung unten) |
-| `feature/display-affinity` | Duplikat der Bildschirmzuordnung | wertlos, Erkenntnis ist dokumentiert — löschen |
-| `feature/window-screen-memory` | Vorgänger vom 10.08. | überholt durch `-v2` — löschen |
-| `feature/board-hugs-content` | abgelehnter Vorschlag vom 23.07. | 131 Commits hinter main, tot |
-| `feature/backlog-release-readiness` | überholt durch RELEASE.md | 179 Commits hinter main, tot |
-| `docs/…`, `fix/…`, `feature/local-column-state` | bereits in main | löschen |
+**Am 14.08.2026 aufgeräumt: alles liegt in `main`, es gibt keine offenen Branches mehr.**
+
+| Was | Wo |
+|---|---|
+| Bildschirmzuordnung | in `main` (PR #48), am laufenden Board verifiziert |
+| Grundlage der Gerätesynchronisation | in `main` (PR #49), funktionsneutral — **es wird nichts übertragen** |
+| Vorgänger der Bildschirmzuordnung (10.08.) | gelöscht, als Tag `archive/window-screen-memory` gesichert, weil PR #48 auf ihn verweist |
+| Duplikat, `board-hugs-content` (23.07. abgelehnt), `backlog-release-readiness`, vier bereits gemergte | gelöscht, lokal und auf GitHub |
+
+Acht Branches sind dabei verschwunden. Der Grund steht direkt darunter — und die zwei
+ältesten waren 131 bzw. 179 Commits hinter `main`, also seit Wochen unbrauchbar.
 
 ### Warum halbfertige Arbeit gemergt und nicht aufgehoben wird
 
