@@ -119,6 +119,14 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Textvorschlag ohne Vorher-Nachher-Gegenüberstellung ist keiner.
 - UI-Änderungen selbst per Screenshot prüfen und eigenständig nachbessern; vorher alte
   App-Instanzen aus früheren Sessions beenden.
+- **Drag & Drop lässt sich nicht synthetisch auslösen** (14.08.2026 gemessen): Ein per
+  computer-use erzeugter Press-Move-Release wird von SwiftUIs Drag-System nicht als Zug
+  angenommen — die Karte bleibt liegen, und weil das Board-Fenster sich am Hintergrund
+  ziehen lässt, wandert stattdessen das Fenster. Für einen Spaltenwechsel im UI-Test
+  deshalb das **Kontextmenü** („Verschieben nach") nehmen: derselbe `move()`-Pfad, nur
+  ohne Geste. Die Geste selbst kann nur der Nutzer prüfen. Nebenbefund: Ein Fenster einer
+  nicht freigegebenen App (hier Home Assistant) wird aus dem Screenshot herausgefiltert,
+  liegt aber weiter davor und blockiert jeden Klick — Fenster verschieben oder maximieren.
 - **Tastaturbefunde nie aus synthetischen Tastendrücken ableiten, ohne sie mit einer
   echten Tastatur gegenzuprüfen.** Am 26.07.2026 blieb der Karten-Editor bei einem
   synthetischen Escape scheinbar offen (kein Codefehler — der Monitor erreicht solche
