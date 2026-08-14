@@ -532,14 +532,14 @@ final class RemindersStore: ObservableObject {
         // This is what the tag hygiene used to do by refusing to leave a tag
         // on a completed reminder.
         for reminder in fetched where reminder.isCompleted {
-            columns.release(reminder.calendarItemIdentifier)
+            columns.release(reminder.calendarItemIdentifier, at: .now)
         }
         // A pull the series has already spent gives its lane back — the same
         // standing rule as before, now written into the board's own record
         // instead of into somebody's notes. No pacing, no undo fence, no
         // regard for write permissions: nothing outside this app is touched.
         for seriesID in releasedSeriesIDs(incomplete: incomplete, completed: completed) {
-            columns.release(seriesID)
+            columns.release(seriesID, at: .now)
         }
         applyCorrections(fetched)
 
@@ -1399,7 +1399,7 @@ final class RemindersStore: ObservableObject {
         }
         // The record is gone, so its column is nothing but a stranded entry —
         // the snapshot carries it now, and `restoreTicket` puts it back.
-        columns.release(cardID)
+        columns.release(cardID, at: .now)
         persistColumns()
         register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
             store.restoreTicket(snapshot, undoManager: undoManager)

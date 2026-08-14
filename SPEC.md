@@ -119,9 +119,27 @@ ein Schreibvorgang, bleibt der Zug in der Sitzung wirksam, es erscheint **kein D
 stünde die Karte im Backlog. Grenze: höchstens 200 Einträge, ältester Zug zuerst — kein
 Verfall nach Alter, denn eine Karte darf monatelang in einer Arbeitsspalte stehen.
 
+**Wann eine Karte abgelegt wurde**, steht seit 14.08.2026 neben den Zügen in der Datei
+(`released`). Vermerkt wird nur, was dieses Board zuvor selbst gezogen hatte; für alles
+andere gibt es nichts zu vermerken. Der Vermerk verfällt nach 30 Tagen und geht **nie** in
+die Spaltenberechnung ein — kein Eintrag in `pulls` heißt weiterhin Backlog, unverändert.
+Er existiert allein für die vorbereitete Zusammenführung zweier Macs: Ohne Datum an der
+Ablage wäre ein alter Zug des anderen Rechners die einzige datierte Aussage und stellte
+eine abgelegte Karte wieder auf. Die Zusicherung, dass das Format Backlog nicht ausdrücken
+kann, bleibt dadurch wörtlich gültig — der Vermerk steht daneben, nicht darin. Die
+Formatversion bleibt 1: Ältere Builds überlesen das Feld und lesen jeden Zug korrekt
+weiter.
+
 **Der Speicher ist an diesen Mac gebunden.** Zwei Macs mit dieser App auf denselben Listen
 haben getrennte Spalten; die spätere iOS-App bräuchte eine eigene Synchronisation. Das ist
 der bewusst bezahlte Preis dafür, dass niemand sonst die Spalte erreichen kann.
+
+**Vorbereitet, aber nicht in Betrieb (Stand 14.08.2026):** Die Regel, nach der zwei
+Rechner ihre Spalten zusammenführen, ist als reine Funktion gebaut und getestet
+(`ColumnState.merged(_:_:now:)`) — je Karte gewinnt der jüngere Zeitstempel, Abwesenheit
+gilt nicht als Aussage, Gleichstand geht nach Backlog. **Übertragen wird noch nichts**;
+solange kein Speicher außerhalb dieses Macs angebunden ist, ändert die Regel am Verhalten
+der App nichts. Plan und Vorbehalte in BACKLOG.md, „Gerätesynchronisation über iCloud".
 
 ### Einmalige Migration der alten Hashtags
 

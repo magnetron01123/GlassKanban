@@ -541,6 +541,166 @@ nicht möglich)
   Export-/Teilen-Darstellung wäre ein eigenes Layout mit eigenen Fragen (was darf ein
   Screenshot über Listennamen verraten?).
 
+## Gerätesynchronisation über iCloud (14.08.2026 — in Arbeit)
+
+Auf Nutzerentscheidung beschlossen, nachdem eine erste Prüfung zur Zurückstellung geraten
+hatte. Die Gegenargumente stehen unten unter „Bewusst in Kauf genommen"; sie sind entkräftet
+oder bezahlt, nicht vergessen.
+
+**Was es löst.** Bis 13.08.2026 war die Spalte geräteübergreifend, weil sie als Hashtag in
+den Notizen stand und Notizen über iCloud synchronisieren (CONCEPT.md nennt das unter den
+Argumenten *gegen* den Formwechsel). Der Formwechsel hat diese Eigenschaft bezahlt. Die
+Synchronisation holt sie zurück, ohne den alten Preis erneut zu zahlen: kein sichtbares
+Datenformat in fremden Notizen, keine Angriffsfläche für fremde Schreiber.
+
+Der methodisch wichtigste Punkt ist nicht der Komfort: **Ein WIP-Limit, das pro Gerät
+zählt, ist keines.** Zwei Macs mit Limit 3 erlauben real sechs begonnene Aufgaben, und der
+WIP-Dialog — das dokumentierte Reibungs-Muster — greift nie. Dazu kommt die Verweildauer,
+die heute nur der ziehende Mac exakt kennt; der zweite fällt auf die
+`lastModifiedDate`-Näherung zurück und zeigt damit eine andere Zahl für dieselbe Karte.
+
+### Messung vom 14.08.2026 (Projektregel: erst messen, dann bauen)
+
+Swift-CLI gegen die echten Listen dieses Macs, 2509 Erinnerungen in 4 Listen, alle iCloud
+(calDAV). Ausgewertet wurden nur Aggregate, keine Titel.
+
+| Frage | Ergebnis |
+|---|---|
+| Hat jede Erinnerung einen `calendarItemExternalIdentifier`? | **ja, 2509 von 2509** |
+| Ist er eindeutig? | **ja** — 2509 verschiedene Werte, keine Kollision, auch nicht bei den 9 wiederkehrenden |
+| Welche Form? | **nackte UUID** — nicht die von `ReminderDeepLink` als typisch beschriebene Form `x-apple-reminder://<UUID>`. Der Code deckt beide ab, die Beschreibung dort ist also unvollständig, nicht falsch |
+| `calendarItemIdentifier` vs. `calendarItemExternalIdentifier` | **bei allen 2509 zeichengleich** |
+
+**Die letzte Zeile ist der Befund, der den Plan verkleinert:** Die Schlüssel in
+`columns.json` *sind* bereits die externen Bezeichner. Die geplante Umschlüsselung
+(ursprünglich Phase B, mit Migration über alle Listen und dem Risiko, die Spalten
+abgewählter Listen zu verlieren) entfällt ersatzlos. Sie erklärt nebenbei die Messung vom
+13.08.: Der Bezeichner überlebt Listenwechsel und kalten Cache, weil er die
+synchronisierte Record-UUID ist.
+
+**Was das über M1 sagt — und was nicht.** Ist der lokale Bezeichner zeichengleich mit dem
+externen, und ist der externe die synchronisierte Identität, dann ist er auf einem zweiten
+Mac derselbe. Das ist ein starkes Indiz, **kein Messergebnis**: Es braucht weiterhin zwei
+Macs. Bis dahin gilt der Vorbehalt.
+
+**Offen, weil auf einem Mac nicht messbar:**
+
+1. **M1** — ist `calendarItemExternalIdentifier` auf zwei Macs für dieselbe Erinnerung
+   identisch? Fällt das negativ aus, trägt der ganze Weg nicht.
+2. **M4** — ist `EKCalendar.calendarIdentifier` über zwei Macs identisch? Entscheidet, ob
+   `excludedCalendarIDs` synchronisierbar ist. `EKCalendar` hat kein Gegenstück zum
+   externen Bezeichner; fällt M4 negativ aus, bliebe nur Titel + Quelle — oder die
+   Einstellung bleibt bewusst lokal (die derzeit bevorzugte Antwort: welche Listen auf
+   welchem Rechner sichtbar sind, ist plausibel eine Gerätefrage).
+3. **M5** — Latenz und Konfliktverhalten des KV-Speichers in der Praxis.
+
+Die Messwerkzeuge liegen im Scratchpad der Sitzung und sind bei Bedarf neu zu erzeugen;
+sie geben nur Aggregate aus und lesen nie Titel.
+
+### Was wohin gehört
+
+Die Klassifikation ist der eigentliche Ertrag — der Übertragungscode ist danach klein.
+**Vor jedem neuen persistierten Wert ist diese Tabelle zu ergänzen**, statt die Frage je
+Feature neu zu stellen.
+
+| Zustand | Ort heute | Klasse |
+|---|---|---|
+| `pulls` (Spalten) | columns.json | geräteweit |
+| `released` (Ablage-Vermerke) | columns.json | geräteweit |
+| `importedLists` | columns.json | geräteweit — die Migration ist Eigenschaft der *Daten* |
+| `wipLimits` | UserDefaults | geräteweit |
+| `foldNotYetDue` | UserDefaults | geräteweit |
+| `excludedCalendarIDs` | UserDefaults | offen, hängt an M4 |
+| `appAppearance` | UserDefaults | lokal — Bildschirm im Büro ≠ zu Hause |
+| `completionSoundEnabled` | UserDefaults | lokal — Kopfhörer am Laptop |
+| `correctionLedger` | UserDefaults | **strikt lokal** |
+| `tagReleaseMemory` | UserDefaults | strikt lokal |
+| `pendingTagCleanup` | columns.json | lokal — Arbeitsliste dieses Prozesses |
+| Fenstergeometrie | AppKit | lokal |
+| künftige Ansichts-Einstellungen (Bildschirmzuordnung, Darstellungsgröße, Fokus-Filter, Tageszeit-Palette) | — | lokal |
+
+**Warum der `CorrectionLedger` niemals synchronisiert werden darf.** Er merkt sich, welche
+Werte *dieses* Board verdrängt hat. Synchronisiert schriebe Mac A einen Wert zurück, den
+Mac B gerade absichtlich geändert hat — zwei Boards, die einander als fremden Schreiber
+behandeln und auf echten Nutzerdaten in eine Schreibschleife laufen. SPEC.md führt „einen
+zweiten Mac mit derselben App" ausdrücklich als zweiten Schreiber; diese Rolle bleibt.
+
+Dazu die gute Nachricht: Seit dem Formwechsel schreibt ein Spaltenzug überhaupt nicht mehr
+in EventKit. Zwei Macs können beliebig ziehen, ohne sich über Reminders je zu begegnen —
+der Formwechsel hat die Synchronisation nicht erschwert, sondern erst sauber möglich
+gemacht.
+
+### Speicher und Zusammenführung
+
+**`NSUbiquitousKeyValueStore`, nicht CloudKit.** Nutzlast rund 12 KB gegen 1 MB Budget;
+kein Schema, keine Zonen, keine Subscriptions, minimale Review-Fläche. Ohne
+iCloud-Anmeldung liefert der Speicher leer und alles läuft lokal weiter — „funktioniert
+vollständig ohne iCloud" bleibt wahr. Die genauen Grenzen vor dem Bau gegen die aktuelle
+Apple-Doku prüfen.
+
+**Einstellungen:** UserDefaults bleibt der Lesepfad (schnell, offline), KV ist nur der
+Transport. Schreiben in beide; bei `didChangeExternallyNotification` die geänderten
+geräteweiten Schlüssel nach UserDefaults spiegeln und publishen. Konflikt: last-writer-wins
+ohne Zeitstempel — bei Präferenzen, die man selten anfasst, angemessen.
+
+**Spalten:** je Karte gewinnt der jüngere Zeitstempel. Umgesetzt als reine Funktion
+`ColumnState.merged(_:_:now:)`, Regeln und Grenzen dort dokumentiert und durch
+`ColumnStateTests` festgenagelt. Drei Punkte, die nicht offensichtlich sind:
+
+- **Abwesenheit ist keine Antwort.** Ein Gerät, das eine Karte nie gesehen hat, sagt nichts
+  über sie — sonst löschte jeder zweite Mac beim ersten Sync alle Pulls.
+- **Deshalb `released`.** Ein zurückgenommener Pull war bisher die *Abwesenheit* eines
+  Eintrags und trug kein Datum; ein alter fremder Pull hätte ihn wiederbelebt — genau die
+  verbotene Richtung. Der Vermerk liegt bewusst **neben** `pulls`, nicht darin, damit die
+  Zusicherung „das Format kann Backlog nicht ausdrücken" wörtlich gilt. Er verfällt nach
+  30 Tagen, danach spricht die Abwesenheit wieder für sich.
+- **Gleichstand geht nach Backlog**, und die Regel ist symmetrisch — sonst einigten sich
+  zwei Macs auf verschiedene Boards und überschrieben einander endlos.
+
+**Die Falle bei der Tag-Migration:** Läuft sie auf dem zweiten Mac, erzeugt sie Einträge
+mit `at = jetzt` und gewinnt damit gegen ältere, legitime Züge. Ihr Zeitstempel muss aus
+`lastModifiedDate` der Erinnerung kommen. Noch offen (Phase D).
+
+### Phasen
+
+| Phase | Inhalt | Braucht Developer Program? | Stand |
+|---|---|---|---|
+| M | Messungen | nein | teilweise erledigt 14.08.2026, M1/M4/M5 offen |
+| ~~B~~ | ~~Umschlüsselung auf externen Bezeichner~~ | — | **entfällt** — Schlüssel sind bereits identisch |
+| C | `released` + `merged(_:_:now:)` als reine Funktion samt Tests | nein | **erledigt 14.08.2026** |
+| A | Speicher in App-Group-Container | zu prüfen | offen |
+| D | KV-Anbindung, Entitlement, Migrations-Zeitstempel | **ja** | offen |
+| E | `SettingsSync` nach obiger Tabelle | ja | offen |
+| F | CONCEPT/SPEC/README/PrivacyInfo/RELEASE nachziehen | nein | teilweise |
+
+**Warum A vor D und nicht später:** `columns.json` liegt im Sandbox-Container der App.
+Widget, Live Activity und App Intents laufen in eigenen Prozessen und erreichen diesen Pfad
+**nicht** — alle drei stehen in diesem Dokument. Der Umzug ist jetzt billig; später
+bedeutet er eine Migration von Nutzerdaten im Feld. Vor dem Bau zu klären: ob App Groups
+mit der heutigen selbstsignierten Entwicklungsidentität überhaupt funktionieren oder erst
+mit Phase 0 aus RELEASE.md.
+
+### Bewusst in Kauf genommen
+
+- **Das Versprechen ändert sich.** CONCEPT.md, README und der künftige Store-Text sagen
+  heute „keine Netzwerkaufrufe". Präzise bleibt: kein eigener Server, kein Konto in der App,
+  keine Analyse, voll funktionsfähig ohne iCloud. Vor 1.0 zu überarbeiten (Phase F).
+- **Eine Karte kann sich bewegen, ohne dass hier jemand sie gezogen hat.** Abwägung in
+  CONCEPT.md, „Korrektur dieser Begründung (14.08.2026)".
+- **Uhrenschiefe entscheidet Gleichstände.** Bei normal synchronisierten Rechnern Sekunden,
+  Züge liegen Minuten auseinander. Eine grob falsche Uhr kostet einen Zug.
+- **Karten in „Auf meinem Mac"-Listen bleiben ausgeschlossen.** Sie haben keinen externen
+  Bezeichner und existieren auf dem zweiten Gerät ohnehin nicht — die Grenze, an der
+  EventKit den Bezeichner verweigert, ist genau die, an der Synchronisation gegenstandslos
+  wird. Dieser Mac hat derzeit keine solche Liste; die App muss den Fall trotzdem behandeln
+  (Karten ohne externen Bezeichner gehören in den lokalen Schlüsselraum).
+
+### Nicht gelöst, ausdrücklich
+
+Mehrgeräte heißt hier **mehrere Macs**. iPhone und iPad brauchen die App aus dem nächsten
+Abschnitt; diese Arbeit ist deren Voraussetzung, nicht ihr Ersatz. Der mobile Pull bleibt
+bis dahin aus.
+
 ## Plattform-Erweiterung: iOS-App
 
 - **Begleitende iOS-App (iPhone + iPad)** — eigene Glass-Kanban-Ansicht auf iPhone/iPad.
