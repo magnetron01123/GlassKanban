@@ -414,27 +414,98 @@ final class ColumnStateTests: XCTestCase {
     // survive being done again: read from every place it has ever lived, write
     // only to the current one, delete nothing.
 
+    /// Stands in for both directories `ColumnState` asks the system about, so
+    /// that these tests never touch — or create — a real one. Running the suite
+    /// must not leave a group container behind in the user's Library.
+    private final class StubFileManager: FileManager {
+        private let groupContainer: URL?
+        private let applicationSupport: URL
+
+        init(groupContainer: URL?, applicationSupport: URL) {
+            self.groupContainer = groupContainer
+            self.applicationSupport = applicationSupport
+            super.init()
+        }
+
+        override func containerURL(
+            forSecurityApplicationGroupIdentifier groupIdentifier: String
+        ) -> URL? {
+            groupContainer
+        }
+
+        override func url(
+            for directory: FileManager.SearchPathDirectory,
+            in domain: FileManager.SearchPathDomainMask,
+            appropriateFor url: URL?, create shouldCreate: Bool
+        ) throws -> URL {
+            applicationSupport
+        }
+    }
+
+    private func stub(withGroupContainer: Bool) throws -> StubFileManager {
+        let root = try temporaryURL().deletingLastPathComponent()
+        return StubFileManager(
+            groupContainer: withGroupContainer ? root.appendingPathComponent("group") : nil,
+            applicationSupport: root.appendingPathComponent("support"))
+    }
+
     /// Writing goes to exactly one place, and it is the first one read.
-    func testTheCurrentLocationIsTheFirstOneRead() {
-        let urls = ColumnState.knownFileURLs()
-        XCTAssertEqual(urls.first, ColumnState.defaultFileURL())
+    func testTheCurrentLocationIsTheFirstOneRead() throws {
+        let fileManager = try stub(withGroupContainer: true)
+        let urls = ColumnState.knownFileURLs(fileManager: fileManager)
+        XCTAssertEqual(urls.first, ColumnState.defaultFileURL(fileManager: fileManager))
+        XCTAssertTrue(urls.first?.path.contains("/group/") == true)
+    }
+
+    /// Without a group container — today's state, the entitlement being
+    /// blocked — the file has to keep going where it always went. Writing
+    /// nowhere would lose every pull on quit.
+    func testWithoutAGroupContainerTheOldLocationIsUsed() throws {
+        let fileManager = try stub(withGroupContainer: false)
+        let current = ColumnState.defaultFileURL(fileManager: fileManager)
+        XCTAssertTrue(current?.path.contains("/support/") == true)
+        XCTAssertEqual(ColumnState.knownFileURLs(fileManager: fileManager).first, current)
     }
 
     /// Every location is listed once. A duplicate would be harmless when
     /// reading and misleading when reasoning about what still has to be
-    /// cleaned up later.
-    func testKnownLocationsAreDistinct() {
-        let urls = ColumnState.knownFileURLs()
-        XCTAssertEqual(Set(urls).count, urls.count)
+    /// cleaned up later — which is why it is worth pinning while the list has
+    /// two entries that collapse into one whenever the group container is gone.
+    func testKnownLocationsAreDistinct() throws {
+        for withContainer in [true, false] {
+            let urls = try ColumnState.knownFileURLs(
+                fileManager: stub(withGroupContainer: withContainer))
+            XCTAssertEqual(Set(urls).count, urls.count)
+        }
     }
 
     /// The old location stays on the list. Dropping it the moment the file
     /// moves would strand every board that has not launched the new build yet.
-    func testTheLegacyLocationIsStillRead() {
-        let urls = ColumnState.knownFileURLs().map(\.path)
+    func testTheLegacyLocationIsStillRead() throws {
+        let fileManager = try stub(withGroupContainer: true)
+        let urls = ColumnState.knownFileURLs(fileManager: fileManager).map(\.path)
+        XCTAssertEqual(urls.count, 2)
         XCTAssertTrue(
-            urls.contains { $0.contains("Application Support/GlassKanban/columns.json") },
+            urls.contains { $0.contains("/support/GlassKanban/columns.json") },
             "the app's private container is where the file lived until 14.08.2026")
+    }
+
+    /// Expired releases have to be dropped somewhere that actually runs.
+    /// Pruning only inside `merged` would mean never, until syncing exists.
+    func testLoadingDropsExpiredReleases() throws {
+        let url = try temporaryURL()
+        var state = pulled("stale", .next, t0)
+        state.release("stale", at: t0)
+        state.pull("fresh", into: .inProgress, at: t0)
+        XCTAssertTrue(state.save(to: url))
+
+        let loaded = ColumnState.load(from: url)
+        XCTAssertEqual(loaded.released.count, 1, "still on record when read raw")
+
+        var pruned = loaded
+        pruned.prune(now: t0.addingTimeInterval(ColumnState.releaseRetention + 1))
+        XCTAssertTrue(pruned.released.isEmpty)
+        XCTAssertEqual(pruned.lane(of: "fresh"), .inProgress, "pruning touches nothing else")
     }
 
     /// A file that exists but reads as empty — corrupt, or from a version this

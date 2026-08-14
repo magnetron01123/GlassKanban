@@ -442,10 +442,18 @@ struct ColumnState: Equatable {
     /// loss as a reason to resurrect a stale copy would put cards back in
     /// lanes the user had already moved them out of. Empty means Backlog,
     /// which one drag repairs.
-    static func loadFromKnownLocations(fileManager: FileManager = .default) -> ColumnState {
+    /// Expired releases are dropped on the way in, so that every launch is a
+    /// tidy-up. Without this the 30-day retention would only ever apply during
+    /// a merge — which is to say not at all until syncing exists, and the file
+    /// would carry release notes for cards nobody has touched in a year.
+    static func loadFromKnownLocations(
+        fileManager: FileManager = .default, now: Date = .now
+    ) -> ColumnState {
         for url in knownFileURLs(fileManager: fileManager)
         where fileManager.fileExists(atPath: url.path) {
-            return load(from: url)
+            var state = load(from: url)
+            state.prune(now: now)
+            return state
         }
         return ColumnState()
     }

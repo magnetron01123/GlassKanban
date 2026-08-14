@@ -121,8 +121,8 @@ Verfall nach Alter, denn eine Karte darf monatelang in einer Arbeitsspalte stehe
 
 **Wann eine Karte abgelegt wurde**, steht seit 14.08.2026 neben den Zügen in der Datei
 (`released`). Vermerkt wird nur, was dieses Board zuvor selbst gezogen hatte; für alles
-andere gibt es nichts zu vermerken. Der Vermerk verfällt nach 30 Tagen und geht **nie** in
-die Spaltenberechnung ein — kein Eintrag in `pulls` heißt weiterhin Backlog, unverändert.
+andere gibt es nichts zu vermerken. Der Vermerk verfällt nach 30 Tagen — geprüft bei jedem Start, damit die Frist auch ohne
+Zusammenführung greift — und geht **nie** in die Spaltenberechnung ein — kein Eintrag in `pulls` heißt weiterhin Backlog, unverändert.
 Er existiert allein für die vorbereitete Zusammenführung zweier Macs: Ohne Datum an der
 Ablage wäre ein alter Zug des anderen Rechners die einzige datierte Aussage und stellte
 eine abgelegte Karte wieder auf. Die Zusicherung, dass das Format Backlog nicht ausdrücken
