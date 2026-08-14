@@ -366,8 +366,28 @@ struct ColumnState: Equatable {
     /// without sync there is no foreign pull for them to outrank.
     private static let formatVersion = 1
 
-    /// The app's own Application Support directory, inside the sandbox
-    /// container.
+    /// The container the board's own files live in.
+    ///
+    /// In one place on purpose. Whether the Mac App Store accepts this form or
+    /// insists on a `<TeamID>.group.…` prefix is not yet settled (no team to
+    /// ask with — see BACKLOG.md), and a change here must stay a one-line
+    /// change plus one more entry in `knownFileURLs`, never a data migration.
+    /// The iOS form is chosen so the planned iOS app can use the same one.
+    static let appGroupIdentifier = "group.com.davidtrogemann.GlassKanban"
+
+    /// Where the file is written.
+    ///
+    /// The group container rather than the app's private one, because a
+    /// widget, a Live Activity and an App Intent each run in their own process
+    /// and cannot see inside the app's own sandbox. None of them exist yet;
+    /// moving the file while it is cheap is the point, since doing it later
+    /// means migrating live user data.
+    ///
+    /// Falls back to Application Support when the group container is
+    /// unavailable — an entitlement that did not make it into the signature,
+    /// a build configured differently. Writing nowhere would lose every pull
+    /// on quit; writing to the old place keeps the board working exactly as it
+    /// did before.
     ///
     /// An earlier version of this comment ruled out iCloud on the grounds that
     /// a synchronising store would bring back the second writer this type
@@ -376,16 +396,58 @@ struct ColumnState: Equatable {
     /// but not for a container keyed to this app's identifier, which no other
     /// program can reach. What syncing does admit is a second *instance of
     /// this app* — the user's own other Mac — which is a far narrower thing,
-    /// and what `merged(_:_:now:)` is for. The path stays local until that
-    /// work lands (see BACKLOG.md).
+    /// and what `merged(_:_:now:)` is for.
     static func defaultFileURL(fileManager: FileManager = .default) -> URL? {
-        guard let base = try? fileManager.url(
-            for: .applicationSupportDirectory, in: .userDomainMask,
-            appropriateFor: nil, create: true)
-        else { return nil }
+        let base = fileManager.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+            ?? (try? fileManager.url(
+                for: .applicationSupportDirectory, in: .userDomainMask,
+                appropriateFor: nil, create: true))
+        guard let base else { return nil }
         let directory = base.appendingPathComponent("GlassKanban", isDirectory: true)
         try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory.appendingPathComponent("columns.json")
+    }
+
+    /// Every place the file has ever been written, newest first.
+    ///
+    /// Reading walks this list and takes the first location that yields
+    /// anything; writing only ever touches the first. Nothing is deleted when
+    /// the file moves — a build that goes back to the old location finds its
+    /// file untouched, and a move that goes wrong costs nothing. Tidying the
+    /// abandoned copies up is a separate, later step, deliberately not folded
+    /// into the move itself (BACKLOG.md, "Aufräumen der alten Speicherorte").
+    static func knownFileURLs(fileManager: FileManager = .default) -> [URL] {
+        var urls: [URL] = []
+        if let current = defaultFileURL(fileManager: fileManager) {
+            urls.append(current)
+        }
+        // The app's private container, where the file lived until 14.08.2026.
+        if let legacy = try? fileManager.url(
+            for: .applicationSupportDirectory, in: .userDomainMask,
+            appropriateFor: nil, create: false) {
+            let path = legacy
+                .appendingPathComponent("GlassKanban", isDirectory: true)
+                .appendingPathComponent("columns.json")
+            if !urls.contains(path) { urls.append(path) }
+        }
+        return urls
+    }
+
+    /// Reads from the first known location that has something to give.
+    ///
+    /// A location that exists but reads as empty — a corrupt file, a version
+    /// this build does not know — deliberately does *not* fall through to an
+    /// older one. That file is the newest thing the board wrote; treating its
+    /// loss as a reason to resurrect a stale copy would put cards back in
+    /// lanes the user had already moved them out of. Empty means Backlog,
+    /// which one drag repairs.
+    static func loadFromKnownLocations(fileManager: FileManager = .default) -> ColumnState {
+        for url in knownFileURLs(fileManager: fileManager)
+        where fileManager.fileExists(atPath: url.path) {
+            return load(from: url)
+        }
+        return ColumnState()
     }
 
     /// Reads the state, tolerating anything: a missing file, foreign JSON, a

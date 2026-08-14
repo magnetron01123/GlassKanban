@@ -130,6 +130,17 @@ kann, bleibt dadurch wörtlich gültig — der Vermerk steht daneben, nicht dari
 Formatversion bleibt 1: Ältere Builds überlesen das Feld und lesen jeden Zug korrekt
 weiter.
 
+**Wo die Datei liegt**, kann sich ändern, ohne dass ein Zug verlorengeht. Gelesen wird der
+Reihe nach an jedem Ort, an dem sie je lag; geschrieben nur am aktuellen; **gelöscht wird
+nie** — ein Build, der zum alten Ort zurückkehrt, findet sein Board unverändert vor.
+Ändert sich der Zielort, legt der nächste Start dort eine Kopie an, damit ein anderer
+Prozess (später: Widget, Kurzbefehl) sie findet, ohne dass der Nutzer erst eine Karte
+ziehen muss. Ein Ort, der existiert, aber unlesbar ist, fällt **nicht** auf einen älteren
+zurück: Die ältere Kopie wäre per Definition überholt, und Karten in Spuren zurückzuholen,
+aus denen der Nutzer sie längst gezogen hat, ist die verbotene Richtung. Stand 14.08.2026
+ist nur ein Ort in Gebrauch, das Verhalten also unverändert; wann die liegengebliebenen
+Kopien verschwinden, steht in BACKLOG.md („Aufräumen der alten Speicherorte").
+
 **Der Speicher ist an diesen Mac gebunden.** Zwei Macs mit dieser App auf denselben Listen
 haben getrennte Spalten; die spätere iOS-App bräuchte eine eigene Synchronisation. Das ist
 der bewusst bezahlte Preis dafür, dass niemand sonst die Spalte erreichen kann.

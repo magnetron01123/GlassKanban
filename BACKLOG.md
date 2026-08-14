@@ -729,7 +729,7 @@ umzuformulieren — bis dahin wäre „Geräte" ein Versprechen, das die App nic
 | M | Messungen | nein | teilweise erledigt 14.08.2026, M1/M4/M5 offen |
 | ~~B~~ | ~~Umschlüsselung auf externen Bezeichner~~ | — | **entfällt** — Schlüssel sind bereits identisch |
 | C | `released` + `merged(_:_:now:)` als reine Funktion samt Tests | nein | **erledigt 14.08.2026** |
-| A | Speicher in App-Group-Container | zu prüfen | offen |
+| A | Speicher in App-Group-Container | **ja, wegen Xcode** | Lese-/Kopiermechanik gebaut 14.08.2026; Entitlement wartet auf Phase 0 |
 | D | KV-Anbindung, Entitlement, Migrations-Zeitstempel, fremde Bewegung animiert (s. o.) | **ja** | offen |
 | E | `SettingsSync` nach obiger Tabelle | ja | offen |
 | F | CONCEPT/SPEC/README/PrivacyInfo/RELEASE nachziehen | nein | teilweise |
@@ -765,6 +765,73 @@ aushält:
 
 Empfohlene Form: `group.com.davidtrogemann.GlassKanban` — die iOS-Konvention, damit die
 spätere iOS-App denselben Bezeichner benutzen kann.
+
+**Zweiter Befund vom 14.08.2026, der Phase A halbiert: Xcode blockiert, wo macOS erlaubt.**
+Trägt das Ziel `com.apple.security.application-groups`, bricht der Build mit „requires a
+provisioning profile" ab — auch mit leerem `PROVISIONING_PROFILE_SPECIFIER` und leerem
+`DEVELOPMENT_TEAM`. Ein Profil setzt das Developer Program voraus. **Phase A ist damit
+doch an Phase 0 gebunden**, nicht wegen macOS, sondern wegen der Toolchain.
+
+*Geprüft und verworfen:* das Entitlement aus dem Xcode-Build herauszuhalten und das Bundle
+in `scripts/build-app.sh` nachzusignieren (technisch belegt — genau so lief die Messung).
+Es entstünden zwei Signierpfade, und Builds des einen Wegs schrieben das Board an einen
+anderen Ort als Builds des anderen. Das ist ein realer Weg, Züge zu verlieren, eingetauscht
+gegen einen Nutzen, den es noch gar nicht gibt: Es existiert kein Widget.
+
+**Gebaut wurde deshalb nur die Hälfte, die nichts kostet** (14.08.2026): Der Bezeichner
+steht als eine Konstante, `ColumnState.knownFileURLs` liest der Reihe nach vom
+Group-Container und vom heutigen Ort, `defaultFileURL` fällt auf den heutigen Ort zurück,
+wenn kein Group-Container verfügbar ist, und `copyColumnsToCurrentLocationIfNeeded` kopiert
+beim Start, sobald sich der Zielort ändert. Am Verhalten der App ändert das heute nichts —
+ohne Entitlement liefert der Group-Container nichts und alles läuft wie bisher. Sobald
+Phase 0 steht, ist das Hinzufügen der Entitlement-Zeile in `project.yml` die **ganze**
+Änderung.
+
+**Bekannte Grenze dieser Zwischenform:** „Erster gefundener Ort gewinnt" ist nur richtig,
+solange alle Builds an denselben Ort schreiben. Wechselten Builds mit und ohne Entitlement
+einander ab, könnte der ältere Stand gewinnen. Das ist ein Entwicklungs-, kein
+Nutzerszenario; tritt es je auf, ist die Antwort „jüngste Datei gewinnt" statt
+„erste in der Liste".
+
+### Aufräumen der alten Speicherorte
+
+Der Umzug lässt bewusst Kopien liegen — ein Rollback soll nichts kosten. Diese Kopien sind
+aber genau das, was am Ende niemand haben will, deshalb steht hier von Anfang an, was wann
+verschwindet. Ohne diesen Abschnitt zeigen zwei Code-Kommentare ins Leere
+(`ColumnState.knownFileURLs`, `RemindersStore.copyColumnsToCurrentLocationIfNeeded`).
+
+**Was am Ende herumliegt:**
+
+| Rest | Ort | Entsteht durch |
+|---|---|---|
+| `columns.json` (alt) | `…/Containers/com.davidtrogemann.GlassKanban/Data/Library/Application Support/GlassKanban/` | Phase A, sobald der Group-Container aktiv ist |
+| `columns.json` (erste Group-Form) | `~/Library/Group Containers/group.com.…/` | nur falls der Store ein `<TeamID>.group.…`-Präfix erzwingt |
+| Lesepfad-Einträge für tote Orte | `ColumnState.knownFileURLs` | jede Ortsänderung |
+| `copyColumnsToCurrentLocationIfNeeded` | `RemindersStore` | Phase A |
+
+**Bedingung, unter der gelöscht werden darf** — alle drei müssen erfüllt sein:
+
+1. Der neue Ort ist mindestens **eine veröffentlichte Version** in Betrieb.
+2. Es existiert kein unterstützter Build mehr, der an den alten Ort schreibt.
+3. Der Löschlauf hat unmittelbar zuvor **erfolgreich vom neuen Ort gelesen**. Ohne diese
+   Bedingung löscht ein Fehlstart die letzte gute Kopie — dieselbe Vorsicht, mit der die
+   Tag-Migration nur schneidet, was sie zuvor namentlich vermerkt hat.
+
+**Wie gelöscht wird:** einmalig, still, ohne Dialog, ohne Fortschrittsanzeige — es ist
+Datenmechanik, und dafür gilt die Haltung aus „Wie viel der Nutzer davon sieht". Scheitert
+das Löschen, bleibt die Datei liegen und es wird beim nächsten Start erneut versucht; eine
+Datei zu viel hat noch nie jemandem geschadet, eine zu wenig schon.
+
+**Was ausdrücklich nicht aufgeräumt wird:** verwaiste Einträge *innerhalb* des Speichers
+(Karten, deren Bezeichner gerade nicht auflöst). Die Begründung steht oben unter „Geprüft
+und verworfen (13.08.2026)" und gilt unverändert — eine abgewählte Liste oder ein
+Sync-Schluckauf nähme dem Board sonst Arbeit weg, die der Nutzer selbst platziert hat. Die
+Mengengrenze von 200 Einträgen ist die einzige Bereinigung, die es gibt.
+
+**Verwandter, schon vorgemerkter Fall:** `StatusTagger.swift` entfällt mit der Aufräumung
+der Tag-Migration, frühestens eine Version nach 1.0 (CLAUDE.md). Beide Aufräumungen haben
+dieselbe Bedingung — „eine Version lang stabil" — und sollten in einem Zug erledigt werden,
+statt zweimal dieselbe Vorsicht zu buchstabieren.
 
 ### Bewusst in Kauf genommen
 

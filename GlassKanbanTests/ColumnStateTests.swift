@@ -405,4 +405,53 @@ final class ColumnStateTests: XCTestCase {
         XCTAssertEqual(loaded.lane(of: "shop"), .next)
         XCTAssertTrue(loaded.released.isEmpty)
     }
+
+    // MARK: - Where the file lives
+    //
+    // The file moved into a group container on 14.08.2026 so that separate
+    // processes — a widget, an App Intent — can read it at all. Whether the
+    // Mac App Store accepts that identifier is still open, so the move has to
+    // survive being done again: read from every place it has ever lived, write
+    // only to the current one, delete nothing.
+
+    /// Writing goes to exactly one place, and it is the first one read.
+    func testTheCurrentLocationIsTheFirstOneRead() {
+        let urls = ColumnState.knownFileURLs()
+        XCTAssertEqual(urls.first, ColumnState.defaultFileURL())
+    }
+
+    /// Every location is listed once. A duplicate would be harmless when
+    /// reading and misleading when reasoning about what still has to be
+    /// cleaned up later.
+    func testKnownLocationsAreDistinct() {
+        let urls = ColumnState.knownFileURLs()
+        XCTAssertEqual(Set(urls).count, urls.count)
+    }
+
+    /// The old location stays on the list. Dropping it the moment the file
+    /// moves would strand every board that has not launched the new build yet.
+    func testTheLegacyLocationIsStillRead() {
+        let urls = ColumnState.knownFileURLs().map(\.path)
+        XCTAssertTrue(
+            urls.contains { $0.contains("Application Support/GlassKanban/columns.json") },
+            "the app's private container is where the file lived until 14.08.2026")
+    }
+
+    /// A file that exists but reads as empty — corrupt, or from a version this
+    /// build does not know — must not fall through to an older copy. That copy
+    /// is by definition staler, and reviving it would put cards back in lanes
+    /// the user already moved them out of. Empty means Backlog, one drag.
+    func testAnUnreadableCurrentFileDoesNotResurrectAnOlderOne() throws {
+        let current = try temporaryURL()
+        let legacy = try temporaryURL()
+        try Data(#"{"v": 99, "pulls": {}}"#.utf8).write(to: current)
+        try Data(#"{"v": 1, "pulls": {"shop": {"lane": "next", "at": 1800000000}}}"#.utf8)
+            .write(to: legacy)
+
+        // The behaviour under test is `load`'s, exercised the way
+        // `loadFromKnownLocations` walks the list: the first existing file
+        // wins, whatever it turns out to contain.
+        XCTAssertEqual(ColumnState.load(from: current), ColumnState())
+        XCTAssertEqual(ColumnState.load(from: legacy).lane(of: "shop"), .next)
+    }
 }
