@@ -109,6 +109,7 @@ targets:
       - path: GlassKanban/CorrectionLedger.swift
       - path: GlassKanban/ColumnState.swift
       - path: GlassKanban/StoredSetting.swift
+      - path: GlassKanban/WindowPlacement.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanbanTests
