@@ -592,7 +592,18 @@ Macs. Bis dahin gilt der Vorbehalt.
    externen Bezeichner; fällt M4 negativ aus, bliebe nur Titel + Quelle — oder die
    Einstellung bleibt bewusst lokal (die derzeit bevorzugte Antwort: welche Listen auf
    welchem Rechner sichtbar sind, ist plausibel eine Gerätefrage).
-3. **M5** — Latenz und Konfliktverhalten des KV-Speichers in der Praxis.
+3. **M5** — Latenz und Konfliktverhalten des KV-Speichers in der Praxis. **Teilbefund vom
+   14.08.2026: ohne Developer Program überhaupt nicht messbar.** Ein sandboxed Bundle mit
+   `com.apple.developer.ubiquity-kvstore-identifier`, signiert mit der lokalen Identität,
+   wird beim Start mit **SIGKILL** beendet; dasselbe Binary ohne dieses Entitlement läuft,
+   aber `NSUbiquitousKeyValueStore.synchronize()` liefert `false` und der Speicher bleibt
+   leer. Es entstanden dabei keine iCloud-Daten, die aufzuräumen wären.
+
+   **Der Unterschied zu den App Groups ist der entscheidende Teil dieses Befunds:** Dort
+   erlaubte macOS und nur Xcode verweigerte sich — ein Umweg über eigenes Nachsignieren
+   war technisch möglich (und wurde aus anderen Gründen verworfen). Hier verweigert das
+   **Betriebssystem** selbst; einen Umweg gibt es nicht. Phase D ist damit hart an Phase 0
+   gebunden, und zwar belegt statt vermutet.
 
 Die Messwerkzeuge liegen im Scratchpad der Sitzung und sind bei Bedarf neu zu erzeugen;
 sie geben nur Aggregate aus und lesen nie Titel.
@@ -600,8 +611,13 @@ sie geben nur Aggregate aus und lesen nie Titel.
 ### Was wohin gehört
 
 Die Klassifikation ist der eigentliche Ertrag — der Übertragungscode ist danach klein.
-**Vor jedem neuen persistierten Wert ist diese Tabelle zu ergänzen**, statt die Frage je
-Feature neu zu stellen.
+
+**Seit 14.08.2026 steht sie im Code, nicht nur hier:** `StoredSetting` nennt jeden
+`UserDefaults`-Wert und beantwortet die Frage in einem `switch`, den der Compiler nicht
+unvollständig lässt. Ein neuer Fall ohne Einordnung **baut nicht**. Das ist derselbe Zug
+wie bei `check-localization.py` — aus einer Zusicherung etwas machen, das tatsächlich
+geprüft wird. Die Tabelle unten bleibt die Begründung, der Code ist die Durchsetzung; bei
+Abweichung gilt der Code.
 
 | Zustand | Ort heute | Klasse |
 |---|---|---|
@@ -731,7 +747,7 @@ umzuformulieren — bis dahin wäre „Geräte" ein Versprechen, das die App nic
 | C | `released` + `merged(_:_:now:)` als reine Funktion samt Tests | nein | **erledigt 14.08.2026** |
 | A | Speicher in App-Group-Container | **ja, wegen Xcode** | Lese-/Kopiermechanik gebaut 14.08.2026; Entitlement wartet auf Phase 0 |
 | D | KV-Anbindung, Entitlement, Migrations-Zeitstempel, fremde Bewegung animiert (s. o.) | **ja** | offen |
-| E | `SettingsSync` nach obiger Tabelle | ja | offen |
+| E | `SettingsSync` nach obiger Tabelle | ja | Klassifikation als `StoredSetting` gebaut 14.08.2026; Transport wartet auf Phase 0 |
 | F | CONCEPT/SPEC/README/PrivacyInfo/RELEASE nachziehen | nein | teilweise |
 
 **Warum A vor D und nicht später:** `columns.json` liegt im Sandbox-Container der App.

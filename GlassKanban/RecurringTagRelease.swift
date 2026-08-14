@@ -116,7 +116,7 @@ enum RecurringTagRelease {
             }
         }
 
-        static let storageKey = "tagReleaseMemory"
+        static let storageKey = StoredSetting.tagReleaseMemory.key
 
         static func load(from defaults: UserDefaults = .standard, now: Date = .now) -> Memory {
             let stored = defaults.dictionary(forKey: storageKey)

@@ -25,6 +25,7 @@
 		4BD67FD6516E1386444BD060 /* TicketRename.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350F062261A839B0E19ADC65 /* TicketRename.swift */; };
 		4DDD94D9BA542BA62B842C25 /* BacklogTicketCreationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85E4B85A97781F983975E11 /* BacklogTicketCreationTests.swift */; };
 		4EB02397A757A20FB4864718 /* RecurringSeriesMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4689182C4C36F8ACADD338BA /* RecurringSeriesMatch.swift */; };
+		54C787EC71014AF10311A103 /* StoredSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D006310FB2A5708AB4D6CF /* StoredSetting.swift */; };
 		5579A24C7243C659DB0C9698 /* TicketRename.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350F062261A839B0E19ADC65 /* TicketRename.swift */; };
 		5C60750477A63990C6B97E35 /* EmptyBoardNotice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */; };
 		5E842D73DB62AFBFA9030CFA /* RecurringTagRelease.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E0CEF056779A87A7359CF3 /* RecurringTagRelease.swift */; };
@@ -50,7 +51,9 @@
 		9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616551F8C95C166758DC62DD /* TextSanitizer.swift */; };
 		9FDA368678556A086FFC3E61 /* RecurringTagReleaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D67DA6580C3911EBE64E996 /* RecurringTagReleaseTests.swift */; };
 		A37B691FB088DA0D3AB2BD68 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */; };
+		A46EF09FB48AF8C5ACDDBFDF /* StoredSetting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D006310FB2A5708AB4D6CF /* StoredSetting.swift */; };
 		A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73CAB35E9902F258F00D82A7 /* SettingsView.swift */; };
+		A6580834DCE133A72213D720 /* StoredSettingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC3A5AF44391098C0E07456 /* StoredSettingTests.swift */; };
 		A7037962261FA9F767BB3E54 /* RecurringSeriesMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4689182C4C36F8ACADD338BA /* RecurringSeriesMatch.swift */; };
 		A70E5A894D67BF2B9B9C0779 /* AppAppearanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48CB5158B3D021C846E9BDE /* AppAppearanceTests.swift */; };
 		A9AA91F4C71136A717EED6B4 /* RecurringTagRelease.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E0CEF056779A87A7359CF3 /* RecurringTagRelease.swift */; };
@@ -88,6 +91,7 @@
 		10ECC48E9096FEF7E8FFDCB5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		11FBBE318C7D36A39F688F25 /* EditorKeyCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorKeyCommand.swift; sourceTree = "<group>"; };
 		168AF2A9B4F0AA4920636C98 /* TicketRenameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketRenameTests.swift; sourceTree = "<group>"; };
+		1EC3A5AF44391098C0E07456 /* StoredSettingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredSettingTests.swift; sourceTree = "<group>"; };
 		2D67DA6580C3911EBE64E996 /* RecurringTagReleaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringTagReleaseTests.swift; sourceTree = "<group>"; };
 		2F5C34C586A1EC88FF7463F0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		350F062261A839B0E19ADC65 /* TicketRename.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicketRename.swift; sourceTree = "<group>"; };
@@ -107,6 +111,7 @@
 		73CAB35E9902F258F00D82A7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		7465F3337FF2CB0DD4ED428F /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		7D4FAE96F445D94EBA27D6B9 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		85D006310FB2A5708AB4D6CF /* StoredSetting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredSetting.swift; sourceTree = "<group>"; };
 		85EE6F42101A6CB8E55FE8FA /* EmptyBoardNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyBoardNotice.swift; sourceTree = "<group>"; };
 		85FD90ADD64A9C51CD9B634E /* ColumnStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColumnStateTests.swift; sourceTree = "<group>"; };
 		885796666D14CA49747DB258 /* AppAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearance.swift; sourceTree = "<group>"; };
@@ -171,6 +176,7 @@
 				2D67DA6580C3911EBE64E996 /* RecurringTagReleaseTests.swift */,
 				57D665E92128A470288652C9 /* ReminderDeepLinkTests.swift */,
 				E4AB243E20C7A7C40112F8D6 /* StatusTaggerTests.swift */,
+				1EC3A5AF44391098C0E07456 /* StoredSettingTests.swift */,
 				4D42472CFB0A2525AA84AADE /* StreakCalculatorTests.swift */,
 				EF53DB3FE2E8D54F03CE48E9 /* TextSanitizerTests.swift */,
 				168AF2A9B4F0AA4920636C98 /* TicketRenameTests.swift */,
@@ -216,6 +222,7 @@
 				73CAB35E9902F258F00D82A7 /* SettingsView.swift */,
 				C897CD919B8A9F654BB8C2E9 /* StatsPopover.swift */,
 				C8099603D0D48B34633EB69D /* StatusTagger.swift */,
+				85D006310FB2A5708AB4D6CF /* StoredSetting.swift */,
 				61E5583BF2ABB5886F6A33CF /* StreakCalculator.swift */,
 				616551F8C95C166758DC62DD /* TextSanitizer.swift */,
 				5363A88A1AA13D97EEF4C674 /* TicketEditSheet.swift */,
@@ -353,6 +360,7 @@
 				A4E9E804297E14C0C8607AEC /* SettingsView.swift in Sources */,
 				E2A442C3A84D88C634225995 /* StatsPopover.swift in Sources */,
 				9A56DED754B385C405CBDFE0 /* StatusTagger.swift in Sources */,
+				54C787EC71014AF10311A103 /* StoredSetting.swift in Sources */,
 				17EF09ACC254297A749F37F2 /* StreakCalculator.swift in Sources */,
 				9EAE408D3BB444BEB7AD0CDC /* TextSanitizer.swift in Sources */,
 				F7ACE669E1BBF9DF40046C3C /* TicketEditSheet.swift in Sources */,
@@ -391,6 +399,8 @@
 				735A75EBAD75AEDA15D7EF67 /* ReminderDeepLinkTests.swift in Sources */,
 				C831C7F9A270718B155C00E3 /* StatusTagger.swift in Sources */,
 				74BF0AB21BF4C7B800C413D1 /* StatusTaggerTests.swift in Sources */,
+				A46EF09FB48AF8C5ACDDBFDF /* StoredSetting.swift in Sources */,
+				A6580834DCE133A72213D720 /* StoredSettingTests.swift in Sources */,
 				095FD46B8BF0F4B3C0DF18D0 /* StreakCalculator.swift in Sources */,
 				B5100A228F130EF0A3292797 /* StreakCalculatorTests.swift in Sources */,
 				F02B830CE81DFD65A6C33E55 /* TextSanitizer.swift in Sources */,

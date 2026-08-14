@@ -252,10 +252,12 @@ final class RemindersStore: ObservableObject {
         }
     }
 
-    private static let excludedKey = "excludedCalendarIDs"
-    private static let wipLimitsKey = "wipLimits"
-    private static let completionSoundKey = "completionSoundEnabled"
-    private static let foldNotYetDueKey = "foldNotYetDue"
+    // Named in `StoredSetting`, which is also where each one is classified as
+    // travelling to the user's other Macs or staying on this one.
+    private static let excludedKey = StoredSetting.excludedCalendars.key
+    private static let wipLimitsKey = StoredSetting.wipLimits.key
+    private static let completionSoundKey = StoredSetting.completionSound.key
+    private static let foldNotYetDueKey = StoredSetting.foldNotYetDue.key
 
     /// How far back completions are fetched for the streak calculation. A
     /// streak longer than this would be reported short — deliberately far
