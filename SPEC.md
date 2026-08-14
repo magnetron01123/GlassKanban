@@ -55,7 +55,11 @@ Verbindlich sind vier Regeln, jede davon in die sichere Richtung:
   AppKit meldet „der Nutzer zieht das Fenster" und „macOS räumt es von einem
   verschwindenden Bildschirm" identisch. Würde Letzteres gemerkt, überschriebe es genau
   die Erinnerung, die man zum Zurückholen braucht. Eine Sekunde nach einer
-  Bildschirmänderung gilt deshalb als Aufräumzeit.
+  Bildschirmänderung gilt deshalb als Aufräumzeit — und das **eigene Zurückholen des
+  Boards zählt ebenso als Aufräumen**, sonst schriebe das Board die gerade
+  wiederhergestellte Lage als frische Nutzerentscheidung fest. Das fällt nicht auf,
+  solange beide übereinstimmen, und wird falsch, sobald der Rahmen auf einen kleineren
+  Bildschirm eingepasst werden musste.
 - **Zurückgeholt wird nur in den sichtbaren Bereich.** Kommt ein Bildschirm kleiner
   zurück, wird der Rahmen eingepasst statt buchstabengetreu wiederhergestellt — sonst
   läge das Board außerhalb des Erreichbaren, was schlimmer wäre als der Fehler selbst.

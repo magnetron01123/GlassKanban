@@ -18,16 +18,16 @@ final class WindowPlacementController: NSObject {
 
     private static let storageKey = "windowPlacement"
 
-    /// Long enough for macOS to finish moving windows around after a display
-    /// appears or disappears, short enough that a user drag right afterwards
-    /// is still recorded. Both edges are forgiving: too short and one stray
-    /// position is remembered, too long and one deliberate move is not.
-    private static let settleDelay: TimeInterval = 1.0
-
     private weak var window: NSWindow?
 
     var isAttached: Bool { window != nil }
-    private var isRearranging = false
+
+    /// When the screens last changed — the clock `WindowPlacement`'s rule
+    /// measures against. A timestamp rather than an "is rearranging" flag:
+    /// a flag has to be cleared by somebody, and a flag that stays set by
+    /// accident silently stops the board from ever learning a new position.
+    /// A timestamp expires on its own.
+    private var lastScreenChange: Date?
     private var settle: DispatchWorkItem?
 
     private override init() { super.init() }
@@ -59,19 +59,19 @@ final class WindowPlacementController: NSObject {
     }
 
     @objc private func windowFrameChanged() {
-        guard !isRearranging else { return }
+        guard WindowPlacement.countsAsDeliberateMove(
+            at: .now, lastScreenChange: lastScreenChange)
+        else { return }
         record()
     }
 
     @objc private func screensChanged() {
-        isRearranging = true
+        lastScreenChange = .now
         settle?.cancel()
-        let work = DispatchWorkItem { [weak self] in
-            self?.restore()
-            self?.isRearranging = false
-        }
+        let work = DispatchWorkItem { [weak self] in self?.restore() }
         settle = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + Self.settleDelay, execute: work)
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + WindowPlacement.settleDelay, execute: work)
     }
 
     private func record() {
@@ -85,6 +85,11 @@ final class WindowPlacementController: NSObject {
         guard let window, let memory = stored,
               let frame = WindowPlacement.restore(memory, window: window.frame, screens: screens)
         else { return }
+        // Renew the settle window before moving: this move is the board's own,
+        // and the `didMove` it triggers must not come back as "the user put it
+        // here". AppKit does not promise that notification arrives before this
+        // method returns, so a flag cleared on the next line would race it.
+        lastScreenChange = .now
         window.setFrame(frame, display: true, animate: false)
     }
 

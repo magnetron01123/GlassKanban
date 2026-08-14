@@ -48,7 +48,8 @@ struct BoardView: View {
             if let emptiness = store.emptiness, emptiness != .loading {
                 EmptyBoardNotice(
                     emptiness: emptiness,
-                    onReset: { store.resetFilters() })
+                    onReset: { store.resetFilters() },
+                    onOpenReminders: { store.openRemindersApp() })
             }
         }
         // Lanes flex between ticket-friendly bounds; the whole block sits

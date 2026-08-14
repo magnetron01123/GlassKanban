@@ -99,4 +99,53 @@ final class WindowPlacementTests: XCTestCase {
         XCTAssertEqual(memory?.screenID, "built-in")
         XCTAssertNil(WindowPlacement.restore(memory!, window: onBuiltIn, screens: docked))
     }
+
+    // MARK: - Telling a drag apart from a rearrangement
+    //
+    // The hardest rule here, and the only one whose failure is invisible:
+    // AppKit reports "the user dragged the window" and "macOS herded it off a
+    // vanishing display" identically. Writing down the second overwrites the
+    // memory needed to undo it — the board would learn "I live on the
+    // built-in screen now" exactly while being pushed there. Time is the only
+    // discriminator available, so these tests pin where the line sits.
+    //
+    // Lived in the AppKit controller as an `isRearranging` flag until
+    // 14.08.2026 and was therefore untestable.
+
+    private let t0 = Date(timeIntervalSince1970: 1_800_000_000)
+
+    /// Nothing has happened to the screens, so every move is the user's.
+    func testAMoveWithNoScreenChangeCounts() {
+        XCTAssertTrue(WindowPlacement.countsAsDeliberateMove(at: t0, lastScreenChange: nil))
+    }
+
+    func testAMoveRightAfterAScreenChangeDoesNotCount() {
+        XCTAssertFalse(WindowPlacement.countsAsDeliberateMove(
+            at: t0.addingTimeInterval(0.2), lastScreenChange: t0))
+    }
+
+    func testAMoveOnceTheScreensHaveSettledCountsAgain() {
+        XCTAssertTrue(WindowPlacement.countsAsDeliberateMove(
+            at: t0.addingTimeInterval(WindowPlacement.settleDelay), lastScreenChange: t0))
+        XCTAssertTrue(WindowPlacement.countsAsDeliberateMove(
+            at: t0.addingTimeInterval(5), lastScreenChange: t0))
+    }
+
+    /// The board's own restoring move renews the timestamp, so the `didMove`
+    /// it triggers lands inside a fresh settle window. Without this the board
+    /// would record the position it had just restored *as if the user had
+    /// chosen it* — harmless while it matches, wrong as soon as the frame was
+    /// clamped onto a smaller screen.
+    func testTheBoardsOwnRestoringMoveDoesNotCount() {
+        let restoredAt = t0.addingTimeInterval(WindowPlacement.settleDelay)
+        XCTAssertFalse(WindowPlacement.countsAsDeliberateMove(
+            at: restoredAt.addingTimeInterval(0.01), lastScreenChange: restoredAt))
+    }
+
+    /// A clock that runs backwards (NTP correction, sleep) must not turn the
+    /// settle window into a permanent block.
+    func testAMoveTimestampedBeforeTheScreenChangeDoesNotCount() {
+        XCTAssertFalse(WindowPlacement.countsAsDeliberateMove(
+            at: t0.addingTimeInterval(-5), lastScreenChange: t0))
+    }
 }

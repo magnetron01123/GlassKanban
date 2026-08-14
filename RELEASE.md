@@ -158,7 +158,13 @@ Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels)
       RemindersStore) → für 1.0 raus, der In-App-Editor deckt Bearbeiten ab, Fallback
       `openRemindersApp()` bleibt. Review-Risiko damit null statt „vermutlich okay".
       Das Systemeinstellungs-Schema in ContentView bleibt (verbreitet, geringes
-      Risiko). README-Abschnitt „Hinweise" dazu anpassen
+      Risiko). README-Abschnitt „Hinweise" dazu anpassen.
+      **Es ist genau eine Stelle** — seit dem 14.08.2026. Bis dahin gab es eine zweite,
+      die hier nicht verzeichnet war: `EmptyBoardNotice` öffnete die Erinnerungen-App
+      über dasselbe Schema und hätte es nach dieser Aufräumung weiter mit ausgeliefert.
+      Sie ruft jetzt `openRemindersApp()` auf, das denselben Zweck über dokumentierte API
+      erfüllt. **Vor dem Abhaken dieses Punktes `grep -rn "x-apple-reminderkit"` laufen
+      lassen**, nicht der Aufzählung vertrauen
 
 **Verifikation Phase 2:** Archive-Build aus dem Store-Profil startet, Berechtigung
 wird neu erteilt, alle Kernflüsse laufen sandboxed.
