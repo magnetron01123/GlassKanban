@@ -737,9 +737,34 @@ umzuformulieren — bis dahin wäre „Geräte" ein Versprechen, das die App nic
 **Warum A vor D und nicht später:** `columns.json` liegt im Sandbox-Container der App.
 Widget, Live Activity und App Intents laufen in eigenen Prozessen und erreichen diesen Pfad
 **nicht** — alle drei stehen in diesem Dokument. Der Umzug ist jetzt billig; später
-bedeutet er eine Migration von Nutzerdaten im Feld. Vor dem Bau zu klären: ob App Groups
-mit der heutigen selbstsignierten Entwicklungsidentität überhaupt funktionieren oder erst
-mit Phase 0 aus RELEASE.md.
+bedeutet er eine Migration von Nutzerdaten im Feld.
+
+**Gemessen am 14.08.2026: App Groups funktionieren mit der selbstsignierten
+Entwicklungsidentität.** Ein minimales, sandboxed `.app`-Bundle, signiert mit „Glass Kanban
+Development" (`TeamIdentifier=not set`), bekam für alle drei getesteten Formen einen
+Container samt Schreib-Lese-Rundlauf — `group.com.davidtrogemann.GlassKanban`,
+`com.davidtrogemann.GlassKanban.group` und `group.GlassKanban`, jeweils unter
+`~/Library/Group Containers/`. Ein Team-Präfix ist lokal **nicht** nötig, Phase 0 also keine
+Voraussetzung für Phase A. (Nebenbefund: Ein nacktes Mach-O mit `app-sandbox` stirbt beim
+Start an SIGTRAP — der Test braucht ein echtes Bundle. Die Testcontainer wurden nach der
+Messung entfernt.)
+
+**Was das nicht beantwortet, und was daraus folgt:** Ob der Mac App Store dieselbe Form
+akzeptiert oder das Team-Präfix (`<TeamID>.group.…`) verlangt, ist damit **nicht** geklärt —
+das entscheidet sich erst mit Phase 0 und ist vor dem Einreichen gegen die dann aktuelle
+Apple-Dokumentation zu prüfen. Ein späterer Wechsel der Group-ID wäre ein zweiter Umzug,
+also genau das, was Phase A vermeiden soll. Der Umzug ist deshalb so zu bauen, dass er das
+aushält:
+
+- Die Group-ID steht an **einer** Stelle als Konstante, nicht verstreut.
+- Der Lesepfad probiert der Reihe nach: aktueller Group-Container, dann jeder früher
+  benutzte Ort (heutiges Application Support). Gefunden wird der erste, der etwas hergibt.
+- Geschrieben wird nur an den aktuellen Ort; der alte bleibt zunächst liegen, statt gelöscht
+  zu werden. Ein Rollback kostet dann nichts, und ein ID-Wechsel ist ein Einzeiler plus ein
+  weiterer Lesepfad statt einer Datenmigration.
+
+Empfohlene Form: `group.com.davidtrogemann.GlassKanban` — die iOS-Konvention, damit die
+spätere iOS-App denselben Bezeichner benutzen kann.
 
 ### Bewusst in Kauf genommen
 
