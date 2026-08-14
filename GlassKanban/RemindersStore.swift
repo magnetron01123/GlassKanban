@@ -146,11 +146,15 @@ final class RemindersStore: ObservableObject {
     /// Which card sits in which working lane — the board's own record, in the
     /// board's own file (see `ColumnState`). Since 13.08.2026 this, and not
     /// the hashtag in the reminder's notes, is what puts a card in a column.
-    private var columns = ColumnState.load(from: ColumnState.defaultFileURL())
+    private var columns = ColumnState.loadFromKnownLocations()
 
     /// What was last written to disk, so an unchanged state is not rewritten
     /// on every refresh — the same guard `lastSavedCorrections` provides.
-    private var lastSavedColumns = ColumnState.load(from: ColumnState.defaultFileURL())
+    ///
+    /// Read from wherever the state came from, not from where it will be
+    /// written: on the launch that moves the file, both are the same value,
+    /// and the first change writes it to the new place.
+    private var lastSavedColumns = ColumnState.loadFromKnownLocations()
 
     private let columnsURL = ColumnState.defaultFileURL()
 
@@ -248,10 +252,12 @@ final class RemindersStore: ObservableObject {
         }
     }
 
-    private static let excludedKey = "excludedCalendarIDs"
-    private static let wipLimitsKey = "wipLimits"
-    private static let completionSoundKey = "completionSoundEnabled"
-    private static let foldNotYetDueKey = "foldNotYetDue"
+    // Named in `StoredSetting`, which is also where each one is classified as
+    // travelling to the user's other Macs or staying on this one.
+    private static let excludedKey = StoredSetting.excludedCalendars.key
+    private static let wipLimitsKey = StoredSetting.wipLimits.key
+    private static let completionSoundKey = StoredSetting.completionSound.key
+    private static let foldNotYetDueKey = StoredSetting.foldNotYetDue.key
 
     /// How far back completions are fetched for the streak calculation. A
     /// streak longer than this would be reported short — deliberately far
@@ -304,6 +310,32 @@ final class RemindersStore: ObservableObject {
                     .map { ($0.rawValue, $0.defaultWIPLimit) })
         completionSoundEnabled = UserDefaults.standard.object(forKey: Self.completionSoundKey) as? Bool ?? true
         foldNotYetDue = UserDefaults.standard.object(forKey: Self.foldNotYetDueKey) as? Bool ?? true
+        copyColumnsToCurrentLocationIfNeeded()
+    }
+
+    /// Writes the column state to where it now belongs, when it was read from
+    /// somewhere older (see `ColumnState.knownFileURLs`).
+    ///
+    /// On launch rather than on the first drag: a separate process that reads
+    /// this file — the planned widget, an App Intent — would otherwise find
+    /// nothing until the user happens to move a card.
+    ///
+    /// The old file is left exactly where it is. Nothing here deletes; that is
+    /// a later, separate step (BACKLOG.md, "Aufräumen der alten Speicherorte")
+    /// so that a build going back to the old location still finds its board,
+    /// and so that a move that goes wrong costs nothing.
+    private func copyColumnsToCurrentLocationIfNeeded() {
+        guard let target = columnsURL,
+              !FileManager.default.fileExists(atPath: target.path),
+              columns != ColumnState()
+        else { return }
+        if columns.save(to: target) {
+            Self.storageLog.notice("column state copied to its current location")
+        } else {
+            // Not fatal: the old file is still there and still readable, so
+            // the board works. The next write tries again.
+            Self.storageLog.error("column state could not be copied to its current location")
+        }
     }
 
     // MARK: - WIP limits
@@ -532,14 +564,14 @@ final class RemindersStore: ObservableObject {
         // This is what the tag hygiene used to do by refusing to leave a tag
         // on a completed reminder.
         for reminder in fetched where reminder.isCompleted {
-            columns.release(reminder.calendarItemIdentifier)
+            columns.release(reminder.calendarItemIdentifier, at: .now)
         }
         // A pull the series has already spent gives its lane back — the same
         // standing rule as before, now written into the board's own record
         // instead of into somebody's notes. No pacing, no undo fence, no
         // regard for write permissions: nothing outside this app is touched.
         for seriesID in releasedSeriesIDs(incomplete: incomplete, completed: completed) {
-            columns.release(seriesID)
+            columns.release(seriesID, at: .now)
         }
         applyCorrections(fetched)
 
@@ -1399,7 +1431,7 @@ final class RemindersStore: ObservableObject {
         }
         // The record is gone, so its column is nothing but a stranded entry —
         // the snapshot carries it now, and `restoreTicket` puts it back.
-        columns.release(cardID)
+        columns.release(cardID, at: .now)
         persistColumns()
         register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
             store.restoreTicket(snapshot, undoManager: undoManager)

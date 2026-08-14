@@ -41,9 +41,16 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
   Tag-Hygiene. Mit Abstand die größte Datei und die einzige Stelle mit Seiteneffekten.
 - **ColumnState.swift** — **die Spalte**: welche Karte in welcher Arbeitsspur liegt und
-  seit wann, in einer eigenen Datei (`Application Support/GlassKanban/columns.json`).
+  seit wann, in einer eigenen Datei (`columns.json`).
   Seit 13.08.2026 die einzige Quelle dafür; kein Eintrag heißt Backlog, Erledigt bleibt
-  `isCompleted`. Kein anderes Programm erreicht diesen Speicher — genau das ist der Zweck.
+  `isCompleted`. Kein anderes **Programm** erreicht diesen Speicher — genau das ist der
+  Zweck. Seit 14.08.2026 ist dagegen eine zweite **Instanz dieser App** vorgesehen (der
+  eigene zweite Mac): `released` datiert das Ablegen einer Karte, `merged(_:_:now:)`
+  führt zwei Rechner zusammen (jüngster gewinnt, Abwesenheit zählt nicht als Aussage,
+  Gleichstand geht nach Backlog), und `knownFileURLs` liest von jedem Ort, an dem die
+  Datei je lag. **Übertragen wird noch nichts** — das hängt am Developer Program
+  (BACKLOG.md, „Gerätesynchronisation über iCloud"; dort steht auch, wann die
+  liegengebliebenen Kopien aufgeräumt werden).
 - **StatusTagger.swift** — **nur noch Migration**: liest die alten Hashtags einmal je
   Liste ein und schneidet sie danach aus den Notizen — aber **nur bei den IDs, die der
   Import namentlich vermerkt hat** (`ColumnState.pendingTagCleanup`). Diese Einschränkung
@@ -68,7 +75,10 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   `RecurringHandoff` (Undo-Zaun bei Wiederholungen), `RecurringSeriesMatch` (Durchgang
   ↔ Serie über das Anlegedatum), `RecurringTagRelease` (stille Freigabe eines
   verbrauchten Pulls), `ColumnState` (die Spalte, siehe oben),
-  `TicketURL` (was das URL-Feld speichern kann). **Muster für neue Logik:** Entscheidung
+  `TicketURL` (was das URL-Feld speichern kann), `StoredSetting` (jeder
+  `UserDefaults`-Wert und ob er dem Nutzer oder dem Rechner gehört — die Einordnung
+  steht in einem `switch`, den der Compiler nicht unvollständig lässt; ein neuer Fall
+  ohne Entscheidung baut nicht). **Muster für neue Logik:** Entscheidung
   aus der View herausziehen, dann testen.
 - **`Localizable.xcstrings`/`InfoPlist.xcstrings`** — String Catalogs, Englisch Quelle,
   Deutsch vollwertige Lokalisierung (seit 07.08.2026, siehe RELEASE.md Phase 1). **Regel

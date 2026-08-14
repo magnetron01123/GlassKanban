@@ -128,6 +128,23 @@ mit dieser App auf denselben Listen führen getrennte Spalten. Das ist keine Nac
 sondern dieselbe Eigenschaft von vorne gelesen: Ein Speicher, den ein zweites Gerät
 erreichen kann, ist ein Speicher, den auch ein zweites *Programm* erreichen kann.
 
+**Korrektur dieser Begründung (14.08.2026).** Der letzte Satz oben verallgemeinert zu
+weit und wird hiermit zurückgenommen — nicht die Entscheidung, nur ihre Begründung. Er
+gilt für die Reminders-Notizen, die jedes Programm mit EventKit-Zugriff beschreiben darf.
+Er gilt *nicht* für einen Speicher, der an die Bundle-ID dieser App gebunden ist: Den
+erreicht kein fremdes Programm. Was Synchronisation zulässt, ist eine zweite **Instanz
+dieser App** — der eigene zweite Mac —, und das ist eine ungleich engere Klasse als „jeder
+EventKit-Client". Stünde der Satz unwidersprochen, schlösse er eines Tages die iOS-App mit
+einem Argument aus, das nicht trägt.
+
+Die Spannung, die dabei wirklich besteht, ist eine andere und gehört benannt: Eine Karte
+kann sich dann bewegen, ohne dass an *diesem* Bildschirm jemand sie gezogen hat. Das Bild
+gleicht dem, was der Formwechsel abstellen sollte, die Ursache ist aber legitim — es ist
+die eigene Hand, nur woanders. „Bewegung gehört Ereignissen" bleibt damit erfüllt; das
+Ereignis war nur ungesehen. Abgewogen und für tragbar befunden am 14.08.2026, weil man
+zwei Boards selten gleichzeitig ansieht. Der Umsetzungsstand steht in BACKLOG.md
+(„Gerätesynchronisation über iCloud").
+
 Ausdrücklich festgehalten: Der Wechsel löst den Spaltensprung, **nicht den
 Notizverlust** — der Notiztext bleibt gemeinsames Territorium, und gegen einen fremden
 Schreiber, der ihn überschreibt, hilft nur das Abstellen der Quelle. Immerhin wird er

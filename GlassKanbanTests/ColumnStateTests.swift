@@ -56,7 +56,7 @@ final class ColumnStateTests: XCTestCase {
     func testReleasingSendsTheCardBackToBacklog() {
         var state = ColumnState()
         state.pull("shop", into: .next, at: t0)
-        state.release("shop")
+        state.release("shop", at: t0.addingTimeInterval(60))
         XCTAssertNil(state.lane(of: "shop"))
     }
 
@@ -261,5 +261,268 @@ final class ColumnStateTests: XCTestCase {
         var state = ColumnState()
         state.pull("shop", into: .next, at: t0)
         XCTAssertFalse(state.save(to: nil), "a storage failure is reported, never thrown at the user")
+    }
+
+    // MARK: - Merging two machines
+    //
+    // Groundwork for syncing the column between the user's own Macs. The
+    // property that matters most is the one the whole form change of
+    // 13.08.2026 was about: no card may end up in a working lane that nobody
+    // pulled it into. A merge that revives a put-down card would reintroduce
+    // exactly that, only with a friendlier cause.
+
+    private func pulled(_ cardID: String, _ lane: ColumnState.Lane, _ at: Date) -> ColumnState {
+        var state = ColumnState()
+        state.pull(cardID, into: lane, at: at)
+        return state
+    }
+
+    /// A machine that has never seen a card says nothing about it — which is
+    /// not the same as saying "Backlog". Were absence an answer, any second
+    /// Mac would erase every pull the moment it synced.
+    func testACardOnlyOneSideKnowsSurvivesTheMerge() {
+        let mine = pulled("shop", .next, t0)
+        let merged = ColumnState.merged(mine, ColumnState(), now: t0)
+        XCTAssertEqual(merged.lane(of: "shop"), .next)
+        XCTAssertEqual(merged.pulledAt("shop"), t0)
+    }
+
+    func testTheNewerPullWins() {
+        let older = pulled("shop", .next, t0)
+        let newer = pulled("shop", .inProgress, t0.addingTimeInterval(600))
+        XCTAssertEqual(ColumnState.merged(older, newer, now: t0).lane(of: "shop"), .inProgress)
+        XCTAssertEqual(ColumnState.merged(newer, older, now: t0).lane(of: "shop"), .inProgress)
+    }
+
+    /// The case the release date exists for: put a card down here, and the
+    /// other Mac's stale pull must not stand it back up.
+    func testAReleaseOutranksAnOlderPullOnTheOtherMachine() {
+        var mine = pulled("shop", .next, t0)
+        mine.release("shop", at: t0.addingTimeInterval(600))
+        let theirs = pulled("shop", .next, t0)
+
+        let merged = ColumnState.merged(mine, theirs, now: t0.addingTimeInterval(600))
+        XCTAssertNil(merged.lane(of: "shop"), "a card nobody pulled may not appear in a working lane")
+        XCTAssertEqual(ColumnState.merged(theirs, mine, now: t0.addingTimeInterval(600)).lane(of: "shop"), nil)
+    }
+
+    /// And the other direction, so the rule is "newest wins" rather than
+    /// "Backlog always wins": pulling it again later must stick.
+    func testAPullAfterAReleaseWins() {
+        var mine = pulled("shop", .next, t0)
+        mine.release("shop", at: t0.addingTimeInterval(60))
+        let theirs = pulled("shop", .inProgress, t0.addingTimeInterval(600))
+
+        let merged = ColumnState.merged(mine, theirs, now: t0.addingTimeInterval(600))
+        XCTAssertEqual(merged.lane(of: "shop"), .inProgress)
+    }
+
+    /// Two clocks agreeing to the second is vanishingly unlikely, but the
+    /// answer still has to be the same on both machines — otherwise they
+    /// disagree about the board and overwrite each other forever.
+    func testATieGoesToBacklogAndIsSymmetric() {
+        var mine = pulled("shop", .next, t0.addingTimeInterval(-60))
+        mine.release("shop", at: t0)
+        let theirs = pulled("shop", .inProgress, t0)
+
+        XCTAssertNil(ColumnState.merged(mine, theirs, now: t0).lane(of: "shop"))
+        XCTAssertNil(ColumnState.merged(theirs, mine, now: t0).lane(of: "shop"))
+    }
+
+    func testMergingIsSymmetricAcrossAMixedBoard() {
+        var mine = pulled("a", .next, t0)
+        mine.pull("b", into: .inProgress, at: t0.addingTimeInterval(300))
+        mine.release("b", at: t0.addingTimeInterval(400))
+        mine.pull("c", into: .next, at: t0)
+
+        var theirs = pulled("b", .next, t0.addingTimeInterval(900))
+        theirs.pull("c", into: .inProgress, at: t0.addingTimeInterval(120))
+        theirs.pull("d", into: .next, at: t0)
+
+        let forward = ColumnState.merged(mine, theirs, now: t0.addingTimeInterval(900))
+        let backward = ColumnState.merged(theirs, mine, now: t0.addingTimeInterval(900))
+        XCTAssertEqual(forward.pulls, backward.pulls)
+        XCTAssertEqual(forward.released, backward.released)
+        XCTAssertEqual(forward.lane(of: "a"), .next)
+        XCTAssertEqual(forward.lane(of: "b"), .next, "their later pull outranks my release")
+        XCTAssertEqual(forward.lane(of: "c"), .inProgress)
+        XCTAssertEqual(forward.lane(of: "d"), .next)
+    }
+
+    /// Releasing a card this board never pulled records nothing: there is no
+    /// foreign pull it could be older or newer than, and an entry per
+    /// completed reminder would grow without bound.
+    func testReleasingAnUnpulledCardLeavesNoTrace() {
+        var state = ColumnState()
+        state.release("never pulled", at: t0)
+        XCTAssertTrue(state.released.isEmpty)
+    }
+
+    func testPullingAgainClearsTheRelease() {
+        var state = pulled("shop", .next, t0)
+        state.release("shop", at: t0.addingTimeInterval(60))
+        state.pull("shop", into: .next, at: t0.addingTimeInterval(120))
+        XCTAssertTrue(state.released.isEmpty, "a card is either pulled or released, never both")
+    }
+
+    /// Once no other device can still hold a pull older than the release, the
+    /// plain absence of an entry means Backlog again — as it always did.
+    func testOldReleasesExpire() {
+        var state = pulled("shop", .next, t0)
+        state.release("shop", at: t0)
+        state.prune(now: t0.addingTimeInterval(ColumnState.releaseRetention + 1))
+        XCTAssertTrue(state.released.isEmpty)
+    }
+
+    func testAListCountsAsImportedFromItsEarliestStamp() {
+        let mine = ColumnState(importedLists: ["list": t0])
+        let theirs = ColumnState(importedLists: ["list": t0.addingTimeInterval(900)])
+        XCTAssertEqual(ColumnState.merged(mine, theirs, now: t0).importedLists["list"], t0)
+    }
+
+    // MARK: - Storing releases
+
+    func testReleasesSurviveASaveAndLoad() throws {
+        let url = try temporaryURL()
+        var state = pulled("shop", .next, t0)
+        state.release("shop", at: t0.addingTimeInterval(60))
+        XCTAssertTrue(state.save(to: url))
+
+        let loaded = ColumnState.load(from: url)
+        XCTAssertEqual(loaded.released["shop"], t0.addingTimeInterval(60))
+        XCTAssertNil(loaded.lane(of: "shop"), "a release is not a lane")
+    }
+
+    /// Releases were added without bumping the format version, so that older
+    /// builds keep reading the pulls instead of dropping the whole board. A
+    /// file written before they existed — or rewritten by such a build — must
+    /// still load.
+    func testAFileWithoutReleasesLoadsAsNothingReleased() throws {
+        let url = try temporaryURL()
+        try Data(#"{"v": 1, "pulls": {"shop": {"lane": "next", "at": 1800000000}}}"#.utf8)
+            .write(to: url)
+        let loaded = ColumnState.load(from: url)
+        XCTAssertEqual(loaded.lane(of: "shop"), .next)
+        XCTAssertTrue(loaded.released.isEmpty)
+    }
+
+    // MARK: - Where the file lives
+    //
+    // The file moved into a group container on 14.08.2026 so that separate
+    // processes — a widget, an App Intent — can read it at all. Whether the
+    // Mac App Store accepts that identifier is still open, so the move has to
+    // survive being done again: read from every place it has ever lived, write
+    // only to the current one, delete nothing.
+
+    /// Stands in for both directories `ColumnState` asks the system about, so
+    /// that these tests never touch — or create — a real one. Running the suite
+    /// must not leave a group container behind in the user's Library.
+    private final class StubFileManager: FileManager {
+        private let groupContainer: URL?
+        private let applicationSupport: URL
+
+        init(groupContainer: URL?, applicationSupport: URL) {
+            self.groupContainer = groupContainer
+            self.applicationSupport = applicationSupport
+            super.init()
+        }
+
+        override func containerURL(
+            forSecurityApplicationGroupIdentifier groupIdentifier: String
+        ) -> URL? {
+            groupContainer
+        }
+
+        override func url(
+            for directory: FileManager.SearchPathDirectory,
+            in domain: FileManager.SearchPathDomainMask,
+            appropriateFor url: URL?, create shouldCreate: Bool
+        ) throws -> URL {
+            applicationSupport
+        }
+    }
+
+    private func stub(withGroupContainer: Bool) throws -> StubFileManager {
+        let root = try temporaryURL().deletingLastPathComponent()
+        return StubFileManager(
+            groupContainer: withGroupContainer ? root.appendingPathComponent("group") : nil,
+            applicationSupport: root.appendingPathComponent("support"))
+    }
+
+    /// Writing goes to exactly one place, and it is the first one read.
+    func testTheCurrentLocationIsTheFirstOneRead() throws {
+        let fileManager = try stub(withGroupContainer: true)
+        let urls = ColumnState.knownFileURLs(fileManager: fileManager)
+        XCTAssertEqual(urls.first, ColumnState.defaultFileURL(fileManager: fileManager))
+        XCTAssertTrue(urls.first?.path.contains("/group/") == true)
+    }
+
+    /// Without a group container — today's state, the entitlement being
+    /// blocked — the file has to keep going where it always went. Writing
+    /// nowhere would lose every pull on quit.
+    func testWithoutAGroupContainerTheOldLocationIsUsed() throws {
+        let fileManager = try stub(withGroupContainer: false)
+        let current = ColumnState.defaultFileURL(fileManager: fileManager)
+        XCTAssertTrue(current?.path.contains("/support/") == true)
+        XCTAssertEqual(ColumnState.knownFileURLs(fileManager: fileManager).first, current)
+    }
+
+    /// Every location is listed once. A duplicate would be harmless when
+    /// reading and misleading when reasoning about what still has to be
+    /// cleaned up later — which is why it is worth pinning while the list has
+    /// two entries that collapse into one whenever the group container is gone.
+    func testKnownLocationsAreDistinct() throws {
+        for withContainer in [true, false] {
+            let urls = try ColumnState.knownFileURLs(
+                fileManager: stub(withGroupContainer: withContainer))
+            XCTAssertEqual(Set(urls).count, urls.count)
+        }
+    }
+
+    /// The old location stays on the list. Dropping it the moment the file
+    /// moves would strand every board that has not launched the new build yet.
+    func testTheLegacyLocationIsStillRead() throws {
+        let fileManager = try stub(withGroupContainer: true)
+        let urls = ColumnState.knownFileURLs(fileManager: fileManager).map(\.path)
+        XCTAssertEqual(urls.count, 2)
+        XCTAssertTrue(
+            urls.contains { $0.contains("/support/GlassKanban/columns.json") },
+            "the app's private container is where the file lived until 14.08.2026")
+    }
+
+    /// Expired releases have to be dropped somewhere that actually runs.
+    /// Pruning only inside `merged` would mean never, until syncing exists.
+    func testLoadingDropsExpiredReleases() throws {
+        let url = try temporaryURL()
+        var state = pulled("stale", .next, t0)
+        state.release("stale", at: t0)
+        state.pull("fresh", into: .inProgress, at: t0)
+        XCTAssertTrue(state.save(to: url))
+
+        let loaded = ColumnState.load(from: url)
+        XCTAssertEqual(loaded.released.count, 1, "still on record when read raw")
+
+        var pruned = loaded
+        pruned.prune(now: t0.addingTimeInterval(ColumnState.releaseRetention + 1))
+        XCTAssertTrue(pruned.released.isEmpty)
+        XCTAssertEqual(pruned.lane(of: "fresh"), .inProgress, "pruning touches nothing else")
+    }
+
+    /// A file that exists but reads as empty — corrupt, or from a version this
+    /// build does not know — must not fall through to an older copy. That copy
+    /// is by definition staler, and reviving it would put cards back in lanes
+    /// the user already moved them out of. Empty means Backlog, one drag.
+    func testAnUnreadableCurrentFileDoesNotResurrectAnOlderOne() throws {
+        let current = try temporaryURL()
+        let legacy = try temporaryURL()
+        try Data(#"{"v": 99, "pulls": {}}"#.utf8).write(to: current)
+        try Data(#"{"v": 1, "pulls": {"shop": {"lane": "next", "at": 1800000000}}}"#.utf8)
+            .write(to: legacy)
+
+        // The behaviour under test is `load`'s, exercised the way
+        // `loadFromKnownLocations` walks the list: the first existing file
+        // wins, whatever it turns out to contain.
+        XCTAssertEqual(ColumnState.load(from: current), ColumnState())
+        XCTAssertEqual(ColumnState.load(from: legacy).lane(of: "shop"), .next)
     }
 }

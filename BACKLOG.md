@@ -26,15 +26,17 @@ Gemessen am 14.08.2026, damit die Härte dieses Blockers nicht erneut geprüft w
 
 ### Wo welche Arbeit liegt
 
-| Branch | Inhalt | Zustand |
-|---|---|---|
-| `feature/display-affinity-v2` | Bildschirmzuordnung | **fertig und am laufenden Board verifiziert** — mergen |
-| `feature/icloud-sync-foundation` | Grundlage der Gerätesynchronisation | funktionsneutral, in sich abgeschlossen — mergen (Begründung unten) |
-| `feature/display-affinity` | Duplikat der Bildschirmzuordnung | wertlos, Erkenntnis ist dokumentiert — löschen |
-| `feature/window-screen-memory` | Vorgänger vom 10.08. | überholt durch `-v2` — löschen |
-| `feature/board-hugs-content` | abgelehnter Vorschlag vom 23.07. | 131 Commits hinter main, tot |
-| `feature/backlog-release-readiness` | überholt durch RELEASE.md | 179 Commits hinter main, tot |
-| `docs/…`, `fix/…`, `feature/local-column-state` | bereits in main | löschen |
+**Am 14.08.2026 aufgeräumt: alles liegt in `main`, es gibt keine offenen Branches mehr.**
+
+| Was | Wo |
+|---|---|
+| Bildschirmzuordnung | in `main` (PR #48), am laufenden Board verifiziert |
+| Grundlage der Gerätesynchronisation | in `main` (PR #49), funktionsneutral — **es wird nichts übertragen** |
+| Vorgänger der Bildschirmzuordnung (10.08.) | gelöscht, als Tag `archive/window-screen-memory` gesichert, weil PR #48 auf ihn verweist |
+| Duplikat, `board-hugs-content` (23.07. abgelehnt), `backlog-release-readiness`, vier bereits gemergte | gelöscht, lokal und auf GitHub |
+
+Acht Branches sind dabei verschwunden. Der Grund steht direkt darunter — und die zwei
+ältesten waren 131 bzw. 179 Commits hinter `main`, also seit Wochen unbrauchbar.
 
 ### Warum halbfertige Arbeit gemergt und nicht aufgehoben wird
 
@@ -619,6 +621,335 @@ nicht möglich)
   zum Weitergeben. Bewusst nicht mitgebaut: das Fenster ist auf einen Blick ausgelegt, eine
   Export-/Teilen-Darstellung wäre ein eigenes Layout mit eigenen Fragen (was darf ein
   Screenshot über Listennamen verraten?).
+
+## Gerätesynchronisation über iCloud (14.08.2026 — in Arbeit)
+
+Auf Nutzerentscheidung beschlossen, nachdem eine erste Prüfung zur Zurückstellung geraten
+hatte. Die Gegenargumente stehen unten unter „Bewusst in Kauf genommen"; sie sind entkräftet
+oder bezahlt, nicht vergessen.
+
+**Was es löst.** Bis 13.08.2026 war die Spalte geräteübergreifend, weil sie als Hashtag in
+den Notizen stand und Notizen über iCloud synchronisieren (CONCEPT.md nennt das unter den
+Argumenten *gegen* den Formwechsel). Der Formwechsel hat diese Eigenschaft bezahlt. Die
+Synchronisation holt sie zurück, ohne den alten Preis erneut zu zahlen: kein sichtbares
+Datenformat in fremden Notizen, keine Angriffsfläche für fremde Schreiber.
+
+Der methodisch wichtigste Punkt ist nicht der Komfort: **Ein WIP-Limit, das pro Gerät
+zählt, ist keines.** Zwei Macs mit Limit 3 erlauben real sechs begonnene Aufgaben, und der
+WIP-Dialog — das dokumentierte Reibungs-Muster — greift nie. Dazu kommt die Verweildauer,
+die heute nur der ziehende Mac exakt kennt; der zweite fällt auf die
+`lastModifiedDate`-Näherung zurück und zeigt damit eine andere Zahl für dieselbe Karte.
+
+### Messung vom 14.08.2026 (Projektregel: erst messen, dann bauen)
+
+Swift-CLI gegen die echten Listen dieses Macs, 2509 Erinnerungen in 4 Listen, alle iCloud
+(calDAV). Ausgewertet wurden nur Aggregate, keine Titel.
+
+| Frage | Ergebnis |
+|---|---|
+| Hat jede Erinnerung einen `calendarItemExternalIdentifier`? | **ja, 2509 von 2509** |
+| Ist er eindeutig? | **ja** — 2509 verschiedene Werte, keine Kollision, auch nicht bei den 9 wiederkehrenden |
+| Welche Form? | **nackte UUID** — nicht die von `ReminderDeepLink` als typisch beschriebene Form `x-apple-reminder://<UUID>`. Der Code deckt beide ab, die Beschreibung dort ist also unvollständig, nicht falsch |
+| `calendarItemIdentifier` vs. `calendarItemExternalIdentifier` | **bei allen 2509 zeichengleich** |
+
+**Die letzte Zeile ist der Befund, der den Plan verkleinert:** Die Schlüssel in
+`columns.json` *sind* bereits die externen Bezeichner. Die geplante Umschlüsselung
+(ursprünglich Phase B, mit Migration über alle Listen und dem Risiko, die Spalten
+abgewählter Listen zu verlieren) entfällt ersatzlos. Sie erklärt nebenbei die Messung vom
+13.08.: Der Bezeichner überlebt Listenwechsel und kalten Cache, weil er die
+synchronisierte Record-UUID ist.
+
+**Was das über M1 sagt — und was nicht.** Ist der lokale Bezeichner zeichengleich mit dem
+externen, und ist der externe die synchronisierte Identität, dann ist er auf einem zweiten
+Mac derselbe. Das ist ein starkes Indiz, **kein Messergebnis**: Es braucht weiterhin zwei
+Macs. Bis dahin gilt der Vorbehalt.
+
+**Offen, weil auf einem Mac nicht messbar:**
+
+1. **M1** — ist `calendarItemExternalIdentifier` auf zwei Macs für dieselbe Erinnerung
+   identisch? Fällt das negativ aus, trägt der ganze Weg nicht.
+2. **M4** — ist `EKCalendar.calendarIdentifier` über zwei Macs identisch? Entscheidet, ob
+   `excludedCalendarIDs` synchronisierbar ist. `EKCalendar` hat kein Gegenstück zum
+   externen Bezeichner; fällt M4 negativ aus, bliebe nur Titel + Quelle — oder die
+   Einstellung bleibt bewusst lokal (die derzeit bevorzugte Antwort: welche Listen auf
+   welchem Rechner sichtbar sind, ist plausibel eine Gerätefrage).
+3. **M5** — Latenz und Konfliktverhalten des KV-Speichers in der Praxis. **Teilbefund vom
+   14.08.2026: ohne Developer Program überhaupt nicht messbar.** Ein sandboxed Bundle mit
+   `com.apple.developer.ubiquity-kvstore-identifier`, signiert mit der lokalen Identität,
+   wird beim Start mit **SIGKILL** beendet; dasselbe Binary ohne dieses Entitlement läuft,
+   aber `NSUbiquitousKeyValueStore.synchronize()` liefert `false` und der Speicher bleibt
+   leer. Es entstanden dabei keine iCloud-Daten, die aufzuräumen wären.
+
+   **Der Unterschied zu den App Groups ist der entscheidende Teil dieses Befunds:** Dort
+   erlaubte macOS und nur Xcode verweigerte sich — ein Umweg über eigenes Nachsignieren
+   war technisch möglich (und wurde aus anderen Gründen verworfen). Hier verweigert das
+   **Betriebssystem** selbst; einen Umweg gibt es nicht. Phase D ist damit hart an Phase 0
+   gebunden, und zwar belegt statt vermutet.
+
+Die Messwerkzeuge liegen im Scratchpad der Sitzung und sind bei Bedarf neu zu erzeugen;
+sie geben nur Aggregate aus und lesen nie Titel.
+
+### Was wohin gehört
+
+Die Klassifikation ist der eigentliche Ertrag — der Übertragungscode ist danach klein.
+
+**Seit 14.08.2026 steht sie im Code, nicht nur hier:** `StoredSetting` nennt jeden
+`UserDefaults`-Wert und beantwortet die Frage in einem `switch`, den der Compiler nicht
+unvollständig lässt. Ein neuer Fall ohne Einordnung **baut nicht**. Das ist derselbe Zug
+wie bei `check-localization.py` — aus einer Zusicherung etwas machen, das tatsächlich
+geprüft wird. Die Tabelle unten bleibt die Begründung, der Code ist die Durchsetzung; bei
+Abweichung gilt der Code.
+
+| Zustand | Ort heute | Klasse |
+|---|---|---|
+| `pulls` (Spalten) | columns.json | geräteweit |
+| `released` (Ablage-Vermerke) | columns.json | geräteweit |
+| `importedLists` | columns.json | geräteweit — die Migration ist Eigenschaft der *Daten* |
+| `wipLimits` | UserDefaults | geräteweit |
+| `foldNotYetDue` | UserDefaults | geräteweit |
+| `excludedCalendarIDs` | UserDefaults | offen, hängt an M4 |
+| `appAppearance` | UserDefaults | lokal — Bildschirm im Büro ≠ zu Hause |
+| `completionSoundEnabled` | UserDefaults | lokal — Kopfhörer am Laptop |
+| `correctionLedger` | UserDefaults | **strikt lokal** |
+| `tagReleaseMemory` | UserDefaults | strikt lokal |
+| `pendingTagCleanup` | columns.json | lokal — Arbeitsliste dieses Prozesses |
+| Fenstergeometrie | AppKit | lokal |
+| künftige Ansichts-Einstellungen (Bildschirmzuordnung, Darstellungsgröße, Fokus-Filter, Tageszeit-Palette) | — | lokal |
+
+**Warum der `CorrectionLedger` niemals synchronisiert werden darf.** Er merkt sich, welche
+Werte *dieses* Board verdrängt hat. Synchronisiert schriebe Mac A einen Wert zurück, den
+Mac B gerade absichtlich geändert hat — zwei Boards, die einander als fremden Schreiber
+behandeln und auf echten Nutzerdaten in eine Schreibschleife laufen. SPEC.md führt „einen
+zweiten Mac mit derselben App" ausdrücklich als zweiten Schreiber; diese Rolle bleibt.
+
+Dazu die gute Nachricht: Seit dem Formwechsel schreibt ein Spaltenzug überhaupt nicht mehr
+in EventKit. Zwei Macs können beliebig ziehen, ohne sich über Reminders je zu begegnen —
+der Formwechsel hat die Synchronisation nicht erschwert, sondern erst sauber möglich
+gemacht.
+
+### Speicher und Zusammenführung
+
+**`NSUbiquitousKeyValueStore`, nicht CloudKit.** Nutzlast rund 12 KB gegen 1 MB Budget;
+kein Schema, keine Zonen, keine Subscriptions, minimale Review-Fläche. Ohne
+iCloud-Anmeldung liefert der Speicher leer und alles läuft lokal weiter — „funktioniert
+vollständig ohne iCloud" bleibt wahr. Die genauen Grenzen vor dem Bau gegen die aktuelle
+Apple-Doku prüfen.
+
+**Einstellungen:** UserDefaults bleibt der Lesepfad (schnell, offline), KV ist nur der
+Transport. Schreiben in beide; bei `didChangeExternallyNotification` die geänderten
+geräteweiten Schlüssel nach UserDefaults spiegeln und publishen. Konflikt: last-writer-wins
+ohne Zeitstempel — bei Präferenzen, die man selten anfasst, angemessen.
+
+**Spalten:** je Karte gewinnt der jüngere Zeitstempel. Umgesetzt als reine Funktion
+`ColumnState.merged(_:_:now:)`, Regeln und Grenzen dort dokumentiert und durch
+`ColumnStateTests` festgenagelt. Drei Punkte, die nicht offensichtlich sind:
+
+- **Abwesenheit ist keine Antwort.** Ein Gerät, das eine Karte nie gesehen hat, sagt nichts
+  über sie — sonst löschte jeder zweite Mac beim ersten Sync alle Pulls.
+- **Deshalb `released`.** Ein zurückgenommener Pull war bisher die *Abwesenheit* eines
+  Eintrags und trug kein Datum; ein alter fremder Pull hätte ihn wiederbelebt — genau die
+  verbotene Richtung. Der Vermerk liegt bewusst **neben** `pulls`, nicht darin, damit die
+  Zusicherung „das Format kann Backlog nicht ausdrücken" wörtlich gilt. Er verfällt nach
+  30 Tagen, danach spricht die Abwesenheit wieder für sich.
+- **Gleichstand geht nach Backlog**, und die Regel ist symmetrisch — sonst einigten sich
+  zwei Macs auf verschiedene Boards und überschrieben einander endlos.
+
+**Die Falle bei der Tag-Migration:** Läuft sie auf dem zweiten Mac, erzeugt sie Einträge
+mit `at = jetzt` und gewinnt damit gegen ältere, legitime Züge. Ihr Zeitstempel muss aus
+`lastModifiedDate` der Erinnerung kommen. Noch offen (Phase D).
+
+### Wie viel der Nutzer davon sieht (14.08.2026 entschieden)
+
+**Haltung: nichts.** Der Präzedenzfall steht in diesem Dokument unter „Fremde Schreiber" —
+der Hinweis, wenn das Board nachgibt, wurde am 10.08.2026 verworfen, weil der Nutzer von
+der Spaltenlogik nichts mitbekommen soll und ein Hinweis auf Datenmechanik die ruhige
+Dauerfläche zerstört. Synchronisation ist derselbe Fall: Mechanik, die ihre Arbeit tut.
+
+**Einblick hat er an drei Stellen, die alle nicht der App gehören** — und das ist die
+richtige Verteilung: Systemeinstellungen → Apple-ID → iCloud → iCloud Drive → Apps (dort
+liegt auch der Ausschalter), die Datenschutzangaben im App Store, und der zweite Mac
+selbst. Der beste Einblick sieht aus wie ein Ergebnis, nicht wie ein Mechanismus.
+
+**Wird nicht gebaut:**
+
+- **Kein eigener Ein/Aus-Schalter.** Es gibt ihn systemweit bereits; zwei Schalter für
+  dieselbe Sache können sich widersprechen, und der zweite erklärt sich nur über Mechanik.
+  Notizen, Erinnerungen und Freeform halten es genauso.
+- **Keine Statuszeile** („Zuletzt synchronisiert 14:32") — Dauer-Chrome für einen
+  Dauerzustand, gegen „Aufmerksamkeit gehört Ereignissen".
+- **Kein Einrichtungsdialog** beim ersten Start. Es gibt nichts einzurichten.
+- **Keine Fehlermeldung** bei gescheiterter Übertragung. Dieselbe Doktrin wie beim
+  Speicher: kein Dialog, eine Zeile in der Konsole, ein Zug repariert es.
+- **Kein Hinweis**, wenn iCloud aus ist. Es fehlt nichts, was der Nutzer angefordert hätte.
+
+**Die vier Momente, in denen die Technik doch durchschlägt:**
+
+| Moment | Unbehandelt | Maßnahme |
+|---|---|---|
+| Karte wechselt die Spur, weil der andere Mac gezogen hat | wirkt wie ein Geist oder ein Fehler | dieselbe Settle-Animation wie bei einem eigenen Zug |
+| Erststart auf dem zweiten Mac | Board steht kurz falsch, dann springen Karten | kurz auf den Speicher warten, bevor gezeichnet wird — wie bei großen Datenbanken schon üblich |
+| Konflikt oder schiefe Uhr | Karte liegt woanders als erwartet | nichts sagen, ein Zug repariert es |
+| iCloud abgemeldet | — | nichts sagen |
+
+Daraus die Regel, die bei der Umsetzung gilt:
+
+> **Fremde Bewegung wird gezeigt, nicht gemeldet.** Sie bekommt die Animation, damit sie
+> als Vorgang lesbar ist statt als Sprung — aber **nicht** Klang und Haptik aus
+> `MoveFeedback`. Die gehören der eigenen Hand; ein Ton für eine Bewegung, die woanders
+> passiert ist, wäre eine Benachrichtigung, und eigene Benachrichtigungen sind ausdrücklich
+> abgelehnt. Belohnung bleibt an das eigene Tun gekoppelt.
+
+**Die eine Stelle, an der Schweigen unehrlich wäre.** Datenhoheit ist ein Kernversprechen;
+der Nutzer muss *wissen können*, dass die Spalten seine iCloud benutzen, auch wenn er es nie
+sehen muss. Ein Satz in den Einstellungen, kein Schalter, keine Statuszeile:
+
+| Naheliegend (technisch) | Beschlossen |
+|---|---|
+| „iCloud-Synchronisation aktiviert · Zuletzt synchronisiert: 14:32" | *(entfällt)* |
+| „Spalten werden über iCloud mit deinen anderen Macs synchronisiert." | **„Deine Spalten stehen auf allen deinen Macs — über deine iCloud."** |
+| „Synchronisierung fehlgeschlagen. Bitte iCloud-Einstellungen prüfen." | *(entfällt)* |
+| „iCloud ist nicht verfügbar." | *(entfällt)* |
+
+Quelltext (Entwicklungssprache Englisch): „Your columns are on all your Macs, through your
+iCloud." Geprüft gegen „Ton der Texte" in CONCEPT.md: benennt statt zu kommentieren, nennt
+den Besitz, verspricht nichts, verteidigt nichts, Punkt hinter vollständigem Satz. Das Wort
+„iCloud" bleibt bewusst stehen — es ist die eine Mechanik, die man kennen muss, um sie
+abschalten zu können; sie zu verschweigen wäre teurer als ein technisches Wort.
+
+**Offen:** Der Satz sagt „Macs", nicht „Geräte". Sobald die iOS-App existiert, ist er
+umzuformulieren — bis dahin wäre „Geräte" ein Versprechen, das die App nicht einlöst.
+
+### Phasen
+
+| Phase | Inhalt | Braucht Developer Program? | Stand |
+|---|---|---|---|
+| M | Messungen | nein | teilweise erledigt 14.08.2026, M1/M4/M5 offen |
+| ~~B~~ | ~~Umschlüsselung auf externen Bezeichner~~ | — | **entfällt** — Schlüssel sind bereits identisch |
+| C | `released` + `merged(_:_:now:)` als reine Funktion samt Tests | nein | **erledigt 14.08.2026** |
+| A | Speicher in App-Group-Container | **ja, wegen Xcode** | Lese-/Kopiermechanik gebaut 14.08.2026; Entitlement wartet auf Phase 0 |
+| D | KV-Anbindung, Entitlement, Migrations-Zeitstempel, fremde Bewegung animiert (s. o.) | **ja** | offen |
+| E | `SettingsSync` nach obiger Tabelle | ja | Klassifikation als `StoredSetting` gebaut 14.08.2026; Transport wartet auf Phase 0 |
+| F | CONCEPT/SPEC/README/PrivacyInfo/RELEASE nachziehen | nein | teilweise |
+
+**Warum A vor D und nicht später:** `columns.json` liegt im Sandbox-Container der App.
+Widget, Live Activity und App Intents laufen in eigenen Prozessen und erreichen diesen Pfad
+**nicht** — alle drei stehen in diesem Dokument. Der Umzug ist jetzt billig; später
+bedeutet er eine Migration von Nutzerdaten im Feld.
+
+**Gemessen am 14.08.2026: App Groups funktionieren mit der selbstsignierten
+Entwicklungsidentität.** Ein minimales, sandboxed `.app`-Bundle, signiert mit „Glass Kanban
+Development" (`TeamIdentifier=not set`), bekam für alle drei getesteten Formen einen
+Container samt Schreib-Lese-Rundlauf — `group.com.davidtrogemann.GlassKanban`,
+`com.davidtrogemann.GlassKanban.group` und `group.GlassKanban`, jeweils unter
+`~/Library/Group Containers/`. Ein Team-Präfix ist lokal **nicht** nötig, Phase 0 also keine
+Voraussetzung für Phase A. (Nebenbefund: Ein nacktes Mach-O mit `app-sandbox` stirbt beim
+Start an SIGTRAP — der Test braucht ein echtes Bundle. Die Testcontainer wurden nach der
+Messung entfernt.)
+
+**Was das nicht beantwortet, und was daraus folgt:** Ob der Mac App Store dieselbe Form
+akzeptiert oder das Team-Präfix (`<TeamID>.group.…`) verlangt, ist damit **nicht** geklärt —
+das entscheidet sich erst mit Phase 0 und ist vor dem Einreichen gegen die dann aktuelle
+Apple-Dokumentation zu prüfen. Ein späterer Wechsel der Group-ID wäre ein zweiter Umzug,
+also genau das, was Phase A vermeiden soll. Der Umzug ist deshalb so zu bauen, dass er das
+aushält:
+
+- Die Group-ID steht an **einer** Stelle als Konstante, nicht verstreut.
+- Der Lesepfad probiert der Reihe nach: aktueller Group-Container, dann jeder früher
+  benutzte Ort (heutiges Application Support). Gefunden wird der erste, der etwas hergibt.
+- Geschrieben wird nur an den aktuellen Ort; der alte bleibt zunächst liegen, statt gelöscht
+  zu werden. Ein Rollback kostet dann nichts, und ein ID-Wechsel ist ein Einzeiler plus ein
+  weiterer Lesepfad statt einer Datenmigration.
+
+Empfohlene Form: `group.com.davidtrogemann.GlassKanban` — die iOS-Konvention, damit die
+spätere iOS-App denselben Bezeichner benutzen kann.
+
+**Zweiter Befund vom 14.08.2026, der Phase A halbiert: Xcode blockiert, wo macOS erlaubt.**
+Trägt das Ziel `com.apple.security.application-groups`, bricht der Build mit „requires a
+provisioning profile" ab — auch mit leerem `PROVISIONING_PROFILE_SPECIFIER` und leerem
+`DEVELOPMENT_TEAM`. Ein Profil setzt das Developer Program voraus. **Phase A ist damit
+doch an Phase 0 gebunden**, nicht wegen macOS, sondern wegen der Toolchain.
+
+*Geprüft und verworfen:* das Entitlement aus dem Xcode-Build herauszuhalten und das Bundle
+in `scripts/build-app.sh` nachzusignieren (technisch belegt — genau so lief die Messung).
+Es entstünden zwei Signierpfade, und Builds des einen Wegs schrieben das Board an einen
+anderen Ort als Builds des anderen. Das ist ein realer Weg, Züge zu verlieren, eingetauscht
+gegen einen Nutzen, den es noch gar nicht gibt: Es existiert kein Widget.
+
+**Gebaut wurde deshalb nur die Hälfte, die nichts kostet** (14.08.2026): Der Bezeichner
+steht als eine Konstante, `ColumnState.knownFileURLs` liest der Reihe nach vom
+Group-Container und vom heutigen Ort, `defaultFileURL` fällt auf den heutigen Ort zurück,
+wenn kein Group-Container verfügbar ist, und `copyColumnsToCurrentLocationIfNeeded` kopiert
+beim Start, sobald sich der Zielort ändert. Am Verhalten der App ändert das heute nichts —
+ohne Entitlement liefert der Group-Container nichts und alles läuft wie bisher. Sobald
+Phase 0 steht, ist das Hinzufügen der Entitlement-Zeile in `project.yml` die **ganze**
+Änderung.
+
+**Bekannte Grenze dieser Zwischenform:** „Erster gefundener Ort gewinnt" ist nur richtig,
+solange alle Builds an denselben Ort schreiben. Wechselten Builds mit und ohne Entitlement
+einander ab, könnte der ältere Stand gewinnen. Das ist ein Entwicklungs-, kein
+Nutzerszenario; tritt es je auf, ist die Antwort „jüngste Datei gewinnt" statt
+„erste in der Liste".
+
+### Aufräumen der alten Speicherorte
+
+Der Umzug lässt bewusst Kopien liegen — ein Rollback soll nichts kosten. Diese Kopien sind
+aber genau das, was am Ende niemand haben will, deshalb steht hier von Anfang an, was wann
+verschwindet. Ohne diesen Abschnitt zeigen zwei Code-Kommentare ins Leere
+(`ColumnState.knownFileURLs`, `RemindersStore.copyColumnsToCurrentLocationIfNeeded`).
+
+**Was am Ende herumliegt:**
+
+| Rest | Ort | Entsteht durch |
+|---|---|---|
+| `columns.json` (alt) | `…/Containers/com.davidtrogemann.GlassKanban/Data/Library/Application Support/GlassKanban/` | Phase A, sobald der Group-Container aktiv ist |
+| `columns.json` (erste Group-Form) | `~/Library/Group Containers/group.com.…/` | nur falls der Store ein `<TeamID>.group.…`-Präfix erzwingt |
+| Lesepfad-Einträge für tote Orte | `ColumnState.knownFileURLs` | jede Ortsänderung |
+| `copyColumnsToCurrentLocationIfNeeded` | `RemindersStore` | Phase A |
+
+**Bedingung, unter der gelöscht werden darf** — alle drei müssen erfüllt sein:
+
+1. Der neue Ort ist mindestens **eine veröffentlichte Version** in Betrieb.
+2. Es existiert kein unterstützter Build mehr, der an den alten Ort schreibt.
+3. Der Löschlauf hat unmittelbar zuvor **erfolgreich vom neuen Ort gelesen**. Ohne diese
+   Bedingung löscht ein Fehlstart die letzte gute Kopie — dieselbe Vorsicht, mit der die
+   Tag-Migration nur schneidet, was sie zuvor namentlich vermerkt hat.
+
+**Wie gelöscht wird:** einmalig, still, ohne Dialog, ohne Fortschrittsanzeige — es ist
+Datenmechanik, und dafür gilt die Haltung aus „Wie viel der Nutzer davon sieht". Scheitert
+das Löschen, bleibt die Datei liegen und es wird beim nächsten Start erneut versucht; eine
+Datei zu viel hat noch nie jemandem geschadet, eine zu wenig schon.
+
+**Was ausdrücklich nicht aufgeräumt wird:** verwaiste Einträge *innerhalb* des Speichers
+(Karten, deren Bezeichner gerade nicht auflöst). Die Begründung steht oben unter „Geprüft
+und verworfen (13.08.2026)" und gilt unverändert — eine abgewählte Liste oder ein
+Sync-Schluckauf nähme dem Board sonst Arbeit weg, die der Nutzer selbst platziert hat. Die
+Mengengrenze von 200 Einträgen ist die einzige Bereinigung, die es gibt.
+
+**Verwandter, schon vorgemerkter Fall:** `StatusTagger.swift` entfällt mit der Aufräumung
+der Tag-Migration, frühestens eine Version nach 1.0 (CLAUDE.md). Beide Aufräumungen haben
+dieselbe Bedingung — „eine Version lang stabil" — und sollten in einem Zug erledigt werden,
+statt zweimal dieselbe Vorsicht zu buchstabieren.
+
+### Bewusst in Kauf genommen
+
+- **Das Versprechen ändert sich.** CONCEPT.md, README und der künftige Store-Text sagen
+  heute „keine Netzwerkaufrufe". Präzise bleibt: kein eigener Server, kein Konto in der App,
+  keine Analyse, voll funktionsfähig ohne iCloud. Vor 1.0 zu überarbeiten (Phase F).
+- **Eine Karte kann sich bewegen, ohne dass hier jemand sie gezogen hat.** Abwägung in
+  CONCEPT.md, „Korrektur dieser Begründung (14.08.2026)".
+- **Uhrenschiefe entscheidet Gleichstände.** Bei normal synchronisierten Rechnern Sekunden,
+  Züge liegen Minuten auseinander. Eine grob falsche Uhr kostet einen Zug.
+- **Karten in „Auf meinem Mac"-Listen bleiben ausgeschlossen.** Sie haben keinen externen
+  Bezeichner und existieren auf dem zweiten Gerät ohnehin nicht — die Grenze, an der
+  EventKit den Bezeichner verweigert, ist genau die, an der Synchronisation gegenstandslos
+  wird. Dieser Mac hat derzeit keine solche Liste; die App muss den Fall trotzdem behandeln
+  (Karten ohne externen Bezeichner gehören in den lokalen Schlüsselraum).
+
+### Nicht gelöst, ausdrücklich
+
+Mehrgeräte heißt hier **mehrere Macs**. iPhone und iPad brauchen die App aus dem nächsten
+Abschnitt; diese Arbeit ist deren Voraussetzung, nicht ihr Ersatz. Der mobile Pull bleibt
+bis dahin aus.
 
 ## Plattform-Erweiterung: iOS-App
 

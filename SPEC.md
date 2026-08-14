@@ -153,9 +153,38 @@ ein Schreibvorgang, bleibt der Zug in der Sitzung wirksam, es erscheint **kein D
 stünde die Karte im Backlog. Grenze: höchstens 200 Einträge, ältester Zug zuerst — kein
 Verfall nach Alter, denn eine Karte darf monatelang in einer Arbeitsspalte stehen.
 
+**Wann eine Karte abgelegt wurde**, steht seit 14.08.2026 neben den Zügen in der Datei
+(`released`). Vermerkt wird nur, was dieses Board zuvor selbst gezogen hatte; für alles
+andere gibt es nichts zu vermerken. Der Vermerk verfällt nach 30 Tagen — geprüft bei jedem Start, damit die Frist auch ohne
+Zusammenführung greift — und geht **nie** in die Spaltenberechnung ein — kein Eintrag in `pulls` heißt weiterhin Backlog, unverändert.
+Er existiert allein für die vorbereitete Zusammenführung zweier Macs: Ohne Datum an der
+Ablage wäre ein alter Zug des anderen Rechners die einzige datierte Aussage und stellte
+eine abgelegte Karte wieder auf. Die Zusicherung, dass das Format Backlog nicht ausdrücken
+kann, bleibt dadurch wörtlich gültig — der Vermerk steht daneben, nicht darin. Die
+Formatversion bleibt 1: Ältere Builds überlesen das Feld und lesen jeden Zug korrekt
+weiter.
+
+**Wo die Datei liegt**, kann sich ändern, ohne dass ein Zug verlorengeht. Gelesen wird der
+Reihe nach an jedem Ort, an dem sie je lag; geschrieben nur am aktuellen; **gelöscht wird
+nie** — ein Build, der zum alten Ort zurückkehrt, findet sein Board unverändert vor.
+Ändert sich der Zielort, legt der nächste Start dort eine Kopie an, damit ein anderer
+Prozess (später: Widget, Kurzbefehl) sie findet, ohne dass der Nutzer erst eine Karte
+ziehen muss. Ein Ort, der existiert, aber unlesbar ist, fällt **nicht** auf einen älteren
+zurück: Die ältere Kopie wäre per Definition überholt, und Karten in Spuren zurückzuholen,
+aus denen der Nutzer sie längst gezogen hat, ist die verbotene Richtung. Stand 14.08.2026
+ist nur ein Ort in Gebrauch, das Verhalten also unverändert; wann die liegengebliebenen
+Kopien verschwinden, steht in BACKLOG.md („Aufräumen der alten Speicherorte").
+
 **Der Speicher ist an diesen Mac gebunden.** Zwei Macs mit dieser App auf denselben Listen
 haben getrennte Spalten; die spätere iOS-App bräuchte eine eigene Synchronisation. Das ist
 der bewusst bezahlte Preis dafür, dass niemand sonst die Spalte erreichen kann.
+
+**Vorbereitet, aber nicht in Betrieb (Stand 14.08.2026):** Die Regel, nach der zwei
+Rechner ihre Spalten zusammenführen, ist als reine Funktion gebaut und getestet
+(`ColumnState.merged(_:_:now:)`) — je Karte gewinnt der jüngere Zeitstempel, Abwesenheit
+gilt nicht als Aussage, Gleichstand geht nach Backlog. **Übertragen wird noch nichts**;
+solange kein Speicher außerhalb dieses Macs angebunden ist, ändert die Regel am Verhalten
+der App nichts. Plan und Vorbehalte in BACKLOG.md, „Gerätesynchronisation über iCloud".
 
 ### Einmalige Migration der alten Hashtags
 

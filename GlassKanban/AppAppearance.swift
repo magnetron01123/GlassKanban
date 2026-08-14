@@ -46,7 +46,7 @@ enum AppAppearance: String, CaseIterable, Identifiable {
     }
 
     /// Shared with the controller below, so the key exists once.
-    static let storageKey = "appAppearance"
+    static let storageKey = StoredSetting.appearance.key
 
     /// The stored choice, for applying at launch before any view exists.
     static var stored: AppAppearance {

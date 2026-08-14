@@ -58,6 +58,23 @@ targets:
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.personal-information.calendars: true
+        # NOT here yet, deliberately: com.apple.security.application-groups.
+        #
+        # The board's own file belongs in a group container, so that a widget,
+        # a Live Activity or an App Intent — separate processes, all of them —
+        # can reach it at all. macOS allows that under this project's
+        # self-signed identity (measured 14.08.2026, no Team ID and no team
+        # prefix needed), but *Xcode* refuses to build a target carrying the
+        # entitlement without a provisioning profile, and a profile needs the
+        # Developer Program (RELEASE.md, phase 0).
+        #
+        # The alternative — strip it here and re-sign the bundle in
+        # scripts/build-app.sh — was rejected: it would leave two signing
+        # paths, and builds made the other way would quietly write the board
+        # to a different location than builds made this way. That is a real
+        # way to lose pulls, traded for a benefit that does not exist yet
+        # (there is no widget). Adding the line back is the whole change once
+        # phase 0 lands; `ColumnState` already reads from both locations.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanban
@@ -91,6 +108,7 @@ targets:
       - path: GlassKanban/RecurringSeriesMatch.swift
       - path: GlassKanban/CorrectionLedger.swift
       - path: GlassKanban/ColumnState.swift
+      - path: GlassKanban/StoredSetting.swift
       - path: GlassKanban/WindowPlacement.swift
     settings:
       base:

@@ -343,7 +343,7 @@ struct CorrectionLedger: Equatable {
     /// payload from an older build. Whatever cannot be vouched for is
     /// dropped, and an empty ledger simply means the app behaves as it did
     /// before this type existed.
-    static let storageKey = "correctionLedger"
+    static let storageKey = StoredSetting.correctionLedger.key
 
     /// Bumped when the stored shape changes. Version 3 turned the single
     /// displaced value into a chain; a version-2 payload is still read — its
