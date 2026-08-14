@@ -1,16 +1,26 @@
 import Foundation
 
-/// Reads and writes the Kanban status hashtag in reminder notes.
+/// Reads the Kanban status hashtag this board used to keep in reminder notes,
+/// and cuts it back out of them.
+///
+/// **Migration only, since 13.08.2026.** The column moved into the board's own
+/// storage (`ColumnState`), so nothing here writes a tag any more. What is
+/// left serves the one-off handover: reading the old form once per list, and
+/// removing it from the notes afterwards. When that cleanup is eventually
+/// dropped — no earlier than a version after 1.0, once no install can still be
+/// carrying tags — this type goes with it.
+///
+/// Until then the standalone rule below stays **safety-critical**: this is the
+/// last place in the app that cuts text out of a note somebody else may have
+/// written, and it was measured destroying real text once already.
 ///
 /// Rules (see SPEC.md):
-/// - Reading: a tag is recognized anywhere in the text, case-insensitively,
-///   but only where it stands alone — whitespace or the ends of the text on
-///   both sides (see `isStandalone`). So neither "#nextlevel" nor the "#next"
-///   inside "example.com/guide#next" counts.
+/// - A tag is recognized anywhere in the text, case-insensitively, but only
+///   where it stands alone — whitespace or the ends of the text on both sides
+///   (see `isStandalone`). So neither "#nextlevel" nor the "#next" inside
+///   "example.com/guide#next" counts.
 /// - If several tags are present, the one appearing last in the text wins
 ///   (it is the one most recently appended).
-/// - Writing: all existing tags are removed, then the new tag is appended
-///   as its own last line. Backlog and Done write no tag at all.
 enum StatusTagger {
 
     /// Canonical tags as of the DE+EN localization (2026): `#next`/`#inprogress`.
@@ -23,8 +33,8 @@ enum StatusTagger {
     /// Tags from earlier builds — the pre-localization German forms
     /// (`#alsnächstes`/`#inbearbeitung` and their older, shorter cousins),
     /// plus `#progress` from a build that briefly used it without the "in".
-    /// Recognized when reading and normalized to the current tags above by
-    /// the next hygiene pass.
+    /// Recognized when reading, so a tag from any build this board ever had
+    /// still reaches the right lane during the handover.
     static let legacyNextRegexes: [Regex<Substring>] = [
         #/#alsn(?:ä|ae)chstes\b/#.ignoresCase(),
         #/#n(?:ä|ae)chstes\b/#.ignoresCase(),
@@ -104,59 +114,21 @@ enum StatusTagger {
         tagRanges(in: text, of: regexes).last
     }
 
-    static func tagCount(_ notes: String?) -> Int {
+    private static func tagCount(_ notes: String?) -> Int {
         guard let notes else { return 0 }
         return tagRanges(in: notes, of: allTagRegexes).count
-    }
-
-    static func hasLegacyTag(_ notes: String?) -> Bool {
-        guard let notes else { return false }
-        return !tagRanges(in: notes, of: legacyNextRegexes + legacyProgressRegexes).isEmpty
     }
 
     static func hasStatusTag(_ notes: String?) -> Bool {
         tagCount(notes) > 0
     }
 
-    /// Whether these notes need a hygiene rewrite: a completed reminder still
-    /// carrying a status tag, several tags at once, or a tag in a legacy
-    /// spelling. Pure, so the rule the sync loop runs on every reminder can be
-    /// tested without EventKit.
-    static func needsHygiene(notes: String?, isCompleted: Bool) -> Bool {
-        (isCompleted && hasStatusTag(notes))
-            || tagCount(notes) > 1
-            || hasLegacyTag(notes)
-    }
-
-    /// Returns the notes rewritten for the given status. The user's own text
-    /// is preserved; only tags are removed/appended. Returns nil when the
-    /// result would be empty (EventKit prefers nil over an empty string).
-    static func rewrittenNotes(_ notes: String?, for status: KanbanStatus) -> String? {
-        let original = notes ?? ""
-        var text = removingTags(original)
-        // Trailing whitespace is tidied only when this call touches the end of
-        // the text anyway — a tag line came out, or one is about to go on.
-        // An earlier version collapsed every run of blank lines in the whole
-        // note on every single move, which quietly ate the paragraph breaks of
-        // anyone who writes their notes with them.
-        if text != original || status.tag != nil {
-            while let last = text.last, last.isWhitespace {
-                text.removeLast()
-            }
-        }
-        if let tag = status.tag {
-            text = text.isEmpty ? tag : text + "\n" + tag
-        }
-        return text.isEmpty ? nil : text
-    }
-
     /// Removes all status tags. Only lines that actually contained a tag are
     /// re-tidied (collapsed double spaces, trimmed) — untouched user lines are
     /// preserved character-for-character. A line that held nothing but a tag
     /// disappears with it instead of leaving a blank line where it stood.
-    /// Also used by `TicketEditSheet` to show notes without the hidden
-    /// hashtag; unlike `TextSanitizer`, URLs are left alone since here
-    /// they're real, editable content.
+    /// The one remaining writer of note text in this app, and only during the
+    /// migration described above.
     static func removingTags(_ text: String) -> String {
         // Every kind of line break splits, and each one is carried along so it
         // can be put back exactly as it was. Splitting on "\n" alone let a

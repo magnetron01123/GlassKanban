@@ -40,10 +40,16 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
   Tag-Hygiene. Mit Abstand die größte Datei und die einzige Stelle mit Seiteneffekten.
-- **StatusTagger.swift** — Hashtag lesen/schreiben/migrieren. Wortgrenzen sind hier
+- **ColumnState.swift** — **die Spalte**: welche Karte in welcher Arbeitsspur liegt und
+  seit wann, in einer eigenen Datei (`Application Support/GlassKanban/columns.json`).
+  Seit 13.08.2026 die einzige Quelle dafür; kein Eintrag heißt Backlog, Erledigt bleibt
+  `isCompleted`. Kein anderes Programm erreicht diesen Speicher — genau das ist der Zweck.
+- **StatusTagger.swift** — **nur noch Migration**: liest die alten Hashtags einmal je
+  Liste ein und schneidet sie danach aus den Notizen. Wortgrenzen sind hier weiterhin
   sicherheitskritisch — eine links fehlende Grenze erkannte `#next` mitten in
   `https://example.com/guide#next` und zerstörte damit echten Nutzertext, ohne dass der
-  Nutzer je etwas getan hatte (behoben 26.07.2026, siehe `StatusTaggerTests`).
+  Nutzer je etwas getan hatte (behoben 26.07.2026, siehe `StatusTaggerTests`). Die Datei
+  entfällt mit der Aufräumung, frühestens eine Version nach 1.0.
 - **Models.swift** — `KanbanStatus`, `KanbanCard`, Filter- und Sortierlogik.
 - **Views** — `BoardView` (Board + Dialoge), `ColumnView` (Spalte, Falz, Drop-Ziele),
   `CardView` (Karte, Settle-Animationen, Durchstrich), `TicketEditSheet` (Karten-Editor),
@@ -54,7 +60,8 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   `TextSanitizer`, `BacklogTicketTargeting`, `StreakCalculator`, `WrappedStats`,
   `ReminderDeepLink`, `CorrectionLedger` (Koexistenz mit fremden Schreibern),
   `RecurringHandoff` (Undo-Zaun bei Wiederholungen), `RecurringSeriesMatch` (Durchgang
-  ↔ Serie über das Anlegedatum), `RecurringTagRelease` (stille Tag-Freigabe),
+  ↔ Serie über das Anlegedatum), `RecurringTagRelease` (stille Freigabe eines
+  verbrauchten Pulls), `ColumnState` (die Spalte, siehe oben),
   `TicketURL` (was das URL-Feld speichern kann). **Muster für neue Logik:** Entscheidung
   aus der View herausziehen, dann testen.
 - **`Localizable.xcstrings`/`InfoPlist.xcstrings`** — String Catalogs, Englisch Quelle,
@@ -112,6 +119,14 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Textvorschlag ohne Vorher-Nachher-Gegenüberstellung ist keiner.
 - UI-Änderungen selbst per Screenshot prüfen und eigenständig nachbessern; vorher alte
   App-Instanzen aus früheren Sessions beenden.
+- **Drag & Drop lässt sich nicht synthetisch auslösen** (14.08.2026 gemessen): Ein per
+  computer-use erzeugter Press-Move-Release wird von SwiftUIs Drag-System nicht als Zug
+  angenommen — die Karte bleibt liegen, und weil das Board-Fenster sich am Hintergrund
+  ziehen lässt, wandert stattdessen das Fenster. Für einen Spaltenwechsel im UI-Test
+  deshalb das **Kontextmenü** („Verschieben nach") nehmen: derselbe `move()`-Pfad, nur
+  ohne Geste. Die Geste selbst kann nur der Nutzer prüfen. Nebenbefund: Ein Fenster einer
+  nicht freigegebenen App (hier Home Assistant) wird aus dem Screenshot herausgefiltert,
+  liegt aber weiter davor und blockiert jeden Klick — Fenster verschieben oder maximieren.
 - **Tastaturbefunde nie aus synthetischen Tastendrücken ableiten, ohne sie mit einer
   echten Tastatur gegenzuprüfen.** Am 26.07.2026 blieb der Karten-Editor bei einem
   synthetischen Escape scheinbar offen (kein Codefehler — der Monitor erreicht solche

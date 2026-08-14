@@ -31,7 +31,8 @@ Phase) gelaufen ist — nicht, wenn der Code geschrieben ist.
 | 5 | Einreichung & Launch | S | ☐ offen — braucht alles |
 
 **Bereits erledigt (vor diesem Plan, verifiziert im Audit 26.07.):** App Sandbox +
-Kalender-Entitlement, PrivacyInfo.xcprivacy (nur UserDefaults/CA92.1), Purpose-String
+Kalender-Entitlement, PrivacyInfo.xcprivacy (UserDefaults/CA92.1 plus die eigene
+Datei `columns.json` im Container — nicht deklarationspflichtig), Purpose-String
 mit Schreibzugriff-Begründung, App-Kategorie, Versionierung 1.0.0/1,
 Export-Compliance-Key, Copyright, keine private API/Reflection (seit `4f83347`),
 Login-Item nur opt-in, kein Netzwerkcode, keine Dependencies.
@@ -76,6 +77,10 @@ Fallback-Sprache für alle nicht übersetzten Märkte muss Englisch sein.
       `#next`/`#inprogress` als Kanonik + deutsche Formen als Legacy umgeschrieben;
       volle Suite grün bis auf zwei vorbestehende, unabhängige `BacklogFoldTests`
       (Datumsfixtur, an anderer Stelle zur Behebung vorgemerkt) (07.08.2026)
+- [x] **Überholt am 13.08.2026:** Die Spalte steht seither nicht mehr in den Notizen,
+      sondern in `columns.json` (SPEC.md, „Spalten = eigener Speicher der App"). Die
+      Tag-Formen unten sind nur noch Lesestoff der einmaligen Migration — der Punkt
+      bleibt als Historie stehen.
 - [x] **Tag-Migration:** kanonisch `#next`/`#inprogress`; `#alsnächstes`/
       `#inbearbeitung` (+ Umlaut-/Kurzvarianten) in der Legacy-Migrationsliste in
       StatusTagger.swift (07.08.2026)

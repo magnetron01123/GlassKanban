@@ -136,18 +136,42 @@ final class RemindersStore: ObservableObject {
     /// on every single refresh.
     private var lastSavedCorrections = CorrectionLedger.load()
 
-    /// The notes of every card that carried a working-lane tag at the last
-    /// refresh. Small by construction — a board only has so much work in
-    /// flight — and the reason a tag can be defended no matter who took it
-    /// off: without it, only the app's own moves would ever be noticed.
-    private var taggedNotesByID: [String: String] = [:]
-
     /// The release rule's persisted memory: when each series was last pulled
     /// on this board, and since when the standing rule has been counting.
     /// Written when the user pulls (see `move`) and pinned once on the first
     /// refresh, so a completion during downtime is still weighed correctly
     /// after a cold start.
     private var releaseMemory = RecurringTagRelease.Memory.load()
+
+    /// Which card sits in which working lane — the board's own record, in the
+    /// board's own file (see `ColumnState`). Since 13.08.2026 this, and not
+    /// the hashtag in the reminder's notes, is what puts a card in a column.
+    private var columns = ColumnState.load(from: ColumnState.defaultFileURL())
+
+    /// What was last written to disk, so an unchanged state is not rewritten
+    /// on every refresh — the same guard `lastSavedCorrections` provides.
+    private var lastSavedColumns = ColumnState.load(from: ColumnState.defaultFileURL())
+
+    private let columnsURL = ColumnState.defaultFileURL()
+
+    /// One line per failed write to the column file. There is deliberately no
+    /// dialog: the pull the user just made is already live on screen, and this
+    /// board may never put a message about its own storage in front of
+    /// somebody who dragged a card. The next write tries again.
+    private static let storageLog = Logger(
+        subsystem: "com.davidtrogemann.GlassKanban", category: "storage")
+
+    /// Writes the column state if it changed. The single place that touches
+    /// the file, and always *after* any EventKit save it belongs to: a
+    /// completion that failed to save must not leave the lane cleared.
+    private func persistColumns() {
+        guard columns != lastSavedColumns else { return }
+        if columns.save(to: columnsURL) {
+            lastSavedColumns = columns
+        } else {
+            Self.storageLog.error("column state not written — retrying on the next change")
+        }
+    }
 
     struct SaveFailure: Identifiable {
         let cardID: String
@@ -497,9 +521,27 @@ final class RemindersStore: ObservableObject {
         // stale open instance over the completed record and take a
         // completion away.
         let fetched = Self.deduplicated(incomplete + completed)
-        noteWorkingTagsTakenOffElsewhere(fetched)
-        let released = releasedSeriesIDs(incomplete: incomplete, completed: completed)
-        applyCorrections(fetched, releasing: released)
+        // Before anything reads a column: lists whose old hashtags have not
+        // been taken over yet hand them over now. Runs before the cards are
+        // built, or the board would flash entirely in Backlog once.
+        importColumnsFromTags(fetched, lists: included)
+        // A card that got finished anywhere gives its lane back. Completion is
+        // the one column EventKit owns, so the board's own record must not go
+        // on claiming a pull beside it — otherwise un-ticking the task in
+        // Reminders would return it to a working lane nobody pulled it into.
+        // This is what the tag hygiene used to do by refusing to leave a tag
+        // on a completed reminder.
+        for reminder in fetched where reminder.isCompleted {
+            columns.release(reminder.calendarItemIdentifier)
+        }
+        // A pull the series has already spent gives its lane back — the same
+        // standing rule as before, now written into the board's own record
+        // instead of into somebody's notes. No pacing, no undo fence, no
+        // regard for write permissions: nothing outside this app is touched.
+        for seriesID in releasedSeriesIDs(incomplete: incomplete, completed: completed) {
+            columns.release(seriesID)
+        }
+        applyCorrections(fetched)
 
         // The list a finished task came from is thrown away everywhere else —
         // a completed card only needs its title. The stats view is the one
@@ -560,7 +602,7 @@ final class RemindersStore: ObservableObject {
         var seen: Set<String> = []
         let refreshed: [KanbanCard] = drawable
             .reversed()
-            .compactMap { seen.insert($0.calendarItemIdentifier).inserted ? Self.card(from: $0) : nil }
+            .compactMap { seen.insert($0.calendarItemIdentifier).inserted ? card(from: $0) : nil }
             .reversed()
 
         // Work finished elsewhere (a shared list on another device) gets the
@@ -588,6 +630,10 @@ final class RemindersStore: ObservableObject {
         }
         // Kept across launches: the writer this defends against works on a
         // scale of tens of minutes, and the app may well be quit in between.
+        // Whatever this refresh changed about the columns — a completion
+        // giving its lane back, an import — reaches the file here, in one
+        // write.
+        persistColumns()
         corrections.retain(now: .now)
         if corrections != lastSavedCorrections {
             lastSavedCorrections = corrections
@@ -636,32 +682,48 @@ final class RemindersStore: ObservableObject {
             isRecurring: reminder.hasRecurrenceRules)
     }
 
-    /// Books a working-lane tag that came off somewhere else — on the phone,
-    /// in Reminders, by another program — as a displacement like any other.
+    /// Hands the old hashtag form over to the board's own record, once per
+    /// list.
     ///
-    /// Deliberately the *only* place where something the board did not write
-    /// itself enters the ledger, and only because the direction is safe: all
-    /// that can ever be restored from such a booking is the absence of a tag.
-    /// Booking observed changes in general was designed and discarded — a
-    /// writer that pushes more often than the user would get its stale values
-    /// adopted and then enforced with the board's own authority.
-    private func noteWorkingTagsTakenOffElsewhere(_ reminders: [EKReminder], now: Date = .now) {
-        var stillTagged: [String: String] = [:]
+    /// **Per list, not per installation.** A single "migration done" flag
+    /// would be set after the first refresh, and that refresh does not see
+    /// everything: a list switched off in Settings, an account that syncs in
+    /// minutes later, a machine that starts offline. Their tags would be lost
+    /// for good, and every card in them would rest in Backlog with no way back
+    /// but a drag. Stamped per list, each one is taken over the first time it
+    /// appears, whenever that is.
+    ///
+    /// **This is not the rejected hybrid.** The tags are read exactly once per
+    /// list and never again; a permanent import channel would hand a foreign
+    /// writer back the very lever this change removes.
+    private func importColumnsFromTags(_ reminders: [EKReminder], lists: [EKCalendar], now: Date = .now) {
+        let pending = lists.filter { !columns.hasImported(listID: $0.calendarIdentifier) }
+        guard !pending.isEmpty else { return }
+        let pendingIDs = Set(pending.map(\.calendarIdentifier))
+        var taggedByList: [String: Set<String>] = [:]
         for reminder in reminders {
+            guard let listID = reminder.calendar?.calendarIdentifier,
+                  pendingIDs.contains(listID)
+            else { continue }
             let cardID = reminder.calendarItemIdentifier
-            let notes = reminder.notes
-            let status = StatusTagger.status(fromNotes: notes, isCompleted: reminder.isCompleted)
-            if status == .next || status == .inProgress, let notes {
-                stillTagged[cardID] = notes
-                continue
+            // Every record carrying a tag right now — completed ones too, so
+            // the cleanup below reaches them — is named here and nowhere else.
+            // That naming is what keeps the cleanup from ever touching a word
+            // the user types later (see `ColumnState.pendingTagCleanup`).
+            if StatusTagger.hasStatusTag(reminder.notes) {
+                taggedByList[listID, default: []].insert(cardID)
             }
-            if let previous = taggedNotesByID[cardID], previous != notes {
-                corrections.record(
-                    cardID: cardID, field: .notes,
-                    replaced: .text(previous), wrote: .text(notes), at: now)
-            }
+            guard !reminder.isCompleted else { continue }
+            let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: false)
+            guard let lane = ColumnState.Lane(status) else { continue }
+            columns.pull(cardID, into: lane, at: now)
         }
-        taggedNotesByID = stillTagged
+        for list in pending {
+            columns.markImported(
+                listID: list.calendarIdentifier, at: now,
+                taggedIDs: taggedByList[list.calendarIdentifier] ?? [])
+        }
+        persistColumns()
     }
 
     /// Which recurring series have a tag left over from a turn that has
@@ -681,7 +743,7 @@ final class RemindersStore: ObservableObject {
                 listID: listID,
                 isCompleted: reminder.isCompleted,
                 isRecurring: reminder.hasRecurrenceRules,
-                status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted),
+                status: currentStatus(of: reminder),
                 createdAt: reminder.creationDate,
                 completedAt: reminder.completionDate)
         }
@@ -691,18 +753,22 @@ final class RemindersStore: ObservableObject {
             deliberatelyMoved: deliberatelyMovedSinceRefresh)
     }
 
-    /// The one place the board writes without being asked: an echo of its own
-    /// write, a pull the series has spent, and the data hygiene — applied in
-    /// that order, then saved once per card.
+    /// The one place the board writes to Reminders without being asked: an
+    /// echo of its own write, and the one-off removal of the old status tags.
     ///
-    /// Order matters and carries three fixes: booking runs before answering
-    /// (a third state withdraws the entry, so a user who changed their mind
-    /// is never fought); hygiene runs *last, on the result*, so a restored
-    /// value is normalised rather than refused and no second pass has to
-    /// rewrite what this one just wrote.
-    private func applyCorrections(_ reminders: [EKReminder], releasing released: Set<String>, now: Date = .now) {
+    /// Since 13.08.2026 columns are not part of this any more — they live in
+    /// the board's own file, so a spent pull and a completed card are handled
+    /// there, without touching anybody's reminder. What is left here defends
+    /// the four fields the *editor* writes.
+    ///
+    /// Order matters: booking runs before answering, so a third state
+    /// withdraws the entry and a user who changed their mind is never fought.
+    private func applyCorrections(_ reminders: [EKReminder], now: Date = .now) {
         var answered = 0
         var dirty = false
+        // Which records the migration finished with in this pass — struck off
+        // only after their save landed, so an interrupted run resumes.
+        var cleaned: Set<String> = []
         for reminder in reminders {
             let cardID = reminder.calendarItemIdentifier
             let state = Self.state(of: reminder)
@@ -719,14 +785,10 @@ final class RemindersStore: ObservableObject {
             // After a repeating card is completed, this identifier belongs to
             // the *next* turn. Undo refuses to write through it and says so;
             // an automatic correction has even less business there, and must
-            // stay silent about it (no dialog, ever). The one exception is
-            // the tag release: it writes precisely what the fence protects —
-            // that the next turn stays unpulled — and blocking it here is
-            // what once left a stale `#next` standing on a series completed
-            // in-app until the user happened to drag it (measured
-            // 12.–13.08.2026, "Einkaufen").
-            let fenced = recurringHandoff.refusesUnattributedWrite(to: cardID)
-            guard !fenced || released.contains(cardID) else { continue }
+            // stay silent about it (no dialog, ever). No exception is needed
+            // any more: the one write that used to need one — releasing a
+            // spent pull — no longer goes through Reminders at all.
+            guard !recurringHandoff.refusesUnattributedWrite(to: cardID) else { continue }
 
             var targetNotes = reminder.notes
             var targetTitle = reminder.title
@@ -734,7 +796,7 @@ final class RemindersStore: ObservableObject {
             var targetDue = reminder.dueDateComponents
             var touched: Set<CorrectionLedger.Field> = []
 
-            if !fenced, answered < Self.maxAnsweredCardsPerRefresh {
+            if answered < Self.maxAnsweredCardsPerRefresh {
                 let echoes = corrections.pendingEchoes(for: cardID, state: state, now: now)
                 for (field, value) in echoes {
                     switch (field, value) {
@@ -763,29 +825,21 @@ final class RemindersStore: ObservableObject {
                 if !touched.isEmpty { answered += 1 }
             }
 
-            // A pull the series has spent. A standing condition since
-            // 13.08.2026, so it needs no edge exemption anymore: it is
-            // re-decided on every refresh and paced below like every other
-            // answer — a writer that keeps restoring the tag is corrected
-            // calmly, at most once per cooldown.
-            if released.contains(cardID) {
-                targetNotes = StatusTagger.rewrittenNotes(targetNotes, for: .backlog)
+            // The one-off cleanup: a status tag left over from the form this
+            // board used until 13.08.2026 is cut out of the notes — but only
+            // from the records the import named when it read them. Deciding by
+            // "a tag is present" instead was measured deleting a user's own
+            // word (14.08.2026): typing "Notiz mit #inprogress darin" and
+            // closing the editor left "Notiz mit darin". Nothing outside that
+            // list is ever cut, whatever it looks like.
+            if columns.awaitsTagCleanup(cardID), StatusTagger.hasStatusTag(targetNotes) {
+                targetNotes = targetNotes.map(StatusTagger.removingTags).flatMap { $0.isEmpty ? nil : $0 }
                 touched.insert(.notes)
-            }
-
-            // Hygiene last, on the result: one tag of the current spelling,
-            // and none at all on a completed reminder.
-            if StatusTagger.needsHygiene(notes: targetNotes, isCompleted: reminder.isCompleted) {
-                let status = StatusTagger.status(fromNotes: targetNotes, isCompleted: reminder.isCompleted)
-                targetNotes = StatusTagger.rewrittenNotes(targetNotes, for: status)
-                touched.insert(.notes)
+                cleaned.insert(cardID)
             }
 
             guard !touched.isEmpty else { continue }
-            // Every field that is about to change has to be allowed to. The
-            // release too: its write books into the ledger like any other,
-            // so a byte-identical restoration inside the cooldown is
-            // deferred, and the cooldown wake-up re-decides it.
+            // Every field that is about to change has to be allowed to.
             let paced = touched.filter { field in
                 corrections.permitsWrite(cardID: cardID, field: field, state: state, now: now)
             }
@@ -824,10 +878,16 @@ final class RemindersStore: ObservableObject {
                 for field in paced {
                     corrections.markAnswered(cardID: cardID, field: field, at: now)
                 }
+                // The migration keeps this record on its list and tries again.
+                cleaned.remove(cardID)
             }
         }
         if dirty {
             try? eventStore.commit()
+        }
+        if !cleaned.isEmpty {
+            for cardID in cleaned { columns.markTagCleaned(cardID) }
+            persistColumns()
         }
     }
 
@@ -865,7 +925,21 @@ final class RemindersStore: ObservableObject {
         }
     }
 
-    private static func card(from reminder: EKReminder) -> KanbanCard? {
+    /// The column this reminder sits in — the one decision this whole board
+    /// turns on.
+    ///
+    /// Completion still comes from EventKit, because that is where everybody
+    /// else reads it. Everything else comes from the board's own record: no
+    /// entry means Backlog, exactly as no tag did before 13.08.2026. What
+    /// stands in the notes is now nobody's business but the user's.
+    private func currentStatus(of reminder: EKReminder) -> KanbanStatus {
+        if reminder.isCompleted { return .done }
+        return columns.lane(of: reminder.calendarItemIdentifier)?.status ?? .backlog
+    }
+
+    /// An instance method since 13.08.2026: the column is read from the
+    /// board's own state, which a static function cannot reach.
+    private func card(from reminder: EKReminder) -> KanbanCard? {
         guard let calendar = reminder.calendar else { return nil }
         return KanbanCard(
             id: reminder.calendarItemIdentifier,
@@ -876,18 +950,19 @@ final class RemindersStore: ObservableObject {
             // what the card shows is a preview, what Find searches is the
             // reminder.
             searchText: [
-                reminder.notes.map(StatusTagger.removingTags),
+                reminder.notes,
                 reminder.url?.absoluteString,
             ].compactMap { $0 }.joined(separator: "\n"),
             dueDate: reminder.dueDateComponents.flatMap { Foundation.Calendar.current.date(from: $0) },
             priority: reminder.priority,
-            status: StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted),
+            status: currentStatus(of: reminder),
             listID: calendar.calendarIdentifier,
             listName: calendar.title,
             listColor: Color(nsColor: calendar.color ?? .controlAccentColor),
             completionDate: reminder.completionDate,
             isRecurring: reminder.hasRecurrenceRules,
             lastModifiedDate: reminder.lastModifiedDate,
+            pulledAt: columns.pulledAt(reminder.calendarItemIdentifier),
             creationDate: reminder.creationDate)
     }
 
@@ -912,7 +987,7 @@ final class RemindersStore: ObservableObject {
         restoredCompletion: Date? = nil
     ) -> KanbanStatus? {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
-        let origin = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
+        let origin = currentStatus(of: reminder)
         let writeStamp = beginWrite()
         guard origin != status else { return nil }
         // Un-completing a repeating reminder is the one move EventKit cannot
@@ -934,15 +1009,16 @@ final class RemindersStore: ObservableObject {
         // Read before the save: afterwards this record is the rolled-on series
         // and no longer says anything about the occurrence that was finished.
         let wasRecurringSeries = reminder.hasRecurrenceRules
-        // Read before the rewrite: this exact text is what an echo would
-        // bring back, and only a record of it can tell an echo from someone
-        // deciding otherwise (see `CorrectionLedger`).
-        let replacedNotes = reminder.notes
-        reminder.notes = StatusTagger.rewrittenNotes(reminder.notes, for: status)
         // Only written when it actually changes: the setter also touches
         // `completionDate`, and a lateral move has no business rewriting
         // completion fields on a live recurring series.
         let completed = (status == .done)
+        // A move between the open lanes touches EventKit not at all since
+        // 13.08.2026 — the column is the board's own, and the reminder has no
+        // business carrying it. Only crossing into or out of Erledigt is a
+        // fact about the task itself, and that one still belongs in Reminders
+        // where everybody else reads it.
+        let touchesEventKit = reminder.isCompleted != completed
         // The day something was finished on is a fact, not a side effect of
         // where its card sits. Clearing `isCompleted` drops `completionDate`,
         // and setting it again stamps *now* — so pulling last week's card
@@ -952,32 +1028,36 @@ final class RemindersStore: ObservableObject {
         // date was gone for good. Carried through the move instead, and
         // handed to the undo below so the way back restores it too.
         let previousCompletionDate = reminder.completionDate
-        if reminder.isCompleted != completed {
+        if touchesEventKit {
             reminder.isCompleted = completed
             if completed, let restoredCompletion {
                 reminder.completionDate = restoredCompletion
             }
-        }
-        do {
-            try eventStore.save(reminder, commit: true)
-        } catch {
-            // Put the record back the way it was. EventKit hands out cached
-            // instances by identifier, so a reminder left carrying an unsaved
-            // tag would place the card in the target lane while the alert
-            // says it did not move.
-            reminder.notes = replacedNotes
-            if reminder.isCompleted != (origin == .done) {
+            do {
+                try eventStore.save(reminder, commit: true)
+            } catch {
+                // Put the record back the way it was. EventKit hands out
+                // cached instances by identifier, so a reminder left carrying
+                // an unsaved completion would show as finished while the alert
+                // says it did not move.
                 reminder.isCompleted = (origin == .done)
+                // Say so. A move that fails leaves the card where it was,
+                // which on a board that animates every real move looks exactly
+                // like a drop that missed — so the user tries again instead of
+                // learning that this list is read-only.
+                pendingSaveFailure = SaveFailure(
+                    cardID: cardID, title: String(localized: "Not Moved"), message: error.localizedDescription)
+                scheduleRefreshAfterWrite()
+                return nil
             }
-            // Say so. A move that fails leaves the card where it was, which
-            // on a board that animates every real move looks exactly like a
-            // drop that missed — so the user tries again instead of learning
-            // that this list is read-only.
-            pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: String(localized: "Not Moved"), message: error.localizedDescription)
-            scheduleRefreshAfterWrite()
-            return nil
         }
+        // The column itself, written last and only once anything it depends on
+        // has actually landed: a completion that failed to save must not leave
+        // the lane cleared. A read-only list is no obstacle here — the entry
+        // is the board's own, and whether somebody else's reminder may be
+        // edited says nothing about how this board sorts its own view.
+        columns.pull(cardID, into: ColumnState.Lane(status), at: .now)
+        persistColumns()
         // Registered after the save, not before: an undo entry for a move
         // that never happened spends itself doing nothing, and the *next* ⌘Z
         // then reaches back past it into an edit the user did mean to keep.
@@ -1014,18 +1094,10 @@ final class RemindersStore: ObservableObject {
                     listID: reminder.calendar?.calendarIdentifier))
             releaseMemory.save()
         }
-        // What this move displaced, so an echo of it can be told apart from
-        // someone deciding otherwise — and so the one correction it is owed
-        // is available. A replay through undo counts too: it is still this
-        // app writing, and its result deserves the same single defence.
-        // Not for a repeating series that was just completed: from that save
-        // on, this identifier is the *next* turn, and an entry on it would
-        // describe a card that no longer exists.
-        if !(wasRecurringSeries && status == .done) {
-            corrections.record(
-                cardID: cardID, field: .notes,
-                replaced: .text(replacedNotes), wrote: .text(reminder.notes), at: .now)
-        }
+        // Nothing is booked into the correction ledger here any more: a move
+        // no longer writes a reminder field, so there is no displacement for a
+        // foreign writer to undo. The ledger still defends everything the
+        // *editor* writes — title, notes, URL, due date.
 
         // Optimistic UI update; the EventKit change notification will
         // confirm it with a full refresh shortly after.
@@ -1125,7 +1197,7 @@ final class RemindersStore: ObservableObject {
         // when the ticket is kept (see `finalizeNewTicket`).
         // Optimistic, like `move`: the editor opens on this card immediately,
         // it cannot wait out the debounced refresh.
-        if let card = Self.card(from: reminder) {
+        if let card = card(from: reminder) {
             cards.append(card)
         }
         scheduleRefreshAfterWrite()
@@ -1249,6 +1321,13 @@ final class RemindersStore: ObservableObject {
         let completionDate: Date?
         let recurrenceRules: [EKRecurrenceRule]?
         let alarms: [EKAlarm]?
+        /// The column the card stood in. Carried in the snapshot because
+        /// EventKit gives a restored reminder a *new* identifier, so the
+        /// board's own record cannot be found again under the old one — undo
+        /// would silently return the card to Backlog. While the column lived
+        /// in the notes, it rode along in `notes` and nobody had to think
+        /// about it.
+        let lane: ColumnState.Lane?
     }
 
     /// A ticket the user asked to delete, waiting for the answer.
@@ -1300,7 +1379,8 @@ final class RemindersStore: ObservableObject {
             isCompleted: reminder.isCompleted,
             completionDate: reminder.completionDate,
             recurrenceRules: reminder.recurrenceRules,
-            alarms: reminder.alarms)
+            alarms: reminder.alarms,
+            lane: columns.lane(of: cardID))
         do {
             try eventStore.remove(reminder, commit: true)
         } catch {
@@ -1309,6 +1389,10 @@ final class RemindersStore: ObservableObject {
             scheduleRefreshAfterWrite()
             return
         }
+        // The record is gone, so its column is nothing but a stranded entry —
+        // the snapshot carries it now, and `restoreTicket` puts it back.
+        columns.release(cardID)
+        persistColumns()
         register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
             store.restoreTicket(snapshot, undoManager: undoManager)
         }
@@ -1351,6 +1435,12 @@ final class RemindersStore: ObservableObject {
         }
 
         let cardID = reminder.calendarItemIdentifier
+        // Under the *new* identifier: EventKit does not hand back the old one,
+        // and without this the card would come back resting in Backlog.
+        if let lane = snapshot.lane {
+            columns.pull(cardID, into: lane, at: .now)
+            persistColumns()
+        }
         register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
@@ -1500,7 +1590,7 @@ final class RemindersStore: ObservableObject {
         let components = reminder.dueDateComponents
         return EditableTicket(
             title: reminder.title ?? "",
-            notes: StatusTagger.removingTags(reminder.notes ?? ""),
+            notes: reminder.notes ?? "",
             url: reminder.url?.absoluteString ?? "",
             dueDate: components.flatMap { Foundation.Calendar.current.date(from: $0) },
             hasDueTime: components?.hour != nil,
@@ -1596,12 +1686,6 @@ final class RemindersStore: ObservableObject {
         // floor without a word.
         let index = cards.firstIndex(where: { $0.id == cardID })
 
-        // Read from the reminder itself, not the cached `cards[index].status`:
-        // the sheet can sit open long enough for an external change (another
-        // device, a direct edit in Reminders.app) to move the card before
-        // this save runs. Using the stale cache here would silently reapply
-        // the old column's tag over whatever the live state already is.
-        let status = StatusTagger.status(fromNotes: reminder.notes, isCompleted: reminder.isCompleted)
         let newCalendar = eventStore.calendar(withIdentifier: edited.calendarID)
 
         let titleChanged = edited.title != baseline.title
@@ -1611,12 +1695,12 @@ final class RemindersStore: ObservableObject {
         let priorityChanged = edited.priority != baseline.priority
         let calendarChanged = edited.calendarID != baseline.calendarID
 
-        // Only computed when it is going to be written: leaving the notes
-        // alone also leaves whatever tag they carry, which is exactly the
-        // live status — so an untouched note still cannot relocate the card.
+        // The note is now nothing but the user's text. Empty means no note at
+        // all rather than an empty one — EventKit distinguishes the two, and
+        // the tag-writing code this replaces was careful about it as well.
         var rewrittenNotes: String?
         if notesChanged {
-            rewrittenNotes = StatusTagger.rewrittenNotes(edited.notes, for: status)
+            rewrittenNotes = edited.notes.isEmpty ? nil : edited.notes
         }
 
         let replacedTitle = reminder.title
@@ -1667,6 +1751,15 @@ final class RemindersStore: ObservableObject {
                 cardID: cardID, title: String(localized: "Not Saved"), message: error.localizedDescription)
             scheduleRefreshAfterWrite()
             return
+        }
+        // Moving a reminder between lists is the one identifier break this app
+        // triggers itself — Apple documents it as possible, and this
+        // measurement (13.08.2026, iCloud scratch lists) found the identifier
+        // intact. Carried over anyway: if it ever does break, the card would
+        // otherwise fall out of its column for a reason the user cannot see.
+        if calendarChanged {
+            columns.rekey(from: cardID, to: reminder.calendarItemIdentifier)
+            persistColumns()
         }
         // Booked after the save, like every other write: an entry for a write
         // that never happened would have the app quietly "restoring" an edit

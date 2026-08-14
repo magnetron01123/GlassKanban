@@ -38,98 +38,8 @@ final class StatusTaggerTests: XCTestCase {
         XCTAssertEqual(StatusTagger.status(fromNotes: "#next dann #inprogress", isCompleted: false), .inProgress)
         XCTAssertEqual(StatusTagger.status(fromNotes: "#inprogress\n#next", isCompleted: false), .next)
     }
-
-    func testTagCount() {
-        XCTAssertEqual(StatusTagger.tagCount(nil), 0)
-        XCTAssertEqual(StatusTagger.tagCount("nichts"), 0)
-        XCTAssertEqual(StatusTagger.tagCount("#next"), 1)
-        XCTAssertEqual(StatusTagger.tagCount("#next #inprogress #NEXT"), 3)
-    }
-
     // MARK: - Writing
-
-    func testRewriteAppendsTagAsOwnLastLine() {
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Meine Notiz", for: .next), "Meine Notiz\n#next")
-    }
-
-    func testRewriteReplacesExistingTag() {
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Meine Notiz\n#next", for: .inProgress), "Meine Notiz\n#inprogress")
-    }
-
-    func testRewriteToBacklogRemovesTag() {
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Meine Notiz\n#inprogress", for: .backlog), "Meine Notiz")
-    }
-
-    func testRewriteToDoneRemovesTag() {
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Meine Notiz\n#next", for: .done), "Meine Notiz")
-    }
-
-    func testRewriteTagOnlyNotesToBacklogBecomesNil() {
-        XCTAssertNil(StatusTagger.rewrittenNotes("#next", for: .backlog))
-    }
-
-    func testRewriteNilNotesToNext() {
-        XCTAssertEqual(StatusTagger.rewrittenNotes(nil, for: .next), "#next")
-    }
-
-    func testRewriteRemovesAllTagsBeforeAppending() {
-        XCTAssertEqual(
-            StatusTagger.rewrittenNotes("#next Text #inprogress", for: .next),
-            "Text\n#next")
-    }
-
-    func testRewritePreservesUserTextExactly() {
-        let notes = "Zeile 1\nZeile 2 mit Inhalt"
-        XCTAssertEqual(StatusTagger.rewrittenNotes(notes, for: .backlog), notes)
-    }
-
-    /// Blank lines are how people separate paragraphs. An earlier version ran
-    /// a "collapse runs of blank lines" pass over the *whole* note on every
-    /// single move, so dragging a card quietly rewrote text the tag never
-    /// touched — and did it again for every card, every move.
-    func testRewriteKeepsBlankLinesTheUserPutThere() {
-        let notes = "Absatz eins\n\n\nAbsatz zwei"
-        XCTAssertEqual(StatusTagger.rewrittenNotes(notes, for: .backlog), notes)
-        XCTAssertEqual(
-            StatusTagger.rewrittenNotes(notes, for: .next),
-            "Absatz eins\n\n\nAbsatz zwei\n#next")
-    }
-
-    /// The tag's own line goes with it, rather than leaving a blank one where
-    /// it stood — that is the tidying the blanket pass was there for.
-    func testRewriteDropsTheLineTheTagOccupied() {
-        XCTAssertEqual(
-            StatusTagger.rewrittenNotes("Notiz\n\n#inprogress", for: .backlog),
-            "Notiz")
-        XCTAssertEqual(
-            StatusTagger.rewrittenNotes("Erste\n#inprogress\nLetzte", for: .backlog),
-            "Erste\nLetzte")
-    }
-
-    /// Writing a tag repeatedly has to land on the same text every time, or
-    /// each save would trigger another change notification and another save.
-    func testRewriteIsIdempotent() {
-        let once = StatusTagger.rewrittenNotes("Notiz", for: .inProgress)
-        XCTAssertEqual(StatusTagger.rewrittenNotes(once, for: .inProgress), once)
-    }
-
     // MARK: - Hygiene rule
-
-    func testNeedsHygieneOnlyWhenSomethingIsActuallyWrong() {
-        // The normal cases: nothing to clean up.
-        XCTAssertFalse(StatusTagger.needsHygiene(notes: nil, isCompleted: false))
-        XCTAssertFalse(StatusTagger.needsHygiene(notes: "Notiz", isCompleted: false))
-        XCTAssertFalse(StatusTagger.needsHygiene(notes: "Notiz\n#next", isCompleted: false))
-        XCTAssertFalse(StatusTagger.needsHygiene(notes: "Notiz", isCompleted: true))
-
-        // Ticked off in Reminders, so the old status line is now stale.
-        XCTAssertTrue(StatusTagger.needsHygiene(notes: "Notiz\n#inprogress", isCompleted: true))
-        // Two tags at once, e.g. one typed by hand on the phone.
-        XCTAssertTrue(StatusTagger.needsHygiene(notes: "#next\n#inprogress", isCompleted: false))
-        // Written by an older build.
-        XCTAssertTrue(StatusTagger.needsHygiene(notes: "Notiz\n#progress", isCompleted: false))
-    }
-
     // MARK: - Legacy tag migration (pre-localization German forms, and #progress)
 
     func testLegacyGermanTagsAreRecognizedWhenReading() {
@@ -149,24 +59,6 @@ final class StatusTaggerTests: XCTestCase {
     func testLegacyBareProgressTagIsRecognizedWhenReading() {
         XCTAssertEqual(StatusTagger.status(fromNotes: "#progress", isCompleted: false), .inProgress)
     }
-
-    func testHasLegacyTag() {
-        XCTAssertTrue(StatusTagger.hasLegacyTag("Notiz\n#progress"))
-        XCTAssertTrue(StatusTagger.hasLegacyTag("Notiz\n#bearbeitung"))
-        XCTAssertTrue(StatusTagger.hasLegacyTag("Notiz\n#alsnächstes"))
-        XCTAssertFalse(StatusTagger.hasLegacyTag("Notiz\n#inprogress"))
-        XCTAssertFalse(StatusTagger.hasLegacyTag(nil))
-    }
-
-    func testRewriteMigratesLegacyTagsToCurrentForm() {
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Notiz\n#progress", for: .inProgress), "Notiz\n#inprogress")
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Notiz\n#alsnächstes", for: .next), "Notiz\n#next")
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Notiz\n#alsnaechstes", for: .next), "Notiz\n#next")
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Notiz\n#bearbeitung", for: .inProgress), "Notiz\n#inprogress")
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Notiz\n#nächstes", for: .next), "Notiz\n#next")
-        XCTAssertEqual(StatusTagger.rewrittenNotes("Notiz\n#inbearbeitung", for: .inProgress), "Notiz\n#inprogress")
-    }
-
     func testLegacyAndCurrentTagLastOneWins() {
         XCTAssertEqual(StatusTagger.status(fromNotes: "#alsnächstes\n#inprogress", isCompleted: false), .inProgress)
     }
@@ -191,11 +83,10 @@ final class StatusTaggerTests: XCTestCase {
             XCTAssertEqual(
                 StatusTagger.status(fromNotes: notes, isCompleted: false), .backlog,
                 "\(notes) darf kein Tag sein")
-            XCTAssertEqual(StatusTagger.tagCount(notes), 0, "\(notes) darf nicht mitgezählt werden")
-            XCTAssertFalse(StatusTagger.hasLegacyTag(notes), "\(notes) ist kein Legacy-Tag")
-            XCTAssertFalse(
-                StatusTagger.needsHygiene(notes: notes, isCompleted: false),
-                "\(notes) darf keine Umschreibung auslösen")
+            XCTAssertFalse(StatusTagger.hasStatusTag(notes), "\(notes) darf keinen Tag melden")
+            XCTAssertEqual(
+                StatusTagger.removingTags(notes), notes,
+                "\(notes) muss die Aufräumung unangetastet überstehen")
         }
     }
 
@@ -204,7 +95,6 @@ final class StatusTaggerTests: XCTestCase {
     func testTextAroundAFalseTagIsPreservedExactly() {
         let notes = "Doku: https://example.com/guide#next"
         XCTAssertEqual(StatusTagger.removingTags(notes), notes)
-        XCTAssertEqual(StatusTagger.rewrittenNotes(notes, for: .backlog), notes)
     }
 
     /// The shapes a tag really comes in: on its own line (what the app
@@ -238,14 +128,15 @@ final class UnusualLineSeparatorTests: XCTestCase {
 
     func testDoubleSpacesSurviveOnLinesWithoutATagLineSeparator() {
         let notes = "Rechnung  Nr. 4711\u{2028}Betrag  120,00 EUR\u{2028}#alsnächstes"
-        let rewritten = StatusTagger.rewrittenNotes(notes, for: .next)
-        XCTAssertEqual(rewritten, "Rechnung  Nr. 4711\u{2028}Betrag  120,00 EUR\n#next")
+        XCTAssertEqual(
+            StatusTagger.removingTags(notes),
+            "Rechnung  Nr. 4711\u{2028}Betrag  120,00 EUR")
     }
 
     func testDoubleSpacesSurviveWithACarriageReturn() {
         let notes = "Zeile A  mit Abstand\rZeile B #next"
         XCTAssertEqual(
-            StatusTagger.rewrittenNotes(notes, for: .backlog),
+            StatusTagger.removingTags(notes),
             "Zeile A  mit Abstand\rZeile B")
     }
 
@@ -253,7 +144,7 @@ final class UnusualLineSeparatorTests: XCTestCase {
     func testNewlineSeparatedNotesAreUnaffected() {
         let notes = "Rechnung  Nr. 4711\nBetrag  120,00 EUR\n#next"
         XCTAssertEqual(
-            StatusTagger.rewrittenNotes(notes, for: .backlog),
+            StatusTagger.removingTags(notes),
             "Rechnung  Nr. 4711\nBetrag  120,00 EUR")
     }
 }

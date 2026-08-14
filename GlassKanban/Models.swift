@@ -19,17 +19,6 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
         }
     }
 
-    /// The hashtag written into the reminder notes for this status.
-    /// Backlog and Done deliberately have no tag: Backlog means "no tag",
-    /// Done is expressed via `isCompleted`.
-    var tag: String? {
-        switch self {
-        case .next: "#next"
-        case .inProgress: "#inprogress"
-        case .backlog, .done: nil
-        }
-    }
-
     /// How much a card in this lane reveals. The information gradient is the
     /// board's focus mechanism: the working lanes carry everything, the
     /// backlog carries what you need to decide, and finished work carries
@@ -111,11 +100,18 @@ struct KanbanCard: Identifiable, Equatable {
     var listColor: Color
     var completionDate: Date?
     let isRecurring: Bool
-    /// EventKit's last-modified timestamp. Used as an approximation for
-    /// "when did this card enter its column": moving a card rewrites its
-    /// notes, which bumps this date. Content edits reset it too — an
-    /// accepted trade-off for an ambient board.
+    /// EventKit's last-modified timestamp. Until 13.08.2026 this was the
+    /// board's only approximation for "when did this card enter its column",
+    /// and it only worked because a move rewrote the notes — which meant any
+    /// content edit, and any foreign writer, reset it too. It is now the
+    /// fallback for cards the board never moved itself; `pulledAt` is the
+    /// real answer.
     let lastModifiedDate: Date?
+    /// When this card was pulled into its lane, straight from the board's own
+    /// record (`ColumnState`). Exact rather than approximate, and unaffected
+    /// by anything anyone writes into the reminder. Nil for a card resting in
+    /// Backlog or one the board never moved.
+    var pulledAt: Date?
     /// EventKit's creation timestamp — when the ticket was first made, and
     /// unlike `lastModifiedDate` it never moves. Used as the stable, fair
     /// tie-breaker in the open lanes (oldest-waiting first) before the title.
@@ -159,14 +155,18 @@ struct KanbanCard: Identifiable, Equatable {
         }
     }
 
-    /// Whole days this card has been sitting in its column (approximated via
-    /// `lastModifiedDate`). The card shows it only from `agingThresholdDays`
-    /// on — fresh is normal and needs no label; only lingering is a signal.
+    /// Whole days this card has been sitting in its column. The card shows it
+    /// only from `agingThresholdDays` on — fresh is normal and needs no label;
+    /// only lingering is a signal.
+    ///
+    /// Reads the board's own record first, which knows the moment exactly, and
+    /// falls back to `lastModifiedDate` for cards it never moved — the old
+    /// approximation, kept because "some idea of how long" beats none.
     func daysInColumn(calendar: Calendar = .current, now: Date = .now) -> Int? {
-        guard let lastModifiedDate else { return nil }
+        guard let entered = pulledAt ?? lastModifiedDate else { return nil }
         return calendar.dateComponents(
             [.day],
-            from: calendar.startOfDay(for: lastModifiedDate),
+            from: calendar.startOfDay(for: entered),
             to: calendar.startOfDay(for: now)).day
     }
 

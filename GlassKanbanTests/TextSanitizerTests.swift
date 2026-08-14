@@ -32,9 +32,13 @@ final class TextSanitizerTests: XCTestCase {
             "Eigentlicher Inhalt")
     }
 
-    func testPreviewSkipsStatusTag() {
+    /// Inverted on 13.08.2026. While the board wrote status tags, hiding its
+    /// own control token was honest. It writes none any more, so a hashtag in
+    /// a note is the user's word and gets shown like every other.
+    func testAHashtagIsShownLikeAnyOtherWord() {
         XCTAssertEqual(TextSanitizer.notesPreview("Wichtige Notiz\n#nächstes"), "Wichtige Notiz")
-        XCTAssertEqual(TextSanitizer.notesPreview("#bearbeitung"), "")
+        XCTAssertEqual(TextSanitizer.notesPreview("#bearbeitung"), "#bearbeitung")
+        XCTAssertEqual(TextSanitizer.notesPreview("#next"), "#next")
     }
 
     func testPreviewStripsInlineURL() {
@@ -65,10 +69,10 @@ final class TextSanitizerTests: XCTestCase {
             "Eins\nZwei")
     }
 
-    func testExcerptStripsURLsAndStatusTags() {
+    func testExcerptStripsURLsAndKeepsEverythingElse() {
         XCTAssertEqual(
             TextSanitizer.notesExcerpt("Siehe https://example.com hier\n#inbearbeitung\nRest"),
-            "Siehe hier\nRest")
+            "Siehe hier\n#inbearbeitung\nRest")
     }
 
     func testExcerptOfNilIsEmpty() {

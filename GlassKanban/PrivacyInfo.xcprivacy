@@ -8,8 +8,11 @@
 	<array/>
 	<!-- Nothing is collected: the app has no network entitlement and no
 	     networking code at all. Every task lives in the user's own Reminders
-	     database via EventKit; the only app-owned storage is the handful of
-	     UserDefaults keys declared below. -->
+	     database via EventKit. App-owned storage is the handful of UserDefaults
+	     keys declared below plus one file in the app's own Application Support
+	     directory (columns.json — which card sits in which column, see SPEC.md).
+	     Writing a file inside the container needs no declaration; the app reads
+	     no file timestamps. -->
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
 	<key>NSPrivacyAccessedAPITypes</key>
