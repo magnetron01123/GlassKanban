@@ -3,6 +3,70 @@
 Alles, was bewusst **nicht** in den MVP geht. Sortiert nach Kategorie, jeweils mit kurzer
 Begründung, warum später (oder warum grundsätzlich nicht).
 
+## Arbeitsstand (14.08.2026)
+
+Zusammenschau über die offenen Arbeitsstränge — was fertig ist, was liegt, und woran es
+hängt. Die Einzelheiten stehen in den jeweiligen Abschnitten; das hier ist die Landkarte,
+mit der eine neue Sitzung anfangen kann.
+
+### Der eine Blocker
+
+**Phase 0 aus RELEASE.md — Apple Developer Program, 99 $/Jahr, nicht angestoßen.** Daran
+hängt inzwischen mehr als der Store: die iCloud-Übertragung, der App-Group-Container (und
+damit Widget, Live Activity und App Intents), Signing, TestFlight, Einreichung. Alles
+andere unten ist entweder fertig oder ohne Account nicht weiterzubringen.
+
+Gemessen am 14.08.2026, damit die Härte dieses Blockers nicht erneut geprüft werden muss:
+
+| Vorhaben | Ohne Account |
+|---|---|
+| iCloud-KV (`NSUbiquitousKeyValueStore`) | **unmöglich** — Prozess wird beim Start per SIGKILL beendet |
+| App Group | **macOS erlaubt es**, aber Xcode verweigert den Build ohne Provisioning Profile |
+| Alles ohne Entitlement | uneingeschränkt möglich |
+
+### Wo welche Arbeit liegt
+
+| Branch | Inhalt | Zustand |
+|---|---|---|
+| `feature/display-affinity-v2` | Bildschirmzuordnung | **fertig und am laufenden Board verifiziert** — mergen |
+| `feature/icloud-sync-foundation` | Grundlage der Gerätesynchronisation | funktionsneutral, in sich abgeschlossen — mergen (Begründung unten) |
+| `feature/display-affinity` | Duplikat der Bildschirmzuordnung | wertlos, Erkenntnis ist dokumentiert — löschen |
+| `feature/window-screen-memory` | Vorgänger vom 10.08. | überholt durch `-v2` — löschen |
+| `feature/board-hugs-content` | abgelehnter Vorschlag vom 23.07. | 131 Commits hinter main, tot |
+| `feature/backlog-release-readiness` | überholt durch RELEASE.md | 179 Commits hinter main, tot |
+| `docs/…`, `fix/…`, `feature/local-column-state` | bereits in main | löschen |
+
+### Warum halbfertige Arbeit gemergt und nicht aufgehoben wird
+
+**Belegt am eigenen Projekt, nicht behauptet.** Die Bildschirmzuordnung lag seit dem
+10.08.2026 fertig auf einem eigenen Branch. Vier Tage später waren daraus 42 Commits
+Abstand geworden, `RemindersStore.swift` hatte zwischenzeitlich den Formwechsel vom 13.08.
+mitgemacht, und der Übernahmeversuch endete in Konflikten, die nicht mehr sinnvoll
+auflösbar waren — die drei Feature-Dateien mussten einzeln herausgelöst und die Anbindung
+neu geschrieben werden. `feature/board-hugs-content` (131 Commits hinter) und
+`feature/backlog-release-readiness` (179) sind dasselbe Muster im Endstadium.
+
+Daraus die Regel für dieses Projekt:
+
+> **Ein Branch, der nicht innerhalb weniger Tage in main landet, ist verloren.** Wer auf
+> „fertig" wartet, bevor er zusammenführt, bekommt keinen sauberen Merge, sondern eine
+> Archäologie.
+
+Die Gegenprobe gilt trotzdem: Gemergt wird nur, was **das Verhalten der App nicht ändert
+oder nachweislich funktioniert**. Für die Synchronisations-Grundlage ist beides erfüllt —
+sie schreibt kein Byte nach außen, ihre einzige unaufgerufene Funktion
+(`ColumnState.merged`) ist eine reine, getestete Regel, und ihre zwei nebenbei behobenen
+Fehler (nie verfallende Ablage-Vermerke, Tests die Container im Home anlegten) wirken
+sofort. Für die Bildschirmzuordnung ist es verifiziert.
+
+### Was ohne Account als Nächstes ginge
+
+Nach dem Bewertungsraster unten, absteigend: **Darstellungsgröße** (der zweite und letzte
+offene Punkt der Klasse *Produktversprechen*; Aufwand steckt in `DesignSystem.swift`, nicht
+im Bedienelement), dann **Phase 3 aus RELEASE.md** (Website, Datenschutzerklärung,
+Demo-Datensatz, Screenshots, Listing-Texte — alles außer dem Hochladen), dann die
+Nutzungsalltag-Punkte.
+
 ## Bewertungsraster für neue Ideen (09.08.2026)
 
 Aus einer Marktrecherche entstanden (Design-prämierte Apps, Kanban-Markt, Mac-native Apps,
@@ -62,7 +126,22 @@ Minimal-Desk-Setup ist das ebenso oft ein iPhone am Ladeständer wie ein zweiter
 weshalb der StandBy-Punkt unten (Abschnitt „Plattform-Erweiterung: iOS-App") inhaltlich
 hierher gehört.
 
-- **Bildschirmzuordnung** — das Fenster kehrt nach dem Andocken auf seinen Monitor zurück,
+- **Bildschirmzuordnung — umgesetzt und verifiziert am 14.08.2026.** Verhalten steht in
+  SPEC.md („Das Board bleibt auf seinem Bildschirm"). Der Weg dorthin ist der eigentliche
+  Merkposten: Die Regel selbst lag seit dem 10.08.2026 fertig und getestet auf
+  `feature/window-screen-memory`, **die Anbindung an AppKit lief aber nie** — der Commit
+  sagte das ausdrücklich („treat the binding as unverified. Do not ship on it") und behielt
+  recht. Gemessen: SwiftUI setzt die Szenen-ID auf `NSWindow.identifier` und lässt
+  `frameAutosaveName` **leer**; gesucht wurde nach dem Autosave-Namen. Der Fehler war
+  unsichtbar in jeder Richtung — Build grün, Tests grün, App startet, nur merkte sie sich
+  nie etwas. Irreführend war zusätzlich, dass macOS den Rahmen sehr wohl unter
+  `NSWindow Frame board` ablegt, der Name also zu stimmen *schien*.
+  **Zwei Lehren fürs nächste Mal:** Ein Feature gilt erst als fertig, wenn ein Lauf das
+  gewünschte Ergebnis *hinterlassen* hat — hier: ein Eintrag in den Defaults. Und
+  `os.Logger`-Ausgaben dieser App waren über `log show`/`log stream` nicht auffindbar; was
+  half, war ein Wert in `UserDefaults`, direkt aus der plist im Container gelesen (`defaults
+  read` zeigte ihn wegen cfprefsd-Zwischenspeicher ebenfalls nicht).
+- ~~**Bildschirmzuordnung**~~ — ursprüngliche Beschreibung: das Fenster kehrt nach dem Andocken auf seinen Monitor zurück,
   statt auf dem eingebauten Display zu bleiben. Dafür die Identität des Displays merken,
   nicht nur den Fensterrahmen wie heute. Genau genommen kein Feature, sondern ein
   Fehlerbild: Bei einer App, deren ganze Idee „steht immer da" ist, ist ein Board am

@@ -91,6 +91,7 @@ targets:
       - path: GlassKanban/RecurringSeriesMatch.swift
       - path: GlassKanban/CorrectionLedger.swift
       - path: GlassKanban/ColumnState.swift
+      - path: GlassKanban/WindowPlacement.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanbanTests
