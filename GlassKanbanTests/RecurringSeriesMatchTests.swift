@@ -105,4 +105,85 @@ final class RecurringSeriesMatchTests: XCTestCase {
         let almost = series(created: seriesCreated.addingTimeInterval(0.000_018))
         XCTAssertNil(RecurringSeriesMatch.seriesID(of: occurrence(), among: [almost]))
     }
+
+    // MARK: - Re-opened turns (11.08.2026)
+
+    /// An open record carrying its series' creation date to the microsecond.
+    /// Measured: only un-ticking a finished turn produces this.
+    private func revived(
+        id: String = "revived", listID: String = "shared", created: Date? = nil
+    ) -> RecurringSeriesMatch.Record {
+        RecurringSeriesMatch.Record(
+            id: id, listID: listID, createdAt: created ?? seriesCreated,
+            isCompleted: false, isRecurring: false)
+    }
+
+    func testAReopenedTurnIsRecognised() {
+        let ids = RecurringSeriesMatch.revivedOccurrenceIDs(among: [series(), revived()])
+        XCTAssertEqual(ids, ["revived"])
+    }
+
+    /// The headline: an ordinary open task must never be mistaken for one.
+    /// It carries its own creation date, whatever it is called.
+    func testAnOrdinaryOpenTaskIsLeftAlone() {
+        let ids = RecurringSeriesMatch.revivedOccurrenceIDs(
+            among: [series(), revived(id: "own", created: ownCreated)])
+        XCTAssertEqual(ids, [])
+    }
+
+    /// A finished turn is the normal, expected state — it belongs in Erledigt
+    /// and is not what this rule looks for.
+    func testACompletedOccurrenceIsNotRevived() {
+        let ids = RecurringSeriesMatch.revivedOccurrenceIDs(among: [series(), occurrence()])
+        XCTAssertEqual(ids, [])
+    }
+
+    /// The series itself is open and shares its own date; hiding it would
+    /// take the actual chore off the board.
+    func testTheSeriesItselfIsNeverHidden() {
+        let ids = RecurringSeriesMatch.revivedOccurrenceIDs(among: [series()])
+        XCTAssertEqual(ids, [])
+    }
+
+    /// Without a live series there is nothing the record could be a turn of —
+    /// after the series is deleted it is an ordinary task again and reappears.
+    func testWithoutALiveSeriesNothingIsHidden() {
+        let ids = RecurringSeriesMatch.revivedOccurrenceIDs(among: [revived()])
+        XCTAssertEqual(ids, [])
+    }
+
+    func testAnotherListDoesNotCount() {
+        let ids = RecurringSeriesMatch.revivedOccurrenceIDs(
+            among: [series(), revived(listID: "private")])
+        XCTAssertEqual(ids, [])
+    }
+
+    /// Two series sharing a creation date make the match ambiguous, and
+    /// ambiguity is shown rather than hidden — the same direction every other
+    /// doubt in this type falls in.
+    func testAmbiguityIsShownNotHidden() {
+        let ids = RecurringSeriesMatch.revivedOccurrenceIDs(
+            among: [series(id: "a"), series(id: "b"), revived()])
+        XCTAssertEqual(ids, [])
+    }
+
+    func testARecordWithoutACreationDateIsShown() {
+        let dateless = RecurringSeriesMatch.Record(
+            id: "dateless", listID: "shared", createdAt: nil,
+            isCompleted: false, isRecurring: false)
+        let ids = RecurringSeriesMatch.revivedOccurrenceIDs(among: [series(), dateless])
+        XCTAssertEqual(ids, [])
+    }
+
+    /// Several chores re-opened at once are each judged on their own series.
+    func testTwoIndependentRevivalsAreBothFound() {
+        let other = Date(timeIntervalSinceReferenceDate: 700_000_000)
+        let ids = RecurringSeriesMatch.revivedOccurrenceIDs(among: [
+            series(id: "s1"),
+            series(id: "s2", created: other),
+            revived(id: "r1"),
+            revived(id: "r2", created: other),
+        ])
+        XCTAssertEqual(ids, ["r1", "r2"])
+    }
 }

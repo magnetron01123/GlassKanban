@@ -93,6 +93,33 @@ dieses Abschnitts bleibt unverändert: Backlog bekommt bewusst **keinen** eigene
 sondern bedeutet immer „kein Status-Tag vorhanden" — zwei verschiedene Darstellungen für
 denselben Zustand würden sonst auseinanderlaufen können.
 
+**Geplanter Formwechsel (13.08.2026, entschieden zu planen — nicht gebaut): Der Status
+verlässt die Notizen.** Der Geisterkarten-Komplex (SPEC.md, „Regel daraus"; PR #46) hat
+die Grenze dieses Datenmodells vermessen: Ein Status, der in einem Feld wohnt, das auch
+anderen Programmen gehört, kann von jedem davon bewegt werden. Die App kann das erkennen
+und beantworten — verhindern kann sie es nur, wenn der Status in einem Speicher liegt,
+den nur sie erreicht. Hier stehen zwei Prinzipien gegeneinander, und die Spannung gehört
+benannt:
+
+- **Für den Wechsel** sprechen Minimalismus und psychologische Wirksamkeit: `#next` in
+  den Notizen ist internes Datenformat, das in Nutzerinhalt leckt — sichtbar in
+  Reminders, am iPhone, für die zweite Person der geteilten Liste. Und eine Karte, die
+  sich strukturell nicht von fremder Hand bewegen kann, ist die stärkste Form von
+  „Bewegung gehört Ereignissen": Vertrauen entsteht, wenn Bewegung nur von der eigenen
+  Hand kommt.
+- **Dagegen** spricht der eine reale Nutzen des Notizen-Formats: der mobile Pull
+  (unterwegs den Tag von Hand tippen) und die geschenkte Gerätesynchronisation für eine
+  spätere iOS-App.
+
+Die Abwägung fiel für den Wechsel, **unter einer Vorbedingung**: Der Nutzer bestätigt
+vor dem Bau, dass er den mobilen Pull real nicht nutzt. Zielbild, Messplan, Migration
+und die verworfenen Zwischenformen (insbesondere der Hybrid-Import, der das Loch als
+„Import-Kanal" zurückgebracht hätte) stehen in BACKLOG.md („Geplanter Formwechsel").
+Ausdrücklich festgehalten: Der Wechsel löst den Spaltensprung, **nicht den
+Notizverlust** — der Notiztext bleibt gemeinsames Territorium, und gegen einen fremden
+Schreiber, der ihn überschreibt, hilft nur das Abstellen der Quelle. Bis zum Umbau
+beschreibt dieser Abschnitt das gebaute Verhalten.
+
 **Schreiben (beim Verschieben per Drag & Drop in der App):**
 
 | Ziel-Spalte | Aktion in den Notizen |
@@ -248,10 +275,84 @@ wurde nicht gebraucht — der Sync stempelt beim Abhaken nichts um.
 Passt keine oder mehr als eine lebende Serie auf das Anlegedatum, gilt „kein Beweis". Für
 das Zurückholen aus „Erledigt" heißt das: Der Zug ist erlaubt — ein sichtbarer, von Hand
 aufräumbarer Fehler. Für die stille Tag-Freigabe heißt es das Gegenteil: Der Tag bleibt
-stehen (SPEC.md, Bedingung 5 — dort strenger geprüft, weil diese eine Regel eine Karte
+stehen (SPEC.md, Bedingung 3 — dort strenger geprüft, weil diese eine Regel eine Karte
 bewegt, ohne dass jemand hinsieht). **Akzeptierte Restlücke:** Zwei Serien einer Liste mit
 bitgenau demselben Anlegedatum wären nicht unterscheidbar. Gemessen tritt das nicht ein,
 und der Ausgang wäre ohnehin die sichere Richtung — kein Beweis, keine Bewegung.
+
+### Ein verbrauchter Tag ist ein Zustand, keine Kante (13.08.2026)
+
+Die Tag-Freigabe war als Kante gebaut: geprüft nur in dem Refresh, der die frische
+Completion zum ersten Mal sieht. Eine Kante setzt voraus, dass die App den Übergang
+*miterlebt* — und genau das ist auf Daten, die drei andere Systeme gleichzeitig
+beschreiben, keine haltbare Annahme. Gemessen am realen Board („Einkaufen",
+12.–13.08.2026): Durchgang in der App erledigt, neun Minuten später schob ein
+Kalender-Client den alten Stand mit `#next` auf die weitergerollte Serie zurück; die App
+sah den sauberen Zwischenzustand nie, die Kante war verbraucht, und der Undo-Zaun
+blockierte obendrein jede automatische Korrektur auf der Serien-ID. Die nie gezogene
+nächste Runde stand dauerhaft in „Als Nächstes" — eine Karte, die sich aus Nutzersicht
+von selbst bewegt hatte. Das verletzt beide oberen Prinzipien zugleich: Bewegung gehört
+Ereignissen, und der freie Platz ruft — nicht ein Tag, den niemand vergeben hat.
+
+Die Konsequenz ist ein Formwechsel, kein Patch: **Was aus den Daten jederzeit ableitbar
+ist, wird als stehende Bedingung geprüft, nicht als beobachtetes Ereignis.** „Jüngste
+Completion nach letztem Pull an diesem Board" ist aus jedem Fetch neu beweisbar — dafür
+muss nichts miterlebt worden sein. Der Preis: Das Board muss seine eigenen Pulls dauerhaft
+kennen (das Pull-Gedächtnis in SPEC.md) und eine Aktivierungsgrenze ziehen, weil Pulls
+von vor dem Formwechsel nie aufgezeichnet wurden. Beides steht mit Stempel-Regeln und
+Restlücken in SPEC.md; die Multi-Board-Grenze (Pulls leben auf ihrem Board) ist dort als
+akzeptiert dokumentiert.
+
+Aus demselben Vorfall stammt die zweite Änderung: Der Korrektur-Ledger merkt sich je Feld
+eine **Kette** der zuletzt verdrängten Werte statt nur des letzten. Der fremde Schreiber
+stellt nicht „den vorigen" Stand wieder her, sondern *irgendeinen* alten aus seinem
+Cache — mit nur einem gemerkten Wert las der sich als dritter Zustand und entwaffnete
+genau die Verteidigung, die er auslösen sollte. Die Kette erweitert nur die Erkennung;
+geschrieben wird unverändert allein der jüngste eigene Wert, in den bekannten sicheren
+Richtungen. Der Grundsatz „nie beobachtete Übergänge adoptieren" bleibt damit stehen.
+
+### Ein wiederbelebter Durchgang ist keine zweite Aufgabe (11.08.2026)
+
+Das Board hat eine Meinung, die es bisher nur gegen sich selbst durchsetzte: Eine erledigte
+Ausführung einer Serie zurück aufs Board zu holen, ist nicht möglich — die Serie ist
+weitergelaufen, und was zurückkäme, wäre nicht der alte Durchgang, sondern eine zweite
+Karte neben einer Serie, die den nächsten längst trägt. Deshalb lehnt die App den Zug aus
+„Erledigt" heraus ab und sagt das auch.
+
+Dieselbe Handlung ist außerhalb ein einziger Klick. Wer in der Erinnerungen-App oder am
+iPhone eine versehentlich abgehakte Wiederholung wieder aufhakt, meint „Erledigung
+rückgängig" — und bekommt einen Zustand, den er nie wollte und meist nicht bemerkt.
+Gemessen (11.08.2026, Scratch-Liste): Das Wiederaufhaken ist die *einzige* Operation, die
+einen offenen abgelösten Datensatz erzeugt. Umbenennen, Fälligkeit verschieben und das
+Erledigen selbst erzeugen keinen.
+
+**Die Entscheidung: Das Board zeichnet ihn nicht.** Ein Urteil, das die App gegen sich
+selbst fällt, muss auch dann gelten, wenn jemand anderes gehandelt hat — sonst verbietet
+sie sich, was sie im nächsten Moment darstellt.
+
+**Das weicht bewusst vom Grundsatz ab, dass das Board zeigt, was in den Daten steht.** Die
+Abweichung ist eng und begründet: Es wird nichts *versteckt*, was eine Entscheidung wäre —
+die Aufgabe ist auf dem Board vorhanden, nämlich als die Serie, die sie hervorgebracht hat.
+Verborgen wird ein Duplikat, das aus einer Handlung entstand, die ihr Ziel nicht erreichen
+konnte. Der Datensatz selbst bleibt unberührt in Reminders sichtbar und bearbeitbar; wird
+die Serie gelöscht, ist er wieder eine gewöhnliche Aufgabe und erscheint sofort.
+
+**Geprüft und verworfen:**
+
+- **Den Zustand im Karten-Editor benennen** („Abgeschlossener Durchgang — die Serie läuft
+  weiter"). Erst favorisiert, dann auf Nutzerentscheidung verworfen: Der Nutzer soll von
+  der Mechanik hinter den Spalten nichts mitbekommen — dieselbe Linie wie beim Verzicht auf
+  einen Hinweis über fremde Schreiber. Ein Satz, der ein Datenmodell erklärt, ist auf
+  dieser Fläche Rauschen, auch wenn er nur beim Öffnen erscheint.
+- **Ein Zeichen auf der Karte.** Dauerhaftes Abzeichen auf der Inhaltsebene, gegen
+  „kein Dauer-Badge" und gegen die abgeschaffte Karten-Tooltip-Regel.
+- **Den Durchgang automatisch wieder abhaken.** Das repariert die Daten statt nur die
+  Ansicht — und fasst damit den Erledigt-Status an, das eine Feld, das der
+  `CorrectionLedger` bewusst *nicht* schützt, weil ein Fehlalarm dort einen echten
+  Abschluss kostet. Eine Ansicht, die zu viel verbirgt, kostet einen Blick in Reminders;
+  ein Schreibvorgang, der zu viel abhakt, kostet Arbeit.
+- **Zusätzlich auf den Titel prüfen.** Wäre eine zweite Wahrheit neben dem Anlegedatum und
+  brächte genau die Fehler zurück, die der Umstieg auf die Identität beseitigt hat.
 
 ### Listen-Filter
 
