@@ -3,71 +3,23 @@
 Alles, was bewusst **nicht** in den MVP geht. Sortiert nach Kategorie, jeweils mit kurzer
 Begründung, warum später (oder warum grundsätzlich nicht).
 
-## Arbeitsstand (14.08.2026)
+## Was als Nächstes geht (Stand 14.08.2026)
 
-Zusammenschau über die offenen Arbeitsstränge — was fertig ist, was liegt, und woran es
-hängt. Die Einzelheiten stehen in den jeweiligen Abschnitten; das hier ist die Landkarte,
-mit der eine neue Sitzung anfangen kann.
+**Der eine Blocker ist Phase 0 aus RELEASE.md** — das Apple Developer Program. Es ist
+inzwischen die Voraussetzung für jedes Vorhaben mit Entitlement (Gerätesynchronisation,
+App Group und damit Widget, Live Activity, App Intents) und nicht mehr nur für den Store;
+die Messungen dazu stehen dort.
 
-### Der eine Blocker
+**Ohne Account möglich**, nach dem Bewertungsraster unten absteigend:
 
-**Phase 0 aus RELEASE.md — Apple Developer Program, 99 $/Jahr, nicht angestoßen.** Daran
-hängt inzwischen mehr als der Store: die iCloud-Übertragung, der App-Group-Container (und
-damit Widget, Live Activity und App Intents), Signing, TestFlight, Einreichung. Alles
-andere unten ist entweder fertig oder ohne Account nicht weiterzubringen.
+1. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
+   Aufwand steckt in `DesignSystem.swift`, nicht im Bedienelement.
+2. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Demo-Datensatz,
+   Screenshots, Listing-Texte. Alles außer dem Hochladen.
+3. Die Punkte der Klasse *Nutzungsalltag*.
 
-Gemessen am 14.08.2026, damit die Härte dieses Blockers nicht erneut geprüft werden muss:
-
-| Vorhaben | Ohne Account |
-|---|---|
-| iCloud-KV (`NSUbiquitousKeyValueStore`) | **unmöglich** — Prozess wird beim Start per SIGKILL beendet |
-| App Group | **macOS erlaubt es**, aber Xcode verweigert den Build ohne Provisioning Profile |
-| Alles ohne Entitlement | uneingeschränkt möglich |
-
-### Wo welche Arbeit liegt
-
-**Am 14.08.2026 aufgeräumt: alles liegt in `main`, es gibt keine offenen Branches mehr.**
-
-| Was | Wo |
-|---|---|
-| Bildschirmzuordnung | in `main` (PR #48), am laufenden Board verifiziert |
-| Grundlage der Gerätesynchronisation | in `main` (PR #49), funktionsneutral — **es wird nichts übertragen** |
-| Vorgänger der Bildschirmzuordnung (10.08.) | gelöscht, als Tag `archive/window-screen-memory` gesichert, weil PR #48 auf ihn verweist |
-| Duplikat, `board-hugs-content` (23.07. abgelehnt), `backlog-release-readiness`, vier bereits gemergte | gelöscht, lokal und auf GitHub |
-
-Acht Branches sind dabei verschwunden. Der Grund steht direkt darunter — und die zwei
-ältesten waren 131 bzw. 179 Commits hinter `main`, also seit Wochen unbrauchbar.
-
-### Warum halbfertige Arbeit gemergt und nicht aufgehoben wird
-
-**Belegt am eigenen Projekt, nicht behauptet.** Die Bildschirmzuordnung lag seit dem
-10.08.2026 fertig auf einem eigenen Branch. Vier Tage später waren daraus 42 Commits
-Abstand geworden, `RemindersStore.swift` hatte zwischenzeitlich den Formwechsel vom 13.08.
-mitgemacht, und der Übernahmeversuch endete in Konflikten, die nicht mehr sinnvoll
-auflösbar waren — die drei Feature-Dateien mussten einzeln herausgelöst und die Anbindung
-neu geschrieben werden. `feature/board-hugs-content` (131 Commits hinter) und
-`feature/backlog-release-readiness` (179) sind dasselbe Muster im Endstadium.
-
-Daraus die Regel für dieses Projekt:
-
-> **Ein Branch, der nicht innerhalb weniger Tage in main landet, ist verloren.** Wer auf
-> „fertig" wartet, bevor er zusammenführt, bekommt keinen sauberen Merge, sondern eine
-> Archäologie.
-
-Die Gegenprobe gilt trotzdem: Gemergt wird nur, was **das Verhalten der App nicht ändert
-oder nachweislich funktioniert**. Für die Synchronisations-Grundlage ist beides erfüllt —
-sie schreibt kein Byte nach außen, ihre einzige unaufgerufene Funktion
-(`ColumnState.merged`) ist eine reine, getestete Regel, und ihre zwei nebenbei behobenen
-Fehler (nie verfallende Ablage-Vermerke, Tests die Container im Home anlegten) wirken
-sofort. Für die Bildschirmzuordnung ist es verifiziert.
-
-### Was ohne Account als Nächstes ginge
-
-Nach dem Bewertungsraster unten, absteigend: **Darstellungsgröße** (der zweite und letzte
-offene Punkt der Klasse *Produktversprechen*; Aufwand steckt in `DesignSystem.swift`, nicht
-im Bedienelement), dann **Phase 3 aus RELEASE.md** (Website, Datenschutzerklärung,
-Demo-Datensatz, Screenshots, Listing-Texte — alles außer dem Hochladen), dann die
-Nutzungsalltag-Punkte.
+Alles Begonnene liegt in `main`; es gibt keine offenen Branches. Warum das so bleiben soll,
+steht als Arbeitsregel in CLAUDE.md.
 
 ## Bewertungsraster für neue Ideen (09.08.2026)
 
@@ -103,8 +55,8 @@ das, was Apple aus Massentauglichkeit nie bauen wird: Meinungsstärke.
 
 | Idee | Philosophie | Wirkung | Umkehrbarkeit | Aufwand |
 |---|---|---|---|---|
-| Bildschirmzuordnung (neu, unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
-| Darstellungsgröße (neu, unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
+| ~~Bildschirmzuordnung~~ | erfüllt | Produktversprechen | umkehrbar | **umgesetzt 14.08.2026** |
+| Darstellungsgröße (unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
 | Ablegen aus anderen Apps (neu, unten) | erfüllt | Kaufentscheidung | gebunden | S–M |
 | Widget „eine Karte" (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Kaufentscheidung | gebunden | L |
 | Natürlichsprachige Erfassung (neu, unten) | erfüllt | Kaufentscheidung | gebunden | M |
@@ -129,25 +81,9 @@ weshalb der StandBy-Punkt unten (Abschnitt „Plattform-Erweiterung: iOS-App") i
 hierher gehört.
 
 - **Bildschirmzuordnung — umgesetzt und verifiziert am 14.08.2026.** Verhalten steht in
-  SPEC.md („Das Board bleibt auf seinem Bildschirm"). Der Weg dorthin ist der eigentliche
-  Merkposten: Die Regel selbst lag seit dem 10.08.2026 fertig und getestet auf
-  `feature/window-screen-memory`, **die Anbindung an AppKit lief aber nie** — der Commit
-  sagte das ausdrücklich („treat the binding as unverified. Do not ship on it") und behielt
-  recht. Gemessen: SwiftUI setzt die Szenen-ID auf `NSWindow.identifier` und lässt
-  `frameAutosaveName` **leer**; gesucht wurde nach dem Autosave-Namen. Der Fehler war
-  unsichtbar in jeder Richtung — Build grün, Tests grün, App startet, nur merkte sie sich
-  nie etwas. Irreführend war zusätzlich, dass macOS den Rahmen sehr wohl unter
-  `NSWindow Frame board` ablegt, der Name also zu stimmen *schien*.
-  **Zwei Lehren fürs nächste Mal:** Ein Feature gilt erst als fertig, wenn ein Lauf das
-  gewünschte Ergebnis *hinterlassen* hat — hier: ein Eintrag in den Defaults. Und
-  `os.Logger`-Ausgaben dieser App waren über `log show`/`log stream` nicht auffindbar; was
-  half, war ein Wert in `UserDefaults`, direkt aus der plist im Container gelesen (`defaults
-  read` zeigte ihn wegen cfprefsd-Zwischenspeicher ebenfalls nicht).
-- ~~**Bildschirmzuordnung**~~ — ursprüngliche Beschreibung: das Fenster kehrt nach dem Andocken auf seinen Monitor zurück,
-  statt auf dem eingebauten Display zu bleiben. Dafür die Identität des Displays merken,
-  nicht nur den Fensterrahmen wie heute. Genau genommen kein Feature, sondern ein
-  Fehlerbild: Bei einer App, deren ganze Idee „steht immer da" ist, ist ein Board am
-  falschen Platz der teuerste Alltagsmoment.
+  SPEC.md („Das Board bleibt auf seinem Bildschirm"). Genau genommen war das kein Feature,
+  sondern ein Fehlerbild. Die beiden Lehren aus dem Weg dorthin stehen als Arbeitsregeln in
+  CLAUDE.md („Arbeitsweise") — sie gelten für jedes Feature, nicht nur für dieses.
 - **Darstellungsgröße** — Skalierung des ganzen Boards für Leseabstände bis etwa zwei
   Meter. Der Aufwand steckt nicht im Bedienelement, sondern darin, die Tokens in
   `DesignSystem.swift` skalierbar zu machen; wer daran vorbei baut, zerlegt das
@@ -1016,9 +952,8 @@ Verweis, damit nichts doppelt gepflegt wird). Beschlossen dort u. a.: Einmalkauf
 Entwicklungssprache, Tag-Migration auf `#next`/`#inprogress` (letzteres am 13.08.2026
 selbst überholt — die Spalte steht seither nicht mehr in den Notizen).
 
-Der ältere Branch `feature/backlog-release-readiness` (21.07.) ist damit obsolet;
-sein Inhalt ist in RELEASE.md aufgegangen bzw. inzwischen umgesetzt (private API
-entfernt in `4f83347`).
+Ein älterer Anlauf vom 21.07. ist darin aufgegangen bzw. inzwischen umgesetzt (private API
+entfernt in `4f83347`); sein Branch wurde am 14.08.2026 gelöscht.
 
 ## Explizit abgelehnt (kein "später", sondern bewusst ausgeschlossen)
 

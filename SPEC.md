@@ -254,9 +254,11 @@ zurückgeschriebener Tag auf einer *erledigten* Erinnerung nichts Sichtbares än
 > schreibt das Board seinen jüngsten Wert zurück — höchstens 24 Stunden lang, und **nie
 > einen Wert, den der Nutzer nicht selbst an diesem Board eingegeben hat**.
 
-**Warum eine Kette (gemessen 12.–13.08.2026):** Das Board schreibt ein Feld mehrfach um —
-ein Zug bucht eine Verdrängung, die Tag-Hygiene eine zweite, ein Edit eine dritte —,
-während der fremde Schreiber irgendeine ältere Kopie zurückschiebt. Mit nur einem
+**Warum eine Kette (gemessen 12.–13.08.2026, noch an der Tag-Form):** Das Board schrieb
+ein Feld mehrfach um — ein Zug buchte eine Verdrängung, die damalige Tag-Hygiene eine
+zweite, ein Edit eine dritte —, während der fremde Schreiber irgendeine ältere Kopie
+zurückschob. Die Tag-Hygiene gibt es seit dem 13.08.2026 nicht mehr; der Fall bleibt
+trotzdem gültig, weil ein Edit und eine Korrektur-Antwort dasselbe Muster erzeugen. Mit nur einem
 gemerkten Wert las sich genau diese Kopie als „dritter Zustand", der Eintrag zog sich
 zurück, und die Verteidigung löste sich in dem Moment auf, in dem sie gebraucht wurde.
 Die Kette erweitert nur, was als Echo *erkannt* wird — zurückgeschrieben wird weiterhin

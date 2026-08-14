@@ -12,10 +12,10 @@ Phase) gelaufen ist — nicht, wenn der Code geschrieben ist.
 
 > Herkunft: Plan vom 26.07.2026, erarbeitet aus zwei vollständigen Repo-Audits
 > (Projektkonfiguration, Entitlements, Privacy, Lokalisierungs-Umfang, Store-Risiken)
-> und Marktrecherche (Quellen am Ende). Ersetzt den Abschnitt „Veröffentlichung" vom
-> Branch `feature/backlog-release-readiness` (21.07.), der damit obsolet ist — dessen
-> Punkt „private API entfernen" ist seit `4f83347` erledigt, die übrigen Punkte sind
-> hier aufgegangen.
+> und Marktrecherche (Quellen am Ende). Er ersetzte einen älteren Abschnitt
+> „Veröffentlichung" vom 21.07., dessen Punkte hier aufgegangen sind — „private API
+> entfernen" ist seit `4f83347` erledigt. Der zugehörige Branch wurde am 14.08.2026
+> gelöscht.
 
 ---
 
@@ -23,7 +23,7 @@ Phase) gelaufen ist — nicht, wenn der Code geschrieben ist.
 
 | # | Phase | Aufwand | Status |
 |---|---|---|---|
-| 0 | Apple Developer Program + App Store Connect | S (wartezeitgetrieben) | ☐ offen |
+| 0 | Apple Developer Program + App Store Connect | S (wartezeitgetrieben) | ☐ offen — **blockiert inzwischen weit mehr als den Store, siehe unten** |
 | 1 | Lokalisierung DE + EN (String Catalog) | **L — der Brocken** | ☑ erledigt 07.08.2026 (bis auf VoiceOver-Stichprobe) |
 | 2 | Signing & Distribution | M | ☐ offen — braucht Phase 0 |
 | 3 | Store-Auftritt, Website, Screenshots | M | ☐ offen |
@@ -40,6 +40,20 @@ Login-Item nur opt-in, kein Netzwerkcode, keine Dependencies.
 ---
 
 ## Phase 0 — Apple Developer Program (zuerst anstoßen, Rest läuft parallel)
+
+**Der Hebel ist seit dem 14.08.2026 größer als beim Aufstellen dieses Plans.** Phase 0 ist
+nicht mehr nur die Eintrittskarte zum Store, sondern die Voraussetzung für jede Funktion,
+die ein Entitlement braucht. Gemessen, damit es nicht erneut geprüft wird:
+
+| Vorhaben | Ohne Developer Program |
+|---|---|
+| Gerätesynchronisation (`NSUbiquitousKeyValueStore`) | **unmöglich** — der Prozess wird beim Start per SIGKILL beendet |
+| App-Group-Container, und damit Widget, Live Activity, App Intents | macOS *erlaubt* es, aber Xcode verweigert den Build ohne Provisioning Profile |
+| Signing, TestFlight, Einreichung | unmöglich (Phasen 2, 4, 5) |
+
+Die Grundlagen für die Synchronisation liegen fertig in `main` (BACKLOG.md,
+„Gerätesynchronisation über iCloud") — es fehlt ausschließlich die Übertragung, und die
+hängt an diesem Punkt.
 
 - [ ] Anmeldung als Einzelperson auf developer.apple.com (99 $/Jahr; Identitätsprüfung
       dauert 1–3 Tage — deshalb Schritt 1)
@@ -180,10 +194,12 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
       „auch auf fremden Boards" ist seit dem Formwechsel vom 13.08.2026 gegenstandslos:
       Die Spalte liegt je Mac in der eigenen `columns.json`, ein fremdes Board hat gar
       keinen Zustand freizugeben
-- [ ] **Migration der Spalten (13.08.2026) auf einem zweiten Rechner beobachten:** Beim
-      ersten Start die Alt-Tags übernehmen lassen und prüfen, dass (a) jede Karte in ihrer
-      Spalte steht, (b) die Tags danach aus den Notizen verschwunden sind, (c) sonst kein
-      Notiztext angefasst wurde. Auf dem Entwicklungsrechner am 13./14.08.2026 so gemessen
+- [ ] **Migration der Spalten (13.08.2026) bei einem Tester beobachten:** Beim ersten Start
+      die Alt-Tags übernehmen lassen und prüfen, dass (a) jede Karte in ihrer Spalte steht,
+      (b) die Tags danach aus den Notizen verschwunden sind, (c) sonst kein Notiztext
+      angefasst wurde. Auf dem Entwicklungsrechner am 13./14.08.2026 so gemessen.
+      **Bewusst an die Beta delegiert:** Es steht kein zweiter Mac zur Verfügung
+      (Stand 14.08.2026), ein Tester ist also der einzige Weg zu diesem Nachweis
 - [ ] Mindestens ein Tester mit englischem System, einer mit wiederkehrenden
       Erinnerungen samt Alarmen
 - [ ] Kriterium für Einreichung: eine crash-freie Beta-Woche
@@ -213,15 +229,16 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
 Setapp (Intel-Binary nötig; nach MAS-Launch prüfen) · Direktvertrieb/Notarisierung/
 Sparkle · weitere Sprachen (1.1) · iOS-App (eigene Ausbaustufe, BACKLOG.md) · CI.
 
-## Grober Zeitrahmen (Hobby-Tempo)
+## Zeitrahmen
 
-| Woche | Inhalt |
-|---|---|
-| 1 | Phase 0 anstoßen; Lokalisierungs-Infrastruktur + erste Dateien |
-| 2–3 | Lokalisierung fertig inkl. Tests und Tag-Migration |
-| 4 | Signing, Deep-Link-Entfernung, Website, Screenshots, Listing |
-| 5–6 | TestFlight-Beta, Härtung |
-| 7 | Einreichung; Puffer für die Review-Runde |
+Der Sieben-Wochen-Plan vom 26.07.2026 ist am 14.08.2026 **ersatzlos entfernt** worden: Er
+sah Phase 0 in Woche 1 und die Einreichung in Woche 7 vor, während in Woche 3 tatsächlich
+Phase 1 fertig und Phase 0 nicht angestoßen war. Ein Plan, der die Wirklichkeit nicht mehr
+beschreibt, wird nicht ehrlicher, wenn man ihn stehen lässt — er wird nur zur Ausrede.
+
+Es gibt keinen Ersatzplan. Die Reihenfolge ergibt sich aus der Statusübersicht oben, und
+das Tempo aus dem, was ein Hobbyprojekt hergibt. Der einzige Punkt mit echter Wartezeit
+bleibt Phase 0 (Identitätsprüfung 1–3 Tage) — und der ist deshalb zuerst dran.
 
 ## Quellen (Recherche 26.07.2026)
 

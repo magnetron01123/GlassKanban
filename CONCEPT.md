@@ -495,11 +495,8 @@ Spalten (= Hashtag in den Notizen wurde im Hintergrund aktualisiert). Eine Karte
 "Erledigt" ziehen setzt `isCompleted = true` — ein separater Erledigen-Button ist damit
 nicht nötig, das deckt der Spaltenwechsel bereits ab.
 
-- 4 feste Spalten (siehe oben)
-- Karten zeigen: Titel, Fälligkeitsdatum, Priorität, Notizen, zugewiesene Person (falls vorhanden) — nur Anzeige
-- Drag & Drop zwischen Spalten
-- Filterleiste: Dringlichkeit, Fälligkeit, Verantwortliche Person
-- Glass-Design (Liquid Glass auf der Chrome-Ebene), siehe Design-Anspruch unten
+Die Funktionsliste, die hier ursprünglich folgte, ist ersatzlos entfallen: Sie zählte auf,
+was heute in SPEC.md steht, nur auf dem Stand von damals.
 
 ## Motivation (leichtgewichtige Gamification)
 
