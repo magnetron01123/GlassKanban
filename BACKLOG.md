@@ -62,7 +62,22 @@ Minimal-Desk-Setup ist das ebenso oft ein iPhone am Ladeständer wie ein zweiter
 weshalb der StandBy-Punkt unten (Abschnitt „Plattform-Erweiterung: iOS-App") inhaltlich
 hierher gehört.
 
-- **Bildschirmzuordnung** — das Fenster kehrt nach dem Andocken auf seinen Monitor zurück,
+- **Bildschirmzuordnung — umgesetzt und verifiziert am 14.08.2026.** Verhalten steht in
+  SPEC.md („Das Board bleibt auf seinem Bildschirm"). Der Weg dorthin ist der eigentliche
+  Merkposten: Die Regel selbst lag seit dem 10.08.2026 fertig und getestet auf
+  `feature/window-screen-memory`, **die Anbindung an AppKit lief aber nie** — der Commit
+  sagte das ausdrücklich („treat the binding as unverified. Do not ship on it") und behielt
+  recht. Gemessen: SwiftUI setzt die Szenen-ID auf `NSWindow.identifier` und lässt
+  `frameAutosaveName` **leer**; gesucht wurde nach dem Autosave-Namen. Der Fehler war
+  unsichtbar in jeder Richtung — Build grün, Tests grün, App startet, nur merkte sie sich
+  nie etwas. Irreführend war zusätzlich, dass macOS den Rahmen sehr wohl unter
+  `NSWindow Frame board` ablegt, der Name also zu stimmen *schien*.
+  **Zwei Lehren fürs nächste Mal:** Ein Feature gilt erst als fertig, wenn ein Lauf das
+  gewünschte Ergebnis *hinterlassen* hat — hier: ein Eintrag in den Defaults. Und
+  `os.Logger`-Ausgaben dieser App waren über `log show`/`log stream` nicht auffindbar; was
+  half, war ein Wert in `UserDefaults`, direkt aus der plist im Container gelesen (`defaults
+  read` zeigte ihn wegen cfprefsd-Zwischenspeicher ebenfalls nicht).
+- ~~**Bildschirmzuordnung**~~ — ursprüngliche Beschreibung: das Fenster kehrt nach dem Andocken auf seinen Monitor zurück,
   statt auf dem eingebauten Display zu bleiben. Dafür die Identität des Displays merken,
   nicht nur den Fensterrahmen wie heute. Genau genommen kein Feature, sondern ein
   Fehlerbild: Bei einer App, deren ganze Idee „steht immer da" ist, ist ein Board am

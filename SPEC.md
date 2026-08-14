@@ -31,6 +31,40 @@ weiterentwickelt: Ändert sich Verhalten, ändert sich diese Datei mit.
   Zugangsdaten in der App — einzige Berechtigung ist der macOS-Systemdialog für
   Erinnerungs-Zugriff)
 
+### Das Board bleibt auf seinem Bildschirm (14.08.2026)
+
+macOS stellt den Fensterrahmen über Neustarts wieder her, aber nicht über das
+Verschwinden eines **Bildschirms**: Wird der Monitor abgezogen, auf dem das Board steht,
+schiebt macOS das Fenster auf den eingebauten — und beim Wiederanstecken bleibt es dort.
+Für ein Board, dessen ganze Idee ist, dass es irgendwo steht, ist das der teuerste Moment
+des Tages.
+
+Das Board merkt sich deshalb die **Identität** des Bildschirms (dessen UUID, nicht seine
+Nummer — die vergibt macOS beim Wiederanstecken neu) und seine Lage **auf** diesem
+Bildschirm. Kommt der Bildschirm zurück, geht das Fenster zurück.
+
+Verbindlich sind vier Regeln, jede davon in die sichere Richtung:
+
+- **Stehenbleiben ist der Normalfall.** Bewegt wird ausschließlich, wenn der gemerkte
+  Bildschirm da ist und das Fenster nicht auf ihm steht. Ein Fenster, das aus anderen
+  Gründen springt, ist schlimmer als eines am falschen Platz — der falsche Platz ist
+  wenigstens der, an dem der Nutzer es zuletzt gesehen hat.
+- **Beim Start wird nichts verschoben.** macOS hat da schon platziert; ein Sprung unter
+  dem laufenden Start hinweg wäre genau die Bewegung, die vermieden werden soll.
+- **Während sich die Bildschirme sortieren, zählt keine Bewegung als Nutzerbewegung.**
+  AppKit meldet „der Nutzer zieht das Fenster" und „macOS räumt es von einem
+  verschwindenden Bildschirm" identisch. Würde Letzteres gemerkt, überschriebe es genau
+  die Erinnerung, die man zum Zurückholen braucht. Eine Sekunde nach einer
+  Bildschirmänderung gilt deshalb als Aufräumzeit.
+- **Zurückgeholt wird nur in den sichtbaren Bereich.** Kommt ein Bildschirm kleiner
+  zurück, wird der Rahmen eingepasst statt buchstabengetreu wiederhergestellt — sonst
+  läge das Board außerhalb des Erreichbaren, was schlimmer wäre als der Fehler selbst.
+
+Ohne gemerkte Lage passiert nichts; die erste eigene Bewegung des Fensters legt sie an.
+Die Bewegung selbst ist nicht animiert: Sie fällt in den Moment, in dem der Nutzer Kabel
+steckt oder den Mac weckt, und ein danach über den Schreibtisch gleitendes Board machte
+auf Mechanik aufmerksam. Es soll einfach schon dort sein.
+
 ## Architektur
 
 - Datenzugriff ausschließlich über EventKit (`EKEventStore`/`EKReminder`), kein eigener

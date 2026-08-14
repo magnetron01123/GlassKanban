@@ -11,6 +11,13 @@ final class AppearanceDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         AppearanceController.shared.applyStored()
     }
+
+    /// The board has to be told which display it belongs to from here: a
+    /// representable in `ContentView`'s background never reaches the window
+    /// (see `WindowPlacementController`).
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        WindowPlacementController.shared.start()
+    }
 }
 
 extension Notification.Name {
