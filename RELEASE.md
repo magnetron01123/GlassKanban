@@ -175,7 +175,7 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
       („verarbeitet ausschließlich lokal, keine Datenerhebung" — deckungsgleich mit
       dem Privacy-Manifest), Support-Kontakt. Privacy-Policy- und Support-URL sind
       Pflichtfelder in App Store Connect
-- [ ] Demo-Datensatz als eigene Reminders-Liste bauen (glaubwürdige, freundliche
+- [x] Demo-Datensatz als eigene Reminders-Liste bauen — 05.09.2026, siehe `plans/linkedin/konzept.md` 2.1 und `seed-demo-reminders.swift` v2 (glaubwürdige, freundliche
       Beispiel-Tickets für Screenshots und Review)
 - [ ] Screenshots EN + DE, je 4–6, 2880×1800 PNG: Board, Karten-Editor,
       Statistik-Fenster, Dunkelmodus

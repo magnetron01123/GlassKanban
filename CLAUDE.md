@@ -163,7 +163,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Textvorschlag ohne Vorher-Nachher-Gegenüberstellung ist keiner.
 - UI-Änderungen selbst per Screenshot prüfen und eigenständig nachbessern; vorher alte
   App-Instanzen aus früheren Sessions beenden.
-- **Drag & Drop lässt sich nicht synthetisch auslösen** (14.08.2026 gemessen): Ein per
+- **Drag & Drop lässt sich nur auf HID-Ebene synthetisch auslösen** (14.08.2026 gemessen, 05.09.2026 präzisiert: `computer_batch` mit `left_mouse_down`, mehreren `mouse_move` und `left_mouse_up` im Vordergrund läuft durch — der Hintergrund-`app_drag` hebt die Karte nur an und lässt nie los, sie bleibt bis zum App-Neustart im Schwebezustand). Die alte Beobachtung im Wortlaut: Ein per
   computer-use erzeugter Press-Move-Release wird von SwiftUIs Drag-System nicht als Zug
   angenommen — die Karte bleibt liegen, und weil das Board-Fenster sich am Hintergrund
   ziehen lässt, wandert stattdessen das Fenster. Für einen Spaltenwechsel im UI-Test
@@ -194,6 +194,10 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   und würde die App sonst aus einem randomisierten Temp-Pfad statt dem echten
   Projektordner starten (Gatekeeper-Translokation) — das Skript entfernt das Attribut
   nach jedem Kopiervorgang und heilt es bei jedem Hook-Aufruf nach, falls iCloud es
-  nachträglich erneut setzt. Ein fehlgeschlagener Build wird einmal pro Fingerprint
+  nachträglich erneut setzt. **Zwischen zwei Hook-Aufrufen kann es trotzdem zurückkommen** (05.09.2026: nach
+  `--manual` startete die App aus einem AppTranslocation-Pfad, Gatekeeper legte einen Dialog auf
+  das zweite Display, danach fensterlose Prozesse). Für UI-Prüfungen am Bildschirm deshalb die
+  identische Binary aus `~/Library/Caches/GlassKanban/DerivedData/Build/Products/Debug/` starten —
+  außerhalb iCloud, nie quarantänisiert. Ein fehlgeschlagener Build wird einmal pro Fingerprint
   gemeldet, sonst bleibt es still. Manuell: `scripts/build-app.sh --manual` (synchron,
   mit Ausgabe) oder `--release` für einen optimierten Build.

@@ -12,11 +12,16 @@ die Messungen dazu stehen dort.
 
 **Ohne Account möglich**, nach dem Bewertungsraster unten absteigend:
 
-1. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
+1. **App-Icon überarbeiten (hohe Priorität, 16.08.2026)** — das aktuelle Icon wirkt zu
+   blass/nichtssagend und ist auf dem Dock/Launchpad schwer erkennbar. Betrifft
+   `GlassKanban/AppIcon.icon` (Icon-Composer-Dokument, siehe auch die offene
+   Tinted-Variante unten unter „Spätere Apple-/Mac-Ausbaustufen"). Vor dem Store-Listing
+   wichtig, da das Icon die erste Kaufentscheidung mitprägt.
+2. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
    Aufwand steckt in `DesignSystem.swift`, nicht im Bedienelement.
-2. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Demo-Datensatz,
+3. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Demo-Datensatz,
    Screenshots, Listing-Texte. Alles außer dem Hochladen.
-3. Die Punkte der Klasse *Nutzungsalltag*.
+4. Die Punkte der Klasse *Nutzungsalltag*.
 
 Alles Begonnene liegt in `main`; es gibt keine offenen Branches. Warum das so bleiben soll,
 steht als Arbeitsregel in CLAUDE.md.
@@ -435,6 +440,18 @@ Zug, sondern nur ein Tag, der einen Zug länger stehen bleibt.
 - **Menüleisten-Modus / Always-on-Top** — MVP nutzt ein normales Fenster.
 
 ## Bewegung / Animation
+
+### Grünes Kopier-Plus am Zeiger beim Ziehen (05.09.2026, beim LinkedIn-Video gefunden — **umgesetzt** am selben Tag, Branch `feature/drag-move-operation`)
+
+Während eine Karte gezogen wird, hängt macOS das grüne „+"-Badge an den Zeiger — das
+Standardzeichen für *Kopieren*. `.draggable(card.id)` mit `.dropDestination(for: String.self)`
+(ColumnView.swift) liefert SwiftUI kein Mittel, die Operation als *Verschieben* zu deklarieren.
+Semantisch ist das falsch: Ein Kanban-Zug verschiebt, er kopiert nicht (Prinzip 3, Pull), und es
+ist das einzige Element im Bild, das etwas anderes sagt als die App tut. Weg über
+`onDrop(of:delegate:)` mit `DropProposal(operation: .move)` — Verhaltensänderung an der
+Drop-Logik. Davids Entscheidung 05.09.2026: machen. Umgesetzt als `LaneDropDelegate` in ColumnView.swift; Nachweis per Zeiger-Screenshot im Messprotokoll des Video-Plans.
+
+
 
 - **Ausgebautere, aber weiterhin zurückhaltende Übergänge** — über die MVP-Basis (dezente
   Animation bei Spaltenwechsel/Live-Update) hinaus ein eigenes Bewegungs-Vokabular, das den
