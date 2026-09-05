@@ -9,9 +9,9 @@ Dieses Dokument ist kein Bauplan im Sinne von `plans/README.md` (es betrifft kei
 App-Verhalten), sondern die Produktionsgrundlage für den Beitrag — und die Vorlage für
 den nächsten Clip. Es lebt in `social/`, weil es Projektwissen braucht (Demo-Datensatz,
 Animationszeiten, Texte) und weil der Demo-Datensatz zugleich Phase 3 aus RELEASE.md
-bedient. Die Skripte daneben (`record.sh`, `stage.sh`, `cut.sh`, `frames.sh`,
-`seed-demo-reminders.swift`, `window-id.swift`) sind wiederverwendbar; das Drehbuch
-steht in Anhang D.
+bedient. **Wie der Clip neu erzeugt wird, steht in `README.md` in diesem Ordner** —
+Schritt für Schritt mit Nachweisen, am 05.09.2026 so durchlaufen. Dieses Dokument ist das
+Warum und die Texte.
 
 ---
 
@@ -92,53 +92,30 @@ tun, sonst widerspricht die Verpackung dem Inhalt. Daraus folgen feste Regeln f�
 
 ### 2.1 Demo-Datensatz (zugleich RELEASE.md Phase 3, „Demo-Datensatz")
 
-Zwei lokale Reminders-Listen, angelegt per `social/linkedin/seed-demo-reminders.swift`
-(kompiliert am 05.09.2026, noch nicht gegen den echten Store gelaufen; `--remove` räumt
-wieder auf). Dasselbe Skript schreibt die Spalten (`next`/`inProgress`) direkt in die
-`columns.json` der App — deshalb muss die App dabei **geschlossen** sein; das Skript
-verweigert sonst. Befehle und Prüfung: Anhang A.2.
+Angelegt per `seed-demo-reminders.swift` (Fassung v2 vom 05.09.2026, gegen den echten Store
+gelaufen; `--remove` räumt auf). Dasselbe Skript schreibt die Spalten (`next`/`inProgress`)
+direkt in die `columns.json` der App — deshalb muss die App dabei **geschlossen** sein; das
+Skript verweigert sonst. Alle Daten sind relativ zu heute, der Seed ist vor jeder Aufnahme
+neu zu setzen (README.md, Schritt 1).
 
-**Liste „Glass Kanban" (blau) — der Release-Backlog:**
+**18 Tickets in einer sichtbaren Liste „Glass Kanban"** (ein Akzent statt Blau/Grün-Mischung;
+„Privat" wird leer angelegt). Jeder Titel hat höchstens 28 Zeichen, damit bei 1220 pt keine
+Ellipse entsteht:
 
-| Karte | Start-Spalte | Merkmale | Herkunft |
-|---|---|---|---|
-| Datenschutzerklärung schreiben | Backlog | `!!`, Notiz | RELEASE.md Phase 3 |
-| App-Store-Screenshots EN + DE | Backlog | Notiz | RELEASE.md Phase 3 |
-| TestFlight-Beta mit fünf Testern | Backlog | | RELEASE.md Phase 4 |
-| Produktseite auf GitHub Pages | Backlog | | RELEASE.md Phase 3 |
-| Listing-Texte und Keywords | Backlog | | RELEASE.md Phase 3 |
-| Review-Notizen vorformulieren | Backlog | | RELEASE.md Phase 3 |
-| Einführungspreis anlegen | Backlog | | RELEASE.md Phase 3 (ohne Zahl — kein Preis im Video) |
-| Wiederkehrende Erinnerungen beim Abhaken testen | Backlog | `!` | RELEASE.md Phase 4 |
-| Doku-Konsistenz prüfen | **In Bearbeitung** | Notiz | aktueller Branch `docs/consistency-pass` |
-| LinkedIn-Video aufnehmen | Als Nächstes | `!!`, **fällig heute** (Chip „Heute") | dieses Vorhaben |
-| Demo-Liste für Screenshots anlegen | Als Nächstes | | dieses Vorhaben |
-| Deep-Link für 1.0 entfernen | Als Nächstes | | README „Hinweise" |
-| iCloud-Sync-Grundlage zusammenführen | Erledigt | vor 1 Tag | PR #49 |
-| Board bleibt auf seinem Bildschirm | Erledigt | vor 2 Tagen | README |
-| Spalte in eigene Datei verlegen | Erledigt | vor 3 Tagen | Formwechsel 13.08. |
-| Deutsche Lokalisierung abschließen | Erledigt | vor 4 Tagen | RELEASE.md Phase 1 |
-| Durchlaufzeit im Rückblick anzeigen | Erledigt | vor 5 Tagen | SPEC „Rückblick" |
-| WIP-Dialog: Reibung statt Verbot | Erledigt | vor 6 Tagen | CONCEPT „WIP-Limits" |
-
-**Liste „Privat" (grün) — weil Personal Kanban Leben *und* Arbeit meint:**
-
-| Karte | Start-Spalte | Merkmale |
+| Spalte | Karten | Merkmale |
 |---|---|---|
-| Steuerunterlagen sortieren | Backlog | fällig in 6 Tagen |
-| Wochenrückblick | Backlog | wöchentlich, nächster Termin in 2 Tagen → sinkt unter die Reifelinie, Falz zeigt **„1 noch nicht fällig"** |
-| Fahrrad zur Inspektion bringen | Erledigt | vor 1 Tag |
-| Einkaufen | Erledigt | vor 4 Tagen |
+| Backlog (7) | Datenschutzerklärung `!!`, App-Store-Screenshots, TestFlight-Beta starten, Produktseite bauen, Listing-Texte schreiben, Einführungspreis festlegen, Wochenrückblick | Wochenrückblick ist wöchentlich, fällig in 3 Tagen → Falz „1 noch nicht fällig" |
+| Als Nächstes (3 / 5) | Demo-Liste anlegen, Deep-Link entfernen, Onboarding kürzen | je eine kurze Notiz |
+| In Bearbeitung (2 / 2) | Doku-Konsistenz prüfen, **LinkedIn-Video aufnehmen** | die LinkedIn-Karte ist die, die zieht: `!!`, fällig heute (Chip „Heute") |
+| Erledigt (6) | iCloud-Sync-Grundlage, Bildschirm-Zuordnung, Spalte in eigene Datei, Deutsche Lokalisierung, Durchlaufzeit im Rückblick, WIP-Dialog gebaut | je eine pro Tag, sechs Tage in Folge → Flamme **6**, nach dem Zug **7** |
 
 Warum so: Alle Titel sind wahr (das Projekt hat diese Aufgaben wirklich), keiner ist privat
-im Sinn von „gehört nicht auf LinkedIn", keiner enthält Namen, Beträge oder Firmen. Die zwei
-Listenfarben zeigen, dass das Board über Listen hinweg liest. Der Falz mit „1 noch nicht
-fällig" und der Chip „Heute" sind zwei stille Details, die Kenner der App-Philosophie
-wiedererkennen — ohne dass etwas erklärt wird.
+im Sinn von „gehört nicht auf LinkedIn", keiner enthält Namen, Beträge oder Firmen. Der
+Falz mit „1 noch nicht fällig" und der Chip „Heute" sind zwei stille Details, die Kenner der
+App-Philosophie wiedererkennen — ohne dass etwas erklärt wird.
 
 **Bewusst weggelassen:** eine überfällige Karte (rotes „Überfällig"-Badge). Realistisch wäre
 sie, aber sie ist das einzige laute Element der Oberfläche und würde im Standbild dominieren.
-Bleibt in beiden Ideen draußen.
 
 ### 2.2 Einstellungen der App für die Aufnahme
 
@@ -259,7 +236,7 @@ Thumbnail (3.7) oder im Repository.
 Vorbereitung (kann Claude weitgehend übernehmen, Abschnitt 6):
 
 - [ ] Alte App-Instanzen beenden, App aus dem Projektordner starten
-- [ ] Demo-Listen seeden (Anhang A.2); das Skript schreibt die Spalten: „Doku-Konsistenz
+- [ ] Demo-Listen seeden (README.md, Schritt 1); das Skript schreibt die Spalten: „Doku-Konsistenz
       prüfen" in In Bearbeitung, die drei anderen laut 2.1 in Als Nächstes
 - [ ] Einstellungen wie 2.2, Fenster wie 2.3, Display wie 2.4
 - [ ] Testframe (`screencapture -l <windowID>`), daraus den 1:1-Ausschnitt schneiden:
@@ -480,12 +457,12 @@ der einzige Witz, mit einem Wort aufgelöst. Kein „stolz", kein „endlich", k
 
 ## 8. Produktionsplan — Reihenfolge und Kästchen
 
-Jeder Punkt verweist auf den Anhang A, wo der Befehl und das erwartete Ergebnis stehen.
+Befehle und erwartete Ergebnisse stehen in `README.md` in diesem Ordner.
 
 **Session 1 — Grundlage (Claude, ~1 h, David für zwei Freigaben):**
 - [ ] `seed-demo-reminders.swift` bauen und laufen lassen; Ergebnis in der Erinnerungen-App
       gegen 2.1 prüfen (Farben, Fälligkeiten, Wiederholung, Erledigt-Daten)
-- [ ] Einstellungen setzen (Anhang A.3), App starten, Flamme muss „6" zeigen (Anhang A.4)
+- [ ] Einstellungen setzen (README.md, Schritt 2), App starten, Flamme muss „6" zeigen (Schritt 4)
 - [ ] Fenster 1300 × 640 pt, Testframe schießen, den festen 1:1-Ausschnitt daraus schneiden,
       **Ergebnis an David senden** (Lesbarkeit, Hintergrund, Rand)
 
@@ -572,332 +549,9 @@ Zweitverwertung: `glass-kanban-one-move-4x5.gif` für README und Messenger; auf 
 
 ---
 
-## Anhang A — Ausführung Schritt für Schritt
-
-Für eine eigene Session, auch mit einem kleineren Modell. Jeder Schritt hat einen Befehl,
-ein erwartetes Ergebnis und eine Prüfung, die etwas hinterlässt. Wer einen Schritt nicht
-prüfen kann, sagt das, statt weiterzugehen. Arbeitsverzeichnis ist der Projektordner.
-
-Werkzeuge aus diesem Ordner (alle am 05.09.2026 kompiliert):
-
-| Datei | Zweck |
-|---|---|
-| `seed-demo-reminders.swift` | Demo-Listen anlegen/entfernen und Spalten in `columns.json` schreiben |
-| `window-id.swift` | Fenster-ID und Position des Boards für `screencapture` |
-| `cut.sh` | Schnitt beider Ideen aus einem Take (Marken eintragen; am 05.09. mit synthetischem Take komplett durchgelaufen) |
-| `record.sh` | Aufnahme eines Takes: Board nach vorn, Fenster + 40 pt, Cursor, 40 s, ffprobe danach |
-| `frames.sh` | Kontaktbogen: ein Frame je 0,25 s zum Take-Auswählen und Marken-Ablesen |
-| `drehbuch.md` | Kurzfassung der Züge zum Mitlesen für David |
-
-### A.1 Vorbedingungen
-
-```
-pgrep -fl "Glass Kanban" || echo "keine Instanz"          # alte Instanzen? → beenden
-osascript -e 'tell application "Glass Kanban" to quit'
-which ffmpeg || brew install ffmpeg                        # für A.9, dauert einige Minuten
-```
-
-Erwartung: keine laufende Instanz; `ffmpeg` vorhanden. **Nichts aus `Glass Kanban.app`
-starten, solange A.2 läuft.**
-
-### A.2 Demo-Listen und Spalten anlegen
-
-```
-swiftc -O -o /tmp/seed-demo social/linkedin/seed-demo-reminders.swift
-/tmp/seed-demo
-```
-
-Beim ersten Lauf fragt macOS „Terminal möchte auf deine Erinnerungen zugreifen" → **Erlauben**
-(Dialog erscheint bei der App, aus der das Terminal gestartet wurde; wird er nicht
-bestätigt, endet das Skript mit „No Reminders access"). Erwartete Ausgabe:
-
-```
-created 22 reminders in Glass Kanban, Privat (source: …)
-columns.json: 4 pulls written to /Users/…/Application Support/GlassKanban/columns.json
-```
-
-Prüfung (drei Nachweise):
-
-```
-python3 -c "import json;d=json.load(open('$HOME/Library/Containers/com.davidtrogemann.GlassKanban/Data/Library/Application Support/GlassKanban/columns.json'));print(sorted(v['lane'] for v in d['pulls'].values()))"
-```
-→ enthält genau einmal `inProgress` und dreimal `next` (plus eventuell vorhandene echte
-Einträge, die bleiben unangetastet).
-
-Erinnerungen-App öffnen: Liste „Glass Kanban" (blau) hat 14 Einträge, davon 6 erledigt;
-„Privat" (grün) hat 4, davon 2 erledigt; „LinkedIn-Video aufnehmen" ist heute fällig.
-
-Stimmt etwas nicht: `/tmp/seed-demo --remove`, Ursache beheben, erneut. Das Skript
-verweigert, wenn die Listen schon existieren oder die App läuft.
-
-### A.3 Einstellungen der App
-
-Die App ist sandboxed; ihre Defaults liegen in
-`~/Library/Containers/com.davidtrogemann.GlassKanban/Data/Library/Preferences/com.davidtrogemann.GlassKanban.plist`.
-Bei **geschlossener** App setzen:
-
-```
-D=com.davidtrogemann.GlassKanban
-defaults write $D wipLimits -dict inProgress -int 2 next -int 5
-defaults write $D appAppearance -string light
-defaults write $D completionSoundEnabled -bool true
-defaults write $D foldNotYetDue -bool true
-```
-
-Listen-Auswahl: Der Schlüssel `excludedCalendarIDs` ist eine Liste der **ausgeblendeten**
-Listen-IDs. Alle IDs außer den beiden Demo-Listen eintragen. IDs ermitteln:
-
-```
-swift - <<'EOF'
-import EventKit
-let s = EKEventStore(); let g = DispatchGroup(); g.enter()
-s.requestFullAccessToReminders { _, _ in g.leave() }; g.wait()
-for c in s.calendars(for: .reminder) { print(c.calendarIdentifier, c.title) }
-EOF
-```
-
-Dann alle IDs, deren Titel **nicht** „Glass Kanban" oder „Privat" ist:
-
-```
-defaults write $D excludedCalendarIDs -array "<ID-1>" "<ID-2>" …
-```
-
-Prüfung — **nicht** `defaults read` (cfprefsd-Cache, siehe CLAUDE.md), sondern:
-
-```
-plutil -p ~/Library/Containers/$D/Data/Library/Preferences/$D.plist | grep -A3 "wipLimits\|appAppearance\|excludedCalendarIDs"
-```
-
-`defaults write` erreicht die Container-plist (am 05.09.2026 mit Probeschlüssel geprüft,
-typisierte Dicts und Arrays inklusive). Der UI-Weg bleibt als Rückfall: App starten, ⌘,
-öffnet die Einstellungen. Reiter **Listen**: Schalter unter „Diese Listen im Board anzeigen"
-— nur „Glass Kanban" und „Privat" an. Reiter **Allgemein**: „Erscheinungsbild" → Hell; „Ton
-beim Erledigen" an; „Work-in-Progress-Limits" → In Bearbeitung 2, Als Nächstes 5; „Noch nicht
-Fälliges einklappen" an. Danach mit `plutil -p` wie oben prüfen.
-
-### A.4 App starten und Board-Zustand abnehmen
-
-```
-open "Glass Kanban.app"; sleep 3
-swiftc -O -o /tmp/window-id social/linkedin/window-id.swift; /tmp/window-id
-```
-
-Erwartung: `id=<n> x=… y=… w=… h=…`. Screenshot der App (computer-use, `app_screenshot`
-mit Bundle-ID `com.davidtrogemann.GlassKanban`) und gegen diese Liste prüfen:
-
-- Backlog: 10 Karten, unten Falz-Zeile „1 noch nicht fällig", Kapsel „10"
-- Als Nächstes: 3 Karten, Kapsel „3 / 5"; „LinkedIn-Video aufnehmen" trägt Chip „Heute" und „!!"
-- In Bearbeitung: 1 Karte „Doku-Konsistenz prüfen", Kapsel „1 / 2"
-- Erledigt: 8 Karten mit Durchstrich, keine Falz-Zeile
-- Toolbar links: Flamme mit **„6"**. Zeigt sie etwas anderes: Flamme anklicken, Statistik
-  „Jetzt" lesen; weicht die Folge ab, `completedDaysAgo`-Werte im Skript um einen Tag
-  verschieben, `--remove`, neu seeden
-- Keine Karte aus fremden Listen sichtbar (sonst A.3 unvollständig)
-
-### A.5 Fenstergröße und -position
-
-Ziel: 1300 × 612 pt (Mindesthöhe), so gelegt, dass der Dialog (mittig über dem Fenster) im 1:1-Ausschnitt
-der rechten Boardhälfte liegt. Bei laufender App:
-
-```
-osascript -e 'tell application "System Events" to tell process "Glass Kanban" to tell window 1
-  set position to {200, 120}
-  set size to {1300, 612}
-end tell'
-/tmp/window-id
-```
-
-Erwartung: `w=1300 h=612` (Werte in pt; auf einem 2×-Display ist der Screenshot doppelt so
-groß). Schlägt das Setzen fehl, Fenster von Hand ziehen und mit `/tmp/window-id` messen. Die
-Größe wird von der App gespeichert (`NSWindow Frame board`) und überlebt Neustarts.
-
-### A.6 Testframe und Ausschnitt *(überholt — Ergebnis-Block oben: ganzes Fenster, `FRAME=native`)*
-
-```
-ID=$(/tmp/window-id | sed 's/id=\([0-9]*\).*/\1/')
-screencapture -l $ID -o -x /tmp/testframe.png
-sips -g pixelWidth -g pixelHeight /tmp/testframe.png
-```
-
-Erwartung auf 2×: ~2600 × 1280 px plus Schattenrand. Ist es ~1300 × 640, läuft das Display
-mit 1× → A.7 zuerst.
-
-Ausschnitt bestimmen (Geometrie am 05.09.2026 gemessen und korrigiert): Die Aufnahme umfasst
-das Fenster plus 40 pt Rand. Der 1:1-Ausschnitt ist **so hoch wie die Aufnahme** (h + 80) und
-**rechtsbündig**, damit „In Bearbeitung" und „Erledigt" vollständig im Bild liegen und rechts
-und oben ein Streifen Wallpaper bleibt. Die Fensterhöhe geht nicht unter **612 pt**
-(Board-Minimum) — bei 1300 × 612 ist der Ausschnitt 692 pt, die Titel sind auf 390 px
-Telefonbreite lesbar (geprüft). Die Toolbar-Flamme (links) liegt **außerhalb** des
-Ausschnitts — bewusster Preis, siehe 4.2.
-
-Simulation aus dem Fenster-Screenshot (Rand als Farbfläche, nur zur Freigabe des Looks):
-
-```
-cp /tmp/testframe.png /tmp/take_sim.png
-sips -p 692 1380 --padColor E8E5E0 /tmp/take_sim.png          # 40 px Rand rundum
-cp /tmp/take_sim.png /tmp/frame_1to1.png
-sips -c 692 692 --cropOffset 0 688 /tmp/frame_1to1.png         # rechtsbündig: x = 1380 − 692
-sips -Z 390 /tmp/frame_1to1.png --out /tmp/frame_phone.png
-```
-
-Abnahme des Ausschnitts (Bild lesen):
-
-- „In Bearbeitung" und „Erledigt" vollständig, „Als Nächstes" links angeschnitten
-- Toolbar mit Flamme oben im Bild
-- Titel lesbar, wenn das Bild auf 390 px Breite verkleinert wird
-  (`sips -Z 390 /tmp/frame_1to1.png --out /tmp/frame_phone.png`, dann ansehen)
-- Glas der Toolbar zeigt Struktur des Wallpapers, kein flaches Grau
-
-`CROP_W/H/X/Y` für `cut.sh` sind H, H, X, 0 — **aber in Pixeln der späteren Aufnahme**, die
-den Bereich aus A.8 abdeckt, nicht des Fenster-Screenshots. Umrechnung in A.8.
-
-**Dieses Bild an David senden** (SendUserFile) — es ist die Freigabe des Looks.
-
-### A.7 Display auf 2× *(gelöst mit `displayplacer`, Modus 2560 × 1440 HiDPI; 1280 × 720 ist zu klein für das Fenster)*
-
-Reihenfolge der Versuche, jeweils danach A.6 wiederholen:
-
-1. Systemeinstellungen → Displays → Dell wählen → mit gedrückter ⌥ auf „Skaliert" klicken
-   → „Alle Auflösungen anzeigen" → einen Eintrag mit „(HiDPI)" oder „Low Resolution" *nicht*
-   markiert bei 1280 × 720 wählen. Prüfung: `system_profiler SPDisplaysDataType | grep "UI Looks like"`
-   zeigt „1280 x 720".
-2. BetterDisplay installieren (betterdisplay.pro, Freemium): Menüleisten-Symbol → „Create
-   New Virtual Screen" → 16:10, 1440 × 900 → im Fenster des virtuellen Displays HiDPI
-   aktivieren → in den Systemeinstellungen als eigenständiges Display (nicht Spiegel).
-   App-Fenster dorthin schieben. Prüfung wie oben, Erwartung „1440 x 900". Am 05.09.2026
-   nicht auf diesem Mac verifiziert.
-3. MacBook mit Retina: Projektordner synchronisiert, `Glass Kanban.app` dort starten, A.2–A.6
-   dort wiederholen (`columns.json` ist gerätelokal).
-
-Dazu einmalig (David): Dock ausblenden (`defaults write com.apple.dock autohide -bool true;
-killall Dock`), Schreibtisch-Symbole aus (`defaults write com.apple.finder CreateDesktop false;
-killall Finder`), Wallpaper: erster Kandidat `/System/Library/Desktop Pictures/Sonoma.heic`,
-zweiter `iMac Silver.heic` im selben Ordner — setzen mit
-`osascript -e 'tell application "System Events" to tell every desktop to set picture to POSIX file "/System/Library/Desktop Pictures/Sonoma.heic"'`.
-Beides nach der Aufnahme zurückstellen (`-bool false` / `-bool true`).
-
-### A.8 Aufnahme *(überholt — `record.sh` nutzt ffmpeg/AVFoundation, der Zug läuft synthetisch)*
-
-Aufnahmebereich = Fenster plus 40 pt Rand seitlich und 130 pt oben/unten (Platz für den
-4:5-Ausschnitt). Alles in einem Befehl (holt das Board nach vorn,
-zählt 3 s, nimmt 40 s auf, zeigt `ffprobe`):
-
-```
-social/linkedin/record.sh 1        # → /tmp/take1.mov
-```
-
-Was das Skript ausführt, falls es von Hand gebraucht wird:
-
-```
-eval $(/tmp/window-id | tr ' ' '\n' | grep -v '^id=' | tr '\n' ' ')   # setzt x y w h
-screencapture -v -C -R $((x-40)),$((y-130)),$((w+80)),$((h+260)) -V 40 -x /tmp/take1.mov
-```
-
-`-C` nimmt den Cursor mit, `-V 40` stoppt nach 40 s, kein Klick-Highlight. (Am 05.09. mit
-einem 2-s-Testlauf geprüft, dass der Befehl eine Datei erzeugt; Cursor-Sichtbarkeit im Video
-am ersten Take kontrollieren — fehlt er, QuickTime → Ablage → Neue Bildschirmaufnahme mit
-„Mauszeiger anzeigen", gleicher Bereich.)
-
-Ablauf je Take: Befehl starten, dann David nach Drehbuch 4.4 (Idee B) bzw. 3.5 (Idee A),
-danach ⌘Z je Zug zurück. Drei Takes je Idee: `take1.mov` … `take6.mov`. Nach jedem Take:
-
-```
-ffprobe -v error -show_entries stream=width,height,r_frame_rate -show_entries format=duration -of default=nw=1 /tmp/take1.mov
-```
-
-Erwartung: Breite ≈ 2 × (w+80), 60 oder 30 fps, Dauer ≈ 40 s.
-
-Ausschnitte für `cut.sh`: nichts zu rechnen — der Block „MARKS" nimmt `WIN_W`, `WIN_H` (aus
-`/tmp/window-id`), `S` (2 bei 2×) und die Ränder `MX=40`, `MY=130`; das Skript leitet beide
-Crops ab und gibt sie beim Start aus (bei 1300 × 612, 1×: `1:1 692x692+688+90`,
-`4:5 692x865+688+4`).
-
-Werte in den Block „MARKS" eintragen, dann einen Probeframe aus dem Take schneiden und wie
-A.6 abnehmen:
-
-```
-ffmpeg -y -ss 1 -i /tmp/take1.mov -vf "crop=$CROP_W:$CROP_H:$CROP_X:$CROP_Y,scale=1080:1080" -frames:v 1 /tmp/take_frame.png
-```
-
-### A.9 Schnitt
-
-Marken in `social/linkedin/cut.sh` (Block „MARKS") aus dem gewählten Take ablesen:
-`social/linkedin/frames.sh /tmp/take2.mov` legt je 0,25 s ein Bild nach `/tmp/frames-take2/`;
-Bildnummer ÷ 4 = Sekunde. Notieren: Cursor-liegt-still, Loslassen der Karte, Ende der Ruhe.
-Dann:
-
-```
-social/linkedin/cut.sh /tmp/take2.mov /tmp/cut
-```
-
-Erwartung: je Format (`-4x5`, `-1x1`) `glass-kanban-one-move-*.mp4` (≈ 7 s), das GIF, das
-Thumbnail-PNG und `glass-kanban-three-moves-*.mp4` (≈ 12 s). Prüfen:
-
-```
-for f in /tmp/cut/glass-kanban-*.mp4; do ffprobe -v error -show_entries stream=codec_name,width,height -show_entries format=duration -of default=nw=1 "$f"; done
-```
-
-→ `h264`, `1080 × 1350` bzw. `1080 × 1080`, `aac`, Dauer wie erwartet. Dazu die Farbtags:
-
-```
-ffprobe -v error -select_streams v:0 -show_entries stream=color_space,color_transfer,color_primaries,color_range,r_frame_rate -of csv=p=0 /tmp/cut/glass-kanban-one-move-4x5.mp4
-```
-→ `bt709,bt709,bt709,tv,30/1`. Alles andere ist ein Fehler im Skript, nicht im Take. Dann Abnahme mit Augen: pro Datei
-Frames bei 0 s, Loslassen, Durchstrich, Ende ziehen (`ffmpeg -ss T -frames:v 1`), bei 390 px
-Breite ansehen. Loop-Prüfung für B: Datei in QuickTime mit ⌥⌘L in Schleife abspielen, der
-Übergang darf kein Springen zeigen. **Alle vier Frames an David senden.**
-
-Schnitt-Skript läuft nicht beim ersten Versuch? Die häufigsten Ursachen: `bc` fehlt (macOS
-hat es), Marken vertauscht (Start > Ende), Take hat 60 fps und die Rest-Standbilder 30 —
-das Skript setzt überall `fps=30`, `concat` verlangt gleiche Parameter; im Zweifel jedes
-Segment mit `ffprobe` vergleichen.
-
-### A.10 Übergabe und Aufräumen
-
-- Beide MP4 und das GIF an David (SendUserFile), Dateinamen aus A.9
-- Thumbnail: Frame aus dem Erledigt-Zug mit angehobener Karte, `ffmpeg -ss T -frames:v 1`,
-  1080 × 1080 PNG
-- Demo-Listen: stehen lassen (RELEASE.md Phase 3 „Demo-Datensatz" abhaken, Verweis hierher)
-  oder `/tmp/seed-demo --remove` bei geschlossener App
-- Einstellungen zurück: `excludedCalendarIDs`, `wipLimits`, `appAppearance` auf die Werte
-  aus dem `plutil -p` **vor** A.3 (deshalb vorher sichern:
-  `cp ~/Library/Containers/$D/Data/Library/Preferences/$D.plist /tmp/prefs-backup.plist`)
-- Dock, Schreibtisch, Wallpaper zurück (A.7)
-
-### A.11 Was dieser Anhang nicht abdeckt
-
-- Ob `screencapture -v -C` den Cursor tatsächlich ins Video schreibt — am ersten Take prüfen.
-- Die exakten Zeitmarken für `cut.sh` — kommen nur aus dem Take.
-- Alles, was die Plattform LinkedIn beim Upload tut (Nachkodierung, Loop) — nach dem Posten
-  am Telefon ansehen.
-
----
-
-## Anhang D — Drehbuch für die Aufnahme (Kurzfassung zum Mitlesen)
-
-Vor jedem Take: Board vorne, Cursor außerhalb des Fensters. Claude startet die Aufnahme,
-sie läuft 40 s und stoppt von selbst. Ruhig ziehen, ~1 s pro Zug, mittig loslassen, nicht
-über andere Karten schweben.
-
-## Take 1–3 — Idee B „Ein Zug" (Startzustand: In Bearbeitung 2 / 2)
-
-1. Cursor auf „LinkedIn-Video aufnehmen" legen, **2 s still halten**
-2. Nach „Erledigt" ziehen, loslassen
-3. **4 s nichts tun**
-4. Cursor langsam nach unten rechts aus dem Fenster
-5. Nach dem Take: ⌘Z einmal (Karte ist wieder in In Bearbeitung, Flamme wieder 6)
-
-## Take 4–6 — Idee A „Drei Züge"
-
-Vorher einmalig: „LinkedIn-Video aufnehmen" zurück nach „Als Nächstes" ziehen
-(Startzustand: In Bearbeitung 1 / 2, Als Nächstes 3 / 5).
-
-1. Cursor auf „LinkedIn-Video aufnehmen" (Als Nächstes), **2 s still**
-2. Zug 1: nach In Bearbeitung, **2 s warten**
-3. Zug 2: „Demo-Liste anlegen" nach In Bearbeitung → Dialog erscheint, **2 s nichts tun**,
-   dann **Return**, 2 s warten
-4. Zug 3: „LinkedIn-Video aufnehmen" nach Erledigt, **3 s warten**
-5. Cursor langsam aus dem Fenster
-6. Nach dem Take: ⌘Z zweimal (Zug 3 und Zug 1; Zug 2 wurde vom Dialog schon zurückgenommen)
-
-Misslingt ein Zug: kurz warten, ⌘Z, Claude Bescheid sagen — Take neu.
+## Anhang A — Ausführung
+
+Ersetzt am 05.09.2026 durch `README.md` in diesem Ordner: der Ablauf, wie er für Take 14
+tatsächlich gelaufen ist (Datensatz v2, Fenster 1220 × 1000 pt, ffmpeg/AVFoundation,
+synthetischer Zug auf HID-Ebene, Marken per `marks.sh`). Die ursprüngliche Fassung mit den
+Zwischenständen liegt in der Git-Historie.

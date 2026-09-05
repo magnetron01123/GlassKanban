@@ -73,7 +73,7 @@ GlassKanban/            Quellen, flach; darin Tests/ (Unit-Tests) und AppIcon.ic
 GlassKanban.xcodeproj/  von XcodeGen erzeugt, nicht in Git
 plans/                  Baupläne für entschiedene, noch nicht gebaute Vorhaben
 scripts/                Build, Doku-Wächter, Lokalisierungsprüfung
-social/                 Material für Beiträge (LinkedIn: Konzept, Skripte, fertiges Video)
+social/                 Material für Beiträge (LinkedIn: Ablauf-README, Konzept, Skripte, fertiges Video)
 project.yml             Projektbeschreibung für XcodeGen — die Quelle des .xcodeproj
 README / SPEC / CONCEPT / BACKLOG / RELEASE / CLAUDE .md
 Glass Kanban.app        der jeweils aktuelle Build, nicht in Git
