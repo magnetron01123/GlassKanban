@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct BoardView: View {
     @EnvironmentObject private var store: RemindersStore
@@ -9,6 +10,7 @@ struct BoardView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var showStreak = false
     @State private var showFind = false
+    @State private var boardSize: CGSize = .zero
 
     var body: some View {
         // Wraps the lanes, not the window: the tooltip has to escape the
@@ -33,11 +35,16 @@ struct BoardView: View {
         // until some later drag happened to land in a lane. This target
         // accepts nothing — it only notices that the drag stopped being over
         // the board and lets the store clear the state.
-        .dropDestination(for: String.self) { _, _ in false } isTargeted: { targeted in
-            if !targeted, store.draggingCardID != nil {
-                store.endDrag()
-            }
-        }
+        // A DropDelegate rather than `dropDestination`, for the same reason
+        // as in ColumnView: in the gap between two lanes this backstop is the
+        // only target under the cursor, and unless it declares the operation
+        // macOS assumes copy and shows its "+" badge right there — measured
+        // 05.09.2026 at the lane boundary (cursor at 798 px, lanes ending at
+        // 787 and starting at 806). It accepts nothing; it answers `.move`.
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { boardSize = $0 }
+        .onDrop(of: [.text], delegate: BoardBackstopDelegate(boardSize: boardSize) {
+            if store.draggingCardID != nil { store.endDrag() }
+        })
         // Four wordless empty lanes read as a broken app. Individual lanes stay
         // silent — only the whole board being blank is worth a sentence, and
         // then exactly one, laid over the lanes rather than inside them.
@@ -48,7 +55,8 @@ struct BoardView: View {
             if let emptiness = store.emptiness, emptiness != .loading {
                 EmptyBoardNotice(
                     emptiness: emptiness,
-                    onReset: { store.resetFilters() })
+                    onReset: { store.resetFilters() },
+                    onOpenReminders: { store.openRemindersApp() })
             }
         }
         // Lanes flex between ticket-friendly bounds; the whole block sits
@@ -413,4 +421,26 @@ struct BoardView: View {
         return NSWorkspace.shared.icon(forFile: url.path)
     }()
 
+}
+
+/// The board's drop backstop. Declares every drag over the board a *move* so
+/// no copy badge appears in the gaps between lanes, and clears the store's
+/// drag state when the drag really leaves the board. A hand-off to a lane
+/// also arrives as an exit — the location tells the two apart.
+private struct BoardBackstopDelegate: DropDelegate {
+    let boardSize: CGSize
+    let dragEnded: () -> Void
+
+    func validateDrop(info: DropInfo) -> Bool { true }
+    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
+    func dropExited(info: DropInfo) {
+        let board = CGRect(origin: .zero, size: boardSize).insetBy(dx: -2, dy: -2)
+        if !board.contains(info.location) { dragEnded() }
+    }
+    func performDrop(info: DropInfo) -> Bool {
+        // A release in a gap or over the toolbar lands nowhere; only the
+        // ghosting has to end.
+        dragEnded()
+        return false
+    }
 }

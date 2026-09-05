@@ -32,6 +32,11 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
   „Explizit abgelehnt" prüfen; abgelehnte Ideen nicht wieder vorschlagen, ohne dass der
   Nutzer das Thema selbst öffnet.
 - **RELEASE.md** — einzige Wahrheit zum Mac-App-Store-Release.
+- **README.md** — die Außensicht: was die App ist und kann, für jemanden, der das
+  Repository zum ersten Mal sieht. Ein neues nutzersichtbares Feature gehört auch hierhin,
+  nicht nur in SPEC.md.
+- **CLAUDE.md** (dieses Dokument) — wie hier gearbeitet wird: Prinzipien als Kompass,
+  Landkarten, Arbeitsregeln. Kein Produktwissen — das steht in den vier oben.
 
 ## Code-Landkarte
 
@@ -39,7 +44,9 @@ Zwei Targets (App + Tests), `GlassKanban/` mit rund 10.000 Zeilen SwiftUI; Proje
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
-  Tag-Hygiene. Mit Abstand die größte Datei und die einzige Stelle mit Seiteneffekten.
+  Korrektur-Antworten an fremde Schreiber. Mit Abstand die größte Datei und die einzige
+  Stelle mit Seiteneffekten. (Die frühere *Tag-Hygiene* ist mit dem Formwechsel vom
+  13.08.2026 entfallen — es gibt keine Tags mehr zu pflegen.)
 - **ColumnState.swift** — **die Spalte**: welche Karte in welcher Arbeitsspur liegt und
   seit wann, in einer eigenen Datei (`columns.json`).
   Seit 13.08.2026 die einzige Quelle dafür; kein Eintrag heißt Backlog, Erledigt bleibt
@@ -66,7 +73,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   `CardView` (Karte, Settle-Animationen, Durchstrich), `TicketEditSheet` (Karten-Editor),
   `StatsPopover`, `FindPopover`, `SettingsView`, `EmptyBoardNotice`, `BoardTooltip`
   (eigenes Glas-Tooltip statt `.help()`), `MoveFeedback` (Klang und Haptik beim Zug),
-  `HUDGlassMaterial` (Fenstermaterial), dazu `ContentView` und `GlassKanbanApp`.
+  `HUDGlassMaterial` (Fenstermaterial), `WindowPlacementController` (hält das Board auf
+  seinem Bildschirm — die einzige Stelle, die `NSWindow` anfasst), dazu `ContentView` und
+  `GlassKanbanApp`.
 - **DesignSystem.swift** — alle Tokens (Farben, Maße, Animationskurven). Neue Werte
   gehören hierher, nicht in die Views.
 - **Reine, testbare Regeln ohne UI/EventKit** — `TicketRename`, `EditorKeyCommand`,
@@ -75,7 +84,8 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   `RecurringHandoff` (Undo-Zaun bei Wiederholungen), `RecurringSeriesMatch` (Durchgang
   ↔ Serie über das Anlegedatum), `RecurringTagRelease` (stille Freigabe eines
   verbrauchten Pulls), `ColumnState` (die Spalte, siehe oben),
-  `TicketURL` (was das URL-Feld speichern kann), `StoredSetting` (jeder
+  `TicketURL` (was das URL-Feld speichern kann), `WindowPlacement` (auf welchem Bildschirm
+  das Board steht und wohin es zurückgehört), `StoredSetting` (jeder
   `UserDefaults`-Wert und ob er dem Nutzer oder dem Rechner gehört — die Einordnung
   steht in einem `switch`, den der Compiler nicht unvollständig lässt; ein neuer Fall
   ohne Entscheidung baut nicht). **Muster für neue Logik:** Entscheidung
@@ -111,7 +121,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `GlassKanbanTests/`, 20 Dateien mit rund 300 Tests, benannt nach der Regel
+- **Tests** — `GlassKanbanTests/`, 22 Dateien mit rund 340 Tests, benannt nach der Regel
   statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
 
 ## Arbeitsweise
@@ -124,7 +134,25 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Dokumentation geändert hat. Ist wirklich keine Doku-Änderung nötig, genügt ein
   ausdrücklicher Satz dazu; der Wächter blockt pro Zug nur einmal.
 - Vor Änderungen an bestehendem UI-Verhalten `git log --all` auf die betroffene Datei
-  prüfen — Feature-History, nicht nur Diff gegen main.
+  prüfen — Feature-History, nicht nur Diff gegen main. **Auch vor vermeintlich neuen
+  Features:** Am 14.08.2026 wurde die Bildschirmzuordnung ein zweites Mal gebaut, obwohl
+  sie seit dem 10.08. auf einem eigenen Branch lag — und die dort schon gelöste
+  Kernschwierigkeit fehlte im Nachbau.
+- **Ein Feature ist fertig, wenn ein Lauf das Ergebnis hinterlassen hat** — nicht, wenn es
+  baut und die Tests grün sind. Die Bildschirmzuordnung war vier Tage lang „fertig" und
+  hat nie funktioniert: Build grün, Tests grün, App startet, sie merkte sich nur nie
+  etwas. Der Nachweis ist die geschriebene Datei, der Defaults-Eintrag, die veränderte
+  Zeile — etwas, das nach dem Lauf noch da ist.
+- **Diagnose in der laufenden App: `os.Logger` ist hier keine verlässliche Quelle.**
+  Ausgaben dieser App waren am 14.08.2026 weder über `log show` noch über `log stream`
+  auffindbar. Was funktioniert hat: einen Wert nach `UserDefaults` schreiben und die
+  Container-plist **direkt** lesen (`plutil -p ~/Library/Containers/…/Preferences/…plist`)
+  — `defaults read` zeigte ihn wegen des cfprefsd-Zwischenspeichers ebenfalls nicht.
+- **Branches nicht liegen lassen.** Ein Branch, der nicht innerhalb weniger Tage in `main`
+  landet, ist verloren: Die Bildschirmzuordnung war nach vier Tagen 42 Commits hinter main
+  und musste dateiweise herausgelöst werden, `feature/board-hugs-content` lag am Ende 131
+  Commits zurück, `feature/backlog-release-readiness` 179. Gegenbedingung: Zusammengeführt
+  wird nur, was **das Verhalten nicht ändert oder nachweislich funktioniert**.
 - **Ton der Texte: knapp und sachlich, benennen statt kommentieren.** Die App spricht wie
   ein Werkzeug, nicht wie ein Begleiter — kein Coaching, kein Trost, kein Ansporn.
   Hergeleitet samt sieben Prüffragen und Beispieltabelle in CONCEPT.md („Ton der Texte");
@@ -135,7 +163,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Textvorschlag ohne Vorher-Nachher-Gegenüberstellung ist keiner.
 - UI-Änderungen selbst per Screenshot prüfen und eigenständig nachbessern; vorher alte
   App-Instanzen aus früheren Sessions beenden.
-- **Drag & Drop lässt sich nicht synthetisch auslösen** (14.08.2026 gemessen): Ein per
+- **Drag & Drop lässt sich nur auf HID-Ebene synthetisch auslösen** (14.08.2026 gemessen, 05.09.2026 präzisiert: `computer_batch` mit `left_mouse_down`, mehreren `mouse_move` und `left_mouse_up` im Vordergrund läuft durch — der Hintergrund-`app_drag` hebt die Karte nur an und lässt nie los, sie bleibt bis zum App-Neustart im Schwebezustand). Die alte Beobachtung im Wortlaut: Ein per
   computer-use erzeugter Press-Move-Release wird von SwiftUIs Drag-System nicht als Zug
   angenommen — die Karte bleibt liegen, und weil das Board-Fenster sich am Hintergrund
   ziehen lässt, wandert stattdessen das Fenster. Für einen Spaltenwechsel im UI-Test
@@ -166,6 +194,10 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   und würde die App sonst aus einem randomisierten Temp-Pfad statt dem echten
   Projektordner starten (Gatekeeper-Translokation) — das Skript entfernt das Attribut
   nach jedem Kopiervorgang und heilt es bei jedem Hook-Aufruf nach, falls iCloud es
-  nachträglich erneut setzt. Ein fehlgeschlagener Build wird einmal pro Fingerprint
+  nachträglich erneut setzt. **Zwischen zwei Hook-Aufrufen kann es trotzdem zurückkommen** (05.09.2026: nach
+  `--manual` startete die App aus einem AppTranslocation-Pfad, Gatekeeper legte einen Dialog auf
+  das zweite Display, danach fensterlose Prozesse). Für UI-Prüfungen am Bildschirm deshalb die
+  identische Binary aus `~/Library/Caches/GlassKanban/DerivedData/Build/Products/Debug/` starten —
+  außerhalb iCloud, nie quarantänisiert. Ein fehlgeschlagener Build wird einmal pro Fingerprint
   gemeldet, sonst bleibt es still. Manuell: `scripts/build-app.sh --manual` (synchron,
   mit Ausgabe) oder `--release` für einen optimierten Build.
