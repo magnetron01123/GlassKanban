@@ -12,12 +12,13 @@ die Messungen dazu stehen dort.
 
 **Ohne Account möglich**, nach dem Bewertungsraster unten absteigend:
 
-1. **Glass Kanban in der Menüleiste („Das Tablett")** — entschieden 05.09.2026, Bauplan
+1. **App-Icon überarbeiten (16.08.2026, Reihenfolge bestätigt 05.09.2026)** — das
+   aktuelle Icon wirkt zu blass und ist im Dock schwer erkennbar. Betrifft
+   `GlassKanban/AppIcon.icon` (Icon-Composer-Dokument; die Tinted-Variante fehlt ohnehin,
+   siehe „Spätere Apple-/Mac-Ausbaustufen"). Vor dem Store-Listing wichtig, das Icon prägt
+   die erste Kaufentscheidung mit.
+2. **Glass Kanban in der Menüleiste („Das Tablett")** — entschieden 05.09.2026, Bauplan
    liegt in `plans/menubar-tablett.md`; Konzept unten unter „Fensterverhalten".
-2. **App-Icon überarbeiten (16.08.2026)** — das aktuelle Icon wirkt zu blass und ist im
-   Dock schwer erkennbar. Betrifft `GlassKanban/AppIcon.icon` (Icon-Composer-Dokument;
-   die Tinted-Variante fehlt ohnehin, siehe „Spätere Apple-/Mac-Ausbaustufen"). Vor dem
-   Store-Listing wichtig, das Icon prägt die erste Kaufentscheidung mit.
 3. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
    Aufwand steckt in `DesignSystem.swift`, nicht im Bedienelement.
 4. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Screenshots, Listing-Texte
