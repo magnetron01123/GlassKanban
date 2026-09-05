@@ -21,7 +21,11 @@ targets:
     type: application
     platform: macOS
     sources:
+      # Tests/ lives inside the source folder (one folder for everything the
+      # app is made of) but is compiled only into the test bundle below.
       - path: GlassKanban
+        excludes:
+          - Tests
     info:
       path: GlassKanban/Info.plist
       properties:
@@ -91,7 +95,7 @@ targets:
     # Standalone logic tests: the pure-logic sources are compiled directly
     # into the test bundle, so no app host is needed to run them.
     sources:
-      - path: GlassKanbanTests
+      - path: GlassKanban/Tests
       - path: GlassKanban/AppAppearance.swift
       - path: GlassKanban/Models.swift
       - path: GlassKanban/StatusTagger.swift

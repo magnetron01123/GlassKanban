@@ -1,6 +1,6 @@
 #!/bin/zsh
 # Contact sheet for picking a take and reading marks: one frame every 0.25 s.
-# Usage: plans/linkedin/frames.sh /tmp/take2.mov [fps=4]
+# Usage: social/linkedin/frames.sh /tmp/take2.mov [fps=4]
 # Output: /tmp/frames-<name>/f%03d.png — frame number ÷ fps = seconds into the take.
 set -euo pipefail
 IN=${1:?take.mov}; FPS=${2:-4}; NAME=$(basename "$IN" .mov); OUT=/tmp/frames-$NAME

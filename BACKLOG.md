@@ -3,7 +3,7 @@
 Alles, was bewusst **nicht** in den MVP geht. Sortiert nach Kategorie, jeweils mit kurzer
 Begründung, warum später (oder warum grundsätzlich nicht).
 
-## Was als Nächstes geht (Stand 14.08.2026)
+## Was als Nächstes geht (Stand 05.09.2026)
 
 **Der eine Blocker ist Phase 0 aus RELEASE.md** — das Apple Developer Program. Es ist
 inzwischen die Voraussetzung für jedes Vorhaben mit Entitlement (Gerätesynchronisation,
@@ -12,19 +12,21 @@ die Messungen dazu stehen dort.
 
 **Ohne Account möglich**, nach dem Bewertungsraster unten absteigend:
 
-1. **App-Icon überarbeiten (hohe Priorität, 16.08.2026)** — das aktuelle Icon wirkt zu
-   blass/nichtssagend und ist auf dem Dock/Launchpad schwer erkennbar. Betrifft
-   `GlassKanban/AppIcon.icon` (Icon-Composer-Dokument, siehe auch die offene
-   Tinted-Variante unten unter „Spätere Apple-/Mac-Ausbaustufen"). Vor dem Store-Listing
-   wichtig, da das Icon die erste Kaufentscheidung mitprägt.
-2. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
+1. **App-Icon überarbeiten (16.08.2026, Reihenfolge bestätigt 05.09.2026)** — das
+   aktuelle Icon wirkt zu blass und ist im Dock schwer erkennbar. Betrifft
+   `GlassKanban/AppIcon.icon` (Icon-Composer-Dokument; die Tinted-Variante fehlt ohnehin,
+   siehe „Spätere Apple-/Mac-Ausbaustufen"). Vor dem Store-Listing wichtig, das Icon prägt
+   die erste Kaufentscheidung mit.
+2. **Glass Kanban in der Menüleiste („Das Tablett")** — entschieden 05.09.2026, Bauplan
+   liegt in `plans/menubar-tablett.md`; Konzept unten unter „Fensterverhalten".
+3. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
    Aufwand steckt in `DesignSystem.swift`, nicht im Bedienelement.
-3. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Demo-Datensatz,
-   Screenshots, Listing-Texte. Alles außer dem Hochladen.
-4. Die Punkte der Klasse *Nutzungsalltag*.
+4. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Screenshots, Listing-Texte
+   (der Demo-Datensatz ist seit 05.09.2026 da). Alles außer dem Hochladen.
+5. Die Punkte der Klasse *Nutzungsalltag*.
 
-Alles Begonnene liegt in `main`; es gibt keine offenen Branches. Warum das so bleiben soll,
-steht als Arbeitsregel in CLAUDE.md.
+Alles Begonnene liegt in `main`. Warum das so bleiben soll, steht als Arbeitsregel in
+CLAUDE.md.
 
 ## Bewertungsraster für neue Ideen (09.08.2026)
 
@@ -61,6 +63,7 @@ das, was Apple aus Massentauglichkeit nie bauen wird: Meinungsstärke.
 | Idee | Philosophie | Wirkung | Umkehrbarkeit | Aufwand |
 |---|---|---|---|---|
 | ~~Bildschirmzuordnung~~ | erfüllt | Produktversprechen | umkehrbar | **umgesetzt 14.08.2026** |
+| Menüleiste „Das Tablett" (s. Fensterverhalten) | erfüllt | Kaufentscheidung | umkehrbar | M — **entschieden 05.09.2026**, Plan liegt |
 | Darstellungsgröße (unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
 | Ablegen aus anderen Apps (neu, unten) | erfüllt | Kaufentscheidung | gebunden | S–M |
 | Widget „eine Karte" (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Kaufentscheidung | gebunden | L |
@@ -85,10 +88,8 @@ Minimal-Desk-Setup ist das ebenso oft ein iPhone am Ladeständer wie ein zweiter
 weshalb der StandBy-Punkt unten (Abschnitt „Plattform-Erweiterung: iOS-App") inhaltlich
 hierher gehört.
 
-- **Bildschirmzuordnung — umgesetzt und verifiziert am 14.08.2026.** Verhalten steht in
-  SPEC.md („Das Board bleibt auf seinem Bildschirm"). Genau genommen war das kein Feature,
-  sondern ein Fehlerbild. Die beiden Lehren aus dem Weg dorthin stehen als Arbeitsregeln in
-  CLAUDE.md („Arbeitsweise") — sie gelten für jedes Feature, nicht nur für dieses.
+- ~~**Bildschirmzuordnung**~~ — umgesetzt 14.08.2026, SPEC.md („Das Board bleibt auf
+  seinem Bildschirm").
 - **Darstellungsgröße** — Skalierung des ganzen Boards für Leseabstände bis etwa zwei
   Meter. Der Aufwand steckt nicht im Bedienelement, sondern darin, die Tokens in
   `DesignSystem.swift` skalierbar zu machen; wer daran vorbei baut, zerlegt das
@@ -144,19 +145,12 @@ hierher gehört.
 
 ## Karten-Anzeige (später ergänzen)
 
-- **Prioritäts-Icon auf der Karte** — MVP zeigt nur Titel, Notizen-Vorschau und Fälligkeit, um
-  die Karte bewusst reduziert zu halten. Dringlichkeit bleibt trotzdem als Filter nutzbar, nur
-  nicht als Dauer-Badge auf jeder Karte.
 - **Verantwortliche-Person-Avatar auf der Karte** — hängt am Verantwortliche-Person-Filter
   (s. u.), daher zusammen verschoben.
-- **Eigene Hashtags aus den Notizen als Tag auf der Karte anzeigen** — wer Erinnerungen schon
-  mit eigenen Hashtags kategorisiert (z. B. `#projektx`), sieht die aktuell nur als rohen Text
-  in der Notizen-Vorschau. **Seit 13.08.2026 einfacher geworden:** Die App filtert keine
-  Hashtags mehr heraus und reserviert auch keinen für sich — das damalige Hindernis
-  (Kollision mit dem Status-Tag) ist mit dem Formwechsel weggefallen. Vorschlag: eigene Hashtags erkennen und als kleine
-  Tag-Chips auf der Karte anzeigen statt/zusätzlich zur reinen Notizen-Vorschau. Bewusst nicht
-  im MVP: Karte soll reduziert bleiben. Die frühere Begründung (Kollision mit dem internen
-  Status-Tag) gilt seit dem Formwechsel nicht mehr; offen bleibt nur die Darstellung bei
+- **Eigene Hashtags aus den Notizen als Chips auf der Karte** — wer Erinnerungen mit eigenen
+  Hashtags kategorisiert (`#projektx`), sieht sie heute nur als Text in der Notizen-Vorschau.
+  Seit 13.08.2026 reserviert die App keinen Hashtag mehr für sich, das frühere Hindernis ist
+  weg. Zurückgestellt, weil die Karte reduziert bleiben soll; offen ist die Darstellung bei
   mehreren Tags.
 
 ## Filter
@@ -183,13 +177,12 @@ hierher gehört.
   anlegen und Karten zuordnen können (z. B. nach Projekt oder eigener Kategorie), quer über
   die Spalten. Deutlich größerer Scope als die "Heute-Absatz"-Trennung oben (die ist
   automatisch und ungestaltbar, nur im Backlog) — hier braucht es Verwaltungs-UI (anlegen,
-  umbenennen, löschen) und eine Datenquelle für die Zuordnung. Offene Frage: gleicher
-  ein zweites Feld im eigenen Spaltenspeicher (`columns.json`) wäre heute der naheliegende
-  Weg — die Spalten selbst benutzen seit 13.08.2026 keinen Hashtag mehr.
+  umbenennen, löschen) und eine Datenquelle für die Zuordnung — ein zweites Feld im eigenen
+  Spaltenspeicher (`columns.json`) wäre der naheliegende Weg.
 - **Mehrere Boards** — MVP ist bewusst ein einzelnes Board.
 - **Board-/Workflow-Designer (Name noch offen)** — Idee (26.07.2026): Nutzer:innen können ihr
   Board individualisieren, statt nur den MVP-Standard mit vier festen Spalten zu bekommen.
-  Vorstellung: die mittleren Spalten (aktuell "Ansteuern"/"In Bearbeitung" o. ä.) lassen sich
+  Vorstellung: die mittleren Spalten („Als Nächstes"/„In Bearbeitung") lassen sich
   umbenennen, und pro Spalte lässt sich ein eigenes WIP-Limit setzen statt nur des fest
   eingebauten Limits für "In Bearbeitung". **Backlog und Erledigt bleiben davon ausgenommen**
   — beide haben Sonderrollen im System (Backlog ist die Zulaufspalte ohne Limit, Erledigt hat
@@ -205,62 +198,27 @@ hierher gehört.
 
 ## Wiederkehrende Aufgaben (Reminders-Wiederholung)
 
-- ~~**Verhalten wiederkehrender Erinnerungen beim Abhaken klären**~~ — am 08.08.2026 gegen
-  echtes EventKit gemessen und beantwortet, ausgelöst von einem echten Fehler: ein
-  wiederkehrendes Ticket stand nach dem Erledigen in „Als Nächstes". Antworten auf die drei
-  offenen Fragen: (1) Der erledigte Durchgang wird als **eigene, abgelöste** Erinnerung
-  abgelegt, die Serie läuft **unter derselben ID** mit dem nächsten Termin weiter — der
-  „Erledigt"-Moment ist also sichtbar und dauerhaft, nur nicht an der ID, die das Board
-  gezogen hat. (2) Der Status-Hashtag wurde sauber entfernt; die zurückkehrende Serie
-  landet korrekt im Backlog, auch nach 90 s Beobachtung ohne iCloud-Rückschreiber (seit
-  13.08.2026 über den eigenen Speicher statt über den Tag — Ergebnis unverändert). (3) Die
-  Erledigung zählt zum Streak (echtes `completionDate`), fließt aber bewusst nicht in die
-  Durchlaufzeit ein — siehe SPEC.md, „Durchlaufzeit bewusst gefenstert".
-  Der eigentliche Fehler lag anderswo: Weil die ID nach dem Erledigen den *nächsten*
-  Durchgang meint, schrieben wiedergespielte Undo-Schritte Status-Tags auf ungezogene
-  Arbeit. Regel und Behebung stehen in SPEC.md, „Wiederkehrende Aufgaben beim Erledigen".
-  **Verworfen wurde dabei**, das Erledigen einer Wiederholung „echt" rückgängig zu machen
-  (erledigten Durchgang löschen, Fälligkeit der Serie zurückdrehen, Tag wiederherstellen):
-  Das setzt voraus, dass die App die Wiederholungsregel korrekt rückwärts rechnet („jeden
-  3. Dienstag") und einen Datensatz löscht, den sie nie angelegt hat — ein Rateschritt mit
-  Datenverlust als Fehlerfall, für einen Sonderfall, den ein Satz Text ehrlich erklärt.
-  **Nachtrag 09.08.2026:** Antwort (2) galt nur fürs Erledigen *in der App*. Extern
-  abgehakt (iPhone, geteilte Liste) bleibt der Tag auf der weiterlaufenden Serie stehen —
-  gemessen und behoben, siehe SPEC.md „Extern abgehakt" (`RecurringTagRelease`).
-- ~~**Restlücke der Tag-Freigabe: Abhaken bei geschlossener App**~~ (09.08.2026, noch am
-  selben Tag geschlossen) — die Freigabe-Regel braucht den vorigen Refresh als Beweis,
-  dass niemand frisch gezogen hat (Bedingung 2). Statt beim Kaltstart aus Zeitstempeln zu
-  raten (das hieße, ohne Beweis Karten zu verschieben — dieselbe Abwägung, an der schon
-  das „Rückwärtsrechnen der Wiederholungsregel" oben gescheitert ist), **überlebt der
-  Beweis jetzt den Neustart**: `RecurringTagRelease.Memory` persistiert am Ende jedes
-  Refreshs die geladenen IDs und die getaggten Karten und seedet damit den ersten Refresh
-  nach dem Start. Positiv- und Negativfall live gemessen: getaggte Serie extern abgehakt bei
-  geschlossener App → Tag im ersten Refresh nach dem Neustart freigegeben; Tag erst bei
-  geschlossener App gesetzt, dann extern abgehakt → Tag bleibt stehen (kein Beweis). Verbleibende,
-  kleinere Restlücke (Hand-getippter Tag auf anderem Gerät nach externem Abhaken) steht in
-  SPEC.md, „Extern abgehakt".
-- ~~**Backlog-Sichtbarkeit wiederkehrender, noch nicht fälliger Karten**~~ — umgesetzt und am
-  27.07.2026 grundlegend neu entschieden: solche Karten werden **nicht mehr ausgeblendet**,
-  sondern sinken ans Ende des Backlogs, wo der Falz schneidet („N noch nicht fällig"). Grund:
-  Ausblenden ist ein Push-Konzept und verhinderte genau das Vorziehen, für das ein Kanban-Board
-  da ist. Filterzeile, Einstellung und Leer-Zustand dazu sind entfallen. Ein Schalter „Noch
-  nicht Fälliges einklappen" (Einstellungen → Backlog, Standard an) wählt seit dem 27.07.2026
-  zwischen zwei Falz-Schnitten — nicht mehr zwischen Sehen und Nicht-Sehen. Siehe SPEC.md,
-  „Reifegrad statt Sichtbarkeit".
+- ~~**Verhalten wiederkehrender Erinnerungen beim Abhaken**~~ — am 08.08.2026 gegen echtes
+  EventKit gemessen und gebaut; Regel in SPEC.md („Wiederkehrende Aufgaben beim Erledigen").
+  **Verworfen dabei:** das Erledigen einer Wiederholung „echt" rückgängig zu machen
+  (Durchgang löschen, Fälligkeit der Serie zurückdrehen). Das setzt voraus, dass die App die
+  Wiederholungsregel rückwärts rechnet („jeden 3. Dienstag") und einen Datensatz löscht, den
+  sie nie angelegt hat — ein Rateschritt mit Datenverlust als Fehlerfall, für einen
+  Sonderfall, den ein Satz Text ehrlich erklärt.
+- ~~**Extern abgehakte, gezogene Serie**~~ — 09.08.2026 gemessen und gebaut, samt
+  Neustart-Lücke; SPEC.md („Extern abgehakt", `RecurringTagRelease`).
+- ~~**Sichtbarkeit noch nicht fälliger wiederkehrender Karten**~~ — 27.07.2026 neu
+  entschieden: nicht ausblenden, sondern ans Spaltenende sinken lassen (Ausblenden ist ein
+  Push-Konzept und verhinderte das Vorziehen, für das ein Kanban-Board da ist); SPEC.md
+  („Reifegrad statt Sichtbarkeit").
 
 ## Fremde Schreiber auf denselben Daten (10.08.2026)
 
-Entstanden aus einem echten Fehlerbild: Ein Kalender-Client mit eigener Datenbank schob alle
-19 bis 55 Minuten einen alten Datenstand zurück (erste Vermutung war eine selbstgebaute
-Hausautomatisierungs-Brücke — per TCC geprüft und verworfen, siehe CONCEPT.md). Regel und
-Messung stehen in SPEC.md („Eine Antwort je Zustand"), die Herleitung in CONCEPT.md. Was
-dabei **geprüft und verworfen** wurde — nicht erneut vorschlagen, ohne dass der Nutzer das
-Thema selbst öffnet:
+Regel in SPEC.md („Wenn andere Programme dieselben Erinnerungen schreiben"), Herleitung und
+die dort verworfenen Alternativen (Hinweis an den Nutzer, eigener `#backlog`-Tag) in
+CONCEPT.md („Das Board ist einer von mehreren Schreibern"). Hier nur, was sonst nirgends
+steht — nicht erneut vorschlagen, ohne dass der Nutzer das Thema selbst öffnet:
 
-- **Hinweis an den Nutzer, wenn das Board nachgibt** — verworfen am 10.08.2026 auf
-  ausdrückliche Nutzerentscheidung. Der Nutzer soll von der Spaltenlogik nichts mitbekommen;
-  ein Hinweis auf Datenmechanik zerstört die UX der ruhigen Dauerfläche. Begründung in
-  CONCEPT.md.
 - **Rückzug mit wachsendem Backoff und „Aufgeben"-Zustand** — verworfen: Das Phänomen wird
   in Perioden des fremden Schreibers gemessen (Dutzende Minuten), nicht in Sekunden; eine
   Wiederholungsleiter verbraucht sich, bevor der erste Rückschieber überhaupt eintrifft.
@@ -272,9 +230,6 @@ Thema selbst öffnet:
   verteidigte Auslöser — der frisch abgelöste erledigte Durchgang — ist am 13.08.2026
   selbst durch eine stehende Bedingung ersetzt worden; die Ablehnung dieser Idee gilt
   unverändert.)
-- **Eigener `#backlog`-Tag** — verworfen, siehe CONCEPT.md: verteidigt die Entscheidung
-  nicht, kostet aber sichtbaren Text in fremden Notizen. (Seit 13.08.2026 ohnehin
-  gegenstandslos — es gibt keine Tags mehr.)
 - **Eine Obergrenze für Antworten je Karte und Stunde** — geprüft, **bewusst offen
   gelassen** (10.08.2026, nach einer Messung am laufenden Board). Der dokumentierte
   Zehn-Minuten-Takt greift für den Status-Tag nicht: Sechs Rückschieber im
@@ -292,81 +247,13 @@ Thema selbst öffnet:
   Reset würde die gerade gehaltenen `openRecurringReminders` mitten im Flug ungültig
   machen; alle Messungen mit frischen Prozessen blieben ohnehin konsistent, ein
   veralteter EventKit-Cache war nie die Ursache.
-- **Status-Tags optional in der Systemsprache schreiben** — verworfen am 10.08.2026. Ein
-  Hashtag ist ein Datenformat, kein Oberflächentext: In geteilten Listen träfen zwei
-  Sprachen aufeinander, Umlaute sind über fremde Systeme ein Kodierungsrisiko (die
-  `ae`-Ersatzformen der Legacy-Tags sind der gelebte Beweis), und jede Umstellung löste
-  einen Migrationslauf über fremde Daten aus. (Überholt am 13.08.2026: Die App schreibt
-  überhaupt keine Tags mehr, und gelesen werden sie nur noch von der einmaligen Migration.
-  Die Ablehnung bleibt als Begründung stehen, warum ein sichtbares Datenformat nie
-  lokalisiert werden sollte.)
 
 ## Formwechsel: Status verlässt die Notizen (13.08.2026 — umgesetzt)
 
-**Umgesetzt am 13.08.2026.** Gebautes Verhalten in SPEC.md („Spalten = eigener Speicher
-der App", „Einmalige Migration der alten Hashtags"), Herleitung in CONCEPT.md. Der
-Abschnitt bleibt als Begründungsspeicher stehen — vor allem die verworfenen Varianten
-unten, die gegen einen Rückbau schützen.
-
-Zwei Dinge kamen beim Bauen dazu, die hier nicht standen: Der Speicher gehört *einem*
-Mac (zwei Rechner führen getrennte Spalten — dieselbe Eigenschaft, die fremde Programme
-aussperrt), und im Editor musste die Tag-Filterung raus, weil sie sonst beim Speichern
-fremden Notiztext auf schreibgeschützten Listen gelöscht hätte.
-
-**Ursprüngliche Planungsnotiz (13.08.2026):** Entstanden aus dem
-Geisterkarten-Komplex (PR #46): Solange der Spaltenstatus als Hashtag in den Notizen wohnt,
-kann jedes Programm mit Schreibrecht auf Reminders eine Karte bewegen. Die seit 13.08.
-stehende Abwehr (Zustandsregel, Ledger-Kette) deckt alle gemessenen Pfade ab — aber nur ein
-Status, den kein fremdes Programm erreichen kann, macht Spaltensprünge **strukturell
-unmöglich**. Herleitung und Prinzipien-Abwägung in CONCEPT.md („Geplanter Formwechsel").
-
-**Zielbild:**
-
-- Status (`next`/`inProgress`) liegt in einem app-eigenen, lokalen Speicher je
-  Erinnerungs-ID (Application Support, gebundelt und tolerant gelesen wie
-  `tagReleaseMemory`). Backlog bleibt „kein Eintrag", Erledigt bleibt `isCompleted` —
-  gespeichert ist also nur, welche ein bis drei Karten gerade gezogen sind (das WIP-Limit
-  begrenzt genau diese Menge). Unbekannte oder verwaiste IDs fallen nach Backlog — die
-  sichere Richtung, die die App überall wählt.
-- Die Notizen werden reiner Nutzerinhalt. Die App schreibt nie wieder in ein Feld, das
-  auch anderen gehört (einzige Ausnahme bleibt `isCompleted` beim Erledigen).
-- Die **stehende Freigaberegel bleibt**, nur lokal: Ein externes Abhaken lässt den lokalen
-  Status der Serie zurück wie heute den Tag — jüngste Completion nach letztem Pull ⇒
-  lokaler Status wird gelöscht. Ohne Reminders-Schreibung, ohne Zaun-Frage, ohne fremde
-  Interferenz.
-- Der `CorrectionLedger` bleibt unverändert für Titel, Notiztext, URL und Fälligkeit —
-  der Formwechsel löst den Spaltensprung, **nicht den Notizverlust** (der Notiztext bleibt
-  in Reminders und damit im Zugriff jedes Schreibers; das löst nur das Abstellen der
-  Quelle, siehe „Fremde Schreiber").
-
-**Was ersatzlos stirbt:** das Schreiben von Status-Tags, die Tag-Hygiene, die
-Wortgrenzen-Erkennung als sicherheitskritische Stelle, die Notes-Richtungsregel des
-Ledgers für Tags — ein erheblicher Teil der kompliziertesten Logik der App existiert nur,
-weil der Status in fremdem Territorium wohnt.
-
-**Was der Nutzer verliert (der Preis, ausdrücklich):** der mobile Pull — unterwegs
-`#next` in die Reminders-Notizen tippen zieht dann nichts mehr. **Vorbedingung vor dem
-Bau: der Nutzer bestätigt, dass er diesen Weg real nicht nutzt.** Die spätere iOS-App
-(unten) bräuchte eigene Status-Synchronisation (CloudKit/iCloud-KV) statt sie über
-Reminders geschenkt zu bekommen.
-
-**Messungen vor dem Bau** (Projektregel: erst messen, dann bauen):
-
-1. Stabilität von `calendarItemIdentifier` über iCloud-Resync, Geräteneustart,
-   Listen-Umbenennung und **Listenwechsel** einer Erinnerung (bekannt riskant — Apple
-   dokumentiert Wechsel als möglichen ID-Bruch). Fallrichtung bei Bruch ist Backlog,
-   kostet einen Zug; gemessen werden muss, *wie oft* das praktisch eintritt.
-2. Verhalten beim Weiterrollen einer Serie (ID bleibt laut Messung vom 08.08. erhalten —
-   gegenprüfen, dass das auch über einen Resync gilt).
-
-**Migrationsplan (einmalig, beim ersten Start des neuen Builds):**
-
-1. Bestehende Tags lesen (kanonische und Legacy-Formen) und in den lokalen Speicher
-   importieren.
-2. Danach ein einmaliger, getakteter Aufräumlauf, der die Tags aus den Notizen entfernt
-   (nur beschreibbare Listen; dieselbe Rücksicht wie jede Korrektur heute). Ab dann werden
-   Tags weder geschrieben noch gelesen.
-3. Kein Rollback-Pfad nötig: Der alte Build liest Notizen ohne Tags schlicht als Backlog.
+Umgesetzt am 13.08.2026. Gebautes Verhalten in SPEC.md („Spalten = eigener Speicher der
+App", „Einmalige Migration der alten Hashtags"), Herleitung und Preis in CONCEPT.md
+(„Spalten gehören dem Board"). Hier bleiben nur die verworfenen Zwischenformen, die gegen
+einen Rückbau schützen.
 
 **Geprüft und verworfen (13.08.2026) — nicht erneut vorschlagen:**
 
@@ -391,56 +278,13 @@ Reminders geschenkt zu bekommen.
 - **Backup/Export des Pull-Zustands** — verworfen als unnötig: Der maximale Verlust ist
   der Inhalt zweier Arbeitsspalten unter WIP-Limit, wiederhergestellt in zwei Zügen.
 
-## Undo bei Wiederholungen (10.08.2026)
-
-Verworfen beim Umbau des Replay-Zauns auf eine Reihenfolge (Regel in SPEC.md,
-„Wiederkehrende Aufgaben beim Erledigen"):
-
-- **Undo-Einträge mit einem `Date` statt einer Ordnung stempeln** — verworfen: Eine Dauer
-  müsste gegen Sync-Latenz und Arbeitstempo kalibriert werden und liegt auf beiden Seiten
-  des gewählten Werts falsch; Zeitumstellung, Uhrabweichung und ein zurückgespieltes
-  Einstellungsfile brechen sie zusätzlich. Vor allem ist die Fehlerrichtung falsch: Ein
-  Zeitfenster läuft still ab und lässt den Schreibvorgang landen, eine Ordnung lehnt im
-  Zweifel ab.
-- **Den Undo-Stapel nach einer Wiederholungs-Erledigung abschalten** — verworfen (stand
-  bisher nur im Code-Kommentar): Der Eintrag muss auf dem Stapel bleiben und von der
-  Erklärung verbraucht werden, sonst greift das *nächste* ⌘Z in eine Änderung, die der
-  Nutzer behalten wollte.
-- **Den Zaun an den Aufrufstellen prüfen statt an der Registrierung** — verworfen: Genau so
-  war es, und vier von sechs Schreibpfaden prüften nicht. Eine Invariante, die jeder neue
-  Pfad erneut befolgen muss, ist keine.
-
-## Zuordnung von Durchgang und Serie (10.08.2026)
-
-Verworfen beim Umstieg von Titel auf Anlegedatum (Messung und Herleitung in CONCEPT.md, Regel in
-SPEC.md):
-
-- **Ein Toleranzfenster auf das Anlegedatum** („innerhalb von N Sekunden") — verworfen: Das
-  machte aus einer Identität eine Ähnlichkeit. Gemessen trennen zwei in einem Rutsch
-  angelegte Aufgaben nur Mikrosekunden; sie würden einander zu Durchgängen erklären.
-  Gleichheit oder nichts, Mehrdeutigkeit fällt zu „kein Beweis".
-- **Den Titel als zusätzliche UND-Bedingung behalten** — verworfen: Das ließe den
-  Umbenennen-Fall offen (Serie nach dem Erledigen umbenannt → Schutz weg) und wäre damit
-  strikt schlechter als das Anlegedatum allein.
-- **`calendarItemExternalIdentifier` als Identität** — verworfen, gemessen: Die abgelöste
-  Kopie bekommt eine eigene, und auf lokalen Listen fehlt das Feld ganz.
-- **Für die Tag-Freigabe nur unter den getaggten Serien auf Eindeutigkeit prüfen** —
-  verworfen: Diese eine Regel bewegt eine Karte, ohne dass jemand hinsieht. Sie prüft
-  deshalb unter *allen* lebenden Serien der Liste; ein zusätzlicher Zweifel kostet dort
-  einen Zug, ein übersehener eine gezogene Karte.
-
-Akzeptierte Restlücke: Trügen zwei Serien einer Liste bitgenau dasselbe Anlegedatum, wäre
-kein Durchgang zuzuordnen. Gemessen tritt das nicht ein — selbst fünf in einem Commit
-geschriebene Erinnerungen kamen mit verschiedenen Anlegedaten heraus —, und der Ausgang
-wäre ohnehin die sichere Richtung: kein Beweis, also keine Freigabe und kein verweigerter
-Zug, sondern nur ein Tag, der einen Zug länger stehen bleibt.
-
 ## Fensterverhalten
 
-- **Menüleisten-Modus / Always-on-Top** — MVP nutzt ein normales Fenster. Zur
-  Menüleiste siehe den ausgearbeiteten Punkt direkt darunter.
+- **Always-on-Top** — nicht vorgesehen, das Board ist ein normales Fenster (CONCEPT.md,
+  „Architektur").
 - **Glass Kanban in der Menüleiste — aber die Bedienung fühlt sich an wie Karten
-  verschieben (Idee 23.08.2026, Konzept 05.09.2026)** — Der Reiz liegt ausdrücklich
+  verschieben (Idee 23.08.2026, entschieden 05.09.2026, Bauplan
+  `plans/menubar-tablett.md`)** — Der Reiz liegt ausdrücklich
   **nicht** im Zugriffsweg, sondern in der Bedienung: Was aus der Menüleiste kommt, soll
   die Geste des Boards tragen — ziehen, ablegen, einrasten — statt eine Textliste mit
   „Verschieben nach"-Untermenüs zu sein. Ein solches Untermenü wäre die Rückfallebene, und
@@ -519,47 +363,18 @@ Zug, sondern nur ein Tag, der einen Zug länger stehen bleibt.
   die vollständige Geste — aber es ist ein zweites Board, nur flacher. Bleibt als
   Technik-Referenz für den Rückfall oben stehen, nicht als Gestaltung.
 
-  **Die Einstellung:** In „Allgemein" ein Auswahlfeld
-  *Anzeigen in* — **Dock** (heutiges Verhalten, Vorgabe: ein Update ändert nichts) ·
-  **Menüleiste** · **Dock und Menüleiste**. Fußnote benennt, was sonst überrascht: „Ohne
-  Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist." Technisch
-  `NSApp.setActivationPolicy(.accessory)` für „Menüleiste" und `MenuBarExtra(isInserted:)`
-  für das Symbol; als `StoredSetting` mit Geltung `.thisDevice` — wo die App sichtbar ist,
-  gehört dem Rechner, nicht dem Nutzer, wie das Erscheinungsbild. Bei „Menüleiste"
-  bekommt das Element ein „Beenden" und „Board öffnen"; ohne Dock gibt es sonst keinen
-  Weg zu beidem. Ein Umschalten der Activation Policy zur Laufzeit lässt das Dock-Symbol
-  kurz springen — gemessen wird, ob das ein Neustart-Hinweis sein muss.
+  **Die Einstellung:** In „Allgemein" ein Auswahlfeld *Anzeigen in* — **Dock** (heutiges
+  Verhalten, Vorgabe) · **Menüleiste** · **Dock und Menüleiste**; Geltung `.thisDevice`,
+  denn wo die App sichtbar ist, gehört dem Rechner. Bei „Menüleiste" bekommt das Element
+  „Beenden" und „Board öffnen"; ohne Dock gibt es sonst keinen Weg zu beidem.
 
-  **Was bewusst nicht drin ist:** Streak-Pille, Statistik, Suche, „+", Filter (Chrome
-  bleibt im Fenster). Ein Menü-Modus mit Untermenüs (Rückfallebene ohne Reiz). Eine Zahl
-  am Symbol. Volle Karten mit Notizen im Element (das wäre ein kleineres Board, und ein
-  kleineres Board ist das Widget-Missverständnis, siehe dort).
-  **Aus dem Review des Bauplans (05.09.2026) dazugekommen:** Erledigt-Karten sind im
-  Tablett nicht ziehbar — der Rückweg einer Serie kann scheitern („Not Restored"), und
-  diese Antwort gehört dem Board, nicht einem Popover. Das Tablett zeigt seine Spuren
-  **ungefiltert**: Es hat kein Chrome, das eine Suche erklären könnte, also darf es
-  keine verbergen. Kein ⌘Z im Tablett — die Hand, die zog, zieht zurück. Die
-  WIP-Frage steht im Tablett **inline in der Mulde**, nicht als Alert: Ein Alert nähme
-  dem Popover den Fokus und schlösse es. Im Modus „Menüleiste" öffnet das Board beim
-  Start nicht von selbst; wer das Symbol per ⌘ aus der Leiste zieht, landet wieder bei
-  „Dock" — die App ist nie ohne Ort.
-  **Leitsatz (Nutzer, 05.09.2026): Tablett und Board so nah beieinander wie möglich,
-  wo es sinnvoll und vergleichbar ist.** Abweichungen nur aus Platz oder Technik, jede
-  benannt (Tabelle im Bauplan). Daraus: Der Kopf jeder Mulde ist der Board-Kopf — ein
-  Zähl-Chip, teal bei Überschreitung, kein „heute N" (das Board hat den Zusatz
-  abgelegt), kein eigener Limit-Chip (den zeigt das Mockup, das Board nicht). Die
-  Erledigt-Ablage nimmt das 7-Tage-Fenster des Boards und dessen Leer-Regel („Nur
-  Fertiges zählt"), nicht ein eigenes „heute". Beide Arbeitsmulden sind gleich hoch —
-  Mulden, die mit dem Inhalt atmen, sind für das Board verworfen und bleiben es hier.
-  Die WIP-Frage hält das Tablett, bis sie beantwortet ist; nichts wird still
-  entschieden. Der Pull-Umriss erscheint in Board und Tablett am selben Platz — eine
-  Einladung, zweimal gezeigt, nicht zwei.
-  **Aus dem Doku-Abgleich (05.09.2026):** „Nur Ziehen" hielt nicht — SPEC verlangt, dass
-  Maus, Kontextmenü und VoiceOver gleich behandelt werden und die WIP-Frage sich bei
-  jeder Route stellt. Das Tablett bekommt deshalb dieselben drei Wege wie eine
-  Board-Karte (Drag, „Verschieben nach", VoiceOver-Aktion), alle über `move()`; nur
-  Löschen und Editor bleiben dem Board. Der Kopf-Tooltip kommt mit (Chrome erklärt
-  Regeln). Erledigt-Titel in voller Farbe, wie SPEC es festlegt.
+  **Was bewusst nicht drin ist:** Streak-Pille, Statistik, Suche, „+", Filter, ⌘Z, Löschen,
+  Editor (Chrome bleibt im Fenster). Ein Menü-Modus mit Untermenüs. Eine Zahl am Symbol.
+  Volle Karten mit Notizen (das wäre ein kleineres Board — das Widget-Missverständnis).
+  **Leitsatz (Nutzer, 05.09.2026): Tablett und Board so nah beieinander wie möglich, wo es
+  sinnvoll und vergleichbar ist.** Jede Abweichung aus Platz oder Technik ist im Bauplan
+  benannt (Abweichungstabelle dort); die Befunde aus Review und Doku-Abgleich stehen
+  ebenfalls dort, nicht hier.
 
   **Spannung, bewusst offen (Minimalismus):** Menüleiste, Widget und Fenster wären drei
   Orte für dieselbe Sache. Nicht alle drei bauen — vor dem Widget entscheiden, ob die
@@ -568,18 +383,9 @@ Zug, sondern nur ein Tag, der einen Zug länger stehen bleibt.
 
 ## Bewegung / Animation
 
-### Grünes Kopier-Plus am Zeiger beim Ziehen (05.09.2026, beim LinkedIn-Video gefunden — **umgesetzt** am selben Tag, Branch `feature/drag-move-operation`)
-
-Während eine Karte gezogen wird, hängt macOS das grüne „+"-Badge an den Zeiger — das
-Standardzeichen für *Kopieren*. `.draggable(card.id)` mit `.dropDestination(for: String.self)`
-(ColumnView.swift) liefert SwiftUI kein Mittel, die Operation als *Verschieben* zu deklarieren.
-Semantisch ist das falsch: Ein Kanban-Zug verschiebt, er kopiert nicht (Prinzip 3, Pull), und es
-ist das einzige Element im Bild, das etwas anderes sagt als die App tut. Weg über
-`onDrop(of:delegate:)` mit `DropProposal(operation: .move)` — Verhaltensänderung an der
-Drop-Logik. Davids Entscheidung 05.09.2026: machen. Umgesetzt als `LaneDropDelegate` in ColumnView.swift; Nachweis per Zeiger-Screenshot im Messprotokoll des Video-Plans.
-
-
-
+- ~~**Grünes Kopier-Plus am Zeiger beim Ziehen**~~ — 05.09.2026 beim LinkedIn-Video
+  gefunden und am selben Tag behoben: Der Zug ist gegenüber macOS als *Verschieben*
+  deklariert (SPEC.md, „Interaktion"). Ein Kanban-Zug verschiebt, er kopiert nicht.
 - **Ausgebautere, aber weiterhin zurückhaltende Übergänge** — über die MVP-Basis (dezente
   Animation bei Spaltenwechsel/Live-Update) hinaus ein eigenes Bewegungs-Vokabular, das den
   Kanban-Fluss-Gedanken spürbar macht: Karten sollen beim Spaltenwechsel wirken, als würden
@@ -669,9 +475,8 @@ nicht möglich)
   auch in einem StandBy-Stack im Querformat funktioniert — nicht als verkleinertes Board.
 - **Interaktives Widget (App Intents)** — Idee (27.07.2026), baut auf dem Widget-Punkt oben
   auf: Seit iOS 17/macOS Sonoma können Widgets Buttons enthalten, die ohne App-Start etwas
-  auslösen. Für ein bewusst überwiegend read-only Board wäre die einzig stimmige Aktion die,
-  die es auch in der App bereits gibt — eine Karte direkt aus dem Widget nach „Erledigt"
-  abhaken. Kein neues Bedienkonzept, nur derselbe eine erlaubte Schreibzugriff an einem
+  auslösen. Die einzig stimmige Aktion wäre die, die es auch auf dem Board gibt — eine Karte
+  direkt aus dem Widget nach „Erledigt" abhaken. Kein neues Bedienkonzept, nur derselbe eine erlaubte Schreibzugriff an einem
   zweiten Ort.
 - **Apple-Watch-Komplikation** — Idee (27.07.2026): Streak-Flamme oder WIP-Auslastung als
   Zifferblatt-Komplikation. Reine Anzeige aus bereits vorhandenen, rein lesend berechneten
@@ -766,8 +571,8 @@ Macs. Bis dahin gilt der Vorbehalt.
    **Betriebssystem** selbst; einen Umweg gibt es nicht. Phase D ist damit hart an Phase 0
    gebunden, und zwar belegt statt vermutet.
 
-Die Messwerkzeuge liegen im Scratchpad der Sitzung und sind bei Bedarf neu zu erzeugen;
-sie geben nur Aggregate aus und lesen nie Titel.
+Die Messwerkzeuge wurden nicht aufbewahrt und sind bei Bedarf neu zu schreiben; sie dürfen
+nur Aggregate ausgeben und nie Titel lesen.
 
 ### Was wohin gehört
 

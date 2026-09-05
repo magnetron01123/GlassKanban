@@ -63,81 +63,17 @@ hängt an diesem Punkt.
 
 ## Phase 1 — Lokalisierung DE + EN (der einzige harte technische Blocker)
 
-Ist-Zustand (Audit): keinerlei Lokalisierungs-Infrastruktur; ~214 deutsche Literale in
-16 Dateien (StatsPopover 31, CardView 31, TicketEditSheet 28, Models 25,
-RemindersStore 22, ColumnView 19, BoardView 14, Rest kleiner), davon 17 mit
-Interpolation; `CFBundleDevelopmentRegion: de` in project.yml.
+Erledigt am 07.08.2026: Englisch ist Entwicklungssprache (Quell-Literale im Code),
+Deutsch vollwertige Lokalisierung in `Localizable.xcstrings`/`InfoPlist.xcstrings`;
+`project.yml` trägt `developmentLanguage: en` und `CFBundleLocalizations: [en, de]`. Das
+gebaute Verhalten steht in SPEC.md („App"), die Arbeitsregeln für den Katalog samt der
+beiden Fehlerbilder, aus denen `scripts/check-localization.py` entstand, in CLAUDE.md
+(„Localizable.xcstrings").
 
-**Architektur:** Englisch wird Entwicklungssprache (Quell-Literale im Code →
-englisch), Deutsch wird vollwertige Lokalisierung im String Catalog. Begründung: Die
-Fallback-Sprache für alle nicht übersetzten Märkte muss Englisch sein.
-
-- [x] `Localizable.xcstrings` + `InfoPlist.xcstrings` angelegt; project.yml:
-      `developmentLanguage: en`, `CFBundleDevelopmentRegion: en`,
-      `CFBundleLocalizations: [en, de]` (07.08.2026 — Projekt wird von XcodeGen
-      generiert, Änderungen nur in project.yml)
-- [x] Alle 16 Dateien migriert (07.08.2026); Nicht-View-Strings (Fehlertitel in
-      RemindersStore, Anzeigenamen in Models) explizit über `String(localized:)`,
-      View-Captions über `LocalizedStringKey`-Parameter (`fieldCaption`, `factRow`,
-      `filterRow`, `row`)
-- [x] Deutsche Übersetzungen im Katalog — 158 Einträge, die heutigen Texte sind die
-      Übersetzung (07.08.2026)
-- [x] `GermanPlural` (Models.swift) ersatzlos aufgelöst → echte
-      `variations.plural`-Einträge im Katalog für die sieben Strings, die es
-      grammatisch brauchen (Karten/Tage/Aufgaben/Listen/Streak-Sätze); die übrigen
-      interpolierten Strings sind strukturell nie Singular oder inhaltlich invariant
-      (07.08.2026)
-- [x] Tests umgestellt: `GermanPluralTests` entfernt, `StatusTaggerTests` auf
-      `#next`/`#inprogress` als Kanonik + deutsche Formen als Legacy umgeschrieben;
-      volle Suite grün bis auf zwei vorbestehende, unabhängige `BacklogFoldTests`
-      (Datumsfixtur, an anderer Stelle zur Behebung vorgemerkt) (07.08.2026)
-- [x] **Überholt am 13.08.2026:** Die Spalte steht seither nicht mehr in den Notizen,
-      sondern in `columns.json` (SPEC.md, „Spalten = eigener Speicher der App"). Die
-      Tag-Formen unten sind nur noch Lesestoff der einmaligen Migration — der Punkt
-      bleibt als Historie stehen.
-- [x] **Tag-Migration:** kanonisch `#next`/`#inprogress`; `#alsnächstes`/
-      `#inbearbeitung` (+ Umlaut-/Kurzvarianten) in der Legacy-Migrationsliste in
-      StatusTagger.swift (07.08.2026)
-- [x] SPEC.md nachgezogen: Hashtag-Tabelle, Lese-/Schreibregeln, Migrationstabelle
-      (07.08.2026)
-
-**Verifikation Phase 1 — abgeschlossen 07.08.2026:**
-
-- Build und Testsuite grün (188 Tests, `xcodebuild … test`, derivedDataPath
-  außerhalb iCloud)
-- **Katalog skriptgeprüft**, nicht per Augenmaß — inzwischen versioniert als
-  `scripts/check-localization.py`: Vollständigkeit gegen jede
-  `String(localized:)`/`LocalizedStringKey`-Stelle, `en`+`de` im Zustand
-  `translated`, und **Pluralregel für jeden Zähler**. Der erste Durchgang fand
-  vier fehlende Schlüssel (`Notes`, `Refresh`, `Yesterday` und eine
-  Anführungszeichen-Abweichung, gerade `"` gegen typografische `“ ”`).
-- **Nachträglich beim Review der englischen Texte gefunden (08.08.2026):** Der
-  erste Prüflauf prüfte nur *Vollständigkeit*, nicht *Korrektheit* — und dabei
-  waren beim Auflösen von `GermanPlural` **fünf Pluralregeln verloren
-  gegangen**. „1 Aufgaben gerade in Bearbeitung", „Folge: 1 Tage" und drei
-  weitere waren zurück, also ein Fehlerbild, das im Juli 2026 schon einmal behoben
-  hatte; die Streak-Pille stand beim Review selbst auf 1. Behoben durch echte
-  `variations.plural` in beiden Sprachen (bzw. einen zahl-neutral formulierten
-  Satz), und die Plural-Prüfung ist seither Teil des Skripts. **Lehre:
-  Vollständigkeit sagt nichts über Korrektheit** — eine Prüfung, die nur zählt,
-  ob ein Schlüssel existiert, übersieht, ob er das Richtige sagt.
-- **Beide Sprachen live durchgeklickt** (`-AppleLanguages (en)`/`(de)`): Board,
-  Karten-Editor, Finden-Popover, Statistik in beiden Registern, Einstellungen in
-  beiden Reitern, Board-Menü. Keine Textabschneidung, kein Umbruch, kein
-  gesprengtes Layout — auch nicht an den drei Fakten-Bedienelementen mit fester
-  180-pt-Breite, an den einzeiligen Leer-Sätzen oder an der Einstellungs-Fußnote.
-  Beide Statistik-Register bleiben gleich hoch (SPEC-Regel gehalten).
-- **Standard-Menüs folgen der Sprache** (Bearbeiten/Darstellung/Fenster/Hilfe
-  gegen Edit/View/Window/Help) — `CFBundleLocalizations` wirkt wie gewollt.
-- **Sprache und Region sind sauber getrennt:** Datums- und Zahlenformate folgen
-  weiterhin der Systemregion (`1,8 Tage` auch in englischer Oberfläche),
-  Wochentagsnamen der Sprache (`Montag`/`Monday`). Das ist das
-  Plattformverhalten, kein Fehler.
-- **Tag-Konvergenz beobachtet:** Das Board stand über mehrere App-Neustarts
-  hinweg unverändert in denselben Spalten (3/5 „Als Nächstes", 0/3 „In
-  Bearbeitung") — die Migration hat die Status erhalten, und es läuft keine
-  Schreibschleife. Der literale Notiztext in der Erinnerungen-App wurde nicht
-  inspiziert; die Konvergenz selbst ist unit-getestet.
+Verifiziert 07./08.08.2026: Suite grün; Katalog skriptgeprüft (Vollständigkeit,
+Übersetzung, Plurale); beide Sprachen live durchgeklickt ohne Abschneidung oder
+Umbruch; Standardmenüs folgen der Sprache; Datums- und Zahlenformate folgen der
+Systemregion (Plattformverhalten, kein Fehler).
 
 **Noch offen:** VoiceOver-Stichprobe in beiden Sprachen an einer Karte und einem
 Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels).
@@ -149,8 +85,8 @@ Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels)
       `com.davidtrogemann.GlassKanban` in App Store Connect registrieren
 - [ ] **TCC-Folge einplanen:** Neue Signatur-Identität → macOS fragt die
       Reminders-Berechtigung einmal neu ab (einmalig; warum bisher selbstsigniert,
-      erklärt der Kommentar in project.yml:56–58)
-- [ ] Archive/Upload über Xcode Organizer; `.gitignore` um `*.xcarchive` ergänzen
+      erklärt der Kommentar an `CODE_SIGN_IDENTITY` in project.yml)
+- [ ] Archive/Upload über Xcode Organizer (`*.xcarchive` steht bereits in `.gitignore`)
 - [ ] Hardened Runtime **nicht** anfassen — für den MAS zählt die Sandbox (✓),
       Hardened Runtime gehört zu Notarisierung/Direktvertrieb
 - [ ] **Deep-Link entfernen:** undokumentiertes Schema
@@ -175,7 +111,7 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
       („verarbeitet ausschließlich lokal, keine Datenerhebung" — deckungsgleich mit
       dem Privacy-Manifest), Support-Kontakt. Privacy-Policy- und Support-URL sind
       Pflichtfelder in App Store Connect
-- [x] Demo-Datensatz als eigene Reminders-Liste bauen — 05.09.2026, siehe `plans/linkedin/konzept.md` 2.1 und `seed-demo-reminders.swift` v2 (glaubwürdige, freundliche
+- [x] Demo-Datensatz als eigene Reminders-Liste bauen — 05.09.2026, siehe `social/linkedin/konzept.md` 2.1 und `seed-demo-reminders.swift` v2 (glaubwürdige, freundliche
       Beispiel-Tickets für Screenshots und Review)
 - [ ] Screenshots EN + DE, je 4–6, 2880×1800 PNG: Board, Karten-Editor,
       Statistik-Fenster, Dunkelmodus
@@ -226,7 +162,7 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
 | 26.07.2026 | **Einmalkauf 9,99–14,99 €**, kein Abo, kein Freemium | Passt zur Positionierung (lokal, kein Konto); Markt: GoodTask 39,99 $ einmalig, Indie-Kanban ~15 $; „kein Abo" ist in der Nische ein Verkaufsargument |
 | 26.07.2026 | Vertrieb **nur Mac App Store** für 1.0 | Zahlungsabwicklung/Updates/Vertrauen inklusive; Setapp erst nach Launch prüfen (verlangt Intel-Binary); Direktvertrieb wäre eigener Aufwandsblock |
 | 26.07.2026 | Sprachen 1.0: **Deutsch + Englisch**, Englisch als Entwicklungssprache | Internationaler Markt trägt die Nische; Fallback für alle übrigen Länder muss Englisch sein |
-| 26.07.2026 | **Tag-Format wird englisch** (`#next`/`#inprogress`), deutsche Tags werden Legacy | Tags sind sichtbares Datenformat in den Notizen internationaler Kunden; Migrationsmechanismus existiert und ist getestet |
+| 26.07.2026 | **Tag-Format wird englisch** (`#next`/`#inprogress`), deutsche Tags werden Legacy — *überholt 13.08.2026: es gibt keine Tags mehr, nur die einmalige Migration liest sie* | Tags sind sichtbares Datenformat in den Notizen internationaler Kunden |
 | 26.07.2026 | Deep-Link `x-apple-reminderkit://` wird für 1.0 **entfernt** | Undokumentiertes Schema = Review-Risiko; In-App-Editor macht ihn verzichtbar, Fallback bleibt |
 | 26.07.2026 | CI ist **kein Launch-Blocker** | Solo-Entwickler mit lokaler Suite; optional nach Launch (macOS-26-Runner-Lage dann prüfen) |
 

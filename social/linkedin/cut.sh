@@ -1,29 +1,33 @@
 #!/bin/zsh
-# Cuts the LinkedIn clips from one screen-recording take — each in 4:5 (main,
-# 1080×1350) and 1:1 (1080×1080).
-# Usage: plans/linkedin/cut.sh TAKE.mov OUTDIR
-# Requires ffmpeg (brew install ffmpeg). Written 05.09.2026 as a template:
-# every value in the "MARKS" block is read off the take (QuickTime: ⌘T shows
-# the timecode) and filled in BEFORE the first run. Not yet run — ffmpeg was
-# not installed when this was written; ran end to end on a synthetic 40-s take
-# the same day (1380×692 still image, CROP 692/692/688/0) — outputs h264/aac
-# 1080×1080, chime at the mark, silence elsewhere, GIF 720 px.
+# Cuts the LinkedIn clip from one screen-recording take.
+# Usage: social/linkedin/cut.sh TAKE.mov OUTDIR [HOVER DROP END]
+# Requires ffmpeg (brew install ffmpeg). The defaults reproduce the published
+# clip (take 14, 05.09.2026): FRAME=native (the square recording is only
+# scaled to 1080x1080), LOOP_XFADE=0 (hard-cut loop), CUT_A=0 (only the one-move
+# idea). Marks come from marks.sh when not given on the command line. Output:
+# glass-kanban-one-move-1x1.mp4 (h264/aac, BT.709, chime on the strike-through),
+# the same as GIF, and the first frame as thumbnail PNG.
+# The other FRAME modes (half, hero, full, exact) and the crossfade loop are the
+# variants measured and rejected that day; they stay for comparison only.
 set -euo pipefail
 ffmpeg()  { command ffmpeg  -hide_banner -loglevel error -stats "$@"; }
 ffprobe() { command ffprobe -hide_banner "$@"; }
 TAKE=${1:?take.mov}; OUT=${2:?outdir}; mkdir -p "$OUT"
 CHIME="$(dirname "$0")/../../GlassKanban/CompletionChime.wav"
+FRAME=${FRAME:-native}; LOOP_XFADE=${LOOP_XFADE:-0}; CUT_A=${CUT_A:-0}
 
 # ---- MARKS (seconds in the take, decimals allowed) ---------------------------
 # Geometry: window size in points (from /tmp/window-id), pixels per point,
 # and the recording margins used by record.sh. Crops are derived below.
-WIN_W=1300; WIN_H=612; S=2; MX=${MX:-40}; MY=${MY:-130}
+WIN_W=${WIN_W:-1220}; WIN_H=${WIN_H:-1000}; S=2; MX=${MX:-20}; MY=${MY:-130}
 # Idea B — one move. HOVER = cursor rests on the card, DROP = card released,
-# END = 2.5 s after the strike-through finished.
-# Read off take1 (05.09.2026) with frames.sh: frames 39-47 identical = cursor
-# resting on the card, frame 48 (12.00 s) = lift, frame 54 (13.50 s) = landed,
-# frame 58 (14.50 s) = strike-through and settle finished.
-B_HOVER=7.69; B_DROP=9.93; B_END=11.65
+# END = the strike-through has settled plus the rest that closes the loop.
+# Given as arguments 3-5, otherwise read off the take by marks.sh (motion
+# analysis; on take 14 it says 7.83 / 9.98 / 11.70 where the hand read
+# 7.69 / 9.93 / 11.65 — same clip).
+if [ $# -ge 5 ]; then B_HOVER=$3; B_DROP=$4; B_END=$5
+else eval "$("$(dirname "$0")/marks.sh" "$TAKE" --export)"; fi
+echo "marks — hover $B_HOVER, drop $B_DROP, end $B_END (clip $(echo "$B_END - $B_HOVER" | bc) s)"
 # Idea A — three moves. Ruhe phases get trimmed to the durations in konzept.md 3.2.
 A_HOVER=3.0
 A_M1_START=4.0;  A_M1_END=6.2      # move 1 incl. wiggle
@@ -39,7 +43,6 @@ CHIME_OFFSET=0.45
 SQ=$(( S*(WIN_H+80) ));  SQ_X=$(( S*(WIN_W+MX) + S*40 - SQ ));  SQ_Y=$(( S*(MY-40) ))
 # Portrait crop (4:5): same width, 5/4 as tall, centred on the window.
 P_W=$SQ; P_H=$(( SQ*5/4 )); P_X=$SQ_X; P_Y=$(( S*MY + S*WIN_H/2 - P_H/2 ))
-[ $P_Y -ge 0 ] || { echo "recording too short for 4:5 — raise MY in record.sh"; exit 1; }
 # BT.709 tags must be set inside the filter graph (setparams) — encoder-side
 # -color_trc alone leaves the transfer tag at bt470m (measured 05.09.2026).
 T709="setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv"
@@ -50,7 +53,6 @@ T709="setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv"
 # 1080 pt screen). FRAME=full therefore lays the window on a blurred, enlarged
 # copy of the same wallpaper — no invented content, but the board is then 1080 px
 # wide instead of 1384, i.e. every label is 44 % smaller than in FRAME=half.
-FRAME=${FRAME:-half}
 if [ "$FRAME" = "hero" ]; then
   # The frame follows the window: side margin SIDE_PT, top/bottom VERT_PT, so the
   # app dominates and the desktop only frames it. At 1:1 the vertical margin is
@@ -90,6 +92,7 @@ elif [ "$FRAME" = "full" ]; then
   VF_EX="${TIGHT},scale=1080:${EX_H}:flags=lanczos:out_color_matrix=bt709:out_range=tv,fps=30,format=yuv420p,$T709"
   echo "frame — full window, tight crop ${FW}x${FH}+${FX}+${FY} (margin ${FM} pt), on a blurred wallpaper bed"
 else
+[ $P_Y -ge 0 ] || { echo "recording too short for 4:5 — raise MY in record.sh"; exit 1; }
 VF_SQ="crop=${SQ}:${SQ}:${SQ_X}:${SQ_Y},scale=1080:1080:flags=lanczos:out_color_matrix=bt709:out_range=tv,fps=30,format=yuv420p,$T709"
 VF_45="crop=${P_W}:${P_H}:${P_X}:${P_Y},scale=1080:1350:flags=lanczos:out_color_matrix=bt709:out_range=tv,fps=30,format=yuv420p,$T709"
 echo "crops — 1:1 ${SQ}x${SQ}+${SQ_X}+${SQ_Y}   4:5 ${P_W}x${P_H}+${P_X}+${P_Y}"
@@ -109,7 +112,7 @@ cut_all() {
   # 2. 1 s still of the first frame, for the loop crossfade back to the start
   ffmpeg -y -ss "$B_HOVER" -i "$TAKE" -vf "$VF" -frames:v 1 "$OUT/${TAG}_b_first.png"
   ffmpeg -y -loop 1 -t 1 -i "$OUT/${TAG}_b_first.png" -vf "fps=30,format=yuv420p,$T709" "$OUT/${TAG}_b_still.mp4"
-  if [ "${LOOP_XFADE:-1}" = "0" ]; then
+  if [ "$LOOP_XFADE" = "0" ]; then
     # Hard-cut loop. The 0.6 s crossfade was the source of two defects measured
     # 05.09.2026: it double-exposed every row in Erledigt (two different card
     # lists dissolving into each other reads as a glitch, not a transition), and
@@ -139,9 +142,9 @@ cut_all() {
     -loop 0 "$OUT/glass-kanban-one-move-${TAG}.gif"
 
   # ---- Idea A: 12 s, three moves ----------------------------------------------
-  # CUT_A=0 skips it — Idea A needs "Als Nachstes" in frame, which the 692 pt
-  # crop does not cover (see umsetzungsplan.md, Befund fuer Idee A).
-  [ "${CUT_A:-1}" = "1" ] || return 0
+  # Off by default — Idea A was never shot (it does not fit the frame,
+  # konzept.md "Ergebnis"); CUT_A=1 keeps the cut available.
+  [ "$CUT_A" = "1" ] || return 0
   seg() { ffmpeg -y -ss "$1" -to "$2" -i "$TAKE" -vf "$VF" -an "$3"; }
   seg "$A_HOVER"      "$A_M1_START"  "$OUT/${TAG}_a0.mp4"   # rest, will be trimmed to 1 s below
   seg "$A_M1_START"   "$A_M1_END"    "$OUT/${TAG}_a1.mp4"
@@ -171,7 +174,7 @@ cut_all "$VF_SQ" 1x1
 fi
 # 16:9 only exists to show how little dead space a short format leaves; the
 # window spans the full width in every ratio, so this does not enlarge the app.
-[ "${FRAME:-half}" = "full" ] && [ "${CUT_169:-0}" = "1" ] && cut_all "$VF_169" 16x9
-[ "${FRAME:-half}" = "full" ] && [ "${CUT_EXACT:-0}" = "1" ] && { echo "exact fit — 1080x${EX_H}, window edge to edge"; cut_all "$VF_EX" exact; }
+[ "$FRAME" = "full" ] && [ "${CUT_169:-0}" = "1" ] && cut_all "$VF_169" 16x9
+[ "$FRAME" = "full" ] && [ "${CUT_EXACT:-0}" = "1" ] && { echo "exact fit — 1080x${EX_H}, window edge to edge"; cut_all "$VF_EX" exact; }
 
 echo "done:"; ls -la "$OUT"/glass-kanban-*

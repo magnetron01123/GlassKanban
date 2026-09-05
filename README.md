@@ -64,6 +64,21 @@ xcodebuild -project GlassKanban.xcodeproj -scheme GlassKanban \
 `scripts/build-app.sh` automatisch aktuell gehalten — kein manueller Build nötig, um die
 App im Finder zu öffnen. Details siehe [CLAUDE.md](CLAUDE.md).
 
+## Ordner
+
+So wenig wie möglich, so viel wie nötig — jeder Eintrag im Stamm hat genau eine Aufgabe:
+
+```
+GlassKanban/            Quellen, flach; darin Tests/ (Unit-Tests) und AppIcon.icon/
+GlassKanban.xcodeproj/  von XcodeGen erzeugt, nicht in Git
+plans/                  Baupläne für entschiedene, noch nicht gebaute Vorhaben
+scripts/                Build, Doku-Wächter, Lokalisierungsprüfung
+social/                 Material für Beiträge (LinkedIn: Ablauf-README, Konzept, Skripte, fertiges Video)
+project.yml             Projektbeschreibung für XcodeGen — die Quelle des .xcodeproj
+README / SPEC / CONCEPT / BACKLOG / RELEASE / CLAUDE .md
+Glass Kanban.app        der jeweils aktuelle Build, nicht in Git
+```
+
 ## Dokumentation
 
 | Datei | Inhalt |

@@ -1,6 +1,6 @@
 // Prints the CGWindowID and bounds of the Glass Kanban board window, so that
 // `screencapture -l <id>` and `screencapture -R x,y,w,h` can target it.
-//   swiftc -O -o /tmp/window-id plans/linkedin/window-id.swift && /tmp/window-id
+//   swiftc -O -o /tmp/window-id social/linkedin/window-id.swift && /tmp/window-id
 // Output: one line "id=<CGWindowID> x=<x> y=<y> w=<w> h=<h>" (points, top-left origin).
 import CoreGraphics
 import Foundation
