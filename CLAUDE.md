@@ -26,11 +26,16 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
 
 ## Dokument-Landkarte
 
-- **CONCEPT.md** — das Warum: Philosophie, Prinzipien, Herleitungen.
-- **SPEC.md** — das Was: verbindliches, gebautes Verhalten.
-- **BACKLOG.md** — das Später und das Nie: vor jedem UI-Vorschlag den Abschnitt
-  „Explizit abgelehnt" prüfen; abgelehnte Ideen nicht wieder vorschlagen, ohne dass der
-  Nutzer das Thema selbst öffnet.
+- **CONCEPT.md** — das Warum: Philosophie, Prinzipien, Herleitungen — **samt der
+  Alternativen, die bei einer gebauten Regel verworfen wurden.**
+- **SPEC.md** — das Was: verbindliches, gebautes Verhalten. Eine Kurzbegründung darf an
+  der Regel stehen, die Herleitung nicht; Messungen und Vorgeschichte gehören nach CONCEPT.
+- **BACKLOG.md** — das Später und das Nie: **Ideen und Features**, die (noch) nicht gebaut
+  sind, und ihre Ablehnung. Umgesetztes wird zur durchgestrichenen Einzeile mit Verweis auf
+  SPEC.md. Vor jedem UI-Vorschlag den Abschnitt „Explizit abgelehnt" prüfen; abgelehnte
+  Ideen nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst öffnet.
+  **Ein Sachverhalt steht in genau einer der drei Dateien**, die anderen verweisen (geprüft
+  und entdoppelt am 05.09.2026).
 - **RELEASE.md** — einzige Wahrheit zum Mac-App-Store-Release.
 - **plans/** — das Wie für ein entschiedenes Vorhaben: eine Datei pro Vorhaben, für
   eine eigene Session geschrieben (auch mit einem kleineren Modell), mit Messweiche,

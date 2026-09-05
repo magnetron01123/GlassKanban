@@ -71,8 +71,9 @@ auf Mechanik aufmerksam. Es soll einfach schon dort sein.
 
 ## Architektur
 
-- Datenzugriff ausschließlich über EventKit (`EKEventStore`/`EKReminder`), kein eigener
-  Datenspeicher
+- Erinnerungen ausschließlich über EventKit (`EKEventStore`/`EKReminder`). Eigener Speicher
+  nur für das, was keine Eigenschaft der Aufgabe ist: die Spalte (`columns.json`, siehe
+  Datenmodell) und Einstellungen (`UserDefaults`, klassifiziert in `StoredSetting`)
 - Bidirektionaler Sync über `EKEventStoreChangedNotification`, kein Polling; zusätzlich
   Refresh um Mitternacht und nach dem Aufwachen aus dem Ruhezustand, damit „Heute"/
   „Überfällig" auf einem tagelang offenen Fenster nicht veralten
@@ -240,15 +241,9 @@ Tag bestand, hat danach gar keine Notiz mehr; beide blieben in ihrer Spalte.
 
 ### Wenn andere Programme dieselben Erinnerungen schreiben
 
-Das Board ist einer von mehreren Schreibern. Erinnerungen synchronisieren über iCloud, in
-geteilten Listen sitzt eine zweite Person, und andere Software — Kalender-Clients,
-Automatisierungs-Brücken, Kurzbefehle — schreibt in dieselben Datensätze. Eine App, die
-nur als alleiniger Schreiber funktioniert, wäre für dieses System kein Produkt.
-
-Am 10.08.2026 gemessen: Ein Kalender-Client mit eigener Datenbank schob alle 19 bis 55
-Minuten eine veraltete Kopie von Datensätzen zurück. Sechs Datensätze in dreißig Stunden,
-nur einer davon wiederkehrend — die übrigen fielen bloß deshalb nicht auf, weil ein
-zurückgeschriebener Tag auf einer *erledigten* Erinnerung nichts Sichtbares ändert.
+Das Board ist einer von mehreren Schreibern (Herleitung und Messung: CONCEPT.md, „Das
+Board ist einer von mehreren Schreibern"). Ein Kalender-Client mit eigener Datenbank schob
+am 10.08.2026 alle 19 bis 55 Minuten veraltete Kopien zurück; dagegen steht diese Regel.
 
 **Verbindliche Regel (`CorrectionLedger`):**
 
@@ -269,12 +264,9 @@ Die Kette erweitert nur, was als Echo *erkannt* wird — zurückgeschrieben wird
 ausschließlich der jüngste eigene Wert, unter denselben Richtungsregeln. Ein Wert, der in
 keiner Kette steht, bleibt ein dritter Zustand und zieht den Eintrag zurück wie bisher.
 
-**Die Regel fragt nie, *wer* geschrieben hat** — sie kann es nicht, EventKit gibt keine
-Herkunft heraus, und sie soll es auch nicht. Erkannt wird ein *Muster* (ein verdrängter
-Wert kehrt buchstabengenau zurück), nicht ein Programm. Damit gilt sie unverändert für
-jeden zweiten Schreiber: einen Kalender-Client, die Erinnerungen-App, ein iPhone über
-iCloud, eine zweite Person in einer geteilten Liste, einen Kurzbefehl, einen zweiten Mac
-mit derselben App. Es gibt keine Liste bekannter Störer und soll keine geben.
+**Die Regel fragt nie, *wer* geschrieben hat.** Erkannt wird ein Muster (ein verdrängter
+Wert kehrt buchstabengenau zurück), nicht ein Programm — sie gilt damit für jeden zweiten
+Schreiber, auch einen zweiten Mac mit derselben App. Es gibt keine Liste bekannter Störer.
 
 **Die eine Voraussetzung, die der fremde Schreiber erfüllen muss:** Er ändert Datensätze,
 statt sie zu löschen und neu anzulegen. Bleibt die Identität stabil, greift die Regel
@@ -299,12 +291,9 @@ heute verteidigt, sind vier gewöhnliche Textfelder. Das Board schreibt nie von 
 einziger Schreibvorgang nach der Antwort). Was fehlt, ist eine Obergrenze für ein
 Programm, das im Sekundentakt schreibt — bewusst offen, siehe BACKLOG.md.
 
-Der letzte Halbsatz trägt die ganze Sicherheit: Jeder Wert, den dieser Mechanismus je
-automatisch schreibt, hat der Nutzer hier eingegeben; nie ein erfundener, nie ein
-abgeleiteter, nie ein vom fremden Schreiber übernommener. Bloß *beobachtete* Übergänge zu
-verteidigen wurde entworfen und verworfen — ein Programm, das häufiger schreibt als der
-Nutzer, bekäme so seine alten Werte adoptiert und anschließend mit der Autorität des
-Boards durchgesetzt (Herleitung in CONCEPT.md).
+Der letzte Halbsatz der Regel trägt die ganze Sicherheit: Jeder Wert, den dieser
+Mechanismus je automatisch schreibt, hat der Nutzer hier eingegeben — nie ein bloß
+beobachteter (warum nicht: CONCEPT.md).
 
 **Geschützte Felder und ihre Richtung:**
 

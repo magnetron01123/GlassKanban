@@ -31,9 +31,10 @@ Voraussetzung für die Kernfunktion der App.
 ## Grundidee
 
 Eine native macOS-App, die eine Kanban-Ansicht über macOS-Erinnerungen (Reminders) legt.
-Alle Daten leben ausschließlich in Erinnerungen — die App speichert selbst nichts, sie ist
-reine Visualisierung/Steuerung über EventKit. Änderungen sind in beide Richtungen sofort
-sichtbar: in Glass Kanban und in der nativen Reminders-App.
+Die Aufgaben leben ausschließlich in Erinnerungen; die App speichert selbst nur, was keine
+Eigenschaft der Aufgabe ist — die Spalte (seit 13.08.2026, siehe Datenmodell) und ihre
+Einstellungen. Änderungen sind in beide Richtungen sofort sichtbar: in Glass Kanban und in
+der nativen Reminders-App.
 
 ## Architektur
 
@@ -60,47 +61,25 @@ sichtbar: in Glass Kanban und in der nativen Reminders-App.
 
 ## Datenmodell
 
-### Spalten = Hashtag in den Notizen (bis 13.08.2026 — historisch)
+### Spalten gehören dem Board — der Weg von der Notiz in den eigenen Speicher
 
-> **Dieser Abschnitt beschreibt die Form, die das Board bis zum 13.08.2026 hatte, und die
-> Überlegungen, die zu ihr führten.** Seither liegt die Spalte im eigenen Speicher der App;
-> die Begründung dafür steht unten unter „Vollzogener Formwechsel", das gebaute Verhalten
-> in SPEC.md („Spalten = eigener Speicher der App"). Die Tabellen und Regeln hier stehen
-> im Präsens, weil sie so beschlossen wurden — sie gelten nicht mehr.
-
-Wichtiger technischer Fakt, der die Lösung damals bestimmte: `EKReminder.calendar` ist ein
+**Warum nicht „Liste = Spalte":** `EKReminder.calendar` ist ein
 **einzelnes Objekt, keine Menge** — eine Erinnerung kann immer nur in genau **einer** Liste
 gleichzeitig sein. "Liste = Spalte" würde also bedeuten, dass eine Erinnerung beim Verschieben
 durchs Board ihre ursprüngliche, inhaltliche Liste (z. B. "Projekt X") verlässt — ein echter
 Eingriff in die normale Reminders-Nutzung. Das ist mit dem Ziel "möglichst wenig Einfluss auf
 die normale Nutzung" nicht vereinbar und wird deshalb verworfen.
 
-Stattdessen wird der Status als **Hashtag im Notizen-Text** der Erinnerung abgelegt. Das ist
-das einzige Feld in EventKit, das (a) nicht überall sichtbar ist wie der Titel (kein Einfluss
-auf Siri, Widgets, Benachrichtigungen, Spotlight) und (b) die Listenzugehörigkeit nicht
-anfasst.
+**Die erste Form (bis 13.08.2026): ein Hashtag im Notizen-Text** — das einzige Feld in
+EventKit, das nicht überall sichtbar ist wie der Titel (kein Einfluss auf Siri, Widgets,
+Benachrichtigungen, Spotlight) und die Listenzugehörigkeit nicht anfasst. Zunächst deutsch
+(`#alsnächstes`/`#inbearbeitung`), ab 07.08.2026 englisch (`#next`/`#inprogress`), weil ein
+Hashtag ein Datenformat ist, kein Oberflächentext, und in geteilten Listen sprachunabhängig
+sein muss. Backlog hatte nie einen eigenen Tag: Er bedeutete „kein Status-Tag vorhanden",
+damit zwei Darstellungen desselben Zustands nicht auseinanderlaufen. Die Tag-Formen, die
+die einmalige Migration heute noch liest, stehen in SPEC.md.
 
-**Spalten, ursprünglicher Entwurf (deutsche Tags):**
-
-| Spalte (intern/technisch) | Anzeige (Deutsch) | Hashtag in den Notizen |
-|---|---|---|
-| Backlog | Backlog | kein Tag (Standard/Fallback) |
-| Next | Als Nächstes | `#alsnächstes` |
-| In Progress | In Bearbeitung | `#inbearbeitung` |
-| Done | Erledigt | — (`isCompleted = true`, kein Tag) |
-
-**Überholt seit der Englisch-Migration (26.07.2026 entschieden, 07.08.2026 umgesetzt,
-RELEASE.md Phase 1):** Ein Hashtag ist ein Datenformat, kein Oberflächentext — in geteilten
-Listen und für einen internationalen Markt muss er sprachunabhängig sein. Geschrieben wird
-seither ausschließlich `#next`/`#inprogress`; die deutschen Formen bleiben dauerhaft als
-akzeptierte Eingabe lesbar, für alle, die den Tag unterwegs von Hand tippen (siehe SPEC.md,
-Migrationstabelle, und BACKLOG.md, „Fremde Schreiber auf denselben Daten"). Die Grundidee
-dieses Abschnitts bleibt unverändert: Backlog bekommt bewusst **keinen** eigenen Hashtag,
-sondern bedeutet immer „kein Status-Tag vorhanden" — zwei verschiedene Darstellungen für
-denselben Zustand würden sonst auseinanderlaufen können.
-
-**Vollzogener Formwechsel (13.08.2026 geplant und gebaut): Der Status verlässt die
-Notizen.** Dieser Abschnitt beschreibt ab hier die Herleitung; das gebaute Verhalten
+**Der Formwechsel (13.08.2026): Der Status verlässt die Notizen.** Das gebaute Verhalten
 steht in SPEC.md („Spalten = eigener Speicher der App"). Der Geisterkarten-Komplex (SPEC.md, „Regel daraus"; PR #46) hat
 die Grenze dieses Datenmodells vermessen: Ein Status, der in einem Feld wohnt, das auch
 anderen Programmen gehört, kann von jedem davon bewegt werden. Die App kann das erkennen
@@ -150,39 +129,6 @@ Notizverlust** — der Notiztext bleibt gemeinsames Territorium, und gegen einen
 Schreiber, der ihn überschreibt, hilft nur das Abstellen der Quelle. Immerhin wird er
 seither *ganz* verteidigt: Die Halbregel, die einen Notiz-Restore nie in eine
 Arbeitsspalte heben durfte, ist mit ihrem Grund entfallen.
-
-**Schreiben (beim Verschieben per Drag & Drop in der App):**
-
-| Ziel-Spalte | Aktion in den Notizen |
-|---|---|
-| Backlog | vorhandene Status-Zeile entfernen |
-| Als Nächstes | Status-Zeile entfernen, `#alsnächstes` als neue, eigene letzte Zeile anhängen |
-| In Bearbeitung | Status-Zeile entfernen, `#inbearbeitung` als neue, eigene letzte Zeile anhängen |
-| Erledigt | `isCompleted = true` setzen, Status-Zeile entfernen |
-
-Der restliche Notiztext bleibt bei jeder Aktion unverändert; der Hashtag wird von der App
-immer strikt als letzte, eigene Zeile geschrieben.
-
-**Lesen/Erkennen (beim Einlesen aus EventKit):**
-
-- Die App sucht den Hashtag an **beliebiger Stelle** im Notizen-Text, nicht nur in der letzten
-  Zeile — falls z. B. am iPhone manuell noch Text darunter ergänzt wird, wird der Tag trotzdem
-  zuverlässig erkannt.
-- Erinnerungen ohne erkannten Hashtag und ohne `isCompleted` fallen automatisch in "Backlog"
-  (kein Pflicht-Tagging nötig, bereits vorhandene Erinnerungen tauchen sofort im Board auf).
-
-**Weitere Eigenschaften:**
-
-- **Bonus (entfallen am 13.08.2026 — der Preis des Formwechsels):** Der Hashtag ließ sich
-auch manuell direkt in der nativen Reminders-App auf
-  iPhone/iPad/Mac eintippen — eine Karte kann so verschoben werden, ohne Glass Kanban zu öffnen.
-- Ursprüngliche Listenzugehörigkeit bleibt bei jedem Spaltenwechsel zu 100 % unverändert.
-- **Datenhygiene:** Erkennt die App eine erledigte Erinnerung (`isCompleted = true`), die noch
-  einen alten Status-Hashtag in den Notizen hat (z. B. weil direkt in Reminders abgehakt statt
-  per Drag & Drop verschoben), entfernt sie die Status-Zeile automatisch beim nächsten Sync.
-
-**Kompromiss, den das kostet:** Der Status ist in der nativen Reminders-Listenansicht nicht
-auf den ersten Blick sichtbar, sondern erst beim Öffnen der Erinnerung (Notizen aufklappen).
 
 ### Das Board ist einer von mehreren Schreibern (10.08.2026)
 
@@ -388,35 +334,12 @@ die Serie gelöscht, ist er wieder eine gewöhnliche Aufgabe und erscheint sofor
 - **Zusätzlich auf den Titel prüfen.** Wäre eine zweite Wahrheit neben dem Anlegedatum und
   brächte genau die Fehler zurück, die der Umstieg auf die Identität beseitigt hat.
 
-### Listen-Filter
+## Finden: ein Bedienelement statt drei
 
-In den Einstellungen wählt der Nutzer, welche der eigenen, bereits vorhandenen Listen
-überhaupt als Quelle fürs Kanban-Board einbezogen werden — z. B. um die Einkaufsliste
-komplett auszuschließen. Erinnerungen aus den gewählten Listen werden gepoolt im Board
-angezeigt; die Liste selbst bleibt unverändert Eigentum/Organisation des Nutzers und wird
-zu keinem Zeitpunkt von der App gewechselt.
-
-Für den MVP genügt eine einfache, flache Liste aller vorhandenen Listen zur Auswahl — unabhängig
-davon, aus welchem Konto (iCloud, Exchange, lokal) sie stammen. Gruppierung nach Konto wäre
-höchstens eine spätere, rein kosmetische Verbesserung, keine funktionale Notwendigkeit.
-
-## Filter (im Board)
-
-| Filter | Datenquelle | Einschränkung |
-|---|---|---|
-| **Suche** | `EKReminder.title` + `notes` (Volltext, lokal) | keine |
-| **Dringlichkeit** | `EKReminder.priority` (0–9, gruppiert: Hoch/Mittel/Niedrig/Keine) | keine |
-| **Fälligkeit** | `EKReminder.dueDateComponents` (z. B. Überfällig/Heute/Diese Woche/Ohne Datum) | keine |
-| **Verantwortliche Person** | `EKCalendarItem.attendees` (`EKParticipant`) | **nur lesend.** Funktioniert nur bei über iCloud **geteilten** Listen. EventKit erlaubt kein programmatisches Zuweisen — das Zuweisen einer Person zu einer Erinnerung muss weiterhin in der nativen Reminders-App erfolgen. Glass Kanban kann nur anzeigen und danach filtern. |
-
-### Finden: ein Bedienelement statt drei
-
-> **Umgesetzt** (Lupe in der Toolbar, ⌘F). Was unten als Empfehlung formuliert ist, ist
-> gebautes Verhalten — der verbindliche Stand steht in [SPEC.md](SPEC.md), Abschnitt
-> „Finden". Der Text bleibt als Herleitung stehen. Eine Abweichung: Statt des
-> Verantwortliche-Person-Filters aus der Tabelle oben enthält das Element heute einen
-> **Listen-Filter** (die Personen-Zuordnung ist über EventKit kaum nutzbar, siehe
-> BACKLOG.md).
+> Gebaut (Lupe in der Toolbar, ⌘F); der verbindliche Stand steht in SPEC.md, „Finden".
+> Geplant war als vierter Filter die verantwortliche Person; gebaut wurde stattdessen ein
+> Listen-Filter, weil `attendees` nur in geteilten iCloud-Listen Daten liefert (BACKLOG.md,
+> „Filter").
 
 **Ausgangsproblem:** Suche, Dringkeit und Fälligkeit sind für den Nutzer *eine* Aufgabe
 („finde ein Ticket"), stehen im Chrome aber als getrennte Elemente. Heute sind das zwei
@@ -475,28 +398,6 @@ die Spaltenzähler die *sichtbare*, nicht die tatsächliche Menge (mit WIP-Limit
 `1 / 3`, obwohl real vier Karten in Bearbeitung sind). Das ist heute schon so und fällt mit
 einer Suche nur häufiger auf. Der eingefärbte Zustand am Finden-Symbol ist die minimale
 Antwort darauf — eine Markierung an einer Stelle statt an jeder Spalte.
-
-## MVP-Funktionsumfang (Stand der ersten Planung — überholt)
-
-> **Beide Annahmen dieses Abschnitts sind eingeholt worden.** „Überwiegend read-only" galt
-> bis zum Karten-Editor (Juli 2026): Anlegen, Bearbeiten, Umbenennen und Löschen sind
-> gebaut. Und die „einzige Schreib-Interaktion" beschreibt den Hashtag-Mechanismus, den der
-> Formwechsel vom 13.08.2026 abgelöst hat — ein Zug schreibt seither in den eigenen
-> Speicher, in Reminders nur noch `isCompleted` beim Erledigen. Der Abschnitt bleibt als
-> Ausgangspunkt stehen; was gebaut ist, steht in SPEC.md.
-
-Die App war im MVP bewusst **überwiegend read-only**. Das Anlegen und inhaltliche Bearbeiten
-von Aufgaben (Titel, Notizen, Fälligkeit, Priorität, Person zuweisen) sollte ausschließlich
-in der nativen Reminders-App passieren. Glass Kanban visualisiert diese Daten live und schön,
-griff aber zunächst nicht inhaltlich ein.
-
-**Einzige Schreib-Interaktion der ersten Fassung:** Drag & Drop einer Karte zwischen den vier
-Spalten (= Hashtag in den Notizen wurde im Hintergrund aktualisiert). Eine Karte nach
-"Erledigt" ziehen setzt `isCompleted = true` — ein separater Erledigen-Button ist damit
-nicht nötig, das deckt der Spaltenwechsel bereits ab.
-
-Die Funktionsliste, die hier ursprünglich folgte, ist ersatzlos entfallen: Sie zählte auf,
-was heute in SPEC.md steht, nur auf dem Stand von damals.
 
 ## Motivation (leichtgewichtige Gamification)
 
@@ -629,8 +530,6 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   Live-Update aus Reminders (z. B. Karte erscheint/verschwindet mit Fade/Slide)
 - Automatische Unterstützung von Light/Dark Mode und System-Akzentfarbe
 - Dringlichkeit/Fälligkeit dezent über Farbe/SF Symbols statt aufdringlicher Badges
-- Da nichts inhaltlich in der App bearbeitet wird, darf die Fläche komplett auf ruhige,
-  reduzierte Darstellung statt Formulare/Eingabefelder optimiert werden
 - **Beispiel Pull-Signal am freien Platz:** Ist „In Bearbeitung" leer und liegt anderswo
   offene Arbeit, zeigt die Spalte einen kartengroßen, gestrichelten Platzhalter mit einer
   Zeile („Frei für die nächste Aufgabe"). Das Signal sitzt bewusst an der **leeren Stelle**,
@@ -748,15 +647,15 @@ jede zusätzliche Silbe.
 Konsequent aus Sicht eines Mac-/Apple-Nutzers gedacht — was macht die App zu einer "echten"
 nativen Mac-App statt eines austauschbaren Tools?
 
-**Ins MVP aufgenommen:**
+**Umgesetzt:**
 
 - **Native Toolbar statt selbstgebauter Titelleiste:** SwiftUI `.toolbar`/`NSToolbar` statt
   eigenem UI-Element für Titel + Filter-Chips. Dadurch übernimmt die App automatisch das
   System-Verhalten für Liquid Glass (Scroll-Edge-Effekt, Verhalten beim Resizen etc.) und bleibt
   über macOS-Updates hinweg konsistent, ohne eigene Wartung.
-- **Volles natives Menü + Tastaturkürzel:** Standard-App-Menü, Fenster-Menü, sinnvolle
-  Kurzbefehle (z. B. ⌘F für Filter-Fokus, Pfeiltasten zur Kartennavigation) statt einer App ohne
-  Menüleisten-Funktionalität.
+- **Volles natives Menü + Tastaturkürzel:** Standard-App-Menü, Fenster-Menü, jeder Befehl
+  des Boards auch im Menü (Liste in SPEC.md). Pfeiltasten auf Karten gab es kurz und wurden
+  verworfen (BACKLOG.md, „Explizit abgelehnt").
 - **Barrierefreiheit/Systemeinstellungen respektieren:** "Transparenz reduzieren" und "Bewegung
   reduzieren" (macOS-Bedienungshilfen) werden beachtet — gerade bei einem Glass-lastigen Design
   wichtig, damit die App für alle Nutzer und auf älterer Hardware performant nutzbar bleibt.
@@ -764,22 +663,8 @@ nativen Mac-App statt eines austauschbaren Tools?
   in der nativen Reminders-App hat) als kleiner Akzent/Punkt auf der Karte — verbindet das Board
   visuell mit der bestehenden, vertrauten Reminders-Farbcodierung, ganz ohne neue Konzepte.
 
-## Was hier bewusst *nicht* mehr steht
+## Was hier bewusst *nicht* steht
 
-Dieses Dokument führte bis zum 03.08.2026 an dieser Stelle vier Listen: spätere
-Ausbaustufen, bewusst Ausgeschlossenes, „außerhalb des MVP" und bekannte Risiken. Sie
-waren reine Aufzählungen ohne Herleitung — also genau das, was **nicht** die Aufgabe
-dieses Dokuments ist — und liefen der Wirklichkeit hinterher: Das WIP-Limit stand dort
-noch als „spätere Ausbaustufe", das Bearbeiten in der App als ausgeschlossen, und die
-Hashtag-Risiken waren längst gelöst und spezifiziert.
-
-Gültig ist deshalb:
-
-- **Was später oder nie kommt** → [BACKLOG.md](BACKLOG.md) (Ausbaustufen, „Explizit
-  abgelehnt", Apple-Plattform-Grenzen)
-- **Wie die App mit diesen Fällen umgeht** → [SPEC.md](SPEC.md) (die Tag-Erkennung gilt
-  seit 13.08.2026 nur noch für die einmalige Migration;
-  samt Wortgrenzen, Mehrfach-Tags, Datenhygiene, bekannte Einschränkungen)
-
-Der Rest dieses Dokuments bleibt, was er sein soll: die Begründung hinter den
-Entscheidungen, nicht ihre Liste.
+Listen ohne Herleitung — Ausbaustufen, Abgelehntes, Plattformgrenzen — gehören nach
+BACKLOG.md; das gebaute Verhalten nach SPEC.md. Dieses Dokument ist die Begründung hinter
+den Entscheidungen, nicht ihre Liste.
