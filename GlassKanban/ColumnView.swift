@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ColumnView: View {
     let status: KanbanStatus
@@ -301,21 +302,27 @@ struct ColumnView: View {
             store.activeEdit = nil
         }
         .animation(reduceMotion ? nil : Board.dropTargetAnimation, value: showsDropFeedback)
-        .dropDestination(for: String.self) { ids, _ in
-            store.endDrag()
-            guard let id = ids.first else { return false }
-            // A drop destination has to answer synchronously, so the move
-            // always goes through first and the WIP question — raised by the
-            // store, for every move route — follows it. No haptic here: the
-            // move itself answers the hand (see `MoveFeedback`, inside
-            // `move`), and a second thud from the drop site on top of it
-            // was a double knock for one landing.
-            return store.move(cardID: id, to: status, undoManager: undoManager) != nil
-        } isTargeted: { targeted in
-            // No tick for the lane the card came from — nothing snaps there.
-            if targeted && !isTargeted && !isDragSource { MoveFeedback.dragEnteredTarget() }
-            isTargeted = targeted
-        }
+        // `onDrop(of:delegate:)` instead of `dropDestination`: only a
+        // DropDelegate can tell macOS which *operation* a drop is, and without
+        // that answer the system assumes copy and hangs its green "+" badge on
+        // the cursor for the whole drag (found 05.09.2026 while shooting the
+        // LinkedIn clip). A lane change is a move; the delegate says so.
+        .onDrop(of: [.text], delegate: LaneDropDelegate(
+            entered: {
+                // No tick for the lane the card came from — nothing snaps there.
+                if !isTargeted && !isDragSource { MoveFeedback.dragEnteredTarget() }
+                isTargeted = true
+            },
+            exited: { isTargeted = false },
+            perform: { id in
+                store.endDrag()
+                // The WIP question — raised by the store, for every move route —
+                // follows the move. No haptic here: the move itself answers the
+                // hand (see `MoveFeedback`, inside `move`), and a second thud
+                // from the drop site on top of it was a double knock for one
+                // landing.
+                _ = store.move(cardID: id, to: status, undoManager: undoManager)
+            }))
         // A lane that empties must forget its last card's height, or the
         // standing pull slot gets sized by whatever happened to be here last.
         .onChange(of: displayedCards.isEmpty) { _, isEmpty in
@@ -882,5 +889,36 @@ private struct AddButtonGlass: ViewModifier {
         } else {
             HUDGlassMaterial().clipShape(.circle)
         }
+    }
+}
+
+/// The lane's drop target. It exists for one line: `dropUpdated` answers
+/// `.move`, which is what keeps the copy badge off the cursor. Everything
+/// else mirrors what `dropDestination` used to do — enter and exit drive the
+/// lane's highlight, the drop decodes the card id the drag carries.
+private struct LaneDropDelegate: DropDelegate {
+    let entered: () -> Void
+    let exited: () -> Void
+    let perform: (String) -> Void
+
+    func validateDrop(info: DropInfo) -> Bool { info.hasItemsConforming(to: [.text]) }
+    func dropEntered(info: DropInfo) { entered() }
+    func dropExited(info: DropInfo) { exited() }
+    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
+
+    func performDrop(info: DropInfo) -> Bool {
+        // macOS sends no exit after a landing; the highlight must not stick.
+        exited()
+        guard let provider = info.itemProviders(for: [.text]).first,
+              provider.canLoadObject(ofClass: NSString.self) else { return false }
+        // The provider hands the id over asynchronously — a drop delegate
+        // cannot answer with the decoded value the way `dropDestination`
+        // did. The move runs on the main queue once the id has arrived; the
+        // store raises the WIP question from inside `move` as before.
+        provider.loadObject(ofClass: NSString.self) { object, _ in
+            guard let id = object as? String else { return }
+            DispatchQueue.main.async { perform(id) }
+        }
+        return true
     }
 }

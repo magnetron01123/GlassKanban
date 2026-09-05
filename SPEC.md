@@ -463,7 +463,7 @@ Reminders.
 
 | Geste | Wirkung |
 |---|---|
-| **Drag & Drop** zwischen Spalten | Spaltenwechsel (siehe Datenmodell) |
+| **Drag & Drop** zwischen Spalten | Spaltenwechsel (siehe Datenmodell). Der Zug ist gegenüber macOS als *Verschieben* deklariert — der Zeiger trägt kein Kopier-Plus (05.09.2026) |
 | **Einfacher Klick** auf eine Karte | öffnet den **Karten-Editor** direkt auf dem Board |
 | **Rechtsklick** | Kontextmenü: Bearbeiten, In Erinnerungen öffnen, Verschieben nach, Umbenennen, Löschen |
 | **„+" im Backlog** | Neues Ticket anlegen und sofort im Karten-Editor öffnen |
