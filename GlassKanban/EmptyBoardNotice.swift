@@ -26,6 +26,10 @@ import AppKit
 struct EmptyBoardNotice: View {
     let emptiness: BoardEmptiness
     let onReset: () -> Void
+    /// Injected like `onReset` rather than reached for directly: opening the
+    /// Reminders app is the store's job, and it already knows the one way to
+    /// do it that uses documented API (`openRemindersApp`).
+    let onOpenReminders: () -> Void
 
     /// SwiftUI's own way into the Settings window (macOS 14+), so the one
     /// state whose way out lives *outside* the board can still offer one.
@@ -145,9 +149,14 @@ struct EmptyBoardNotice: View {
         case .noListsSelected: (String(localized: "Choose Lists"), { openSettings() })
         // The way out is the Reminders app, where a list can actually be
         // made — not this app's settings, which would have nothing to list.
-        case .noListsAtAll: (String(localized: "Open Reminders"), {
-            NSWorkspace.shared.open(URL(string: "x-apple-reminderkit://")!)
-        })
+        //
+        // Through the store, not through `x-apple-reminderkit://`, which is
+        // what stood here until 14.08.2026: that is the undocumented scheme
+        // RELEASE.md removes for 1.0 (guideline 2.5.1), and this second use of
+        // it was not on that list — it would have shipped after the documented
+        // one was gone. `openRemindersApp()` does the same thing through
+        // `urlForApplication(withBundleIdentifier:)` and needs no force-unwrap.
+        case .noListsAtAll: (String(localized: "Open Reminders"), onOpenReminders)
         case .loading: nil
         }
     }

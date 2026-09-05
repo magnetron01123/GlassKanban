@@ -29,6 +29,9 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
   Bedienelement; **Listen-Auswahl** und **WIP-Limits** in den Einstellungen
 - **Motivation, dezent:** Streak-Flamme (🔥) mit Statistik-Fenster („Jetzt" und
   „Rückblick" — Auslastung, Durchlaufzeit-Schätzung, bester Tag, häufigste Liste)
+- **Das Board bleibt auf seinem Bildschirm:** Wird der Monitor abgezogen, auf dem es
+  steht, und später wieder angesteckt, kehrt das Fenster dorthin zurück — statt auf dem
+  eingebauten Display liegenzubleiben
 
 ## Philosophie
 

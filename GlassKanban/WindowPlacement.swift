@@ -37,6 +37,39 @@ enum WindowPlacement {
         let frame: CGRect
     }
 
+    /// How long after a display change no frame change counts as the user's.
+    ///
+    /// Long enough for macOS to finish herding windows around after a display
+    /// appears or disappears, short enough that a drag right afterwards is
+    /// still recorded. Both edges are forgiving: too short and one stray
+    /// position is remembered, too long and one deliberate move is not.
+    static let settleDelay: TimeInterval = 1.0
+
+    /// Whether a frame change should be written down as where the board now
+    /// belongs.
+    ///
+    /// **This is the hardest rule in the feature, and the one that silently
+    /// destroys it when wrong.** AppKit reports two completely different
+    /// events identically: the user dragging the window, and macOS herding it
+    /// off a display that just vanished. Recording the second overwrites the
+    /// exact memory needed to undo it — the board would learn "I live on the
+    /// built-in screen now" at the very moment it was being pushed there
+    /// against the user's wishes, and nothing about that failure is visible.
+    ///
+    /// Nothing in AppKit says which is which, so time is the only available
+    /// discriminator: a move that lands within `settleDelay` of a display
+    /// change is assumed to be the system rearranging, not a person.
+    ///
+    /// The board's *own* restoring move counts as a rearrangement too — the
+    /// caller renews the timestamp before moving the window, so the answer
+    /// here stays false for the move it just made.
+    static func countsAsDeliberateMove(
+        at moment: Date, lastScreenChange: Date?, settleDelay: TimeInterval = settleDelay
+    ) -> Bool {
+        guard let lastScreenChange else { return true }
+        return moment.timeIntervalSince(lastScreenChange) >= settleDelay
+    }
+
     /// The screen a window sits on: the one it overlaps most. A window
     /// straddling two displays belongs to the one showing more of it, which is
     /// also the one AppKit calls its screen.
