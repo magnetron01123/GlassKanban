@@ -3,7 +3,7 @@
 # 130 pt top/bottom margin (room for the 4:5 crop), cursor included, stops
 # after DURATION seconds. Clears the stage first (stage.sh) and brings the
 # board to the front.
-# Usage: plans/linkedin/record.sh <take-number> [duration=40]
+# Usage: social/linkedin/record.sh <take-number> [duration=40]
 # Needs: /tmp/window-id, stage.sh next to this file, ffmpeg, and macOS
 #        screen-recording permission for the terminal host.
 #

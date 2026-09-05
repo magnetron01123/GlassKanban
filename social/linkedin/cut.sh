@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Cuts the LinkedIn clips from one screen-recording take — each in 4:5 (main,
 # 1080×1350) and 1:1 (1080×1080).
-# Usage: plans/linkedin/cut.sh TAKE.mov OUTDIR
+# Usage: social/linkedin/cut.sh TAKE.mov OUTDIR
 # Requires ffmpeg (brew install ffmpeg). Written 05.09.2026 as a template:
 # every value in the "MARKS" block is read off the take (QuickTime: ⌘T shows
 # the timecode) and filled in BEFORE the first run. Not yet run — ffmpeg was

@@ -1,12 +1,12 @@
 // Seeds the demo Reminders lists for the LinkedIn video / carousel.
 // Creates two LOCAL lists ("Glass Kanban", "Privat") and fills them with the
-// tickets from plans/linkedin/konzept.md, then writes the column placement
+// tickets from social/linkedin/konzept.md, then writes the column placement
 // (Next / In Progress) straight into the app's columns.json — the app must be
 // CLOSED while this runs, it rewrites the file on its own saves.
 //
 // Build & run (needs Reminders permission for the resulting binary — macOS
 // asks once, on first run, for the terminal that launches it):
-//   swiftc -O -o /tmp/seed-demo plans/linkedin/seed-demo-reminders.swift
+//   swiftc -O -o /tmp/seed-demo social/linkedin/seed-demo-reminders.swift
 //   /tmp/seed-demo            # creates lists + reminders, writes columns.json
 //   /tmp/seed-demo --remove   # deletes both demo lists and their column entries
 //

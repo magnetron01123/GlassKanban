@@ -6,17 +6,21 @@ Anspruch laut Auftrag: professionell, realistisch, aktueller Projektstand, styli
 beeindrucken durch Understatement.
 
 Dieses Dokument ist kein Bauplan im Sinne von `plans/README.md` (es betrifft kein
-App-Verhalten), sondern die Produktionsgrundlage für den Beitrag. Es lebt hier, weil es
-Projektwissen braucht (Demo-Datensatz, Animationszeiten, Texte) und weil der
-Demo-Datensatz zugleich Phase 3 aus RELEASE.md bedient.
+App-Verhalten), sondern die Produktionsgrundlage für den Beitrag — und die Vorlage für
+den nächsten Clip. Es lebt in `social/`, weil es Projektwissen braucht (Demo-Datensatz,
+Animationszeiten, Texte) und weil der Demo-Datensatz zugleich Phase 3 aus RELEASE.md
+bedient. Die Skripte daneben (`record.sh`, `stage.sh`, `cut.sh`, `frames.sh`,
+`seed-demo-reminders.swift`, `window-id.swift`) sind wiederverwendbar; das Drehbuch
+steht in Anhang D.
 
 ---
 
 ## Ergebnis (05.09.2026, nach der Umsetzung) — gilt vor allem Folgenden
 
 Das Video, das gebaut wurde, weicht in vier Punkten von den Abschnitten 2.3–2.5 und Anhang A ab.
-Wo unten etwas anderes steht, gilt dieser Block; die Herleitung steht im Messprotokoll von
-`umsetzungsplan.md`.
+Wo unten etwas anderes steht, gilt dieser Block; die Herleitung stand im Messprotokoll des
+Umsetzungsplans (gelöscht am 05.09.2026 mit dem Umzug nach `social/`, in der Git-Historie
+unter `plans/linkedin/umsetzungsplan.md`).
 
 | | Konzept (ursprünglich) | Gebaut |
 |---|---|---|
@@ -35,8 +39,10 @@ melden jetzt `DropProposal(operation: .move)` — Branch `feature/drag-move-oper
 Nachweis per Zeiger-Frames über Spalte und Spaltenlücke. Die Endfassung (Take 14) zeigt
 den Zeiger als schlichten Pfeil.
 
-Ergebnisdateien: `~/Movies/GlassKanban-LinkedIn/final/` (MP4, GIF, Thumbnail, Kontrollframes,
-Rohtake). Idee A („Drei Züge") wurde nicht gedreht — sie passt nicht in den Ausschnitt.
+Ergebnisdateien: MP4, GIF und Thumbnail liegen hier im Ordner (`glass-kanban-one-move-1x1.*`,
+`glass-kanban-thumbnail-1x1.png`). Kontrollframes, Nachweise, Rohtake (`take14.mov`) und die
+verworfenen Fassungen (`alt-*`) bleiben außerhalb des Repos in
+`~/Movies/GlassKanban-LinkedIn/final/`. Idee A („Drei Züge") wurde nicht gedreht — sie passt nicht in den Ausschnitt.
 
 ---
 
@@ -86,7 +92,7 @@ tun, sonst widerspricht die Verpackung dem Inhalt. Daraus folgen feste Regeln f�
 
 ### 2.1 Demo-Datensatz (zugleich RELEASE.md Phase 3, „Demo-Datensatz")
 
-Zwei lokale Reminders-Listen, angelegt per `plans/linkedin/seed-demo-reminders.swift`
+Zwei lokale Reminders-Listen, angelegt per `social/linkedin/seed-demo-reminders.swift`
 (kompiliert am 05.09.2026, noch nicht gegen den echten Store gelaufen; `--remove` räumt
 wieder auf). Dasselbe Skript schreibt die Spalten (`next`/`inProgress`) direkt in die
 `columns.json` der App — deshalb muss die App dabei **geschlossen** sein; das Skript
@@ -277,7 +283,7 @@ Regeln beim Ziehen: nicht zu schnell, nicht zittern, nicht über anderen Karten 
 ### 3.6 Schnitt — reproduzierbar per Skript, kein Klick-Programm
 
 Werkzeug: `ffmpeg` (`brew install ffmpeg`). Der Schnitt ist ein Skript im Projekt
-(`plans/linkedin/cut.sh`, entsteht nach dem ersten Take), damit ein zweiter Take denselben
+(`social/linkedin/cut.sh`, entsteht nach dem ersten Take), damit ein zweiter Take denselben
 Schnitt bekommt.
 
 Bausteine:
@@ -597,7 +603,7 @@ starten, solange A.2 läuft.**
 ### A.2 Demo-Listen und Spalten anlegen
 
 ```
-swiftc -O -o /tmp/seed-demo plans/linkedin/seed-demo-reminders.swift
+swiftc -O -o /tmp/seed-demo social/linkedin/seed-demo-reminders.swift
 /tmp/seed-demo
 ```
 
@@ -673,7 +679,7 @@ Fälliges einklappen" an. Danach mit `plutil -p` wie oben prüfen.
 
 ```
 open "Glass Kanban.app"; sleep 3
-swiftc -O -o /tmp/window-id plans/linkedin/window-id.swift; /tmp/window-id
+swiftc -O -o /tmp/window-id social/linkedin/window-id.swift; /tmp/window-id
 ```
 
 Erwartung: `id=<n> x=… y=… w=… h=…`. Screenshot der App (computer-use, `app_screenshot`
@@ -777,7 +783,7 @@ Aufnahmebereich = Fenster plus 40 pt Rand seitlich und 130 pt oben/unten (Platz 
 zählt 3 s, nimmt 40 s auf, zeigt `ffprobe`):
 
 ```
-plans/linkedin/record.sh 1        # → /tmp/take1.mov
+social/linkedin/record.sh 1        # → /tmp/take1.mov
 ```
 
 Was das Skript ausführt, falls es von Hand gebraucht wird:
@@ -815,13 +821,13 @@ ffmpeg -y -ss 1 -i /tmp/take1.mov -vf "crop=$CROP_W:$CROP_H:$CROP_X:$CROP_Y,scal
 
 ### A.9 Schnitt
 
-Marken in `plans/linkedin/cut.sh` (Block „MARKS") aus dem gewählten Take ablesen:
-`plans/linkedin/frames.sh /tmp/take2.mov` legt je 0,25 s ein Bild nach `/tmp/frames-take2/`;
+Marken in `social/linkedin/cut.sh` (Block „MARKS") aus dem gewählten Take ablesen:
+`social/linkedin/frames.sh /tmp/take2.mov` legt je 0,25 s ein Bild nach `/tmp/frames-take2/`;
 Bildnummer ÷ 4 = Sekunde. Notieren: Cursor-liegt-still, Loslassen der Karte, Ende der Ruhe.
 Dann:
 
 ```
-plans/linkedin/cut.sh /tmp/take2.mov /tmp/cut
+social/linkedin/cut.sh /tmp/take2.mov /tmp/cut
 ```
 
 Erwartung: je Format (`-4x5`, `-1x1`) `glass-kanban-one-move-*.mp4` (≈ 7 s), das GIF, das
@@ -864,3 +870,34 @@ Segment mit `ffprobe` vergleichen.
 - Die exakten Zeitmarken für `cut.sh` — kommen nur aus dem Take.
 - Alles, was die Plattform LinkedIn beim Upload tut (Nachkodierung, Loop) — nach dem Posten
   am Telefon ansehen.
+
+---
+
+## Anhang D — Drehbuch für die Aufnahme (Kurzfassung zum Mitlesen)
+
+Vor jedem Take: Board vorne, Cursor außerhalb des Fensters. Claude startet die Aufnahme,
+sie läuft 40 s und stoppt von selbst. Ruhig ziehen, ~1 s pro Zug, mittig loslassen, nicht
+über andere Karten schweben.
+
+## Take 1–3 — Idee B „Ein Zug" (Startzustand: In Bearbeitung 2 / 2)
+
+1. Cursor auf „LinkedIn-Video aufnehmen" legen, **2 s still halten**
+2. Nach „Erledigt" ziehen, loslassen
+3. **4 s nichts tun**
+4. Cursor langsam nach unten rechts aus dem Fenster
+5. Nach dem Take: ⌘Z einmal (Karte ist wieder in In Bearbeitung, Flamme wieder 6)
+
+## Take 4–6 — Idee A „Drei Züge"
+
+Vorher einmalig: „LinkedIn-Video aufnehmen" zurück nach „Als Nächstes" ziehen
+(Startzustand: In Bearbeitung 1 / 2, Als Nächstes 3 / 5).
+
+1. Cursor auf „LinkedIn-Video aufnehmen" (Als Nächstes), **2 s still**
+2. Zug 1: nach In Bearbeitung, **2 s warten**
+3. Zug 2: „Demo-Liste anlegen" nach In Bearbeitung → Dialog erscheint, **2 s nichts tun**,
+   dann **Return**, 2 s warten
+4. Zug 3: „LinkedIn-Video aufnehmen" nach Erledigt, **3 s warten**
+5. Cursor langsam aus dem Fenster
+6. Nach dem Take: ⌘Z zweimal (Zug 3 und Zug 1; Zug 2 wurde vom Dialog schon zurückgenommen)
+
+Misslingt ein Zug: kurz warten, ⌘Z, Claude Bescheid sagen — Take neu.

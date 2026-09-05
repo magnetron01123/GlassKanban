@@ -23,7 +23,9 @@ das Vorhaben umsetzen können, ohne diese Entscheidung noch einmal zu führen.
    CLAUDE.md kennt die neuen Dateien. Git behält die Geschichte des Plans.
 
 Ein Plan, der länger als das Vorhaben lebt, ist Drift — dieselbe Regel wie für Branches
-(CLAUDE.md, „Branches nicht liegen lassen").
+(CLAUDE.md, „Branches nicht liegen lassen"). Was kein App-Verhalten ist, gehört nicht
+hierher: Material für Beiträge (Konzept, Aufnahme-Skripte, fertige Clips) liegt in
+`social/` und bleibt dort, weil es für den nächsten Beitrag wiederverwendet wird.
 
 ## Aufbau eines Plans
 

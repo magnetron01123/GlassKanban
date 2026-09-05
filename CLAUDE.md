@@ -44,6 +44,16 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
 - **CLAUDE.md** (dieses Dokument) — wie hier gearbeitet wird: Prinzipien als Kompass,
   Landkarten, Arbeitsregeln. Kein Produktwissen — das steht in den Dokumenten oben.
 
+## Ordner-Landkarte
+
+Der Projektordner folgt „so wenig wie nötig": `GlassKanban/` (Quellen, darin `Tests/`),
+`plans/`, `scripts/`, `social/` (Beitragsmaterial, z. B. LinkedIn-Clip samt Skripten),
+`project.yml`, die sechs Markdown-Dateien im Stamm und `Glass Kanban.app`. Das
+`.xcodeproj` wird von XcodeGen erzeugt und ist seit 05.09.2026 **nicht mehr in Git** —
+`scripts/build-app.sh` regeneriert es, wenn `project.yml` neuer ist; in einem frischen
+Klon einmal `xcodegen generate`. Neue Ordner oder Dateien im Stamm brauchen einen Grund
+und einen Eintrag in der Liste in README.md („Ordner").
+
 ## Code-Landkarte
 
 Zwei Targets (App + Tests), `GlassKanban/` mit rund 10.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
@@ -127,8 +137,10 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `GlassKanbanTests/`, 22 Dateien mit rund 340 Tests, benannt nach der Regel
-  statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
+- **Tests** — `GlassKanban/Tests/`, 22 Dateien mit rund 340 Tests, benannt nach der Regel
+  statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`). Der
+  Ordner liegt in den Quellen, wird aber per `excludes` in `project.yml` nur ins
+  Testbundle kompiliert (Target heißt weiterhin `GlassKanbanTests`).
 
 ## Arbeitsweise
 
