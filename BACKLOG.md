@@ -496,7 +496,134 @@ Zug, sondern nur ein Tag, der einen Zug länger stehen bleibt.
 
 ## Fensterverhalten
 
-- **Menüleisten-Modus / Always-on-Top** — MVP nutzt ein normales Fenster.
+- **Menüleisten-Modus / Always-on-Top** — MVP nutzt ein normales Fenster. Zur
+  Menüleiste siehe den ausgearbeiteten Punkt direkt darunter.
+- **Glass Kanban in der Menüleiste — aber die Bedienung fühlt sich an wie Karten
+  verschieben (Idee 23.08.2026, Konzept 05.09.2026)** — Der Reiz liegt ausdrücklich
+  **nicht** im Zugriffsweg, sondern in der Bedienung: Was aus der Menüleiste kommt, soll
+  die Geste des Boards tragen — ziehen, ablegen, einrasten — statt eine Textliste mit
+  „Verschieben nach"-Untermenüs zu sein. Ein solches Untermenü wäre die Rückfallebene, und
+  sie hat genau den Reiz nicht, um den es geht.
+
+  **Warum der Punkt Gewicht hat:** Die Menüleiste ist der einzige Ort außerhalb des
+  Fensters, an dem die App ohne Apple Developer Program präsent sein kann — das Widget,
+  das diese Rolle bisher trägt („Spätere Apple-/Mac-Ausbaustufen", Gewicht gestiegen
+  09.08.2026), hängt an Phase 0 aus RELEASE.md. Zur Positionierung „ruhige Fläche im
+  Schreibtisch-Setup" passt sie ebenfalls: ein Board, das da ist, ohne Fläche zu belegen.
+
+  **Konzept (05.09.2026) — Mockups zur Entscheidung.**
+
+  Zwei Richtungen als Canvas, beide aus den echten Tokens gebaut (Mulde 14 pt, Papier
+  11 pt, Kompaktzeile 38 pt, Titel 15 pt medium, Kopf 13 pt semibold sekundär):
+  <https://claude.ai/code/artifact/a3b2efd4-9603-418f-9227-0b14031fc8e4>
+
+  **Was für beide gilt — die Regeln, die nicht zur Wahl stehen:**
+  - *Glas ist Chrome, nie Inhalt.* Das Menüleisten-Element ist eine Glasplatte
+    (`HUDGlassMaterial`, `state = .active` — dieselbe Immer-aktiv-Regel wie das Fenster),
+    darin liegen Mulden, darauf Papier. Kein Element des Boards wird neu erfunden; die
+    Karte ist die **Kompaktzeile** des Boards (38 pt — die Backlog-Zeile in den
+    Arbeitsspuren, die Erledigt-Zeile in Erledigt) — Titel, nicht Inhalt. Wer den Inhalt braucht, hat das Board. Das hält das Element
+    klein und macht es zur Ansicht *derselben* Karte, nicht zu einer zweiten Karte.
+  - *Pull-Prinzip bleibt.* Ist „In Bearbeitung" leer und liegt stromaufwärts Arbeit,
+    zeigt die Mulde denselben gestrichelten Umriss („Fertigwerden beginnt hier") wie das
+    Board — dieselbe eine Einladung, nur an einem zweiten Ort; keine Karte wird
+    hervorgehoben. Ist das Fenster geschlossen (reiner Menüleisten-Betrieb), ist das
+    sogar die *einzige* Einladung — die Regel „höchstens eine" bleibt wörtlich erfüllt.
+  - *WIP als Reibung.* Ein Zug über das Limit stellt dieselbe Rückfrage wie auf dem Board
+    (`Über deinem Limit` mit den beiden Knöpfen). Offen ist nur die Form im kleinen
+    Element — kein Sheet über einem Popover; eher eine Zeile in der Mulde, die den Zug
+    hält, bis geantwortet ist. Nie stilles Zulassen, nie stilles Verbot.
+  - *Das Symbol in der Menüleiste ist stumm.* Ein monochromes Template-Glyph — drei
+    Spuren, zwei mit Karten — ohne Zahl, ohne Badge, ohne Farbe. Eine Zahl in der
+    Menüleiste ist ein Dauer-Badge, und ein Dauer-Badge ist das, was Reminders'
+    rote Zahl aus einer Aufgabenliste in eine Anklage macht. Verworfen wurde auch, das
+    Glyph bei freiem „In Bearbeitung"-Platz hohl zu zeichnen: ein Zustand, der den
+    ganzen Tag steht, bekommt keine Aufmerksamkeit (CLAUDE.md, Prinzip 2).
+  - *Nur Bewegen und Öffnen.* Bewegen auf denselben drei Wegen wie eine Board-Karte
+    (Ziehen, „Verschieben nach", VoiceOver-Aktion — siehe Doku-Abgleich unten); ein
+    Klick auf eine Karte öffnet das Board mit dieser Karte, mehr nicht. Kein
+    Bearbeiten, kein Anlegen, kein Suchen im Element. Alles, was Chrome bräuchte
+    (Suche, „+", Filter), bleibt im Fenster; das Element ist eine Hand, kein zweites
+    Werkzeug.
+  - *Klang und Haptik laufen mit* (`MoveFeedback`): derselbe Zug, dieselbe Antwort.
+  - *Kein neuer Schreibpfad.* Das Element ruft dieselbe `move()`-Funktion wie
+    Drag & Drop und Kontextmenü im Board — eine Regel, ein Weg, keine dritte Wahrheit.
+
+  **Entschieden am 05.09.2026: Richtung A, „Das Tablett".** Begründung des Nutzers:
+  näher an Kanban. **Bauplan: `plans/menubar-tablett.md`** — Messweiche, Schritte,
+  Abnahme; für eine eigene Session geschrieben. Das Tablett ist ein Popover unter dem
+  Symbol, 660 pt breit. Darin **drei Spuren in einer Reihe, in Board-Reihenfolge**:
+  „Als Nächstes" · „In Bearbeitung" · „Erledigt" — gleich breit, gleich hoch, der Zug
+  läuft von links nach rechts wie auf dem Board. Backlog bleibt dem Board; die Fußzeile
+  nennt nur die Zahl und den Weg zurück („Backlog · 12", „Board öffnen"). Das Element
+  zeigt genau die Strecke, auf der Kanban stattfindet — Zusage → Arbeit → fertig —, und
+  sonst nichts. **Korrektur vom selben Tag:** Die erste Fassung (und das erste Mockup)
+  legte Erledigt als flache Ablage *unter* die beiden Arbeitsspuren. Der Nutzer hat das
+  verworfen: Damit lief der letzte Zug nach unten statt nach rechts — und die Richtung
+  ist nicht Dekoration, sie *ist* die Kanban-Logik. Eine schmalere Erledigt-Spalte
+  kam nicht infrage („Schmalere Ablage-Spalten", Explizit abgelehnt). Wer morgens aus
+  dem Backlog wählt, tut das im Fenster; das ist Planung, und Planung gehört nicht in
+  die Hand.
+
+  **Erster Schritt vor jeder Zeile Code (Projektregel: erst messen):**
+  `MenuBarExtra` mit `.menuBarExtraStyle(.window)` ist das Einzige, was ein Popover mit
+  echten SwiftUI-Views trägt. Ob ein Drag darin lebt, ist **ungemessen** — das Popover
+  schließt bei Fokusverlust, und ein begonnener Zug darf es nicht zuklappen. Rückfall,
+  falls nicht: dieselbe Fläche als eigenes nicht aktivierendes `NSPanel` unter dem
+  Symbol positioniert (die Technik der verworfenen Richtung B, in der Größe von A).
+
+  **Verworfen: Richtung B, „Das Regal"** (Artboard `RegalB`, Seite „Verworfen"). Ein
+  Brett über die volle Bildschirmbreite unter der Menüleiste, alle vier Spuren in
+  Board-Geometrie, technisch ein eigenes `NSPanel`. Es hatte den sichereren Drag und
+  die vollständige Geste — aber es ist ein zweites Board, nur flacher. Bleibt als
+  Technik-Referenz für den Rückfall oben stehen, nicht als Gestaltung.
+
+  **Die Einstellung:** In „Allgemein" ein Auswahlfeld
+  *Anzeigen in* — **Dock** (heutiges Verhalten, Vorgabe: ein Update ändert nichts) ·
+  **Menüleiste** · **Dock und Menüleiste**. Fußnote benennt, was sonst überrascht: „Ohne
+  Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist." Technisch
+  `NSApp.setActivationPolicy(.accessory)` für „Menüleiste" und `MenuBarExtra(isInserted:)`
+  für das Symbol; als `StoredSetting` mit Geltung `.thisDevice` — wo die App sichtbar ist,
+  gehört dem Rechner, nicht dem Nutzer, wie das Erscheinungsbild. Bei „Menüleiste"
+  bekommt das Element ein „Beenden" und „Board öffnen"; ohne Dock gibt es sonst keinen
+  Weg zu beidem. Ein Umschalten der Activation Policy zur Laufzeit lässt das Dock-Symbol
+  kurz springen — gemessen wird, ob das ein Neustart-Hinweis sein muss.
+
+  **Was bewusst nicht drin ist:** Streak-Pille, Statistik, Suche, „+", Filter (Chrome
+  bleibt im Fenster). Ein Menü-Modus mit Untermenüs (Rückfallebene ohne Reiz). Eine Zahl
+  am Symbol. Volle Karten mit Notizen im Element (das wäre ein kleineres Board, und ein
+  kleineres Board ist das Widget-Missverständnis, siehe dort).
+  **Aus dem Review des Bauplans (05.09.2026) dazugekommen:** Erledigt-Karten sind im
+  Tablett nicht ziehbar — der Rückweg einer Serie kann scheitern („Not Restored"), und
+  diese Antwort gehört dem Board, nicht einem Popover. Das Tablett zeigt seine Spuren
+  **ungefiltert**: Es hat kein Chrome, das eine Suche erklären könnte, also darf es
+  keine verbergen. Kein ⌘Z im Tablett — die Hand, die zog, zieht zurück. Die
+  WIP-Frage steht im Tablett **inline in der Mulde**, nicht als Alert: Ein Alert nähme
+  dem Popover den Fokus und schlösse es. Im Modus „Menüleiste" öffnet das Board beim
+  Start nicht von selbst; wer das Symbol per ⌘ aus der Leiste zieht, landet wieder bei
+  „Dock" — die App ist nie ohne Ort.
+  **Leitsatz (Nutzer, 05.09.2026): Tablett und Board so nah beieinander wie möglich,
+  wo es sinnvoll und vergleichbar ist.** Abweichungen nur aus Platz oder Technik, jede
+  benannt (Tabelle im Bauplan). Daraus: Der Kopf jeder Mulde ist der Board-Kopf — ein
+  Zähl-Chip, teal bei Überschreitung, kein „heute N" (das Board hat den Zusatz
+  abgelegt), kein eigener Limit-Chip (den zeigt das Mockup, das Board nicht). Die
+  Erledigt-Ablage nimmt das 7-Tage-Fenster des Boards und dessen Leer-Regel („Nur
+  Fertiges zählt"), nicht ein eigenes „heute". Beide Arbeitsmulden sind gleich hoch —
+  Mulden, die mit dem Inhalt atmen, sind für das Board verworfen und bleiben es hier.
+  Die WIP-Frage hält das Tablett, bis sie beantwortet ist; nichts wird still
+  entschieden. Der Pull-Umriss erscheint in Board und Tablett am selben Platz — eine
+  Einladung, zweimal gezeigt, nicht zwei.
+  **Aus dem Doku-Abgleich (05.09.2026):** „Nur Ziehen" hielt nicht — SPEC verlangt, dass
+  Maus, Kontextmenü und VoiceOver gleich behandelt werden und die WIP-Frage sich bei
+  jeder Route stellt. Das Tablett bekommt deshalb dieselben drei Wege wie eine
+  Board-Karte (Drag, „Verschieben nach", VoiceOver-Aktion), alle über `move()`; nur
+  Löschen und Editor bleiben dem Board. Der Kopf-Tooltip kommt mit (Chrome erklärt
+  Regeln). Erledigt-Titel in voller Farbe, wie SPEC es festlegt.
+
+  **Spannung, bewusst offen (Minimalismus):** Menüleiste, Widget und Fenster wären drei
+  Orte für dieselbe Sache. Nicht alle drei bauen — vor dem Widget entscheiden, ob die
+  Menüleiste es ersetzt oder ergänzt. Der Unterschied liegt im Zug: Das Widget zeigt,
+  das Tablett bewegt.
 
 ## Bewegung / Animation
 
@@ -710,6 +837,7 @@ Abweichung gilt der Code.
 | `excludedCalendarIDs` | UserDefaults | offen, hängt an M4 |
 | `appAppearance` | UserDefaults | lokal — Bildschirm im Büro ≠ zu Hause |
 | `completionSoundEnabled` | UserDefaults | lokal — Kopfhörer am Laptop |
+| `appPresence` (Dock/Menüleiste/beides, geplant 05.09.2026) | UserDefaults | lokal — wo die App sichtbar ist, gehört dem Rechner |
 | `correctionLedger` | UserDefaults | **strikt lokal** |
 | `tagReleaseMemory` | UserDefaults | strikt lokal |
 | `pendingTagCleanup` | columns.json | lokal — Arbeitsliste dieses Prozesses |
