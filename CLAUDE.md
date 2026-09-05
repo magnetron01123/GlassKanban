@@ -32,11 +32,17 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
   „Explizit abgelehnt" prüfen; abgelehnte Ideen nicht wieder vorschlagen, ohne dass der
   Nutzer das Thema selbst öffnet.
 - **RELEASE.md** — einzige Wahrheit zum Mac-App-Store-Release.
+- **plans/** — das Wie für ein entschiedenes Vorhaben: eine Datei pro Vorhaben, für
+  eine eigene Session geschrieben (auch mit einem kleineren Modell), mit Messweiche,
+  Schrittfolge, Befehlen und Abnahme. Entsteht nach der Entscheidung in BACKLOG.md,
+  wird beim Bauen abgehakt und mit dem Merge gelöscht — das Verhalten steht dann in
+  SPEC.md. Muster und Lebensdauer in `plans/README.md`. **Steht ein Plan, wird die
+  Entscheidung dort nicht neu geführt.**
 - **README.md** — die Außensicht: was die App ist und kann, für jemanden, der das
   Repository zum ersten Mal sieht. Ein neues nutzersichtbares Feature gehört auch hierhin,
   nicht nur in SPEC.md.
 - **CLAUDE.md** (dieses Dokument) — wie hier gearbeitet wird: Prinzipien als Kompass,
-  Landkarten, Arbeitsregeln. Kein Produktwissen — das steht in den vier oben.
+  Landkarten, Arbeitsregeln. Kein Produktwissen — das steht in den Dokumenten oben.
 
 ## Code-Landkarte
 
