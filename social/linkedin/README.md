@@ -52,15 +52,15 @@ swiftc -O -o /tmp/seed-demo social/linkedin/seed-demo-reminders.swift
 /tmp/seed-demo --remove 2>/dev/null; /tmp/seed-demo
 ```
 
-Erwartung: `created 18 reminders in Glass Kanban, Privat` und `5 pulls written`.
-„Privat" wird leer angelegt, nur „Glass Kanban" trägt Karten. Das Skript verweigert,
+Erwartung (Datensatz v3, 07.09.2026): `created 16 reminders in Glass Kanban, Privat` und
+`3 pulls written`. „Privat" (grün) trägt den Alltag, „Glass Kanban" (blau) zwei Projektkarten. Das Skript verweigert,
 wenn die App läuft. Nachweis:
 
 ```
 python3 -c "import json;d=json.load(open('$HOME/Library/Containers/com.davidtrogemann.GlassKanban/Data/Library/Application Support/GlassKanban/columns.json'));print(sorted(v['lane'] for v in d['pulls'].values()))"
 ```
 
-→ zweimal `inProgress`, dreimal `next` (plus vorhandene echte Einträge).
+→ dreimal `next`, kein `inProgress` — die Spalte ist absichtlich leer, der Clip ist der Pull hinein.
 
 ## 2. App-Einstellungen (5 min) — bei geschlossener App
 
@@ -109,7 +109,9 @@ displayplacer list | grep "Persistent screen id\|2560x1440.*scaling:on"
 displayplacer "id:<Persistent screen id des Hauptdisplays> mode:<N>"
 ```
 
-Nachweis kommt in Schritt 4 (Aufnahmebreite). Zwei Fallen, beide gemessen: Der Finder
+Nachweis kommt in Schritt 4 (Aufnahmebreite). Drei Fallen, alle gemessen: Ein offenes
+**Finder-Fenster** hinter dem Board scheint dunkel durch das Glas (07.09.2026, Take 1) —
+vorher schließen, `stage.sh` blendet den Finder nicht aus. Der Finder
 darf **nicht** ausgeblendet werden (Apple-Events-Dialog mitten im Take; `stage.sh` lässt
 ihn deshalb aus), und ein Gatekeeper-Dialog kann auf dem zweiten Display liegen und die
 Aufnahme-App blockieren — vorher nachsehen.
@@ -133,13 +135,13 @@ Screenshot per computer-use (`app_screenshot`, Bundle-ID `com.davidtrogemann.Gla
 und diese Liste abhaken, **jeden Punkt einzeln**:
 
 - Backlog: 6 Karten und die Falz „1 noch nicht fällig", Kapsel „7"
-- Als Nächstes: 3 Karten, Kapsel „3 / 5"
-- In Bearbeitung: „Doku-Konsistenz prüfen" und „LinkedIn-Video aufnehmen" (Chip „Heute", `!!`), Kapsel „2 / 2"
+- Als Nächstes: 3 Karten, Kapsel „3 / 5"; „LinkedIn-Beitrag schreiben" oben, Chip „Heute", `!!`
+- In Bearbeitung: **leer**, Platzhalter „Fertigwerden beginnt hier", Kapsel „0 / 2"
 - Erledigt: 6 Karten mit Durchstrich, Kapsel „6"
 - Toolbar links: Flamme mit **„6"**. Anders → Erledigt-Daten liegen falsch, Schritt 1 wiederholen
 - keine Karte aus fremden Listen, kein abgeschnittener Titel
 
-Dann den Zeiger **auf die Karte „LinkedIn-Video aufnehmen"** legen (computer-use
+Dann den Zeiger **auf die Karte „LinkedIn-Beitrag schreiben"** legen (computer-use
 `mouse_move`, Kartenmitte aus dem Screenshot) und liegen lassen. Der Clip beginnt mit
 dem Zeiger auf der Karte, ohne Anfahrt.
 
@@ -154,8 +156,8 @@ Das Skript blendet andere Apps aus, holt das Board nach vorn, findet das Display
 
 **Der Zug** läuft synthetisch, aber nur auf HID-Ebene (CLAUDE.md, „Drag & Drop"): ab
 Sekunde 7 nach dem Start eine `computer_batch` mit `left_mouse_down` auf der Karte,
-**sieben** `mouse_move` in gleichen Schritten auf dieselbe Höhe in der Spalte
-„Erledigt" (eine Spaltenbreite weiter rechts, ≈ 300 pt bei 1220 pt Fenster), danach
+**sieben** `mouse_move` in gleichen Schritten auf dieselbe Höhe in die leere Spalte
+„In Bearbeitung" (eine Spaltenbreite weiter rechts, ≈ 300 pt bei 1220 pt Fenster), danach
 `left_mouse_up`; Gesamtdauer ≈ 1,7 s. Danach **nichts** mehr bewegen, bis die Aufnahme
 endet. Der Hintergrund-`app_drag` taugt nicht: Er lässt die Karte nie los.
 
@@ -169,16 +171,23 @@ ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_r
 zu Schritt 3. Sichtprüfung eines Frames beim Zug (`ffmpeg -ss 8 -frames:v 1`): Zeiger als
 **schlichter Pfeil**, kein grünes Plus, kein Greifsymbol.
 
-Für einen weiteren Take: `Bearbeiten › Widerrufen` in der App (Karte zurück, Flamme 6),
+Für einen weiteren Take: `Bearbeiten › Widerrufen` in der App (Karte zurück) — ist der
+Menüpunkt grau, die Karte per HID-Zug zurückziehen —,
 Zeiger wieder auf die Karte, `record.sh 2`.
 
 ## 6. Schnitt (2 min)
 
 ```
-social/linkedin/cut.sh /tmp/take1.mov /tmp/cut
+CHIME=/tmp/silence.wav social/linkedin/cut.sh /tmp/take1.mov /tmp/cut 7.25 9.47 11.31
 ```
 
-Das Skript liest die Marken selbst (`marks.sh`: Ruhe 0,5 s, Zug, Settle, Durchstrich,
+Der Pull vollendet nichts, also **kein Erledigt-Klang**: `CHIME` auf eine stille Datei
+(`ffmpeg -f lavfi -i anullsrc=r=48000:cl=stereo -t 0.2 /tmp/silence.wav`). Die Marken kommen
+von Hand — `marks.sh` ist auf den Durchstrich-Ausschlag geeicht, den es hier nicht gibt:
+Ruhe 0,5 s vor der ersten Bewegung, Ablegen am Ende des Zugs, Ende kurz bevor der Zeiger
+das Bild verlässt (Take 2 am 07.09.2026: `7.25 9.47 11.31`, 4,07 s). Für den älteren
+Erledigt-Clip (Take 14, `final/`) gilt weiterhin: ohne Marken, ohne `CHIME` —
+das Skript liest die Marken selbst (`marks.sh`: Ruhe 0,5 s, Zug, Settle, Durchstrich,
 Nachlauf 1,1 s) und meldet sie; erwartete Cliplänge **3,8–4,1 s**. Sind die Marken
 unplausibel: `social/linkedin/frames.sh /tmp/take1.mov`, Bilder ansehen, Marken von Hand
 als Argumente 3–5 übergeben.
@@ -194,7 +203,7 @@ ffmpeg -v error -y -sseof -0.04 -i $F -frames:v 1 /tmp/cut/check-last.png
 
 → `h264`, `1080 × 1080`, `30/1`, `bt709/bt709/bt709/tv`. Bilder: bei 0 s Zeiger auf der
 Karte; bei 1,0 / 1,4 / 1,8 s (Quellspalte, Spaltenlücke, Zielspalte) Zeiger ohne Badge;
-letztes Bild Kapseln **7 · 1/2 · 7**, Flamme **7**, kein Geist der Karte. Loop: Datei in
+letztes Bild Kapseln **7 · 2/5 · 1/2 · 6**, Flamme bleibt **6**, kein Geist der Karte; Tonspur still (`volumedetect`: −91 dB). Loop: Datei in
 QuickTime mit ⌥⌘L abspielen, die Naht darf nicht springen.
 
 Am 05.09.2026 gemessen: Der Standardaufruf auf `take14.mov` liefert 3,90 s (von Hand
@@ -203,7 +212,7 @@ geschnitten waren es 3,97 s), identisches Thumbnail, gleiche Bitrate — dasselb
 ## 7. Ablage
 
 ```
-cp /tmp/cut/glass-kanban-one-move-1x1.mp4 /tmp/cut/glass-kanban-one-move-1x1.gif /tmp/cut/glass-kanban-thumbnail-1x1.png social/linkedin/
+cp /tmp/cut/glass-kanban-one-move-1x1.mp4 social/linkedin/glass-kanban-pull-1x1.mp4   # Pull-Clip; der Erledigt-Clip heißt one-move
 mkdir -p ~/Movies/GlassKanban-LinkedIn && cp /tmp/take1.mov ~/Movies/GlassKanban-LinkedIn/
 ```
 

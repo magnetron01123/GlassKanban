@@ -40,38 +40,35 @@ func date(daysFromToday d: Int, hour: Int = 9) -> Date {
 
 // Order matters only for the app's own sorting (age), not here.
 let tickets: [Ticket] = [
-    // Show set, 05.09.2026 (v2): built for a tall 1:1 frame at the board's
-    // minimum width of 1220 pt. Every title fits without an ellipsis (≤ 28
-    // characters, compact cards), one list only so the board carries a single
-    // accent colour, and fewer cards so the columns breathe. The recurring
-    // card is the one that folds ("1 noch nicht fällig").
+    // Show set v3, 07.09.2026: fewer project tickets, mostly everyday work on
+    // the "Privat" list (green) with two "Glass Kanban" cards (blue), so the
+    // board reads as a life, not a changelog. Kanban-shaped: a full Backlog,
+    // three pulled into Als Nächstes (limit 5), In Bearbeitung EMPTY (limit 2)
+    // — the clip is the pull that starts work there — and six done, one per
+    // day, for a streak of 6. Titles ≤ 28 characters (no ellipsis at 1220 pt).
     // Backlog
-    Ticket(title: "Datenschutzerklärung", priority: 5),
-    Ticket(title: "App-Store-Screenshots"),
-    Ticket(title: "TestFlight-Beta starten"),
+    Ticket(title: "Keller aufräumen", list: "Privat"),
+    Ticket(title: "Zahnarzttermin buchen", list: "Privat"),
+    Ticket(title: "Winterreifen einlagern", list: "Privat"),
+    Ticket(title: "Geschenk besorgen", list: "Privat"),
+    Ticket(title: "Fahrrad zur Inspektion", list: "Privat"),
     Ticket(title: "Produktseite bauen"),
-    Ticket(title: "Listing-Texte schreiben"),
-    Ticket(title: "Einführungspreis festlegen"),
-    Ticket(title: "Wochenrückblick", dueInDays: 3, weekly: true),
-    // In Bearbeitung — 2 / 2, the LinkedIn card is the one that moves
-    Ticket(title: "Doku-Konsistenz prüfen", lane: "inProgress",
-           notes: "SPEC, CONCEPT, BACKLOG gegen main lesen"),
-    Ticket(title: "LinkedIn-Video aufnehmen", lane: "inProgress", priority: 5, dueInDays: 0,
-           notes: "Ein Zug, vier Sekunden, kein Text auf dem Board"),
-    // Als Nächstes — 3 / 5
-    Ticket(title: "Demo-Liste anlegen", lane: "next",
-           notes: "Zwei Listen, glaubwürdige Titel, keine Namen"),
-    Ticket(title: "Deep-Link entfernen", lane: "next",
-           notes: "x-apple-reminderkit ist undokumentiert"),
-    Ticket(title: "Onboarding kürzen", lane: "next",
-           notes: "Drei Sätze, kein Coaching, kein Tooltip"),
-    // Erledigt — one per day, six consecutive days → streak 6 before the move
-    Ticket(title: "iCloud-Sync-Grundlage", completedDaysAgo: 1),
-    Ticket(title: "Bildschirm-Zuordnung", completedDaysAgo: 2),
-    Ticket(title: "Spalte in eigene Datei", completedDaysAgo: 3),
+    Ticket(title: "Wochenrückblick", list: "Privat", dueInDays: 3, weekly: true),
+    // Als Nächstes — 3 / 5; the top card is the one that gets pulled
+    Ticket(title: "LinkedIn-Beitrag schreiben", lane: "next", priority: 5, dueInDays: 0,
+           notes: "Vier Sekunden, ein Zug, kein Text auf dem Board"),
+    Ticket(title: "Steuerunterlagen sortieren", list: "Privat", lane: "next",
+           notes: "Belege 2025, Ordner im Regal"),
+    Ticket(title: "Wochenessen planen", list: "Privat", lane: "next",
+           notes: "Drei Abende, ein Einkauf"),
+    // In Bearbeitung — empty on purpose
+    // Erledigt — one per day, six consecutive days → streak 6
+    Ticket(title: "Einkaufen", list: "Privat", completedDaysAgo: 1),
+    Ticket(title: "Fünf Kilometer laufen", list: "Privat", completedDaysAgo: 2),
+    Ticket(title: "Versicherung kündigen", list: "Privat", completedDaysAgo: 3),
     Ticket(title: "Deutsche Lokalisierung", completedDaysAgo: 4),
-    Ticket(title: "Durchlaufzeit im Rückblick", completedDaysAgo: 5),
-    Ticket(title: "WIP-Dialog gebaut", completedDaysAgo: 6),
+    Ticket(title: "Geburtstagskarte schicken", list: "Privat", completedDaysAgo: 5),
+    Ticket(title: "Fenster putzen", list: "Privat", completedDaysAgo: 6),
 ]
 
 let store = EKEventStore()
