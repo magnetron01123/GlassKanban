@@ -26,7 +26,9 @@ MX=${MX:-20}; MY=${MY:-130}   # margins in points, must match cut.sh.
 # like padding; this does not.
 # The avfoundation index of the main display moves whenever an iPhone
 # (Continuity Camera) is nearby, so look it up by name instead of hard-coding it.
-SCREEN=$(ffmpeg -hide_banner -f avfoundation -list_devices true -i "" 2>&1 | sed -n 's/.*\[\([0-9]*\)\] Capture screen 0$/\1/p')
+# `-list_devices` always exits non-zero (251, "Error opening input"); under
+# `set -o pipefail` that would kill the script right here — measured 07.09.2026.
+SCREEN=$( (ffmpeg -hide_banner -f avfoundation -list_devices true -i "" 2>&1 || true) | sed -n 's/.*\[\([0-9]*\)\] Capture screen 0$/\1/p')
 [ -n "$SCREEN" ] || { echo "no 'Capture screen 0' device — screen-recording permission missing?"; exit 1; }
 pgrep -q -f "Glass Kanban.app/Contents/MacOS/Glass Kanban" || { echo "Glass Kanban is not running"; exit 1; }
 [ -x /tmp/window-id ] || swiftc -O -o /tmp/window-id "$(dirname "$0")/window-id.swift"

@@ -137,6 +137,17 @@ als ein Verwischen.
 
 ---
 
+## 3a. Zweiter Clip: „Der Pull" (≈ 4 s, Loop, 07.09.2026)
+
+Gleiche Bühne, anderer Zug: „In Bearbeitung" ist **leer** und zeigt den Platzhalter der App,
+„Fertigwerden beginnt hier". Der Zeiger liegt auf „LinkedIn-Beitrag schreiben" in „Als
+Nächstes", zieht die Karte in die leere Spalte, sie landet, der Platzhalter ist weg — 3/5
+→ 2/5, 0/2 → 1/2. Kein Durchstrich, keine Flamme, kein Klang: Der Clip zeigt den Anfang
+von Arbeit, nicht ihr Ende. Datensatz v3 (`seed-demo-reminders.swift`): 16 Tickets, fast
+nur Alltag auf der Liste „Privat", zwei Projektkarten auf „Glass Kanban", Backlog 7 · Als
+Nächstes 3 · In Bearbeitung 0 · Erledigt 6. Dateien: `glass-kanban-pull-1x1.*`. Beide
+Clips liegen nebeneinander; welcher zu welchem Text gehört, entscheidet der Beitrag.
+
 ## 4. Beitragstexte — zwei Entwürfe
 
 Beide unter 1.300 Zeichen (LinkedIn zeigt ~210 Zeichen vor „mehr anzeigen" — der erste Satz
