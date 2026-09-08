@@ -61,11 +61,13 @@ und einen Eintrag in der Liste in README.md („Ordner").
 
 ## Code-Landkarte
 
-Zwei Targets (App + Tests), `GlassKanban/` mit rund 10.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
+Zwei Targets (App + Tests), `GlassKanban/` mit rund 12.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
-  Korrektur-Antworten an fremde Schreiber. Mit Abstand die größte Datei und die einzige
+  Korrektur-Antworten an fremde Schreiber; `PendingOverflow` trägt seit 08.09.2026
+  ein `MoveSource` mit, damit Board und Tablett je nur ihre eigene WIP-Frage
+  stellen. Mit Abstand die größte Datei und die einzige
   Stelle mit Seiteneffekten. (Die frühere *Tag-Hygiene* ist mit dem Formwechsel vom
   13.08.2026 entfallen — es gibt keine Tags mehr zu pflegen.)
 - **ColumnState.swift** — **die Spalte**: welche Karte in welcher Arbeitsspur liegt und
@@ -90,6 +92,17 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Nutzer je etwas getan hatte (behoben 26.07.2026, siehe `StatusTaggerTests`). Die Datei
   entfällt mit der Aufräumung, frühestens eine Version nach 1.0.
 - **Models.swift** — `KanbanStatus`, `KanbanCard`, Filter- und Sortierlogik.
+- **MenuBarTrayController.swift** — das Menüleisten-Symbol und sein Panel, die einzige
+  Stelle neben `WindowPlacementController`, die `NSWindow`/`NSStatusItem` anfasst.
+  **Bewusst AppKit statt `MenuBarExtra`:** In einem `MenuBarExtra`-Popover lebt ein Zug
+  zwar, aber der Drop kommt nie an (gemessen 08.09.2026, Gegenprobe auf dem Board
+  positiv). Ein Tablett, dessen Karten nicht ziehbar sind, ist nicht dieses Tablett.
+- **MenuBarTrayView.swift** — das Tablett selbst (`TrayLane`, `TrayCardView`, die
+  WIP-Zeile). Zieht seine Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`.
+- **CardParts.swift** — die Bausteine einer Karte (Prioritätsmarken, Titel,
+  Datums-Badge, Wiederholungs-Icon, Listenstreifen, Durchstrich), geteilt von `CardView`
+  und `TrayCardView`. Angelegt beim Bau des Tabletts, damit die Anatomie einer Karte
+  nicht zweimal existiert.
 - **Views** — `BoardView` (Board + Dialoge), `ColumnView` (Spalte, Falz, Drop-Ziele),
   `CardView` (Karte, Settle-Animationen, Durchstrich), `TicketEditSheet` (Karten-Editor),
   `StatsPopover`, `FindPopover`, `SettingsView`, `EmptyBoardNotice`, `BoardTooltip`
@@ -106,7 +119,12 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   ↔ Serie über das Anlegedatum), `RecurringTagRelease` (stille Freigabe eines
   verbrauchten Pulls), `ColumnState` (die Spalte, siehe oben),
   `TicketURL` (was das URL-Feld speichern kann), `WindowPlacement` (auf welchem Bildschirm
-  das Board steht und wohin es zurückgehört), `StoredSetting` (jeder
+  das Board steht und wohin es zurückgehört), `AppPresence` (Dock, Menüleiste oder
+  beides — samt der Regel, dass das Schließen des Boards die App nur ohne
+  Menüleisten-Symbol beendet), `MenuBarTray` (was das Tablett zeigt: Zeilendeckel,
+  gemeinsame Muldenhöhe, wann ein Zug erlaubt ist), `MoveSource` (auf welcher
+  Oberfläche ein Zug gemacht wurde — ohne das stellte das Board die WIP-Frage auch
+  für einen Zug im Tablett), `StoredSetting` (jeder
   `UserDefaults`-Wert und ob er dem Nutzer oder dem Rechner gehört — die Einordnung
   steht in einem `switch`, den der Compiler nicht unvollständig lässt; ein neuer Fall
   ohne Entscheidung baut nicht). **Muster für neue Logik:** Entscheidung
@@ -142,7 +160,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `GlassKanban/Tests/`, 22 Dateien mit rund 340 Tests, benannt nach der Regel
+- **Tests** — `GlassKanban/Tests/`, 24 Dateien mit rund 360 Tests, benannt nach der Regel
   statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`). Der
   Ordner liegt in den Quellen, wird aber per `excludes` in `project.yml` nur ins
   Testbundle kompiliert (Target heißt weiterhin `GlassKanbanTests`).

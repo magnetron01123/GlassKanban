@@ -29,6 +29,10 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
   Bedienelement; **Listen-Auswahl** und **WIP-Limits** in den Einstellungen
 - **Motivation, dezent:** Streak-Flamme (🔥) mit Statistik-Fenster („Jetzt" und
   „Rückblick" — Auslastung, Durchlaufzeit-Schätzung, bester Tag, häufigste Liste)
+- **In der Menüleiste:** ein Klick auf das Symbol öffnet das Tablett — „Als Nächstes",
+  „In Bearbeitung" und „Erledigt" in einer Reihe, Karten als Kompaktzeilen, ziehbar wie
+  auf dem Board. In den Einstellungen wählbar: Dock, Menüleiste oder beides; ohne
+  Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist
 - **Das Board bleibt auf seinem Bildschirm:** Wird der Monitor abgezogen, auf dem es
   steht, und später wieder angesteckt, kehrt das Fenster dorthin zurück — statt auf dem
   eingebauten Display liegenzubleiben

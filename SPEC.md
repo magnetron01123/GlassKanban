@@ -831,6 +831,72 @@ hochgehaltene Karte zurück; ein Klick auf die Flamme legte die Statistik vorher
 den offenen Editor. Die Toolbar bleibt sichtbar und scharf — sie ist Chrome, kein Inhalt
 — konkurriert aber nicht mit dem, was gerade in der Hand ist.
 
+### Menüleiste: das Tablett (08.09.2026)
+
+Neben dem Board kann die App in der Menüleiste liegen. Ein Klick auf das Symbol öffnet
+das **Tablett**: drei Mulden in einer Reihe, in Board-Reihenfolge — „Als Nächstes" ·
+„In Bearbeitung" · „Erledigt", 660 pt breit, gleich breit und gleich hoch. Der Zug läuft
+von links nach rechts wie auf dem Board. Herleitung und die verworfenen Richtungen stehen
+in BACKLOG.md („Fensterverhalten").
+
+**Leitsatz: so nah am Board wie möglich.** Dieselben Tokens, dieselben Schlüssel,
+dieselben Regeln, dieselbe `move()`-Funktion. Die Abweichungen sind vollständig hier
+aufgezählt.
+
+| Element | Board | Tablett |
+|---|---|---|
+| Spurkopf, Zähl-Chip, teal bei Überschreitung, Kopf-Tooltip | ja | gleich |
+| Karte in den Arbeitsspuren | volle Karte (152 pt) | Kompaktzeile (38 pt) — Platz; Inhalt gehört dem Board |
+| Erledigt-Karte | Titel mit Durchstrich | gleich, aber **ohne** den Zeichen-Sweep: der ist die Belohnung des Boards |
+| Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | 7 Tage, kein Knopf; Zeilen bei 6 gedeckelt |
+| Karte jenseits der 6 Zeilen | immer sichtbar | nicht gezeichnet, der Chip zählt sie mit — kein Scrollbereich unter einem Zug |
+| Backlog | eigene Spur | nur die Zahl in der Fußzeile |
+| Zugziele | alle drei anderen Spuren | die zwei anderen **gezeigten** — eine Karte, die ins Backlog ginge, verschwände hier spurlos |
+| WIP-Frage | Alert über dem Fenster | Zeile über den Mulden, in voller Breite |
+| Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
+| ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |
+| Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Hinweis | **nicht** — der Hinweis gehört dem Board, hier verpuffte der Fehlschlag stumm |
+| Leerer Platz | Umriss mit Satz bei 15 pt | gleicher Umriss, gleicher Satz — nur so weit verkleinert, wie die schmalere Mulde es verlangt |
+| Streak, Statistik, Suche, „+", Editor, Umbenennen, Löschen | ja | nichts davon; Chrome bleibt im Fenster |
+
+**Bewegen — dieselben drei Wege wie auf dem Board:** ziehen, Kontextmenü „Verschieben
+nach", VoiceOver-Aktion. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
+wie auf dem Board. Ein Klick auf eine Karte öffnet das Board mit dieser Karte.
+
+**Die WIP-Frage steht im Tablett, nicht auf dem Board.** Ein Alert nimmt den Fokus, und
+das Panel schlösse unter der eigenen Frage weg. Deshalb trägt jeder Zug seine Herkunft
+(`MoveSource`), und jede Oberfläche zeigt nur ihre eigene Frage. **Solange die Frage
+steht, bewegt sich im Tablett nichts** — auf keinem der drei Wege; ein zweiter Zug würde
+die erste Frage unbeantwortet überschreiben, und das wäre stilles Zulassen. Wird das
+Tablett geschlossen, steht die Frage beim nächsten Öffnen wieder da: Sie wird weder still
+zugelassen noch still zurückgelegt. Der Zustand ist unterdessen sichtbar — der Zähl-Chip
+der Mulde ist teal, im Tablett wie auf dem Board.
+
+**Das Symbol ist stumm:** ein monochromes Template-Glyph, keine Zahl, kein Badge, keine
+Farbe. Zieht der Nutzer es mit ⌘ aus der Menüleiste, springt die Einstellung auf „Dock" —
+ohne beides wäre die App laufend und unerreichbar.
+
+### Anzeigen in: Dock, Menüleiste, beides (08.09.2026)
+
+In „Allgemein" wählt der Nutzer, wo die App erscheint. Vorgabe ist **Dock** — das
+Verhalten, das jede bestehende Installation schon hat. Die Wahl gehört dem Rechner, nicht
+dem Nutzer (BACKLOG.md, „Was wohin gehört"), und wirkt sofort.
+
+| Wert | Dock-Symbol | Menüleisten-Symbol | Board beim Start | Board schließen |
+|---|---|---|---|---|
+| Dock | ja | nein | öffnet | beendet die App |
+| Menüleiste | nein | ja | bleibt zu | App läuft weiter |
+| Dock und Menüleiste | ja | ja | öffnet | App läuft weiter |
+
+Solange ein Menüleisten-Symbol da ist, beendet das Schließen des Boards die App **nicht** —
+sonst verschwände das Symbol mit dem Fenster, das es ersetzen soll. Ein Klick auf das
+Dock-Symbol holt das geschlossene Board zurück.
+
+Im Modus „Menüleiste" springt beim Start kein Board auf — auch keins, das beim letzten
+Beenden offen war. Die Einstellungen sind dort über „Board öffnen" erreichbar: mit dem
+Fenster kommt die Menüleiste der App. Ein eigener „Einstellungen …"-Knopf im Tablett wäre
+ein dritter Knopf für einen Weg, den der vorhandene schon öffnet.
+
 ## Karten-Anzeige
 
 Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus des Boards:

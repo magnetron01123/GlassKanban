@@ -17,13 +17,14 @@ die Messungen dazu stehen dort.
    `GlassKanban/AppIcon.icon` (Icon-Composer-Dokument; die Tinted-Variante fehlt ohnehin,
    siehe „Spätere Apple-/Mac-Ausbaustufen"). Vor dem Store-Listing wichtig, das Icon prägt
    die erste Kaufentscheidung mit.
-2. **Glass Kanban in der Menüleiste („Das Tablett")** — entschieden 05.09.2026, Bauplan
-   liegt in `plans/menubar-tablett.md`; Konzept unten unter „Fensterverhalten".
-3. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
+2. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
    Aufwand steckt in `DesignSystem.swift`, nicht im Bedienelement.
-4. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Screenshots, Listing-Texte
+3. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Screenshots, Listing-Texte
    (der Demo-Datensatz ist seit 05.09.2026 da). Alles außer dem Hochladen.
-5. Die Punkte der Klasse *Nutzungsalltag*.
+4. Die Punkte der Klasse *Nutzungsalltag*.
+
+Die Menüleiste („Das Tablett") ist seit 08.09.2026 gebaut — SPEC.md, „Menüleiste: das
+Tablett".
 
 Alles Begonnene liegt in `main`. Warum das so bleiben soll, steht als Arbeitsregel in
 CLAUDE.md.
@@ -63,7 +64,7 @@ das, was Apple aus Massentauglichkeit nie bauen wird: Meinungsstärke.
 | Idee | Philosophie | Wirkung | Umkehrbarkeit | Aufwand |
 |---|---|---|---|---|
 | ~~Bildschirmzuordnung~~ | erfüllt | Produktversprechen | umkehrbar | **umgesetzt 14.08.2026** |
-| Menüleiste „Das Tablett" (s. Fensterverhalten) | erfüllt | Kaufentscheidung | umkehrbar | M — **entschieden 05.09.2026**, Plan liegt |
+| ~~Menüleiste „Das Tablett"~~ | erfüllt | Kaufentscheidung | umkehrbar | **umgesetzt 08.09.2026** |
 | Darstellungsgröße (unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
 | Ablegen aus anderen Apps (neu, unten) | erfüllt | Kaufentscheidung | gebunden | S–M |
 | Widget „eine Karte" (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Kaufentscheidung | gebunden | L |
@@ -282,9 +283,11 @@ einen Rückbau schützen.
 
 - **Always-on-Top** — nicht vorgesehen, das Board ist ein normales Fenster (CONCEPT.md,
   „Architektur").
-- **Glass Kanban in der Menüleiste — aber die Bedienung fühlt sich an wie Karten
-  verschieben (Idee 23.08.2026, entschieden 05.09.2026, Bauplan
-  `plans/menubar-tablett.md`)** — Der Reiz liegt ausdrücklich
+- ~~**Glass Kanban in der Menüleiste — aber die Bedienung fühlt sich an wie Karten
+  verschieben**~~ — Idee 23.08.2026, entschieden 05.09.2026, **umgesetzt 08.09.2026**;
+  das gebaute Verhalten steht in SPEC.md („Menüleiste: das Tablett" und „Anzeigen in").
+  Die Konzeptabsätze bleiben stehen, weil sie die verworfenen Richtungen tragen. Der Reiz
+  lag ausdrücklich
   **nicht** im Zugriffsweg, sondern in der Bedienung: Was aus der Menüleiste kommt, soll
   die Geste des Boards tragen — ziehen, ablegen, einrasten — statt eine Textliste mit
   „Verschieben nach"-Untermenüs zu sein. Ein solches Untermenü wäre die Rückfallebene, und
@@ -335,9 +338,7 @@ einen Rückbau schützen.
     Drag & Drop und Kontextmenü im Board — eine Regel, ein Weg, keine dritte Wahrheit.
 
   **Entschieden am 05.09.2026: Richtung A, „Das Tablett".** Begründung des Nutzers:
-  näher an Kanban. **Bauplan: `plans/menubar-tablett.md`** — Messweiche, Schritte,
-  Abnahme; für eine eigene Session geschrieben. Das Tablett ist ein Popover unter dem
-  Symbol, 660 pt breit. Darin **drei Spuren in einer Reihe, in Board-Reihenfolge**:
+  näher an Kanban. Das Tablett hängt unter dem Symbol und ist 660 pt breit. Darin **drei Spuren in einer Reihe, in Board-Reihenfolge**:
   „Als Nächstes" · „In Bearbeitung" · „Erledigt" — gleich breit, gleich hoch, der Zug
   läuft von links nach rechts wie auf dem Board. Backlog bleibt dem Board; die Fußzeile
   nennt nur die Zahl und den Weg zurück („Backlog · 12", „Board öffnen"). Das Element
@@ -350,12 +351,14 @@ einen Rückbau schützen.
   dem Backlog wählt, tut das im Fenster; das ist Planung, und Planung gehört nicht in
   die Hand.
 
-  **Erster Schritt vor jeder Zeile Code (Projektregel: erst messen):**
-  `MenuBarExtra` mit `.menuBarExtraStyle(.window)` ist das Einzige, was ein Popover mit
-  echten SwiftUI-Views trägt. Ob ein Drag darin lebt, ist **ungemessen** — das Popover
-  schließt bei Fokusverlust, und ein begonnener Zug darf es nicht zuklappen. Rückfall,
-  falls nicht: dieselbe Fläche als eigenes nicht aktivierendes `NSPanel` unter dem
-  Symbol positioniert (die Technik der verworfenen Richtung B, in der Größe von A).
+  **Gemessen am 08.09.2026, und die Weiche fiel:** In einem `MenuBarExtra`-Popover
+  (`.menuBarExtraStyle(.window)`) *lebt* ein Zug — die Vorschau folgt dem Zeiger, das
+  Popover bleibt dabei offen —, aber der Drop kommt nie an: weder `isTargeted` noch die
+  Drop-Closure feuern. Derselbe synthetische Zug auf dem Board verschiebt eine Karte, die
+  Messung ist also gültig. Dasselbe Popover blieb außerdem offen stehen, nachdem es das
+  Board geöffnet hatte; eine API, es zu schließen, gibt es nicht. Gebaut ist deshalb der
+  Rückfall: ein eigenes, nicht aktivierendes `NSPanel` unter einem `NSStatusItem` (die
+  Technik der verworfenen Richtung B, in der Größe von A). Darin kommt der Drop an.
 
   **Verworfen: Richtung B, „Das Regal"** (Artboard `RegalB`, Seite „Verworfen"). Ein
   Brett über die volle Bildschirmbreite unter der Menüleiste, alle vier Spuren in
@@ -595,7 +598,7 @@ Abweichung gilt der Code.
 | `excludedCalendarIDs` | UserDefaults | offen, hängt an M4 |
 | `appAppearance` | UserDefaults | lokal — Bildschirm im Büro ≠ zu Hause |
 | `completionSoundEnabled` | UserDefaults | lokal — Kopfhörer am Laptop |
-| `appPresence` (Dock/Menüleiste/beides, geplant 05.09.2026) | UserDefaults | lokal — wo die App sichtbar ist, gehört dem Rechner |
+| `appPresence` (Dock/Menüleiste/beides, umgesetzt 08.09.2026) | UserDefaults | lokal — wo die App sichtbar ist, gehört dem Rechner |
 | `correctionLedger` | UserDefaults | **strikt lokal** |
 | `tagReleaseMemory` | UserDefaults | strikt lokal |
 | `pendingTagCleanup` | columns.json | lokal — Arbeitsliste dieses Prozesses |

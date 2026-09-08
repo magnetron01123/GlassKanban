@@ -66,6 +66,27 @@ final class AppearanceDelegate: NSObject, NSApplicationDelegate {
 
     private func closeBoardWindows() { Self.closeBoardWindows() }
 
+    /// Clicking the Dock icon of a running app with no window open has to
+    /// bring the board back.
+    ///
+    /// This never came up before: closing the board *quit* the app, so the
+    /// state "running, no window" did not exist. It does now (see
+    /// `AppPresence.quitsWithLastWindow`), and without this the Dock icon
+    /// answered a click with nothing at all. The window itself survives its
+    /// close — measured 08.09.2026, it stays in `NSApp.windows` carrying
+    /// `identifier == "board"` — so ordering it front is the whole of it.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard !flag else { return true }
+        Self.showBoardWindow()
+        return true
+    }
+
+    static func showBoardWindow() {
+        for window in NSApp.windows where window.identifier?.rawValue == "board" {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
     private static func closeBoardWindows() {
         for window in NSApp.windows where window.identifier?.rawValue == "board" {
             window.close()

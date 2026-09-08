@@ -76,7 +76,11 @@ Umbruch; Standardmenüs folgen der Sprache; Datums- und Zahlenformate folgen der
 Systemregion (Plattformverhalten, kein Fehler).
 
 **Noch offen:** VoiceOver-Stichprobe in beiden Sprachen an einer Karte und einem
-Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels).
+Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels). Dazu
+seit 08.09.2026 die Längenprüfung der Menüleisten-Texte: „Glass Kanban beenden" und
+„Board öffnen" in der Fußzeile des Tabletts, die drei Werte von „Anzeigen in" im
+Auswahlfeld, und die drei Spurköpfe in einer rund 200 pt breiten Mulde. Das Tablett
+ist mit 660 pt fest — was dort nicht passt, bricht nicht um, es wird abgeschnitten.
 
 ## Phase 2 — Signing & Distribution (nach Phase 0, parallel zu 1 vorbereitbar)
 
@@ -114,7 +118,7 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
 - [x] Demo-Datensatz als eigene Reminders-Liste bauen — 05.09.2026, siehe `social/linkedin/konzept.md` 2.1 und `seed-demo-reminders.swift` v2 (glaubwürdige, freundliche
       Beispiel-Tickets für Screenshots und Review)
 - [ ] Screenshots EN + DE, je 4–6, 2880×1800 PNG: Board, Karten-Editor,
-      Statistik-Fenster, Dunkelmodus
+      Statistik-Fenster, Menüleiste (Tablett), Dunkelmodus
 - [ ] Listing-Texte EN + DE: Kurzbeschreibung, Feature-Liste, Keywords (kanban,
       reminders, board, tasks, personal kanban, wip limit …); Nutrition-Label
       „Data Not Collected"

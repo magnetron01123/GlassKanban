@@ -13,6 +13,11 @@ struct MenuBarTrayView: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openWindow) private var openWindow
+    /// Observed, not just read: the tray's own footer changes with it (see
+    /// `MenuBarTray.offersQuit`), and the panel's hosting view is built once
+    /// and then lives on — a plain read of the shared value showed the
+    /// footer of whichever mode was current when the tray was first opened.
+    @ObservedObject private var presence = PresenceController.shared
 
     /// The lanes the tray shows, left to right. Backlog is a number in the
     /// footer — planning belongs to the board.
@@ -47,6 +52,15 @@ struct MenuBarTrayView: View {
 
     private var tray: some View {
         VStack(spacing: 12) {
+            // Above the wells, across the whole tray — not inside the lane
+            // it is about. Measured 08.09.2026: in a ~200pt well the title
+            // and its two answers came out as "In Bear… / Erst abschlie… /
+            // Passt schon", three truncated fragments where a question
+            // should be. It also *is* a question about the whole tray: while
+            // it stands, no card anywhere in here moves.
+            if let overflow = trayOverflow {
+                OverflowQuestionRow(overflow: overflow)
+            }
             HStack(alignment: .top, spacing: Board.trayLaneSpacing) {
                 ForEach(Self.lanes) { status in
                     TrayLane(status: status, rows: laneRows, openBoard: openBoard)
@@ -58,6 +72,13 @@ struct MenuBarTrayView: View {
         // The board's own reflow curve, so a card changing lane in the tray
         // moves at the board's pace rather than at a second one.
         .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: store.cards)
+    }
+
+    /// The tray's own limit question, if one is standing. The board's own
+    /// stays with the board's alert.
+    private var trayOverflow: RemindersStore.PendingOverflow? {
+        guard let overflow = store.pendingOverflow, overflow.source == .tray else { return nil }
+        return overflow
     }
 
     /// All three wells share one height — see `MenuBarTray.laneRows`.
@@ -101,7 +122,7 @@ struct MenuBarTrayView: View {
             Spacer(minLength: 0)
             Button("Open Board") { openBoard(nil) }
                 .buttonStyle(.plain)
-            if MenuBarTray.offersQuit(PresenceController.shared.selection) {
+            if MenuBarTray.offersQuit(presence.selection) {
                 Button("Quit Glass Kanban") { NSApp.terminate(nil) }
                     .buttonStyle(.plain)
             }
@@ -120,12 +141,20 @@ struct MenuBarTrayView: View {
     /// and then the scene has to make one.
     private func openBoard(_ cardID: String?) {
         MenuBarTrayController.shared.close()
-        NSApp.activate(ignoringOtherApps: true)
         if let board = NSApp.windows.first(where: { $0.identifier?.rawValue == "board" }) {
             board.makeKeyAndOrderFront(nil)
         } else {
             openWindow(id: "board")
         }
+        // Activated *after* the window is up, and with the modern call. The
+        // tray's panel is non-activating, so in the menu bar mode the app is
+        // never frontmost while the tray is open — and an
+        // `activate(ignoringOtherApps:)` fired before the window existed was
+        // simply dropped: the board appeared behind the previous app, with
+        // no menu bar of its own and no keyboard focus (measured
+        // 08.09.2026). Without the menu bar there is also no way into
+        // Settings in that mode.
+        NSApp.activate()
         // Only after the window is up: `editingCardID` is cleared by
         // `BoardView.closeEditor`, so a value set with no window to close it
         // would simply stay there.
@@ -184,20 +213,13 @@ private struct TrayLane: View {
     private var wipLimit: Int? { store.wipLimit(for: status) }
     private var isOverLimit: Bool { wipLimit.map { cards.count > $0 } ?? false }
 
-    /// The tray's own limit question, if one is standing.
-    private var trayOverflow: RemindersStore.PendingOverflow? {
-        guard let overflow = store.pendingOverflow, overflow.source == .tray,
-              overflow.status == status else { return nil }
-        return overflow
-    }
-
     /// Every move route is off while a question of the tray's own stands.
     private var allowsMoves: Bool {
         MenuBarTray.allowsMoves(pendingSource: store.pendingOverflow?.source)
     }
 
     private var showsEmptySlot: Bool {
-        guard cards.isEmpty, trayOverflow == nil else { return false }
+        guard cards.isEmpty else { return false }
         // The board's rule, shared rather than rebuilt.
         return status.invitesWhenEmpty(
             nextIsEmpty: store.cards(for: .next, applyingFilters: false).isEmpty,
@@ -220,9 +242,6 @@ private struct TrayLane: View {
                 .padding(.horizontal, Board.laneMargin)
 
             VStack(spacing: Board.trayRowSpacing) {
-                if let trayOverflow {
-                    OverflowQuestionRow(overflow: trayOverflow)
-                }
                 ForEach(shownCards) { card in
                     row(for: card)
                 }
@@ -447,20 +466,28 @@ private struct OverflowQuestionRow: View {
             Text(store.overflowTitle(for: overflow))
                 .monospacedDigit()
                 .lineLimit(1)
-            Spacer(minLength: 0)
-            // The safe answer stands first — Escape and Return do not exist
-            // in a non-activating panel, so position is what carries it.
+            Spacer(minLength: 12)
+            // Real buttons, not the plain text the footer uses. The footer
+            // navigates; these two *answer a question*, and "die Frage
+            // stellen die Knöpfe" (CONCEPT.md, "Ton der Texte") only holds
+            // if they read as something to press. Drawn like the board's
+            // alert: the safe answer prominent and first — Escape and Return
+            // do not exist in a non-activating panel, so shape and position
+            // are what carry it.
             Button("Finish First") {
                 store.move(
                     cardID: overflow.cardID, to: overflow.origin,
                     undoManager: nil, feedback: false)
                 store.pendingOverflow = nil
             }
+            .buttonStyle(.borderedProminent)
             Button("That's Fine") { store.pendingOverflow = nil }
+                .buttonStyle(.bordered)
         }
         .font(BoardText.meta)
-        .buttonStyle(.plain)
-        .padding(.horizontal, 8)
+        .controlSize(.small)
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity)
         .frame(height: Board.compactCardHeight)
         .background { Board.wellShape.fill(Board.wellFill(colorScheme)) }
         .accessibilityElement(children: .contain)

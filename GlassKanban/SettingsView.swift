@@ -23,7 +23,7 @@ enum SettingsMetrics {
     /// Measured against the content, not guessed: the pane is a fixed height,
     /// so a footer that grows silently loses its last line. 455 cut the WIP
     /// rule off mid-sentence the day it stopped being a hover tip.
-    static let generalHeight: CGFloat = 585
+    static let generalHeight: CGFloat = 640
 }
 
 struct SettingsView: View {
