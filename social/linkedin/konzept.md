@@ -145,7 +145,9 @@ Nächstes", zieht die Karte in die leere Spalte, sie landet, der Platzhalter ist
 → 2/5, 0/2 → 1/2. Kein Durchstrich, keine Flamme, kein Klang: Der Clip zeigt den Anfang
 von Arbeit, nicht ihr Ende. Datensatz v3 (`seed-demo-reminders.swift`): 16 Tickets, fast
 nur Alltag auf der Liste „Privat", zwei Projektkarten auf „Glass Kanban", Backlog 7 · Als
-Nächstes 3 · In Bearbeitung 0 · Erledigt 6. Dateien: `glass-kanban-pull-1x1.*`. Beide
+Nächstes 3 · In Bearbeitung 0 · Erledigt 6. Dateien: `glass-kanban-pull-1x1.*` (4,07 s) und
+`glass-kanban-pull-long-1x1.*` (5,23 s, 08.09.2026: gleicher Zug, ~1,8 s Ruhe nach dem Landen —
+empfohlen, damit die gefüllte Spalte einen Moment steht, bevor der Loop zurückspringt). Alle
 Clips liegen nebeneinander; welcher zu welchem Text gehört, entscheidet der Beitrag.
 
 ## 4. Beitragstexte — zwei Entwürfe
