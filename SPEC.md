@@ -180,6 +180,31 @@ aus denen der Nutzer sie längst gezogen hat, ist die verbotene Richtung. Stand 
 ist nur ein Ort in Gebrauch, das Verhalten also unverändert; wann die liegengebliebenen
 Kopien verschwinden, steht in BACKLOG.md („Aufräumen der alten Speicherorte").
 
+**Der Zielort wird geprüft, nicht angenommen (seit 08.09.2026).** In Frage kommen zwei
+Orte: der Group-Container (`~/Library/Group Containers/…`), den auch ein späteres Widget
+lesen könnte, und der private Container der App. Genommen wird der Group-Container **nur,
+wenn ein Probeschreiben dorthin gelingt** — Verzeichnis anlegen, Datei atomar schreiben,
+Datei wieder entfernen; sonst der private Container. Grund: Das System nennt einen
+Group-Container-Pfad auch dann, wenn der App das Entitlement fehlt, und die Sandbox weist
+erst den Schreibvorgang ab. Ein Pfad ist keine Schreiberlaubnis. Der Lesepfad führt aus
+demselben Grund **keinen** Ort, an den dieser Build nicht schreiben kann: Von dort zu
+lesen sähe aus, als hätte es geklappt, und verlöre den nächsten Zug unbemerkt.
+Herleitung und Messung in CONCEPT.md („Ein Pfad ist keine Schreiberlaubnis").
+
+**Ein misslungener Schreibvorgang hinterlässt einen lesbaren Vermerk (seit 08.09.2026).**
+Nicht im Board — dort ändert sich nichts, siehe oben — sondern in den Voreinstellungen der
+App, ohne Debugger lesbar:
+
+```bash
+plutil -p ~/Library/Containers/com.davidtrogemann.GlassKanban/Data/Library/Preferences/com.davidtrogemann.GlassKanban.plist
+```
+
+`columnStorageLocation` steht bei **jedem** Start dort und nennt den gewählten Ort;
+`columnStorageLastFailure` erscheint nur nach einem gescheiterten Schreibvorgang und
+verschwindet erst, wenn wieder einer gelingt — nicht schon beim nächsten Start. Beide
+wandern nicht auf einen zweiten Mac (`StoredSetting`), weil sie dessen Sandbox nicht
+beschreiben.
+
 **Der Speicher ist an diesen Mac gebunden.** Zwei Macs mit dieser App auf denselben Listen
 haben getrennte Spalten; die spätere iOS-App bräuchte eine eigene Synchronisation. Das ist
 der bewusst bezahlte Preis dafür, dass niemand sonst die Spalte erreichen kann.

@@ -130,6 +130,65 @@ Schreiber, der ihn überschreibt, hilft nur das Abstellen der Quelle. Immerhin w
 seither *ganz* verteidigt: Die Halbregel, die einen Notiz-Restore nie in eine
 Arbeitsspalte heben durfte, ist mit ihrem Grund entfallen.
 
+### Ein Pfad ist keine Schreiberlaubnis (08.09.2026)
+
+Der eigene Spaltenspeicher aus dem vorigen Abschnitt hat drei Wochen lang **nichts
+gespeichert**. Jeder Zug zwischen Backlog, „Als Nächstes" und „In Bearbeitung" war nach
+einem Neustart weg; überlebt hat nur „Erledigt", weil das über `isCompleted` in EventKit
+läuft und nie durch diese Datei ging.
+
+**Wie es dazu kam.** Der Umzug in einen Group-Container am 14.08.2026 schrieb den Zielort
+als `containerURL(forSecurityApplicationGroupIdentifier:) ?? applicationSupport`. Die
+Annahme dahinter stand als Kommentar an der Funktion: Ohne das Entitlement
+`com.apple.security.application-groups` — das dieser Build bewusst nicht trägt, weil Xcode
+dafür ein Provisioning-Profil und damit das Developer Program verlangt — käme `nil` zurück
+und der Rückfall griffe. **Die Annahme war falsch.** Die Methode nennt den Pfad
+`~/Library/Group Containers/<id>/` unabhängig davon, was in der Signatur steht; erst der
+Schreibvorgang wird von der Sandbox abgewiesen. Der `??`-Rückfall konnte deshalb nie
+feuern, das Verzeichnis wurde nie angelegt, und `save(to:)` scheiterte bei jedem Zug.
+
+**Warum es niemand gemerkt hat**, ist der eigentlich teure Teil. Es gab genau eine Spur:
+eine `os.Logger`-Zeile. Deren Ausgaben sind bei dieser App weder über `log show` noch über
+`log stream` auffindbar — das war seit dem 14.08.2026 bekannt und in CLAUDE.md notiert,
+aber der Code verließ sich weiter darauf. Ein Fehler, der nur an einen Kanal meldet, den
+niemand lesen kann, ist ein stiller Fehler. Dazu kam, dass die App *aussah*, als
+funktioniere sie: Der Zug landet sofort, die Karte liegt in der neuen Spalte, das Board
+las beim nächsten Start klaglos die alte Datei am alten Ort. Sichtbar war der Defekt nur
+für jemanden, der zwischen zwei Starts hinsah.
+
+**Was daraus gebaut wurde** (Verhalten in SPEC.md, „Wo die Datei liegt"):
+
+1. **Gefragt wird nach Schreibbarkeit, nicht nach Existenz.** Der Group-Container wird
+   genommen, wenn ein Probeschreiben gelingt — genau die Schritte, die `save(to:)` geht.
+   Billiger geht es nicht ehrlich: `isWritableFile(atPath:)` beantwortet POSIX-Rechte, und
+   die sagen für einen Group-Container ja, den die Sandbox trotzdem abweist. Die
+   Entscheidung selbst ist eine reine Funktion (`ColumnState.chooseStorageDirectory`) und
+   getestet; nur die Probe fasst das Dateisystem an.
+2. **Der Lesepfad führt keinen Ort, an den nicht geschrieben werden kann.** Von einem
+   solchen Ort zu lesen sähe aus, als hätte es geklappt, und verlöre den nächsten Zug
+   unbemerkt — dieselbe Fehlerform noch einmal. Der Group-Container braucht dafür keinen
+   eigenen Eintrag: Ist er schreibbar, steht er ohnehin an erster Stelle; ist er es nicht,
+   hat er nie eine Datei getragen.
+3. **Der gewählte Ort wird bei jedem Start vermerkt, nicht erst im Fehlerfall.** Die Frage,
+   die drei Wochen offen blieb, war nicht „ist ein Schreibvorgang gescheitert", sondern
+   „wohin schreibt dieser Build überhaupt". Ein Vermerk, der erst beim Fehler entsteht,
+   beantwortet sie nicht. Er geht nach `UserDefaults` und ist mit `plutil -p` direkt aus
+   der Container-plist lesbar — der einzige Diagnosekanal, der bei dieser App
+   nachweislich funktioniert. Der Fehlervermerk daneben wird **nur von einem gelungenen
+   Schreibvorgang** gelöscht, nie von einem Start: Sonst sähe ein Board, das bei jedem Zug
+   scheitert, für jeden sauber aus, der ohne Kartenzug beendet.
+
+**Was ausdrücklich nicht gebaut wurde:** kein Dialog. Die Begründung von 14.08.2026 gilt
+unverändert — wer eine Karte gezogen hat, bekommt keine Meldung über den Speicher der App
+vor die Nase. Neu ist nicht die Lautstärke gegenüber dem Nutzer, sondern dass überhaupt
+ein Nachweis existiert, den ein Mensch ohne Debugger finden kann.
+
+**Die allgemeine Lehre**, über diesen Bug hinaus: Ein Feature ist nicht fertig, wenn es
+baut und die Tests grün sind — CLAUDE.md sagt das seit dem 14.08.2026, und derselbe Umzug
+hat es zweimal bewiesen. Hier fehlte genau die Prüfung, die dort verlangt wird: nach dem
+Lauf nachsehen, ob etwas dasteht. Die Zeile „Lese-/Kopiermechanik gebaut" in BACKLOG.md
+(Phase A) war drei Wochen lang wahr und trotzdem wertlos.
+
 ### Das Board ist einer von mehreren Schreibern (10.08.2026)
 
 Aus dem Datenmodell folgt eine Eigenschaft, die lange unausgesprochen blieb: **Backlog ist
