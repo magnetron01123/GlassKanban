@@ -264,9 +264,13 @@ struct BoardView: View {
         return store.cards.first { $0.id == id }
     }
 
+    /// Only the board's own moves. A card moved in the menu bar tray raises
+    /// the same question in the store, and it is answered there — in the
+    /// tray's own well, because an alert takes the focus and would close the
+    /// tray out from under it.
     private var overflowBinding: Binding<Bool> {
         Binding(
-            get: { store.pendingOverflow != nil },
+            get: { store.pendingOverflow?.source == .board },
             set: { if !$0 { store.pendingOverflow = nil } })
     }
 
@@ -282,18 +286,10 @@ struct BoardView: View {
             set: { if !$0 { store.pendingSaveFailure = nil } })
     }
 
+    /// Built by the store, so the tray's inline question says the same thing
+    /// in the same words (see `RemindersStore.overflowTitle(for:)`).
     private var overflowTitle: String {
-        guard let overflow = store.pendingOverflow else { return "" }
-        guard let limit = store.wipLimit(for: overflow.status) else {
-            return overflow.status.displayName
-        }
-        // The number the *rule* used, not the one the filtered view happens to
-        // show. Asking "over your limit?" above the line "2 of 3" left the
-        // question unanswerable — the lane really held four, two of them
-        // hidden by a filter. The lane header keeps showing what is on
-        // screen; a question has to show what it decided on.
-        return "\(overflow.status.displayName): "
-            + String(localized: "\(store.totalCount(for: overflow.status)) of \(limit)")
+        store.pendingOverflow.map(store.overflowTitle(for:)) ?? ""
     }
 
     // MARK: - Streak pill + popover

@@ -53,6 +53,27 @@ enum Board {
     /// three rows would be 114. The slack sits in the notes zone, where the
     /// card wants air anyway (see `CardView.fullBody`).
     static let fullCardHeight: CGFloat = compactCardHeight * 4
+    /// The menu bar tray's width. Three equally wide wells of ~200pt
+    /// (660 − 2·16 padding − 2·12 spacing = 604 / 3) carry about 22
+    /// characters of title at 15pt plus a date chip — enough for a name that
+    /// is recognised rather than read. Three wells and not two, because the
+    /// move into Erledigt has to run to the right like it does on the board,
+    /// not downwards; equally wide, because narrower storage lanes were
+    /// rejected for the board. Wider than this and the tray reads as a
+    /// second window.
+    static let trayWidth: CGFloat = 660
+    /// Air between the tray and the menu bar it hangs from, and its minimum
+    /// clearance from a screen edge.
+    static let trayGap: CGFloat = 8
+    /// The tray's outer margin and the air between its three wells — the two
+    /// numbers `trayWidth` is derived from.
+    static let trayPadding: CGFloat = 16
+    static let trayLaneSpacing: CGFloat = 12
+    /// Between two rows in a well. The board's own storage-lane spacing
+    /// (`ColumnView`, `spacing: singleLine ? 5 : cardSpacing`), so the tray
+    /// keeps the same rhythm.
+    static let trayRowSpacing: CGFloat = 5
+
     /// A card only reports its dwell time once it has lingered this long —
     /// below it, sitting in a column is simply normal.
     static let agingThresholdDays = 3

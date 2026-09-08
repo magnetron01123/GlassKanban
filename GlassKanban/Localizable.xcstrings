@@ -232,6 +232,47 @@
         }
       }
     },
+    "%lld more not shown here": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld more not shown here"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld more not shown here"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weitere nicht gezeigt"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weitere nicht gezeigt"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld not yet due": {
       "extractionState": "manual",
       "localizations": {
@@ -625,6 +666,23 @@
         }
       }
     },
+    "Backlog · %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backlog · %lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backlog · %lld"
+          }
+        }
+      }
+    },
     "Best Day": {
       "extractionState": "manual",
       "localizations": {
@@ -914,6 +972,40 @@
         }
       }
     },
+    "Dock": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock"
+          }
+        }
+      }
+    },
+    "Dock and Menu Bar": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock und Menüleiste"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock and Menu Bar"
+          }
+        }
+      }
+    },
     "Done": {
       "extractionState": "manual",
       "localizations": {
@@ -1173,6 +1265,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Get it out of your head"
+          }
+        }
+      }
+    },
+    "Glass Kanban": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glass Kanban"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glass Kanban"
           }
         }
       }
@@ -1530,6 +1639,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Medium priority"
+          }
+        }
+      }
+    },
+    "Menu Bar": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menüleiste"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu Bar"
           }
         }
       }
@@ -2128,6 +2254,23 @@
         }
       }
     },
+    "Open Board": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Board öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Board"
+          }
+        }
+      }
+    },
     "Open Reminders": {
       "extractionState": "manual",
       "localizations": {
@@ -2226,6 +2369,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Per Week"
+          }
+        }
+      }
+    },
+    "Quit Glass Kanban": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glass Kanban beenden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Glass Kanban"
           }
         }
       }
@@ -2451,6 +2611,23 @@
         }
       }
     },
+    "Show In": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anzeigen in"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show In"
+          }
+        }
+      }
+    },
     "Show These Lists on the Board": {
       "extractionState": "manual",
       "localizations": {
@@ -2658,6 +2835,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "That's Fine"
+          }
+        }
+      }
+    },
+    "The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In der Menüleiste liegen Als Nächstes, In Bearbeitung und Erledigt. Ohne Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed."
           }
         }
       }

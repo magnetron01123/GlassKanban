@@ -79,6 +79,11 @@ final class RemindersStore: ObservableObject {
         let cardID: String
         let origin: KanbanStatus
         let status: KanbanStatus
+        /// Where the move was made, so only that surface asks. The board and
+        /// the menu bar tray watch this same value: without it the board put
+        /// its alert up for a card moved in the tray — and an alert takes the
+        /// focus, which would close the tray out from under its own question.
+        let source: MoveSource
         var id: String { cardID }
     }
 
@@ -362,6 +367,25 @@ final class RemindersStore: ObservableObject {
     /// header keeps showing the filtered figure, since that is what is on
     /// screen; when the two disagree, the rule follows the board, not the
     /// view (decision 10.08.2026, see SPEC.md).
+    /// The lane and the numbers the limit question is about — "In
+    /// Bearbeitung: 4 von 3".
+    ///
+    /// On the store rather than in `BoardView` because the tray asks the same
+    /// question in its own well, and a sentence that states a rule must not
+    /// exist in two places with two chances to drift.
+    ///
+    /// The number the *rule* used, not the one the filtered view happens to
+    /// show: asking "over your limit?" above the line "2 of 3" left the
+    /// question unanswerable — the lane really held four, two of them hidden
+    /// by a filter.
+    func overflowTitle(for overflow: PendingOverflow) -> String {
+        guard let limit = wipLimit(for: overflow.status) else {
+            return overflow.status.displayName
+        }
+        return "\(overflow.status.displayName): "
+            + String(localized: "\(totalCount(for: overflow.status)) of \(limit)")
+    }
+
     func isOverWIPLimit(_ status: KanbanStatus) -> Bool {
         guard let limit = wipLimit(for: status) else { return false }
         return totalCount(for: status) > limit
@@ -1024,7 +1048,8 @@ final class RemindersStore: ObservableObject {
         to status: KanbanStatus,
         undoManager: UndoManager? = nil,
         feedback: Bool = true,
-        restoredCompletion: Date? = nil
+        restoredCompletion: Date? = nil,
+        source: MoveSource = .board
     ) -> KanbanStatus? {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = currentStatus(of: reminder)
@@ -1189,7 +1214,8 @@ final class RemindersStore: ObservableObject {
         // undo entry of its own, so ⌘Z bounced the card between two lanes,
         // asking every time.
         if feedback, status.asksBeforeExceedingLimit, isOverWIPLimit(status) {
-            pendingOverflow = PendingOverflow(cardID: cardID, origin: origin, status: status)
+            pendingOverflow = PendingOverflow(
+                cardID: cardID, origin: origin, status: status, source: source)
         }
         scheduleRefreshAfterWrite()
         return origin
@@ -1936,13 +1962,17 @@ final class RemindersStore: ObservableObject {
 
     // MARK: - Board queries
 
-    func cards(for status: KanbanStatus) -> [KanbanCard] {
+    /// `applyingFilters` is false for exactly one caller: the menu bar tray.
+    /// The board wears its filter — the find control tints, the badge counts,
+    /// the empty notice explains — and the tray has none of that chrome. A
+    /// card missing from a lane there would simply look lost.
+    func cards(for status: KanbanStatus, applyingFilters: Bool = true) -> [KanbanCard] {
         let filtered = cards.filter {
-            $0.status == status
-                && priorityFilter.matches($0.priority)
-                && dueFilter.matches($0.dueDate)
-                && listFilter.matches($0.listID)
-                && $0.matches(search: searchTerm)
+            $0.status == status && (!applyingFilters || (
+                priorityFilter.matches($0.priority)
+                    && dueFilter.matches($0.dueDate)
+                    && listFilter.matches($0.listID)
+                    && $0.matches(search: searchTerm)))
         }
         if status == .done {
             // Finished work reads newest first; priority no longer matters.

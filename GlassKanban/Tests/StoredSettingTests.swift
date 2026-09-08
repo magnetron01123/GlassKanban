@@ -19,6 +19,7 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.completionSound.key, "completionSoundEnabled")
         XCTAssertEqual(StoredSetting.foldNotYetDue.key, "foldNotYetDue")
         XCTAssertEqual(StoredSetting.appearance.key, "appAppearance")
+        XCTAssertEqual(StoredSetting.presence.key, "appPresence")
         XCTAssertEqual(StoredSetting.correctionLedger.key, "correctionLedger")
         XCTAssertEqual(StoredSetting.tagReleaseMemory.key, "tagReleaseMemory")
     }
@@ -53,6 +54,7 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.appearance.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.completionSound.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.excludedCalendars.scope, .thisDevice)
+        XCTAssertEqual(StoredSetting.presence.scope, .thisDevice)
     }
 
     /// Guards the list the future transport will iterate over: if a new setting

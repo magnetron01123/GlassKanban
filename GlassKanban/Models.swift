@@ -48,6 +48,27 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
     /// also keeps the app's only modal nag to a single, justified spot.
     var asksBeforeExceedingLimit: Bool { self == .inProgress }
 
+    /// Whether an empty lane of this status puts up its standing invitation
+    /// — the dashed outline with a sentence in it (SPEC.md, "Leere Spalte:
+    /// der angedeutete Platz").
+    ///
+    /// Two lanes are fed by a pull and must not invite one that cannot
+    /// happen: "In Bearbeitung" needs something upstream to take, "Als
+    /// Nächstes" needs a Backlog to choose from. Backlog and Erledigt are not
+    /// pull-fed, so emptiness alone is reason enough to speak.
+    ///
+    /// Here rather than inside `ColumnView` because the menu bar tray shows
+    /// the same outline in the same places, and a rule about when the board
+    /// invites must not exist twice — the tray would have inherited a copy
+    /// that drifts on the next edit.
+    func invitesWhenEmpty(nextIsEmpty: Bool, backlogIsEmpty: Bool) -> Bool {
+        switch self {
+        case .inProgress: !(nextIsEmpty && backlogIsEmpty)
+        case .next: !backlogIsEmpty
+        case .backlog, .done: true
+        }
+    }
+
     /// Default limit for a fresh install. Personal Kanban's rule of thumb for
     /// one person: 2–3 things actually in progress, a slightly roomier queue
     /// that must not become a second backlog.

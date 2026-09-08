@@ -23,7 +23,7 @@ enum SettingsMetrics {
     /// Measured against the content, not guessed: the pane is a fixed height,
     /// so a footer that grows silently loses its last line. 455 cut the WIP
     /// rule off mid-sentence the day it stopped being a hover tip.
-    static let generalHeight: CGFloat = 495
+    static let generalHeight: CGFloat = 585
 }
 
 struct SettingsView: View {
@@ -95,6 +95,7 @@ struct ListsSettingsView: View {
 struct GeneralSettingsView: View {
     @EnvironmentObject private var store: RemindersStore
     @ObservedObject private var appearance = AppearanceController.shared
+    @ObservedObject private var presence = PresenceController.shared
 
     /// Seeded with the real state rather than a placeholder corrected in
     /// `onAppear`: that correction is a state change on the first frame, so
@@ -178,6 +179,28 @@ struct GeneralSettingsView: View {
             // around — but an app that lives on screen all day owes the off
             // switch a first-class place.
             Toggle("Sound on Completion", isOn: $store.completionSoundEnabled)
+
+            // Its own section rather than a fourth single row: unlike the
+            // three above, this one changes where the app *is*, and the
+            // footer has to say what that costs. No `onChange` either — the
+            // controller persists and applies in one step (measured 08.09.2026,
+            // M2: the activation policy really does switch at runtime).
+            Section {
+                Picker("Show In", selection: $presence.selection) {
+                    ForEach(AppPresence.allCases) { option in
+                        Text(option.displayName).tag(option)
+                    }
+                }
+            } header: {
+                Text("Menu Bar")
+            } footer: {
+                // Names the two facts and stops: what is up there, and what
+                // happens to the app without a Dock icon. The second one is
+                // the question this switch actually raises — an app whose
+                // window can be closed while it keeps running is the part a
+                // user has to be told, not persuaded of.
+                Text("The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed.")
+            }
 
             // Where workflows differ most. Backlog is the pool of options the
             // board could pull *now*, which is why this ships on — but "now"

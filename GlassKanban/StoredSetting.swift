@@ -26,6 +26,8 @@ enum StoredSetting: String, CaseIterable {
     case foldNotYetDue
     /// Light, dark, or follow the system.
     case appearance = "appAppearance"
+    /// Dock, menu bar, or both.
+    case presence = "appPresence"
     /// Which values this board overwrote, so it can recognise its own echo.
     case correctionLedger
     /// Which recurring series have spent their pull.
@@ -58,6 +60,11 @@ enum StoredSetting: String, CaseIterable {
 
         // Brightness is a property of the room and the screen, not of the user.
         case .appearance: .thisDevice
+        // Where the app shows itself is a property of the desk, like the
+        // appearance above: a Mac that runs the board on a second screen all
+        // day wants the Dock icon, a laptop carried to meetings wants the
+        // menu bar. Nothing about the work changes with it.
+        case .presence: .thisDevice
         // Headphones on the laptop, silence in the office.
         case .completionSound: .thisDevice
         // Open until measured (M4): `EKCalendar.calendarIdentifier` may differ

@@ -7,9 +7,22 @@ import SwiftUI
 /// `NSApp` exists, and an early attempt to set the appearance there crashed
 /// the app on every launch — a failure the build and the unit tests both
 /// pass straight through, because it only exists at runtime.
+@MainActor
 final class AppearanceDelegate: NSObject, NSApplicationDelegate {
+    /// The board's data, owned here rather than by the `App` struct.
+    ///
+    /// In the menu bar mode there is no window, so a `@StateObject` on the
+    /// scene would be created only once the board is opened — and the tray,
+    /// which is AppKit and lives outside every scene, would have nothing to
+    /// read. One store, held by the one object that exists in both modes.
+    let store = RemindersStore()
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         AppearanceController.shared.applyStored()
+        // Same moment, same reason: the activation policy decides whether a
+        // Dock icon appears at all, and that has to be settled before the
+        // app is on screen rather than corrected afterwards.
+        PresenceController.shared.applyStored()
     }
 
     /// The board has to be told which display it belongs to from here: a
@@ -17,6 +30,46 @@ final class AppearanceDelegate: NSObject, NSApplicationDelegate {
     /// (see `WindowPlacementController`).
     func applicationDidFinishLaunching(_ notification: Notification) {
         WindowPlacementController.shared.start()
+        MenuBarTrayController.shared.start(store: store)
+        closeRestoredBoardInMenuBarMode()
+    }
+
+    /// A `Window` scene is the whole app as far as SwiftUI is concerned, so
+    /// closing the board quit. With an item in the menu bar that is the one
+    /// thing it must not do — see `AppPresence.quitsWithLastWindow`.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        PresenceController.shared.selection.quitsWithLastWindow
+    }
+
+    /// `.defaultLaunchBehavior(.suppressed)` stops SwiftUI from *opening* the
+    /// board at launch, and that much was measured (08.09.2026, M3). What it
+    /// does not stop is macOS restoring a window that was open when the app
+    /// last quit — so in the menu bar mode a board came back anyway, which is
+    /// exactly the login-time surprise the setting exists to prevent.
+    ///
+    /// The board window carries `identifier == "board"` from its scene
+    /// (measured 08.09.2026); the status bar windows carry none. Run twice,
+    /// because restoration finishes after launch does.
+    private func closeRestoredBoardInMenuBarMode() {
+        guard !PresenceController.shared.selection.opensBoardAtLaunch else { return }
+        closeBoardWindows()
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didFinishRestoringWindowsNotification,
+            object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated {
+                guard !PresenceController.shared.selection.opensBoardAtLaunch else { return }
+                Self.closeBoardWindows()
+            }
+        }
+    }
+
+    private func closeBoardWindows() { Self.closeBoardWindows() }
+
+    private static func closeBoardWindows() {
+        for window in NSApp.windows where window.identifier?.rawValue == "board" {
+            window.close()
+        }
     }
 }
 
@@ -33,8 +86,10 @@ extension Notification.Name {
 
 @main
 struct GlassKanbanApp: App {
-    @StateObject private var store = RemindersStore()
     @NSApplicationDelegateAdaptor(AppearanceDelegate.self) private var appearanceDelegate
+    @ObservedObject private var presence = PresenceController.shared
+
+    private var store: RemindersStore { appearanceDelegate.store }
 
     var body: some Scene {
         // Single window (one board); macOS restores its frame automatically.
@@ -43,6 +98,11 @@ struct GlassKanbanApp: App {
                 .environmentObject(store)
         }
         .defaultSize(width: 1280, height: 760)
+        // In the menu bar mode the board waits to be asked for. SwiftUI opens
+        // a `Window` scene at launch on its own, so with "start at login" on
+        // a board would spring up at every single login (measured 08.09.2026,
+        // M3: this modifier really does keep it shut).
+        .defaultLaunchBehavior(presence.selection.opensBoardAtLaunch ? .automatic : .suppressed)
         .commands {
             CommandMenu("Board") {
                 // Every board command answers the same two questions the

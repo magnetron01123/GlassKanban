@@ -713,10 +713,13 @@ selbst lesen:
 
 | Datum | Messung | Ergebnis | Folge |
 |---|---|---|---|
-| | M1 Drag im MenuBarExtra-Popover | | |
-| | M1 Popover schließt bei „Board" | | |
-| | M2 Activation Policy zur Laufzeit | | |
-| | M3 `defaultLaunchBehavior(.suppressed)` | | |
+| 08.09.2026 | M1 Drag im MenuBarExtra-Popover | **Negativ.** Der Zug *lebt* — die Drag-Preview folgt dem Cursor, das Popover bleibt dabei offen —, aber das `dropDestination` empfängt nichts: weder `isTargeted` noch der Drop feuern. Gegenprobe mit demselben synthetischen HID-Zug auf dem Board: Karte wechselt die Spalte wie erwartet, die Messmethode ist also gültig. | **Weiche gezogen:** kein `MenuBarExtra`, sondern `NSStatusItem` + eigener `NSPanel` (Schritt 3). |
+| 08.09.2026 | M1 Popover schließt bei „Board" | **Negativ.** `openWindow(id:)` plus `NSApp.activate` bringt das Board, das `MenuBarExtra`-Popover bleibt daneben offen stehen. | Mit dem eigenen Panel ohnehin selbst gesteuert: `close()` vor dem Öffnen des Boards. |
+| 08.09.2026 | M2 Activation Policy zur Laufzeit | **Sauber.** `.accessory` nimmt das Dock-Symbol sofort weg, `.regular` bringt es zurück; gemessen über die Dock-UI-Elemente. | Die Einstellung wirkt sofort, `apply()` im `didSet`. Kein „wirkt nach dem nächsten Start". |
+| 08.09.2026 | M3 `defaultLaunchBehavior(.suppressed)` | **Funktioniert.** Nach dem Start hatte der Prozess kein einziges Fenster. | Modifier abhängig von `presence.selection` (Schritt 3). |
+| 08.09.2026 | Drag im eigenen `NSPanel` (Weiche M1) | **Positiv.** `isTargeted` färbt das Ziel beim Überfahren, der Drop feuert beim Loslassen, das Panel bleibt dabei offen. Damit trägt der Rückfall. | `NSStatusItem` + `NSPanel` gebaut (`MenuBarTrayController`). |
+| 08.09.2026 | M3, zweiter Befund: Fenster*wiederherstellung* | `.defaultLaunchBehavior(.suppressed)` verhindert nur das *Öffnen* einer Szene. Ein Board, das beim Beenden offen war, stellt macOS trotzdem wieder her — im Menüleisten-Modus sprang es also doch auf. | Im Delegate: Fenster mit `identifier == "board"` schließen, bei Start und bei `didFinishRestoringWindows`. |
+| 08.09.2026 | Nebenbefund: die App beendete sich | Eine SwiftUI-`Window`-Szene *ist* die App: das Schließen des Boards beendete den Prozess — mitsamt dem Menüleisten-Symbol. | `applicationShouldTerminateAfterLastWindowClosed` folgt `AppPresence.quitsWithLastWindow`. |
 | | Hintergrund: Systemmaterial vs. HUDGlassMaterial | | |
 | | `SettingsMetrics.generalHeight` gemessen | | |
 
