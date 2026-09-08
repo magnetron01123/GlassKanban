@@ -171,6 +171,10 @@ ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_r
 zu Schritt 3. Sichtprüfung eines Frames beim Zug (`ffmpeg -ss 8 -frames:v 1`): Zeiger als
 **schlichter Pfeil**, kein grünes Plus, kein Greifsymbol.
 
+Längerer Nachlauf (Variante `pull-long`, 08.09.2026): nach `left_mouse_up` **2,8 s** warten,
+bevor der Zeiger das Bild verlässt; Marken dann von Hand (`5.32 7.53 10.55`, 5,23 s). Die
+automatische Lesung stolpert hier über das Ausblenden der Fenster zu Aufnahmebeginn.
+
 Für einen weiteren Take: `Bearbeiten › Widerrufen` in der App (Karte zurück) — ist der
 Menüpunkt grau, die Karte per HID-Zug zurückziehen —,
 Zeiger wieder auf die Karte, `record.sh 2`.
