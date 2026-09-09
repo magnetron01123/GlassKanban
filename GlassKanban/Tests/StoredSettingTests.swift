@@ -22,6 +22,8 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.presence.key, "appPresence")
         XCTAssertEqual(StoredSetting.correctionLedger.key, "correctionLedger")
         XCTAssertEqual(StoredSetting.tagReleaseMemory.key, "tagReleaseMemory")
+        XCTAssertEqual(StoredSetting.columnStorageLocation.key, "columnStorageLocation")
+        XCTAssertEqual(StoredSetting.columnStorageLastFailure.key, "columnStorageLastFailure")
     }
 
     func testKeysAreDistinct() {
@@ -55,6 +57,14 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.completionSound.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.excludedCalendars.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.presence.scope, .thisDevice)
+    }
+
+    /// The storage breadcrumbs describe *this* Mac's sandbox. Travelling, they
+    /// would name a path the other Mac does not have and blame it for a write
+    /// it never attempted.
+    func testTheStorageBreadcrumbsStayOnTheMachineTheyDescribe() {
+        XCTAssertEqual(StoredSetting.columnStorageLocation.scope, .thisDevice)
+        XCTAssertEqual(StoredSetting.columnStorageLastFailure.scope, .thisDevice)
     }
 
     /// Guards the list the future transport will iterate over: if a new setting

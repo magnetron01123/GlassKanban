@@ -715,7 +715,7 @@ umzuformulieren — bis dahin wäre „Geräte" ein Versprechen, das die App nic
 | M | Messungen | nein | teilweise erledigt 14.08.2026, M1/M4/M5 offen |
 | ~~B~~ | ~~Umschlüsselung auf externen Bezeichner~~ | — | **entfällt** — Schlüssel sind bereits identisch |
 | C | `released` + `merged(_:_:now:)` als reine Funktion samt Tests | nein | **erledigt 14.08.2026** |
-| A | Speicher in App-Group-Container | **ja, wegen Xcode** | Lese-/Kopiermechanik gebaut 14.08.2026; Entitlement wartet auf Phase 0 |
+| A | Speicher in App-Group-Container | **ja, wegen Xcode** | Lese-/Kopiermechanik gebaut 14.08.2026; **schrieb bis 08.09.2026 ins Leere** (CONCEPT.md, „Ein Pfad ist keine Schreiberlaubnis"); Entitlement wartet auf Phase 0 |
 | D | KV-Anbindung, Entitlement, Migrations-Zeitstempel, fremde Bewegung animiert (s. o.) | **ja** | offen |
 | E | `SettingsSync` nach obiger Tabelle | ja | Klassifikation als `StoredSetting` gebaut 14.08.2026; Transport wartet auf Phase 0 |
 | F | CONCEPT/SPEC/README/PrivacyInfo/RELEASE nachziehen | nein | teilweise |
@@ -792,6 +792,8 @@ verschwindet. Ohne diesen Abschnitt zeigen zwei Code-Kommentare ins Leere
 |---|---|---|
 | `columns.json` (alt) | `…/Containers/com.davidtrogemann.GlassKanban/Data/Library/Application Support/GlassKanban/` | Phase A, sobald der Group-Container aktiv ist |
 | `columns.json` (erste Group-Form) | `~/Library/Group Containers/group.com.…/` | nur falls der Store ein `<TeamID>.group.…`-Präfix erzwingt |
+
+**Stand 08.09.2026:** Im Group-Container liegt bisher **nichts** — er wurde ohne Entitlement nie beschreibbar und darum nie angelegt (CONCEPT.md, „Ein Pfad ist keine Schreiberlaubnis"). Aufzuräumen ist hier also erst etwas, wenn Phase 0 das Entitlement bringt.
 | Lesepfad-Einträge für tote Orte | `ColumnState.knownFileURLs` | jede Ortsänderung |
 | `copyColumnsToCurrentLocationIfNeeded` | `RemindersStore` | Phase A |
 
@@ -909,6 +911,17 @@ Ein älterer Anlauf vom 21.07. ist darin aufgegangen bzw. inzwischen umgesetzt (
 entfernt in `4f83347`); sein Branch wurde am 14.08.2026 gelöscht.
 
 ## Explizit abgelehnt (kein "später", sondern bewusst ausgeschlossen)
+
+### Listenwechsel per Kopieren-und-Löschen nachbauen (abgelehnt 09.09.2026)
+
+Manche Erinnerungslisten weisen jeden Verschiebeversuch ab. Der naheliegende Ersatz —
+die Aufgabe in der Zielliste neu anlegen und das Original löschen — **funktioniert
+nachweislich** und ist trotzdem abgelehnt: Er ist kein Verschieben, sondern ein Nachbau
+mit neuer Identität, und kostet das Erfassungsdatum (an dem `RecurringSeriesMatch`, die
+Durchlaufzeit und die Backlog-Sortierung hängen), Unterpunkte und Anhänge. Messungen
+und vollständige Begründung in CONCEPT.md, „Manche Listen geben nichts ab".
+Gebaut wurde stattdessen eine Meldung, die den Systemzustand benennt (SPEC.md).
+
 
 - **Eigene Push-Benachrichtigungen der App** — Reminders hat bereits eigene
   Benachrichtigungen; eigene Notifications würden sich doppeln und widersprechen dem ruhigen

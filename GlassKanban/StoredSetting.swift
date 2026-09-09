@@ -11,6 +11,16 @@ import Foundation
 /// build. That is the same move `check-localization.py` made for the string
 /// catalogue — turn an assurance into something that is actually checked.
 ///
+/// **Two of these are not settings.** `columnStorageLocation` and
+/// `columnStorageLastFailure` are diagnostics, written by the app and read by
+/// a person with `plutil -p`. They live here because this type's promise is
+/// "every value this app keeps in `UserDefaults`" — an exception would be the
+/// first hole in it — and because they must be classified as travelling or
+/// not, exactly like the rest. Why `UserDefaults` and not a log: this app's
+/// `os.Logger` output is findable through neither `log show` nor `log stream`
+/// (measured 14.08.2026, CLAUDE.md), which is how a board that failed to save
+/// every single pull looked healthy for three weeks (08.09.2026, CONCEPT.md).
+///
 /// Nothing transports anything yet. Until the KV store is wired up (blocked on
 /// the Developer Program, measured 14.08.2026), this type only names and
 /// classifies what already exists.
@@ -32,6 +42,13 @@ enum StoredSetting: String, CaseIterable {
     case correctionLedger
     /// Which recurring series have spent their pull.
     case tagReleaseMemory
+    /// Where this build writes `columns.json`, and which of the two possible
+    /// homes that is. Not a setting — a breadcrumb, and the only one this app
+    /// has (see `scope` for why it is kept here rather than logged).
+    case columnStorageLocation
+    /// The last write of `columns.json` that failed, with its reason. Removed
+    /// again by the next write that succeeds.
+    case columnStorageLastFailure
 
     /// The `UserDefaults` key. **A persisted contract**, exactly like
     /// `ColumnState.Lane`'s raw values: renaming one does not migrate a
@@ -81,6 +98,11 @@ enum StoredSetting: String, CaseIterable {
         case .correctionLedger: .thisDevice
         // Same reason: a record of what this machine did, not of what is.
         case .tagReleaseMemory: .thisDevice
+
+        // Facts about this Mac's sandbox, useless and misleading anywhere
+        // else: the other Mac may well have a different answer, and a
+        // travelling failure note would accuse the wrong machine.
+        case .columnStorageLocation, .columnStorageLastFailure: .thisDevice
         }
     }
 
