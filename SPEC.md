@@ -205,6 +205,22 @@ verschwindet erst, wenn wieder einer gelingt — nicht schon beim nächsten Star
 wandern nicht auf einen zweiten Mac (`StoredSetting`), weil sie dessen Sandbox nicht
 beschreiben.
 
+**Die Liste einer Karte** lässt sich im Karten-Editor ändern; geschrieben wird
+`EKReminder.calendar`, angeboten werden alle beschreibbaren, nicht ausgeblendeten Listen
+plus die eigene. **Manche Listen weisen das ab** — eine Eigenschaft der Liste, in beide
+Richtungen, von EventKit vorher nicht erfragbar (Herleitung und Messung in CONCEPT.md,
+„Manche Listen geben nichts ab"). In diesem Fall:
+
+- Die Karte bleibt, wo sie ist. **Es wird nichts nachgebaut** — kein Kopieren-und-Löschen,
+  weil das Erfassungsdatum, Unterpunkte und Anhänge verlieren würde.
+- Es erscheint eine Meldung, die den Systemzustand benennt statt einer Fehlernummer:
+  „Verschieben nicht möglich" /
+  „iCloud lässt zwischen diesen beiden Listen kein Verschieben zu. Die Karte bleibt in ihrer Liste."
+- **Alle anderen Änderungen desselben Zuges werden gesichert.** Ein abgewiesenes `save`
+  rollt den ganzen Reminder zurück, deshalb wird alles außer der Liste erneut
+  geschrieben — aber nur, wenn es überhaupt eine weitere Änderung gab, damit ein
+  bloßer Verschiebeversuch das Änderungsdatum nicht anfasst.
+
 **Der Speicher ist an diesen Mac gebunden.** Zwei Macs mit dieser App auf denselben Listen
 haben getrennte Spalten; die spätere iOS-App bräuchte eine eigene Synchronisation. Das ist
 der bewusst bezahlte Preis dafür, dass niemand sonst die Spalte erreichen kann.

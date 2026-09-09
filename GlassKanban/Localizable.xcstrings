@@ -1602,6 +1602,23 @@
         }
       }
     },
+    "Move Not Possible": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschieben nicht möglich"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Not Possible"
+          }
+        }
+      }
+    },
     "Move to": {
       "extractionState": "manual",
       "localizations": {
@@ -3072,6 +3089,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "days in a row"
+          }
+        }
+      }
+    },
+    "iCloud does not allow moving tasks between these two lists. The card stays in its list.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud lässt zwischen diesen beiden Listen kein Verschieben zu. Die Karte bleibt in ihrer Liste."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud does not allow moving tasks between these two lists. The card stays in its list."
           }
         }
       }

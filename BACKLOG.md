@@ -909,6 +909,17 @@ entfernt in `4f83347`); sein Branch wurde am 14.08.2026 gelöscht.
 
 ## Explizit abgelehnt (kein "später", sondern bewusst ausgeschlossen)
 
+### Listenwechsel per Kopieren-und-Löschen nachbauen (abgelehnt 09.09.2026)
+
+Manche Erinnerungslisten weisen jeden Verschiebeversuch ab. Der naheliegende Ersatz —
+die Aufgabe in der Zielliste neu anlegen und das Original löschen — **funktioniert
+nachweislich** und ist trotzdem abgelehnt: Er ist kein Verschieben, sondern ein Nachbau
+mit neuer Identität, und kostet das Erfassungsdatum (an dem `RecurringSeriesMatch`, die
+Durchlaufzeit und die Backlog-Sortierung hängen), Unterpunkte und Anhänge. Messungen
+und vollständige Begründung in CONCEPT.md, „Manche Listen geben nichts ab".
+Gebaut wurde stattdessen eine Meldung, die den Systemzustand benennt (SPEC.md).
+
+
 - **Eigene Push-Benachrichtigungen der App** — Reminders hat bereits eigene
   Benachrichtigungen; eigene Notifications würden sich doppeln und widersprechen dem ruhigen
   Minimal-Desk-Setup-Vibe der App.

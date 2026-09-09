@@ -1841,6 +1841,38 @@ final class RemindersStore: ObservableObject {
         let previous = loadEditableTicket(cardID: cardID)
         do {
             try eventStore.save(reminder, commit: true)
+        } catch where calendarChanged && ReminderWriteFailure.isListMoveRefused(error) {
+            // The list is the one field the system itself refuses, on lists it
+            // does not say in advance (see `ReminderWriteFailure`). Reported as
+            // the fact it is rather than as this app's failure: nothing here
+            // went wrong, and there is nothing to try again.
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID,
+                title: String(localized: "Move Not Possible"),
+                message: String(
+                    localized: "iCloud does not allow moving tasks between these two lists. The card stays in its list."))
+            // A refused save rolls the *whole* reminder back, not just the
+            // list (measured 09.09.2026) — so a title typed in the same breath
+            // would be lost with it. Writing the rest again, without the list,
+            // is what keeps that from happening; it is the same promise
+            // `isReadOnly` makes one row further up in the editor, that typing
+            // is never wasted for a fact the user could not have known.
+            //
+            // Only when there *is* something else. A second save with nothing
+            // changed would still bump the reminder's modification date, and
+            // this app holds that opening a card and closing it must be a read.
+            let otherFieldsChanged =
+                titleChanged || notesChanged || urlChanged || dueChanged || priorityChanged
+            if otherFieldsChanged {
+                var withoutTheMove = edited
+                withoutTheMove.calendarID = baseline.calendarID
+                updateTicket(
+                    cardID: cardID, edited: withoutTheMove, baseline: baseline,
+                    undoManager: undoManager)
+                return
+            }
+            scheduleRefreshAfterWrite()
+            return
         } catch {
             pendingSaveFailure = SaveFailure(
                 cardID: cardID, title: String(localized: "Not Saved"), message: error.localizedDescription)
