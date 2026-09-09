@@ -508,6 +508,169 @@ final class ColumnStateTests: XCTestCase {
         XCTAssertEqual(pruned.lane(of: "fresh"), .inProgress, "pruning touches nothing else")
     }
 
+    // MARK: - Where the file is written
+
+    /// The regression this section exists for, in one test.
+    ///
+    /// Until 08.09.2026 the choice was `containerURL(…) ?? applicationSupport`.
+    /// That method answers with a path whether or not the app carries the
+    /// group entitlement, so the fallback never fired, every write into the
+    /// group container was refused by the sandbox, and the board lost every
+    /// pull on quit for three weeks. A path is not permission to write to it.
+    func testAGroupContainerThatCannotBeWrittenFallsBackToApplicationSupport() {
+        let group = URL(fileURLWithPath: "/Users/x/Library/Group Containers/g")
+        let support = URL(fileURLWithPath: "/Users/x/Library/Application Support")
+
+        let choice = ColumnState.chooseStorageDirectory(
+            groupContainer: group, applicationSupport: support,
+            isWritable: { _ in false })
+
+        XCTAssertEqual(
+            choice,
+            .applicationSupport(
+                support.appendingPathComponent("GlassKanban", isDirectory: true)))
+    }
+
+    /// Once the entitlement lands the group container is the point of all this:
+    /// a widget or an App Intent runs in its own process and cannot look inside
+    /// the app's sandbox.
+    func testAWritableGroupContainerWins() {
+        let group = URL(fileURLWithPath: "/Users/x/Library/Group Containers/g")
+        let support = URL(fileURLWithPath: "/Users/x/Library/Application Support")
+
+        let choice = ColumnState.chooseStorageDirectory(
+            groupContainer: group, applicationSupport: support,
+            isWritable: { _ in true })
+
+        XCTAssertEqual(
+            choice,
+            .groupContainer(
+                group.appendingPathComponent("GlassKanban", isDirectory: true)))
+    }
+
+    /// The case the old code assumed was the only failure mode. It still has to
+    /// work — and without touching the file system to find out.
+    func testNoGroupContainerAtAllFallsBackWithoutProbing() {
+        var probed = false
+        let support = URL(fileURLWithPath: "/Users/x/Library/Application Support")
+
+        let choice = ColumnState.chooseStorageDirectory(
+            groupContainer: nil, applicationSupport: support,
+            isWritable: { _ in probed = true; return true })
+
+        XCTAssertEqual(
+            choice,
+            .applicationSupport(
+                support.appendingPathComponent("GlassKanban", isDirectory: true)))
+        XCTAssertFalse(probed, "there is nothing to probe")
+    }
+
+    /// Nowhere to write is a real answer, and has to stay distinguishable from
+    /// "wrote it" — that is what `save(to: nil)` returning false is for.
+    func testNowhereToWriteIsAnswerable() {
+        XCTAssertNil(ColumnState.chooseStorageDirectory(
+            groupContainer: nil, applicationSupport: nil,
+            isWritable: { _ in true }))
+    }
+
+    /// The probe must ask about the directory the file actually goes in, not
+    /// the container above it: creating `…/GlassKanban` is the step the sandbox
+    /// refuses, and probing the parent would answer a question nobody asked.
+    func testTheProbeAsksAboutTheDirectoryTheFileGoesIn() {
+        var asked: [URL] = []
+        let group = URL(fileURLWithPath: "/Users/x/Library/Group Containers/g")
+
+        _ = ColumnState.chooseStorageDirectory(
+            groupContainer: group, applicationSupport: nil,
+            isWritable: { asked.append($0); return true })
+
+        XCTAssertEqual(
+            asked, [group.appendingPathComponent("GlassKanban", isDirectory: true)])
+    }
+
+    /// The probe itself, against a real directory it may write to and one it
+    /// may not. Both answers have to be right or the choice above is decided
+    /// by a coin.
+    func testTheProbeReportsWhatTheFileSystemActuallyAllows() throws {
+        let writable = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        XCTAssertTrue(ColumnState.directoryAcceptsWrites(writable))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: writable.path))
+        XCTAssertEqual(
+            try FileManager.default.contentsOfDirectory(atPath: writable.path), [],
+            "the probe leaves nothing behind")
+        try? FileManager.default.removeItem(at: writable)
+
+        XCTAssertFalse(
+            ColumnState.directoryAcceptsWrites(
+                URL(fileURLWithPath: "/System/GlassKanbanProbe")),
+            "a directory this process may not create")
+    }
+
+    /// Keeps this test off the real machine.
+    ///
+    /// **Why a stub and not the default manager.** The first version of the
+    /// test below simply called `knownFileURLs()`. Inside the app that is
+    /// harmless — the sandbox refuses the group container instantly. The test
+    /// bundle is *not* sandboxed, so the same probe was allowed: it created a
+    /// real group container under `~/Library/Group Containers`, and the run in
+    /// which containermanagerd built it took **180 seconds** while the rest of
+    /// the suite takes three (measured 09.09.2026). A unit test may do
+    /// neither. Both answers are stubbed, so nothing outside the temporary
+    /// directory is touched.
+    private final class OffMachineFileManager: FileManager {
+        let root: URL
+        init(root: URL) {
+            self.root = root
+            super.init()
+        }
+        override func containerURL(
+            forSecurityApplicationGroupIdentifier identifier: String
+        ) -> URL? { nil }
+        override func url(
+            for directory: FileManager.SearchPathDirectory,
+            in domain: FileManager.SearchPathDomainMask,
+            appropriateFor url: URL?, create shouldCreate: Bool
+        ) throws -> URL { root }
+    }
+
+    /// The read list must not name a location this build cannot write back to.
+    /// Reading one would look like it worked and lose the next pull silently —
+    /// the same shape of fault as the bug this section is about.
+    func testTheReadListOnlyNamesLocationsThisBuildCanWrite() throws {
+        let root = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fileManager = OffMachineFileManager(root: root)
+
+        let urls = ColumnState.knownFileURLs(fileManager: fileManager)
+
+        XCTAssertFalse(urls.isEmpty)
+        XCTAssertEqual(urls.first, ColumnState.defaultFileURL(fileManager: fileManager))
+        XCTAssertEqual(Set(urls).count, urls.count, "no location listed twice")
+        for url in urls {
+            XCTAssertEqual(url.lastPathComponent, "columns.json")
+            XCTAssertTrue(
+                url.path.hasPrefix(root.path),
+                "the test must not name a path on the real machine")
+        }
+    }
+
+    /// Without the group entitlement both candidates are the same directory,
+    /// and the read list must say it once — a location walked twice would make
+    /// a corrupt file look like two independent opinions.
+    func testWithoutAGroupContainerTheReadListHasASingleEntry() throws {
+        let root = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let urls = ColumnState.knownFileURLs(fileManager: OffMachineFileManager(root: root))
+
+        XCTAssertEqual(urls.count, 1)
+    }
+
     /// A file that exists but reads as empty — corrupt, or from a version this
     /// build does not know — must not fall through to an older copy. That copy
     /// is by definition staler, and reviving it would put cards back in lanes

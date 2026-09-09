@@ -156,14 +156,60 @@ final class RemindersStore: ObservableObject {
     /// and the first change writes it to the new place.
     private var lastSavedColumns = ColumnState.loadFromKnownLocations()
 
-    private let columnsURL = ColumnState.defaultFileURL()
+    private let columnsLocation = ColumnState.defaultStorageLocation()
+
+    private var columnsURL: URL? { columnsLocation?.fileURL }
 
     /// One line per failed write to the column file. There is deliberately no
     /// dialog: the pull the user just made is already live on screen, and this
     /// board may never put a message about its own storage in front of
     /// somebody who dragged a card. The next write tries again.
+    ///
+    /// **This log is not the record.** It was the only one until 08.09.2026,
+    /// and it is why nobody noticed that every pull failed to save for three
+    /// weeks: this app's `os.Logger` output cannot be found through `log show`
+    /// or `log stream` (CLAUDE.md). The record a person can actually read is
+    /// `noteStorage(_:)` below.
     private static let storageLog = Logger(
         subsystem: "com.davidtrogemann.GlassKanban", category: "storage")
+
+    /// Puts where the board writes, and whether the last write worked, into
+    /// `UserDefaults` — the one diagnostic channel this app is known to have.
+    ///
+    /// Readable without a debugger and without the app running:
+    ///
+    ///     plutil -p ~/Library/Containers/com.davidtrogemann.GlassKanban/Data\
+    ///       /Library/Preferences/com.davidtrogemann.GlassKanban.plist
+    ///
+    /// The location is written on every launch, not only on failure. The
+    /// question that went unanswered for three weeks was not "did a write
+    /// fail" but "where does this build write at all" — a breadcrumb that only
+    /// appears once something breaks cannot answer it.
+    private func noteStorageLocation() {
+        let description = switch columnsLocation {
+        case .groupContainer(let url): "group container — \(url.path)"
+        case .applicationSupport(let url): "application support — \(url.path)"
+        case nil: "nowhere — no writable directory"
+        }
+        UserDefaults.standard.set(
+            description, forKey: StoredSetting.columnStorageLocation.key)
+    }
+
+    /// Records a failed write, or clears the note once one succeeds.
+    ///
+    /// Only a *successful write* clears it, never a launch: a note wiped at
+    /// startup would leave a board that fails on every pull looking clean to
+    /// anybody who quit without moving a card — which is exactly the shape of
+    /// the fault this whole mechanism exists for.
+    private func noteStorage(failure: String?) {
+        let key = StoredSetting.columnStorageLastFailure.key
+        if let failure {
+            UserDefaults.standard.set(
+                "\(Date.now.formatted(.iso8601)) — \(failure)", forKey: key)
+        } else {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+    }
 
     /// Writes the column state if it changed. The single place that touches
     /// the file, and always *after* any EventKit save it belongs to: a
@@ -172,8 +218,10 @@ final class RemindersStore: ObservableObject {
         guard columns != lastSavedColumns else { return }
         if columns.save(to: columnsURL) {
             lastSavedColumns = columns
+            noteStorage(failure: nil)
         } else {
             Self.storageLog.error("column state not written — retrying on the next change")
+            noteStorage(failure: "column state not written to \(columnsURL?.path ?? "nowhere")")
         }
     }
 
@@ -310,6 +358,12 @@ final class RemindersStore: ObservableObject {
                     .map { ($0.rawValue, $0.defaultWIPLimit) })
         completionSoundEnabled = UserDefaults.standard.object(forKey: Self.completionSoundKey) as? Bool ?? true
         foldNotYetDue = UserDefaults.standard.object(forKey: Self.foldNotYetDueKey) as? Bool ?? true
+        // Before anything is written, so the answer to "where does this build
+        // write" exists even on a launch that never saves a thing.
+        noteStorageLocation()
+        if columnsLocation == nil {
+            noteStorage(failure: "no writable directory for the column file")
+        }
         copyColumnsToCurrentLocationIfNeeded()
     }
 
@@ -335,6 +389,7 @@ final class RemindersStore: ObservableObject {
             // Not fatal: the old file is still there and still readable, so
             // the board works. The next write tries again.
             Self.storageLog.error("column state could not be copied to its current location")
+            noteStorage(failure: "column state could not be copied to \(target.path)")
         }
     }
 
@@ -1786,6 +1841,38 @@ final class RemindersStore: ObservableObject {
         let previous = loadEditableTicket(cardID: cardID)
         do {
             try eventStore.save(reminder, commit: true)
+        } catch where calendarChanged && ReminderWriteFailure.isListMoveRefused(error) {
+            // The list is the one field the system itself refuses, on lists it
+            // does not say in advance (see `ReminderWriteFailure`). Reported as
+            // the fact it is rather than as this app's failure: nothing here
+            // went wrong, and there is nothing to try again.
+            pendingSaveFailure = SaveFailure(
+                cardID: cardID,
+                title: String(localized: "Move Not Possible"),
+                message: String(
+                    localized: "iCloud does not allow moving tasks between these two lists. The card stays in its list."))
+            // A refused save rolls the *whole* reminder back, not just the
+            // list (measured 09.09.2026) — so a title typed in the same breath
+            // would be lost with it. Writing the rest again, without the list,
+            // is what keeps that from happening; it is the same promise
+            // `isReadOnly` makes one row further up in the editor, that typing
+            // is never wasted for a fact the user could not have known.
+            //
+            // Only when there *is* something else. A second save with nothing
+            // changed would still bump the reminder's modification date, and
+            // this app holds that opening a card and closing it must be a read.
+            let otherFieldsChanged =
+                titleChanged || notesChanged || urlChanged || dueChanged || priorityChanged
+            if otherFieldsChanged {
+                var withoutTheMove = edited
+                withoutTheMove.calendarID = baseline.calendarID
+                updateTicket(
+                    cardID: cardID, edited: withoutTheMove, baseline: baseline,
+                    undoManager: undoManager)
+                return
+            }
+            scheduleRefreshAfterWrite()
+            return
         } catch {
             pendingSaveFailure = SaveFailure(
                 cardID: cardID, title: String(localized: "Not Saved"), message: error.localizedDescription)
