@@ -178,6 +178,18 @@ für jemanden, der zwischen zwei Starts hinsah.
    Schreibvorgang** gelöscht, nie von einem Start: Sonst sähe ein Board, das bei jedem Zug
    scheitert, für jeden sauber aus, der ohne Kartenzug beendet.
 
+**Nachtrag 09.09.2026, gemessen: Die Probe antwortet je nach Prozess verschieden.** In
+der sandboxed App wird sie sofort abgewiesen — deshalb steht dort Application Support. Im
+Testbundle, das **nicht** sandboxed ist, ist derselbe Schreibversuch *erlaubt*: Er legt
+einen echten Group-Container unter `~/Library/Group Containers` an, und der Lauf, in dem
+containermanagerd ihn erzeugte, dauerte **180 Sekunden**, während die übrige Testreihe
+drei braucht. Das ist keine Schwäche der Regel, sondern eine des ersten Tests dazu, der
+sie gegen die echte Maschine laufen ließ. Er arbeitet seither gegen einen `FileManager`,
+der beide Antworten stellt; die Reihe braucht wieder unter einer Sekunde. Die Lehre ist
+allgemeiner als der Fall: **Eine Probe, die etwas anlegt, ist in einem Test kein
+Messinstrument, sondern ein Eingriff** — und der Testprozess hat andere Rechte als die
+App, über die er urteilt.
+
 **Was ausdrücklich nicht gebaut wurde:** kein Dialog. Die Begründung von 14.08.2026 gilt
 unverändert — wer eine Karte gezogen hat, bekommt keine Meldung über den Speicher der App
 vor die Nase. Neu ist nicht die Lautstärke gegenüber dem Nutzer, sondern dass überhaupt
@@ -188,6 +200,53 @@ baut und die Tests grün sind — CLAUDE.md sagt das seit dem 14.08.2026, und de
 hat es zweimal bewiesen. Hier fehlte genau die Prüfung, die dort verlangt wird: nach dem
 Lauf nachsehen, ob etwas dasteht. Die Zeile „Lese-/Kopiermechanik gebaut" in BACKLOG.md
 (Phase A) war drei Wochen lang wahr und trotzdem wertlos.
+
+### Manche Listen geben nichts ab — und niemand sagt vorher, welche (09.09.2026)
+
+Der Karten-Editor lässt die Liste einer Karte ändern. Auf zwei von sechs Listen des
+Testkontos schlug das fehl, mit einer rohen Systemmeldung: „com.apple.reminderkit-Fehler −3002".
+
+**Es ist keine Fehlfunktion dieser App.** Derselbe Zug, aus einem eigenen
+Kommandozeilenwerkzeug mit eigenem `EKEventStore`, wird genauso abgewiesen. Der
+Klartext hinter der Zahl lautet „Moving between lists is unsupported in this account". Die Sperre hängt
+an der **Liste**, nicht am Paar und nicht am Konto: Eine gesperrte Liste verweigert in
+beide Richtungen gegen jede andere, die übrigen vier verschieben untereinander klaglos.
+
+**Vorher fragen kann man nicht.** `EKCalendar` deklariert 36 Objective-C-Eigenschaften —
+zwischen einer sperrenden und einer freien Liste unterscheidet sich **keine einzige**;
+`allowsContentModifications`, `immutable`, `subscribed` und `type` lesen sich identisch.
+Auch die private Brücke dahinter (`backingObject`, ein `EKFrozenReminderCalendar`) trägt
+fünfzehn weitere Eigenschaften und darunter nichts zu Freigabe oder Eigentümerschaft.
+Dieser Zustand liegt in ReminderKit, das nur private API erreicht — und private API ist
+eine abgelehnte App-Store-Einreichung (RELEASE.md). Das Werkzeug `remctl`, das private
+API ausdrücklich nutzt, kommt zu demselben Schluss und hält es in seiner Dokumentation
+so fest: erst der normale Weg, und wenn eine „pure move is rejected by a list/container boundary", dann ein Ersatz.
+
+**Der Ersatz wurde geprüft und verworfen.** Kopieren-und-Löschen kommt durch — in allen
+drei gesperrten Kombinationen gemessen, und Titel, Notizen, URL, Priorität, Fälligkeit
+samt Zeitzone, Erinnerungen und Wiederholungsregel kommen mit. Es ist aber **kein
+Verschieben, sondern ein Nachbau**, und der kostet drei Dinge, die diese App braucht:
+
+1. **Das Erfassungsdatum.** Gemessen: Die Kopie trägt „jetzt".
+   `RecurringSeriesMatch` erkennt daran — und nur daran, auf die Mikrosekunde und
+   ausdrücklich ohne Toleranz — welcher erledigte Durchgang zu welcher Serie gehört.
+   Das Statistikfenster misst daran die Durchlaufzeit, das Backlog sortiert danach.
+2. **Was EventKit nicht kennt:** Unterpunkte, Anhänge, Ort-Auslöser, Zuweisungen in
+   geteilten Listen. Nicht lesbar, also nicht übertragbar.
+3. **Die Identität.** Ein Ersatz mit neuer ID ist für ein CLI vertretbar — `remctl`
+   gibt dazu eine `oldId` zurück. Für ein Board, dessen Spalten, Korrektur-Buch und
+   Undo an dieser ID hängen, ist es eine stille Kette von Folgefehlern.
+
+Ein Kompromiss, den der Nutzer erst hinterher bemerkt, ist keiner. Die Regel lautet
+deshalb: **Der Versuch bleibt der Versuch, und das Ergebnis wird benannt** — nicht als
+Versagen dieser App, sondern als das, was es ist. Was gebaut wurde, steht in SPEC.md
+(„Die Liste einer Karte").
+
+**Ein Nebenbefund, der die Meldung erst ehrlich macht:** Ein abgewiesenes `save` rollt
+den *ganzen* Reminder zurück, nicht nur die Liste. Wer im selben Zug den Titel ändert
+und die Liste, verlor beides. Deshalb wird alles außer der Liste noch einmal
+geschrieben — dieselbe Zusage, die `isReadOnly` eine Zeile weiter oben im Editor macht:
+Getipptes geht nie für eine Tatsache verloren, die der Nutzer nicht kennen konnte.
 
 ### Das Board ist einer von mehreren Schreibern (10.08.2026)
 

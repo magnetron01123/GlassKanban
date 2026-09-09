@@ -607,17 +607,68 @@ final class ColumnStateTests: XCTestCase {
             "a directory this process may not create")
     }
 
+    /// Keeps this test off the real machine.
+    ///
+    /// **Why a stub and not the default manager.** The first version of the
+    /// test below simply called `knownFileURLs()`. Inside the app that is
+    /// harmless — the sandbox refuses the group container instantly. The test
+    /// bundle is *not* sandboxed, so the same probe was allowed: it created a
+    /// real group container under `~/Library/Group Containers`, and the run in
+    /// which containermanagerd built it took **180 seconds** while the rest of
+    /// the suite takes three (measured 09.09.2026). A unit test may do
+    /// neither. Both answers are stubbed, so nothing outside the temporary
+    /// directory is touched.
+    private final class OffMachineFileManager: FileManager {
+        let root: URL
+        init(root: URL) {
+            self.root = root
+            super.init()
+        }
+        override func containerURL(
+            forSecurityApplicationGroupIdentifier identifier: String
+        ) -> URL? { nil }
+        override func url(
+            for directory: FileManager.SearchPathDirectory,
+            in domain: FileManager.SearchPathDomainMask,
+            appropriateFor url: URL?, create shouldCreate: Bool
+        ) throws -> URL { root }
+    }
+
     /// The read list must not name a location this build cannot write back to.
     /// Reading one would look like it worked and lose the next pull silently —
     /// the same shape of fault as the bug this section is about.
-    func testTheReadListOnlyNamesLocationsThisBuildCanWrite() {
-        let urls = ColumnState.knownFileURLs()
+    func testTheReadListOnlyNamesLocationsThisBuildCanWrite() throws {
+        let root = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fileManager = OffMachineFileManager(root: root)
+
+        let urls = ColumnState.knownFileURLs(fileManager: fileManager)
+
         XCTAssertFalse(urls.isEmpty)
-        XCTAssertEqual(urls.first, ColumnState.defaultFileURL())
+        XCTAssertEqual(urls.first, ColumnState.defaultFileURL(fileManager: fileManager))
         XCTAssertEqual(Set(urls).count, urls.count, "no location listed twice")
         for url in urls {
             XCTAssertEqual(url.lastPathComponent, "columns.json")
+            XCTAssertTrue(
+                url.path.hasPrefix(root.path),
+                "the test must not name a path on the real machine")
         }
+    }
+
+    /// Without the group entitlement both candidates are the same directory,
+    /// and the read list must say it once — a location walked twice would make
+    /// a corrupt file look like two independent opinions.
+    func testWithoutAGroupContainerTheReadListHasASingleEntry() throws {
+        let root = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let urls = ColumnState.knownFileURLs(fileManager: OffMachineFileManager(root: root))
+
+        XCTAssertEqual(urls.count, 1)
     }
 
     /// A file that exists but reads as empty — corrupt, or from a version this
