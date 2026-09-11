@@ -894,7 +894,7 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 | Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |
 | Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
 | Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | 7 Tage, höchstens 6 Zeilen je Abschnitt; eine letzte Zeile „N weitere" öffnet das Board |
-| Backlog | eigene Spur | nur die Zahl in der Fußzeile |
+| Backlog | eigene Spur | Kopfzeile ganz oben — wo der Fluss beginnt — mit Zahl, ohne Zeilen; ein Klick darauf öffnet das Board |
 | Zugziele | alle drei anderen Spuren | die zwei anderen **gezeigten** — eine Karte, die ins Backlog ginge, verschwände hier spurlos |
 | Ablegeziel | gestrichelter Umriss in Kartenform | der ganze Abschnitt hebt sich, wie eine Menüzeile unter dem Zeiger |
 | WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen |
@@ -905,9 +905,9 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 
 **Bewegen — dieselben drei Wege wie auf dem Board:** ziehen, Kontextmenü „Verschieben
 nach", VoiceOver-Aktion. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
-wie auf dem Board. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte; die
-Fußzeile hat „Board öffnen" und — nur ohne Dock-Symbol — „Glass Kanban beenden" als
-Menüzeilen.
+wie auf dem Board. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte, ein Klick
+auf die Backlog-Kopfzeile das Board; die Fußzeile hat „Board öffnen" und — nur ohne
+Dock-Symbol — „Glass Kanban beenden" als Menüzeilen.
 
 **Die WIP-Frage steht im Tablett, nicht auf dem Board.** Ein Alert nimmt den Fokus, und
 das Panel schlösse unter der eigenen Frage weg. Deshalb trägt jeder Zug seine Herkunft

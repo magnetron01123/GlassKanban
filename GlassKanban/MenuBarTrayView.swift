@@ -25,8 +25,9 @@ struct MenuBarTrayView: View {
     /// footer of whichever mode was current when the tray was first opened.
     @ObservedObject private var presence = PresenceController.shared
 
-    /// The sections, top to bottom, in board order. Backlog is a number in
-    /// the footer — planning belongs to the board.
+    /// The sections with rows, top to bottom, in board order. The Backlog
+    /// stands above them as a head alone (`BacklogHead`) — planning belongs
+    /// to the board.
     static let lanes: [KanbanStatus] = [.next, .inProgress, .done]
 
     var body: some View {
@@ -67,6 +68,13 @@ struct MenuBarTrayView: View {
                 OverflowQuestionRow(overflow: overflow)
                 separator
             }
+            // The flow starts here, so this is where the Backlog stands —
+            // as a head with its number and nothing under it. Its rows live
+            // on the board, and the head says so by taking you there.
+            BacklogHead(
+                count: store.cards(for: .backlog, applyingFilters: false).count,
+                openBoard: { openBoard(nil) })
+            separator
             ForEach(Self.lanes) { status in
                 TraySection(status: status, openBoard: openBoard)
                 separator
@@ -118,18 +126,9 @@ struct MenuBarTrayView: View {
 
     // MARK: - Footer
 
-    /// One quiet figure and the ways out, as menu rows.
+    /// The ways out, as menu rows.
     private var footer: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // The smallest form of "make the work visible": one number for
-            // the one lane the tray does not show. It counts; it does not
-            // accuse. No full stop — this is a figure, not a sentence.
-            Text("Backlog · \(store.cards(for: .backlog, applyingFilters: false).count)")
-                .font(BoardText.meta)
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, Board.trayPadding + Board.trayRowInset)
-                .padding(.vertical, 4)
             TrayActionRow(title: String(localized: "Open Board")) { openBoard(nil) }
             if MenuBarTray.offersQuit(presence.selection) {
                 TrayActionRow(title: String(localized: "Quit Glass Kanban")) { NSApp.terminate(nil) }
@@ -180,6 +179,57 @@ struct MenuBarTrayView: View {
         } else {
             HUDGlassMaterial()
         }
+    }
+}
+
+// MARK: - The Backlog, as a head
+
+/// The first head in the tray, and the only one with nothing under it.
+///
+/// The Backlog is where the flow begins, so a number for it at the bottom
+/// read as an afterthought — and a number the user could not act on
+/// contradicted a panel in which everything else moves. Two ways out were
+/// weighed on 11.09.2026 and set aside: showing the ripe rows behind a
+/// disclosure (the pull chain complete in the panel, but the panel grows and
+/// starts planning), and leaving the Backlog out entirely (the panel goes
+/// quiet about where "Als Nächstes" is fed from). This is the third: the head
+/// stands in its place in the flow, counts, and a click on it opens the board,
+/// where the rows are. It lights up under the pointer so that it is
+/// recognisably the one head that does something.
+private struct BacklogHead: View {
+    let count: Int
+    let openBoard: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(KanbanStatus.backlog.displayName)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+            Text("\(count)")
+                .monospacedDigit()
+                .contentTransition(.numericText())
+        }
+        .font(BoardText.chip)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, Board.trayRowInset)
+        .padding(.top, 6)
+        .padding(.bottom, 4)
+        .frame(maxWidth: .infinity)
+        .background {
+            if isHovered {
+                Board.trayRowShape.fill(Color.primary.opacity(Board.trayHoverTint))
+            }
+        }
+        .padding(.horizontal, Board.trayPadding)
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
+        .onTapGesture(perform: openBoard)
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel("\(KanbanStatus.backlog.displayName), \(String(localized: "\(count) cards"))")
+        .accessibilityHint(Text("Open Board"))
     }
 }
 

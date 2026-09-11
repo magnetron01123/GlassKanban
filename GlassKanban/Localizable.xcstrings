@@ -642,23 +642,6 @@
         }
       }
     },
-    "Backlog · %lld": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Backlog · %lld"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Backlog · %lld"
-          }
-        }
-      }
-    },
     "Best Day": {
       "extractionState": "manual",
       "localizations": {

@@ -387,8 +387,14 @@ einen Rückbau schützen.
   Umkehr der Korrektur vom 05.09. oben („der Zug läuft nach rechts, nicht nach unten"),
   und sie ist bewusst: Jenes Argument galt für ein Tablett, das das Board nachbildet. In
   einem Menü ist von oben nach unten die Leserichtung, Titel bleiben lesbar statt
-  abgeschnitten, und unten ist, wo Fertiges hinsinkt. Das gebaute Verhalten steht in
-  SPEC.md („Menüleiste: das Tablett").
+  abgeschnitten, und unten ist, wo Fertiges hinsinkt. **Nachtrag vom selben Tag:** Die
+  Backlog-Zahl stand zuerst in der Fußzeile — am Ende eines Flusses, der dort beginnt,
+  und als einzige Zahl, mit der man nichts tun konnte. Sie steht jetzt als Kopfzeile ganz
+  oben; ein Klick darauf öffnet das Board. Verworfen wurden dabei zwei Alternativen: das
+  Backlog aufklappbar zu machen (der Pull-Weg wäre im Panel vollständig, aber das Panel
+  fängt an zu planen) und es ganz wegzulassen (das Panel schwiege darüber, woher „Als
+  Nächstes" gespeist wird). Das gebaute Verhalten steht in SPEC.md („Menüleiste: das
+  Tablett").
 
   **Spannung, bewusst offen (Minimalismus):** Menüleiste, Widget und Fenster wären drei
   Orte für dieselbe Sache. Nicht alle drei bauen — vor dem Widget entscheiden, ob die
