@@ -338,7 +338,7 @@ einen Rückbau schützen.
     Drag & Drop und Kontextmenü im Board — eine Regel, ein Weg, keine dritte Wahrheit.
 
   **Entschieden am 05.09.2026: Richtung A, „Das Tablett".** Begründung des Nutzers:
-  näher an Kanban. Das Tablett hängt unter dem Symbol und ist 660 pt breit. Darin **drei Spuren in einer Reihe, in Board-Reihenfolge**:
+  näher an Kanban. In dieser ersten Fassung: ein Tablett von 660 pt Breite unter dem Symbol. Darin **drei Spuren in einer Reihe, in Board-Reihenfolge**:
   „Als Nächstes" · „In Bearbeitung" · „Erledigt" — gleich breit, gleich hoch, der Zug
   läuft von links nach rechts wie auf dem Board. Backlog bleibt dem Board; die Fußzeile
   nennt nur die Zahl und den Weg zurück („Backlog · 12", „Board öffnen"). Das Element
@@ -374,10 +374,21 @@ einen Rückbau schützen.
   **Was bewusst nicht drin ist:** Streak-Pille, Statistik, Suche, „+", Filter, ⌘Z, Löschen,
   Editor (Chrome bleibt im Fenster). Ein Menü-Modus mit Untermenüs. Eine Zahl am Symbol.
   Volle Karten mit Notizen (das wäre ein kleineres Board — das Widget-Missverständnis).
-  **Leitsatz (Nutzer, 05.09.2026): Tablett und Board so nah beieinander wie möglich, wo es
-  sinnvoll und vergleichbar ist.** Jede Abweichung aus Platz oder Technik ist im Bauplan
-  benannt (Abweichungstabelle dort); die Befunde aus Review und Doku-Abgleich stehen
-  ebenfalls dort, nicht hier.
+  **Neu gefasst am 11.09.2026 (Nutzer), nach dem ersten Lauf der gebauten Fassung:**
+  Der Leitsatz vom 05.09. — „Tablett und Board so nah beieinander wie möglich" — hatte
+  drei Mulden nebeneinander ergeben, mit Papier, Schatten, Listenstreifen und den
+  Einladungssätzen des Boards. Am Bildschirm war das das ganze Board, verkleinert: zu
+  schwer für den Moment, in dem man ein Menüleisten-Symbol anklickt, nämlich um *mal eben
+  etwas zu erledigen*. „Fertigwerden beginnt hier" in einer 200-pt-Mulde war der
+  deutlichste Fall. Neuer Leitsatz: **ein Menüleisten-Panel, das an das Board erinnert,
+  aber abstrakter ist** — im Stil der Systempanels, minimalistischer als das Board, weil
+  es in der Menüleiste steht. Damit fiel auch die Anordnung: **drei Abschnitte
+  untereinander** in einem 340-pt-Panel statt drei Spuren nebeneinander. Das ist die
+  Umkehr der Korrektur vom 05.09. oben („der Zug läuft nach rechts, nicht nach unten"),
+  und sie ist bewusst: Jenes Argument galt für ein Tablett, das das Board nachbildet. In
+  einem Menü ist von oben nach unten die Leserichtung, Titel bleiben lesbar statt
+  abgeschnitten, und unten ist, wo Fertiges hinsinkt. Das gebaute Verhalten steht in
+  SPEC.md („Menüleiste: das Tablett").
 
   **Spannung, bewusst offen (Minimalismus):** Menüleiste, Widget und Fenster wären drei
   Orte für dieselbe Sache. Nicht alle drei bauen — vor dem Widget entscheiden, ob die

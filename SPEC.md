@@ -872,37 +872,42 @@ hochgehaltene Karte zurück; ein Klick auf die Flamme legte die Statistik vorher
 den offenen Editor. Die Toolbar bleibt sichtbar und scharf — sie ist Chrome, kein Inhalt
 — konkurriert aber nicht mit dem, was gerade in der Hand ist.
 
-### Menüleiste: das Tablett (08.09.2026)
+### Menüleiste: das Tablett (08.09.2026, Form neu gefasst 11.09.2026)
 
 Neben dem Board kann die App in der Menüleiste liegen. Ein Klick auf das Symbol öffnet
-das **Tablett**: drei Mulden in einer Reihe, in Board-Reihenfolge — „Als Nächstes" ·
-„In Bearbeitung" · „Erledigt", 660 pt breit, gleich breit und gleich hoch. Der Zug läuft
-von links nach rechts wie auf dem Board. Herleitung und die verworfenen Richtungen stehen
-in BACKLOG.md („Fensterverhalten").
+das **Tablett**: ein Panel von 340 pt Breite im Stil der Systempanels, darin **drei
+Abschnitte untereinander, in Board-Reihenfolge** — „Als Nächstes", „In Bearbeitung",
+„Erledigt" —, jeder mit Kopf und Zahl, darunter Zeilen wie in einem Menü. Es hängt unter
+dem Symbol des Bildschirms, auf dem geklickt wurde. Herleitung und die verworfenen Formen
+— darunter die erste gebaute Fassung mit drei Mulden nebeneinander — stehen in BACKLOG.md
+(„Fensterverhalten").
 
-**Leitsatz: so nah am Board wie möglich.** Dieselben Tokens, dieselben Schlüssel,
-dieselben Regeln, dieselbe `move()`-Funktion. Die Abweichungen sind vollständig hier
-aufgezählt.
+**Leitsatz: ein Menüleisten-Panel, kein kleines Board.** Man öffnet es, um mal eben
+etwas zu erledigen. Es erinnert an das Board, ist aber abstrakter: eine Schicht Glas,
+keine Mulden, kein Papier, keine Sätze. Der Zug läuft von oben nach unten — im Menü ist
+das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 
 | Element | Board | Tablett |
 |---|---|---|
-| Spurkopf, Zähl-Chip, teal bei Überschreitung, Kopf-Tooltip | ja | gleich |
-| Karte in den Arbeitsspuren | volle Karte (152 pt) | Kompaktzeile (38 pt) — Platz; Inhalt gehört dem Board |
-| Erledigt-Karte | Titel mit Durchstrich | gleich, aber **ohne** den Zeichen-Sweep: der ist die Belohnung des Boards |
-| Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | 7 Tage, kein Knopf; Zeilen bei 6 gedeckelt |
-| Karte jenseits der 6 Zeilen | immer sichtbar | nicht gezeichnet, der Chip zählt sie mit — kein Scrollbereich unter einem Zug |
+| Spurkopf | Name und Zähl-Chip | Name und Zahl als Text, 11 pt sekundär; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt |
+| Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeits-Badge — sonst nichts; Hover hebt die Zeile |
+| Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |
+| Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
+| Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | 7 Tage, höchstens 6 Zeilen je Abschnitt; eine letzte Zeile „N weitere" öffnet das Board |
 | Backlog | eigene Spur | nur die Zahl in der Fußzeile |
 | Zugziele | alle drei anderen Spuren | die zwei anderen **gezeigten** — eine Karte, die ins Backlog ginge, verschwände hier spurlos |
-| WIP-Frage | Alert über dem Fenster | Zeile über den Mulden, in voller Breite |
+| Ablegeziel | gestrichelter Umriss in Kartenform | der ganze Abschnitt hebt sich, wie eine Menüzeile unter dem Zeiger |
+| WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen |
 | Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
 | ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |
 | Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Hinweis | **nicht** — der Hinweis gehört dem Board, hier verpuffte der Fehlschlag stumm |
-| Leerer Platz | Umriss mit Satz bei 15 pt | gleicher Umriss, gleicher Satz — nur so weit verkleinert, wie die schmalere Mulde es verlangt |
-| Streak, Statistik, Suche, „+", Editor, Umbenennen, Löschen | ja | nichts davon; Chrome bleibt im Fenster |
+| Tooltips, Streak, Statistik, Suche, „+", Editor, Umbenennen, Löschen | ja | nichts davon; Chrome bleibt im Fenster |
 
 **Bewegen — dieselben drei Wege wie auf dem Board:** ziehen, Kontextmenü „Verschieben
 nach", VoiceOver-Aktion. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
-wie auf dem Board. Ein Klick auf eine Karte öffnet das Board mit dieser Karte.
+wie auf dem Board. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte; die
+Fußzeile hat „Board öffnen" und — nur ohne Dock-Symbol — „Glass Kanban beenden" als
+Menüzeilen.
 
 **Die WIP-Frage steht im Tablett, nicht auf dem Board.** Ein Alert nimmt den Fokus, und
 das Panel schlösse unter der eigenen Frage weg. Deshalb trägt jeder Zug seine Herkunft
@@ -910,8 +915,8 @@ das Panel schlösse unter der eigenen Frage weg. Deshalb trägt jeder Zug seine 
 steht, bewegt sich im Tablett nichts** — auf keinem der drei Wege; ein zweiter Zug würde
 die erste Frage unbeantwortet überschreiben, und das wäre stilles Zulassen. Wird das
 Tablett geschlossen, steht die Frage beim nächsten Öffnen wieder da: Sie wird weder still
-zugelassen noch still zurückgelegt. Der Zustand ist unterdessen sichtbar — der Zähl-Chip
-der Mulde ist teal, im Tablett wie auf dem Board.
+zugelassen noch still zurückgelegt. Der Zustand ist unterdessen sichtbar — die Zahl im
+Kopf trägt die teale Kapsel, im Tablett wie auf dem Board.
 
 **Das Symbol ist stumm:** ein monochromes Template-Glyph, keine Zahl, kein Badge, keine
 Farbe. Zieht der Nutzer es mit ⌘ aus der Menüleiste, springt die Einstellung auf „Dock" —

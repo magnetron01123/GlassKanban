@@ -97,11 +97,14 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   **Bewusst AppKit statt `MenuBarExtra`:** In einem `MenuBarExtra`-Popover lebt ein Zug
   zwar, aber der Drop kommt nie an (gemessen 08.09.2026, Gegenprobe auf dem Board
   positiv). Ein Tablett, dessen Karten nicht ziehbar sind, ist nicht dieses Tablett.
-- **MenuBarTrayView.swift** — das Tablett selbst (`TrayLane`, `TrayCardView`, die
-  WIP-Zeile). Zieht seine Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`.
+- **MenuBarTrayView.swift** — das Tablett selbst: drei Abschnitte untereinander im
+  Menü-Stil (`TraySection`, `TrayRow`, `TrayActionRow`, die WIP-Zeile). Zieht seine
+  Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`. **Kein kleines Board** —
+  die erste Fassung war eines und wurde am 11.09.2026 verworfen (BACKLOG.md,
+  „Fensterverhalten").
 - **CardParts.swift** — die Bausteine einer Karte (Prioritätsmarken, Titel,
   Datums-Badge, Wiederholungs-Icon, Listenstreifen, Durchstrich), geteilt von `CardView`
-  und `TrayCardView`. Angelegt beim Bau des Tabletts, damit die Anatomie einer Karte
+  und `TrayRow`. Angelegt beim Bau des Tabletts, damit die Anatomie einer Karte
   nicht zweimal existiert.
 - **Views** — `BoardView` (Board + Dialoge), `ColumnView` (Spalte, Falz, Drop-Ziele),
   `CardView` (Karte, Settle-Animationen, Durchstrich), `TicketEditSheet` (Karten-Editor),
@@ -122,7 +125,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   das Board steht und wohin es zurückgehört), `AppPresence` (Dock, Menüleiste oder
   beides — samt der Regel, dass das Schließen des Boards die App nur ohne
   Menüleisten-Symbol beendet), `MenuBarTray` (was das Tablett zeigt: Zeilendeckel,
-  gemeinsame Muldenhöhe, wann ein Zug erlaubt ist), `MoveSource` (auf welcher
+  wann ein Zug erlaubt ist), `MoveSource` (auf welcher
   Oberfläche ein Zug gemacht wurde — ohne das stellte das Board die WIP-Frage auch
   für einen Zug im Tablett), `StoredSetting` (jeder
   `UserDefaults`-Wert und ob er dem Nutzer oder dem Rechner gehört — die Einordnung

@@ -232,43 +232,19 @@
         }
       }
     },
-    "%lld more not shown here": {
+    "%lld more": {
       "extractionState": "manual",
       "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld more not shown here"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld more not shown here"
-                }
-              }
-            }
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld weitere"
           }
         },
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld weitere nicht gezeigt"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld weitere nicht gezeigt"
-                }
-              }
-            }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more"
           }
         }
       }

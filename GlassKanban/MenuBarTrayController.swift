@@ -98,10 +98,24 @@ final class MenuBarTrayController: NSObject {
         }
     }
 
+    /// Where the tray hangs from, taken at the click and kept for the
+    /// panel's lifetime on screen: a resize repositions against *this*, not
+    /// against wherever the pointer has wandered to since.
+    private var anchor: TrayAnchor?
+
     private func open() {
         guard let store else { return }
         let panel = self.panel ?? makePanel(store: store)
         self.panel = panel
+        anchor = TrayAnchor.atClick(statusItem: statusItem)
+        // Lay the content out *before* placing the panel. Positioned first,
+        // the panel still had its placeholder height, hung too low, and then
+        // jumped into place once SwiftUI had measured — the "strange
+        // positioning" of the first build (11.09.2026).
+        if let hosting = panel.contentViewController {
+            hosting.view.layoutSubtreeIfNeeded()
+            panel.setContentSize(hosting.view.fittingSize)
+        }
         position(panel)
         panel.orderFrontRegardless()
         panel.makeKey()
@@ -114,23 +128,23 @@ final class MenuBarTrayController: NSObject {
     func close() {
         stopWatchingForClicksOutside()
         panel?.orderOut(nil)
+        anchor = nil
     }
 
     private func makePanel(store: RemindersStore) -> NSPanel {
-        let panel = NSPanel(
+        // Borderless, not `.titled` with a hidden bar. The hidden title bar
+        // still drew its own separator and shadow across the top of the
+        // content — the "shadow over the shadow" of the first build. With no
+        // border at all, the corner and the edge are the content's own
+        // (`MenuBarTrayView`), and the window shadow follows that shape.
+        let panel = TrayPanel(
             contentRect: NSRect(x: 0, y: 0, width: Board.trayWidth, height: 100),
             // `.nonactivatingPanel` so opening the tray does not pull the
             // whole app forward — a menu bar item is a glance, not a context
-            // switch. `.titled` + `.fullSizeContentView` for the system's own
-            // rounded corners and shadow, with the bar itself hidden below.
-            styleMask: [.nonactivatingPanel, .titled, .fullSizeContentView],
+            // switch.
+            styleMask: [.nonactivatingPanel, .borderless],
             backing: .buffered,
             defer: false)
-        panel.titleVisibility = .hidden
-        panel.titlebarAppearsTransparent = true
-        panel.standardWindowButton(.closeButton)?.isHidden = true
-        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        panel.standardWindowButton(.zoomButton)?.isHidden = true
         panel.isMovable = false
         panel.isFloatingPanel = true
         panel.level = .popUpMenu
@@ -140,36 +154,39 @@ final class MenuBarTrayController: NSObject {
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = true
 
         let hosting = NSHostingController(
             rootView: MenuBarTrayView().environmentObject(store))
-        // The tray grows and shrinks with its lanes, so the panel follows the
-        // content rather than a constant that would drift away from it.
+        // The tray grows and shrinks with its sections, so the panel follows
+        // the content rather than a constant that would drift away from it.
         hosting.sizingOptions = [.preferredContentSize]
         panel.contentViewController = hosting
         // A window grows upward from its bottom-left origin, so every resize
-        // would walk the tray away from the menu bar without this.
+        // would walk the tray away from the menu bar without this. The
+        // shadow is cached against the old outline and has to be redone too.
         NotificationCenter.default.addObserver(
             forName: NSWindow.didResizeNotification, object: panel, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.position(panel) }
+            MainActor.assumeIsolated {
+                self?.position(panel)
+                panel.invalidateShadow()
+            }
         }
         return panel
     }
 
-    /// Hangs the panel under its own status item, on the screen that item
-    /// lives on, clamped so it never runs off the edge.
+    /// Hangs the panel under the status item on the screen the user clicked
+    /// on, clamped so it never runs off the edge.
     private func position(_ panel: NSPanel) {
-        guard let button = statusItem?.button, let buttonWindow = button.window else { return }
-        let anchor = buttonWindow.frame
-        let screen = buttonWindow.screen ?? NSScreen.main
+        guard let anchor else { return }
         var origin = NSPoint(
             x: anchor.midX - panel.frame.width / 2,
-            y: anchor.minY - panel.frame.height - Board.trayGap)
-        if let visible = screen?.visibleFrame {
-            origin.x = min(max(origin.x, visible.minX + Board.trayGap),
-                           visible.maxX - panel.frame.width - Board.trayGap)
-        }
+            y: anchor.menuBarBottom - panel.frame.height - Board.trayGap)
+        let visible = anchor.screen.visibleFrame
+        origin.x = min(max(origin.x, visible.minX + Board.trayGap),
+                       visible.maxX - panel.frame.width - Board.trayGap)
         panel.setFrameOrigin(origin)
     }
 
@@ -199,5 +216,44 @@ final class MenuBarTrayController: NSObject {
         if let localClickMonitor { NSEvent.removeMonitor(localClickMonitor) }
         outsideClickMonitor = nil
         localClickMonitor = nil
+    }
+}
+
+// MARK: - Support
+
+/// A borderless panel that can still take key status. `NSWindow` refuses it
+/// for borderless windows, and without it the rows' hover tracking and the
+/// context menu are unreliable while the app itself stays in the background.
+private final class TrayPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+}
+
+/// Where the tray hangs from.
+///
+/// With two displays each menu bar mirrors the status items, but the item's
+/// `button.window` lives on one of them — so anchoring to that frame put the
+/// tray on the wrong screen when the click came from the other (seen
+/// 08.09.2026). The screen is the one under the pointer at the click; the
+/// item's x is carried over as its offset from the *right* edge, which is the
+/// one thing a right-aligned status item keeps across screens of different
+/// widths.
+private struct TrayAnchor {
+    let screen: NSScreen
+    let midX: CGFloat
+    /// The bottom edge of the menu bar on that screen.
+    let menuBarBottom: CGFloat
+
+    @MainActor
+    static func atClick(statusItem: NSStatusItem?) -> TrayAnchor? {
+        let mouse = NSEvent.mouseLocation
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) })
+            ?? NSScreen.main else { return nil }
+        var midX = mouse.x
+        if let button = statusItem?.button, let window = button.window,
+           let itemScreen = window.screen {
+            let rightOffset = itemScreen.frame.maxX - window.frame.midX
+            midX = screen.frame.maxX - rightOffset
+        }
+        return TrayAnchor(screen: screen, midX: midX, menuBarBottom: screen.visibleFrame.maxY)
     }
 }

@@ -53,26 +53,35 @@ enum Board {
     /// three rows would be 114. The slack sits in the notes zone, where the
     /// card wants air anyway (see `CardView.fullBody`).
     static let fullCardHeight: CGFloat = compactCardHeight * 4
-    /// The menu bar tray's width. Three equally wide wells of ~200pt
-    /// (660 − 2·16 padding − 2·12 spacing = 604 / 3) carry about 22
-    /// characters of title at 15pt plus a date chip — enough for a name that
-    /// is recognised rather than read. Three wells and not two, because the
-    /// move into Erledigt has to run to the right like it does on the board,
-    /// not downwards; equally wide, because narrower storage lanes were
-    /// rejected for the board. Wider than this and the tray reads as a
-    /// second window.
-    static let trayWidth: CGFloat = 660
+    // The menu bar tray. A menu bar panel, not a small board (retaken
+    // 11.09.2026): one layer of glass, sections and rows like a menu.
+
+    /// Wide enough for a title to be read, not just recognised — the tray
+    /// is opened to finish something, and "Romina bei Live Akt…" is not a
+    /// thing one can finish. The width of the system's own panels.
+    static let trayWidth: CGFloat = 340
     /// Air between the tray and the menu bar it hangs from, and its minimum
     /// clearance from a screen edge.
     static let trayGap: CGFloat = 8
-    /// The tray's outer margin and the air between its three wells — the two
-    /// numbers `trayWidth` is derived from.
-    static let trayPadding: CGFloat = 16
-    static let trayLaneSpacing: CGFloat = 12
-    /// Between two rows in a well. The board's own storage-lane spacing
-    /// (`ColumnView`, `spacing: singleLine ? 5 : cardSpacing`), so the tray
-    /// keeps the same rhythm.
-    static let trayRowSpacing: CGFloat = 5
+    /// The panel's inner margin, like a menu's — rows and their hover
+    /// highlight sit this far in from the glass edge.
+    static let trayPadding: CGFloat = 8
+    /// A row's own text margin, inside the highlight.
+    static let trayRowInset: CGFloat = 10
+    /// One menu row. The system's own menu rows are 22–24pt; two more for
+    /// a target that is dragged onto, not just clicked.
+    static let trayRowHeight: CGFloat = 26
+    /// The list's colour as a dot in front of the title — the one piece of
+    /// context a glance uses, in the smallest form that still reads.
+    static let trayDotSize: CGFloat = 7
+    /// The panel's corner, the system's for a menu bar panel; the row
+    /// highlight one step under it, per the nesting rule.
+    static let trayShape = RoundedRectangle(cornerRadius: 10, style: .continuous)
+    static let trayRowShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+    /// A row under the pointer, and a section a row is about to land in.
+    /// Both faint: a menu highlights, it does not announce.
+    static let trayHoverTint: Double = 0.07
+    static let trayDropTint: Double = 0.12
 
     /// A card only reports its dwell time once it has lingered this long —
     /// below it, sitting in a column is simply normal.
@@ -413,6 +422,9 @@ enum BoardText {
     static let header = Font.system(size: 13, weight: .semibold)
     /// Running text — notes excerpt, popover copy.
     static let body = Font.system(size: 12)
+    /// A row in the menu bar tray — the system's menu size, because the
+    /// tray is a menu bar panel and not a small board.
+    static let trayRow = Font.system(size: 13)
     /// Chips: date badges, lane counts, dwell time.
     static let chip = Font.system(size: 11, weight: .semibold)
     /// Quiet metadata — list name, "Show N more", weekday letters.

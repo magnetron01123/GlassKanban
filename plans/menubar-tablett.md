@@ -1,5 +1,11 @@
 # Glass Kanban in der Menüleiste („Das Tablett") — Bauplan (05.09.2026)
 
+> **Stand 11.09.2026:** Die Form wurde nach dem ersten Lauf neu gefasst (Nutzer): drei
+> Abschnitte untereinander im Menü-Stil statt drei Mulden nebeneinander — Begründung in
+> BACKLOG.md („Fensterverhalten"), gebautes Verhalten in SPEC.md („Menüleiste: das
+> Tablett"). Schritt 4c und die Abweichungstabelle unten beschreiben die erste Fassung
+> und sind überholt; die Messungen und die Schritte 0–4b gelten weiter.
+
 Entschieden am 05.09.2026 (BACKLOG.md, „Fensterverhalten"). Mockups zum Nachsehen:
 <https://claude.ai/code/artifact/a3b2efd4-9603-418f-9227-0b14031fc8e4> (Seite „Entwurf";
 Artboards „A · Das Tablett", „Einstellungen · Allgemein", „Auswahl ‚Anzeigen in'").
@@ -720,8 +726,8 @@ selbst lesen:
 | 08.09.2026 | Drag im eigenen `NSPanel` (Weiche M1) | **Positiv.** `isTargeted` färbt das Ziel beim Überfahren, der Drop feuert beim Loslassen, das Panel bleibt dabei offen. Damit trägt der Rückfall. | `NSStatusItem` + `NSPanel` gebaut (`MenuBarTrayController`). |
 | 08.09.2026 | M3, zweiter Befund: Fenster*wiederherstellung* | `.defaultLaunchBehavior(.suppressed)` verhindert nur das *Öffnen* einer Szene. Ein Board, das beim Beenden offen war, stellt macOS trotzdem wieder her — im Menüleisten-Modus sprang es also doch auf. | Im Delegate: Fenster mit `identifier == "board"` schließen, bei Start und bei `didFinishRestoringWindows`. |
 | 08.09.2026 | Nebenbefund: die App beendete sich | Eine SwiftUI-`Window`-Szene *ist* die App: das Schließen des Boards beendete den Prozess — mitsamt dem Menüleisten-Symbol. | `applicationShouldTerminateAfterLastWindowClosed` folgt `AppPresence.quitsWithLastWindow`. |
-| | Hintergrund: Systemmaterial vs. HUDGlassMaterial | | |
-| | `SettingsMetrics.generalHeight` gemessen | | |
+| 08.09.2026 | Hintergrund: Systemmaterial vs. HUDGlassMaterial | Mit dem `NSPanel`-Rückfall gab es kein Systemmaterial zu vergleichen; `HUDGlassMaterial` von Anfang an, liest sich wie das Fenster. | `HUDGlassMaterial`, bei „Transparenz reduzieren" `windowBackgroundColor`. |
+| 08.09.2026 | `SettingsMetrics.generalHeight` gemessen | 585 schnitt die letzte Fußzeile ab (Scrollbalken erschien); 640 zeigt sie vollständig. | 640. |
 
 ## Review-Befunde vom 05.09.2026 (eingearbeitet)
 

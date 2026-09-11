@@ -1,17 +1,23 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The menu bar tray: the board's three lanes after the Backlog, in one row,
-/// in board order — "Als Nächstes" · "In Bearbeitung" · "Erledigt".
+/// The menu bar tray: three sections, one under the other — "Als Nächstes",
+/// "In Bearbeitung", "Erledigt" — in the shape a menu bar panel has.
 ///
-/// **As close to the board as it can be** (see SPEC.md, "Menüleiste"): the
-/// same tokens, the same strings, the same rules, the same `move()`. Where it
-/// differs it is for room or for technique, and each of those is named where
-/// it happens.
+/// **Not a small board.** The first build (08.09.2026) put the board's three
+/// lanes side by side with wells, paper cards and the empty lane's
+/// invitation. Measured against the reason a menu bar item exists at all —
+/// you open it to *finish something quickly* — that was the whole board,
+/// shrunk. Retaken 11.09.2026 (user): the tray reminds of the board, but is
+/// more abstract: sections and rows like a menu, one layer of glass, no
+/// sentences. What stays is the point of it — a row is dragged from one
+/// section into the next, through the same `move()` the board uses, with the
+/// same limit question and the same sound.
 struct MenuBarTrayView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.openWindow) private var openWindow
     /// Observed, not just read: the tray's own footer changes with it (see
     /// `MenuBarTray.offersQuit`), and the panel's hosting view is built once
@@ -19,16 +25,18 @@ struct MenuBarTrayView: View {
     /// footer of whichever mode was current when the tray was first opened.
     @ObservedObject private var presence = PresenceController.shared
 
-    /// The lanes the tray shows, left to right. Backlog is a number in the
-    /// footer — planning belongs to the board.
+    /// The sections, top to bottom, in board order. Backlog is a number in
+    /// the footer — planning belongs to the board.
     static let lanes: [KanbanStatus] = [.next, .inProgress, .done]
 
     var body: some View {
-        // The lane heads carry the board's own tooltip, and that needs a host
-        // to draw into — the same wrapper `BoardView` puts around its lanes.
-        TooltipHost { content }
+        content
             .frame(width: Board.trayWidth)
             .background { trayBackground }
+            .clipShape(Board.trayShape)
+            // The hairline every system panel wears at its edge; without it
+            // the glass has no end against a bright desktop.
+            .overlay { Board.trayShape.strokeBorder(Board.columnBorder(contrast)) }
             // `store.start()` hangs on the board window's `.task`. In the menu
             // bar mode there is no window, so without this the tray would be
             // empty and would never have asked for access. `start()` is
@@ -45,33 +53,39 @@ struct MenuBarTrayView: View {
             deniedNotice
         case .unknown, .requesting:
             ProgressView("Accessing Reminders…")
-                .padding(Board.trayPadding)
+                .padding(Board.trayPadding * 2)
                 .frame(maxWidth: .infinity)
         }
     }
 
     private var tray: some View {
-        VStack(spacing: 12) {
-            // Above the wells, across the whole tray — not inside the lane
-            // it is about. Measured 08.09.2026: in a ~200pt well the title
-            // and its two answers came out as "In Bear… / Erst abschlie… /
-            // Passt schon", three truncated fragments where a question
-            // should be. It also *is* a question about the whole tray: while
-            // it stands, no card anywhere in here moves.
+        VStack(alignment: .leading, spacing: 0) {
+            // The limit question stands above everything, across the whole
+            // tray — it *is* a question about the whole tray: while it
+            // stands, no row in here moves.
             if let overflow = trayOverflow {
                 OverflowQuestionRow(overflow: overflow)
+                separator
             }
-            HStack(alignment: .top, spacing: Board.trayLaneSpacing) {
-                ForEach(Self.lanes) { status in
-                    TrayLane(status: status, rows: laneRows, openBoard: openBoard)
-                }
+            ForEach(Self.lanes) { status in
+                TraySection(status: status, openBoard: openBoard)
+                separator
             }
             footer
         }
-        .padding(Board.trayPadding)
-        // The board's own reflow curve, so a card changing lane in the tray
-        // moves at the board's pace rather than at a second one.
+        .padding(.vertical, Board.trayPadding)
+        // The board's own reflow curve, so a row changing section moves at
+        // the board's pace rather than at a second one.
         .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: store.cards)
+    }
+
+    /// A menu's separator: a hairline, inset like the rows.
+    private var separator: some View {
+        Rectangle()
+            .fill(Board.columnBorder(contrast))
+            .frame(height: 1)
+            .padding(.horizontal, Board.trayPadding + Board.trayRowInset)
+            .padding(.vertical, Board.trayPadding / 2)
     }
 
     /// The tray's own limit question, if one is standing. The board's own
@@ -79,14 +93,6 @@ struct MenuBarTrayView: View {
     private var trayOverflow: RemindersStore.PendingOverflow? {
         guard let overflow = store.pendingOverflow, overflow.source == .tray else { return nil }
         return overflow
-    }
-
-    /// All three wells share one height — see `MenuBarTray.laneRows`.
-    private var laneRows: Int {
-        MenuBarTray.laneRows(
-            next: store.cards(for: .next, applyingFilters: false).count,
-            inProgress: store.cards(for: .inProgress, applyingFilters: false).count,
-            done: DoneWindow.recent(store.cards(for: .done, applyingFilters: false)).count)
     }
 
     /// Without access the tray would be silently empty on the first launch.
@@ -106,29 +112,29 @@ struct MenuBarTrayView: View {
                 }
             }
         }
-        .padding(Board.trayPadding)
+        .padding(Board.trayPadding * 2)
         .frame(maxWidth: .infinity)
     }
 
     // MARK: - Footer
 
+    /// One quiet figure and the ways out, as menu rows.
     private var footer: some View {
-        HStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
             // The smallest form of "make the work visible": one number for
             // the one lane the tray does not show. It counts; it does not
             // accuse. No full stop — this is a figure, not a sentence.
             Text("Backlog · \(store.cards(for: .backlog, applyingFilters: false).count)")
+                .font(BoardText.meta)
                 .monospacedDigit()
-            Spacer(minLength: 0)
-            Button("Open Board") { openBoard(nil) }
-                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, Board.trayPadding + Board.trayRowInset)
+                .padding(.vertical, 4)
+            TrayActionRow(title: String(localized: "Open Board")) { openBoard(nil) }
             if MenuBarTray.offersQuit(presence.selection) {
-                Button("Quit Glass Kanban") { NSApp.terminate(nil) }
-                    .buttonStyle(.plain)
+                TrayActionRow(title: String(localized: "Quit Glass Kanban")) { NSApp.terminate(nil) }
             }
         }
-        .font(BoardText.meta)
-        .foregroundStyle(.secondary)
     }
 
     /// Hands over to the board: the tray closes first, then the window comes
@@ -177,20 +183,16 @@ struct MenuBarTrayView: View {
     }
 }
 
-// MARK: - One lane
+// MARK: - One section
 
-/// One well of the tray. Head, hairline, rows — the board's lane, at the
-/// tray's size.
-private struct TrayLane: View {
+/// One section of the tray: a head with the count, then rows. Also the drop
+/// target for a row on its way here.
+private struct TraySection: View {
     let status: KanbanStatus
-    /// Rows every well is tall, so all three match (see `MenuBarTray.laneRows`).
-    let rows: Int
     /// Handing a card — or nothing — over to the board.
     let openBoard: (String?) -> Void
 
     @EnvironmentObject private var store: RemindersStore
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isTargeted = false
 
@@ -200,15 +202,15 @@ private struct TrayLane: View {
     private var cards: [KanbanCard] {
         let all = store.cards(for: status, applyingFilters: false)
         // Erledigt takes the board's own seven-day window, newest first, so
-        // the two lanes hold the same cards.
+        // the two hold the same cards.
         return status == .done ? DoneWindow.recent(all) : all
     }
 
-    /// What is drawn. Beyond the cap the chip counts on without the row being
-    /// shown — a deliberate exception to "a dragged card stays visible where
-    /// it lands" (SPEC.md), because a scroll area under a drag is trouble
-    /// without a benefit.
+    /// What is drawn. Beyond the cap the head counts on and a last row says
+    /// how many are not here — a scroll area under a drag is trouble without
+    /// a benefit.
     private var shownCards: [KanbanCard] { Array(cards.prefix(MenuBarTray.rowCap)) }
+    private var hiddenRows: Int { MenuBarTray.hiddenRows(total: cards.count) }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
     private var isOverLimit: Bool { wipLimit.map { cards.count > $0 } ?? false }
@@ -218,54 +220,36 @@ private struct TrayLane: View {
         MenuBarTray.allowsMoves(pendingSource: store.pendingOverflow?.source)
     }
 
-    private var showsEmptySlot: Bool {
-        guard cards.isEmpty else { return false }
-        // The board's rule, shared rather than rebuilt.
-        return status.invitesWhenEmpty(
-            nextIsEmpty: store.cards(for: .next, applyingFilters: false).isEmpty,
-            backlogIsEmpty: store.cards(for: .backlog, applyingFilters: false).isEmpty)
-    }
-
-    /// Only lanes that would actually receive the card light up.
+    /// Only sections that would actually receive the row light up.
     private var isDragSource: Bool {
         guard let draggingID = store.draggingCardID else { return false }
         return cards.contains { $0.id == draggingID }
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             header
-
-            Rectangle()
-                .fill(Board.columnBorder(contrast))
-                .frame(height: 1)
-                .padding(.horizontal, Board.laneMargin)
-
-            VStack(spacing: Board.trayRowSpacing) {
-                ForEach(shownCards) { card in
-                    row(for: card)
-                }
-                if isTargeted && !isDragSource {
-                    insertionSlot
-                } else if showsEmptySlot {
-                    emptySlot
-                }
-                Spacer(minLength: 0)
+            ForEach(shownCards) { card in
+                row(for: card)
             }
-            .padding(.horizontal, Board.laneMargin)
-            .padding(.top, 10)
-            .padding(.bottom, 12)
-            .frame(height: contentHeight, alignment: .top)
-            // Rows beyond the cap must not draw past the well they belong to.
-            .clipped()
+            if hiddenRows > 0 {
+                moreRow
+            }
+            // An empty section still has to be somewhere to drop a row —
+            // half a row of nothing is enough to aim at, and says nothing.
+            if cards.isEmpty {
+                Color.clear.frame(height: Board.trayRowHeight / 2)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .top)
-        .background { Board.columnShape.fill(Board.columnFill(colorScheme)) }
-        .overlay {
-            Board.columnShape
-                .strokeBorder(Board.columnBorder(contrast))
-                .shadow(color: Board.columnInnerShadow(colorScheme), radius: 2, y: 1)
-                .clipShape(Board.columnShape)
+        .padding(.horizontal, Board.trayPadding)
+        // The drop target is the whole section, tinted the way a menu row
+        // lights up — not a dashed card outline, which was the board's.
+        .background {
+            if isTargeted && !isDragSource {
+                Board.trayRowShape
+                    .fill(Color.accentColor.opacity(Board.trayDropTint))
+                    .padding(.horizontal, Board.trayPadding)
+            }
         }
         .animation(reduceMotion ? nil : Board.dropTargetAnimation, value: isTargeted)
         // The same delegate shape the board uses: without one, macOS assumes
@@ -289,15 +273,15 @@ private struct TrayLane: View {
         .accessibilityLabel("\(status.displayName), \(countHelp)")
     }
 
-    /// Card rows, with the three move routes the board offers — drag, the
+    /// Rows, with the three move routes the board offers — drag, the
     /// context menu, the VoiceOver action. "Die Frage stellt sich bei jeder
     /// Route" (SPEC.md, "WIP-Limits"), and a tray in which VoiceOver can move
     /// nothing is not this tray.
     @ViewBuilder
     private func row(for card: KanbanCard) -> some View {
         let movable = MenuBarTray.allowsMoving(from: card.status) && allowsMoves
-        TrayCardView(card: card)
-            .contentShape(.dragPreview, Board.cardShape)
+        TrayRow(card: card)
+            .contentShape(.dragPreview, Board.trayRowShape)
             .onTapGesture { openBoard(card.id) }
             .modifier(TrayDraggable(cardID: card.id, enabled: movable))
             .contextMenu {
@@ -318,8 +302,9 @@ private struct TrayLane: View {
             }
     }
 
-    /// The tray's own three lanes — the Backlog is not a target here, because
-    /// it is not shown and a card sent there would leave without a trace.
+    /// The tray's own three sections — the Backlog is not a target here,
+    /// because it is not shown and a card sent there would leave without a
+    /// trace.
     private func moveTargets(for card: KanbanCard) -> [KanbanStatus] {
         MenuBarTrayView.lanes.filter { $0 != card.status }
     }
@@ -328,152 +313,169 @@ private struct TrayLane: View {
         store.move(cardID: card.id, to: target, undoManager: nil, source: .tray)
     }
 
+    /// The rows the cap keeps out, named in one quiet line. A click opens
+    /// the board, where all of them are.
+    private var moreRow: some View {
+        TrayActionRow(title: String(localized: "\(hiddenRows) more"), quiet: true) { openBoard(nil) }
+    }
+
     // MARK: - Head
 
-    /// Word for word the board's lane header (`ColumnView.header`): the name
-    /// in secondary, one count chip, teal when the lane is over its limit.
-    /// One head, one number — no second "Limit N" chip and no "done today".
+    /// A menu's section head: the name and one number, both secondary. The
+    /// number takes the board's teal capsule only while the section is over
+    /// its limit — at rest it is plain text, which is all a head needs.
     private var header: some View {
         HStack(spacing: 8) {
             Text(status.displayName)
-                .font(BoardText.header)
-                .foregroundStyle(.secondary)
                 .lineLimit(1)
             Spacer(minLength: 0)
             Text(countLabel)
-                .font(BoardText.chip)
                 .monospacedDigit()
                 .contentTransition(.numericText())
                 .foregroundStyle(isOverLimit ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                .padding(.horizontal, 7)
-                .padding(.vertical, 2)
+                .padding(.horizontal, isOverLimit ? 6 : 0)
+                .padding(.vertical, isOverLimit ? 1 : 0)
                 .background {
                     if isOverLimit {
                         Board.chipShape.fill(Board.wipLimitTint.opacity(Board.wipCapsuleFill))
-                    } else {
-                        Board.chipShape.fill(.quaternary.opacity(Board.chipFill))
                     }
                 }
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 .accessibilityValue(countHelp)
         }
-        .padding(EdgeInsets(top: 12, leading: Board.laneMargin, bottom: 10, trailing: Board.laneMargin))
-        // A lane header is chrome, and chrome tooltips explain rules —
-        // "make policies explicit" holds up here too.
-        .contentShape(Rectangle())
-        .boardTooltip(countHelp)
+        .font(BoardText.chip)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, Board.trayRowInset)
+        .padding(.top, 6)
+        .padding(.bottom, 4)
     }
 
-    /// The chip always tells the whole truth, even where a row is not drawn.
+    /// The count always tells the whole truth, even where a row is not drawn.
     private var countLabel: String {
         if let wipLimit { return "\(cards.count) / \(wipLimit)" }
         return "\(cards.count)"
     }
 
+    /// Spoken with the section, since the number alone carries the rule.
     private var countHelp: String {
-        var lines = [countSummary]
-        if isOverLimit {
-            lines.append(String(localized: "Over your limit"))
-        } else if wipLimit != nil {
-            lines.append(String(localized: "Finish before you stack"))
-        }
-        if cards.count > shownCards.count {
-            lines.append(String(localized: "\(cards.count - shownCards.count) more not shown here"))
+        var lines: [String] = []
+        if let wipLimit {
+            lines.append(String(localized: "\(cards.count) of \(wipLimit) cards"))
+            lines.append(String(localized: isOverLimit ? "Over your limit" : "Finish before you stack"))
+        } else {
+            lines.append(String(localized: "\(cards.count) cards"))
         }
         return lines.joined(separator: "\n")
     }
+}
 
-    private var countSummary: String {
-        guard let wipLimit else { return String(localized: "\(cards.count) cards") }
-        return String(localized: "\(cards.count) of \(wipLimit) cards")
-    }
+// MARK: - One row
 
-    // MARK: - Slots
+/// A menu row: a dot in the list's colour, the title, and the due date if
+/// there is one. Nothing of the board's card — no paper, no stripe, no
+/// shadow, no repeat glyph. The dot is the one piece of context a quick
+/// glance uses; the date is the one fact that decides what to finish first.
+private struct TrayRow: View {
+    let card: KanbanCard
 
-    private var insertionSlot: some View {
-        Board.cardShape
-            .strokeBorder(
-                Color.accentColor.opacity(0.35),
-                style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
-            .background(Color.accentColor.opacity(0.05), in: Board.cardShape)
-            .frame(height: Board.compactCardHeight)
-            .transition(.opacity)
-    }
+    @State private var isHovered = false
 
-    /// The board's standing invitation, at row height. Same outline, same
-    /// sentences (`ColumnView.emptySlotText`), same stillness — it is an
-    /// invitation, not an event.
-    private var emptySlot: some View {
-        Board.cardShape
-            .strokeBorder(
-                Color.primary.opacity(0.25),
-                style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
-            .frame(height: Board.compactCardHeight)
-            .overlay {
-                Text(emptySlotText)
-                    .font(BoardText.titleCompact)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    // The one place the tray may not simply copy the board.
-                    // A well is ~200pt wide against a lane's 280, and
-                    // "Fertigwerden beginnt hier" came out as "Fertigwerden
-                    // begin…" — a truncated invitation is noise, not a
-                    // signal. Widening the tray to fit it would have taken
-                    // ~800pt, which is a second window, not a tray. Shrinking
-                    // only as far as a line needs keeps the sentence whole
-                    // and leaves the board's own slot untouched at 15pt.
-                    .minimumScaleFactor(0.72)
-                    .padding(.horizontal, 12)
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(CardParts.stripeColor(of: card).opacity(card.status == .done ? 0.45 : 0.9))
+                .frame(width: Board.trayDotSize, height: Board.trayDotSize)
+            // The strike as a text attribute, not the board's drawn line:
+            // the drawn one exists so that completing can animate it, and
+            // that reward plays on the board, where the finishing happened.
+            CardParts.titleText(for: card)
+                .strikethrough(card.status == .done, color: .secondary)
+                .font(BoardText.trayRow)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            if let badge = CardParts.compactBadge(for: card) {
+                CardBadgeView(info: badge)
             }
-            .transition(.opacity)
-    }
-
-    private var emptySlotText: String {
-        switch status {
-        case .backlog: String(localized: "Get it out of your head")
-        case .next: String(localized: "Choose, don't collect")
-        case .inProgress: String(localized: "Finishing starts here")
-        case .done: String(localized: "Only finished counts")
         }
-    }
-
-    /// The height every well shares: `rows` card rows and the air between
-    /// them, plus the padding above and below.
-    private var contentHeight: CGFloat {
-        let rowsHeight = CGFloat(rows) * Board.compactCardHeight
-            + CGFloat(max(0, rows - 1)) * Board.trayRowSpacing
-        return rowsHeight + 10 + 12
+        .padding(.horizontal, Board.trayRowInset)
+        .frame(height: Board.trayRowHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // A menu's hover: the row lights up under the pointer, nothing more.
+        .background {
+            if isHovered {
+                Board.trayRowShape.fill(Color.primary.opacity(Board.trayHoverTint))
+            }
+        }
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
+        // Deliberately not a `Button` and not `.focusable()`: rows take no
+        // keyboard focus, on the board or here (BACKLOG.md, "Explizit
+        // abgelehnt").
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(CardParts.accessibilityLabel(for: card))
+        .accessibilityHint(Text("Click to edit"))
     }
 }
 
-// MARK: - The limit question, in the well
+/// A row that does something rather than showing something — "Board öffnen",
+/// "Glass Kanban beenden", "5 weitere". Same height and hover as a card row,
+/// so the tray reads as one list.
+private struct TrayActionRow: View {
+    let title: String
+    /// Secondary text for a row that is more a note than a command.
+    var quiet = false
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Text(title)
+            .font(BoardText.trayRow)
+            .foregroundStyle(quiet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+            .lineLimit(1)
+            .padding(.horizontal, Board.trayRowInset)
+            .frame(height: Board.trayRowHeight)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                if isHovered {
+                    Board.trayRowShape.fill(Color.primary.opacity(Board.trayHoverTint))
+                }
+            }
+            .padding(.horizontal, Board.trayPadding)
+            .contentShape(Rectangle())
+            .onHover { isHovered = $0 }
+            .onTapGesture(perform: action)
+            .accessibilityAddTraits(.isButton)
+    }
+}
+
+// MARK: - The limit question
 
 /// The WIP question, inline.
 ///
 /// Not an `.alert`: an alert takes the focus, and the tray's panel would
-/// close out from under its own question. It stands in the well above the
-/// cards until it is answered — closing the tray does not answer it, in
-/// either direction. "Karte springt zurück" is the pattern this project has
-/// paid the most for.
+/// close out from under its own question. It stands at the top until it is
+/// answered — closing the tray does not answer it, in either direction.
+/// "Karte springt zurück" is the pattern this project has paid the most for.
 private struct OverflowQuestionRow: View {
     let overflow: RemindersStore.PendingOverflow
 
     @EnvironmentObject private var store: RemindersStore
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: 8) {
             Text(store.overflowTitle(for: overflow))
+                .font(BoardText.trayRow)
                 .monospacedDigit()
                 .lineLimit(1)
-            Spacer(minLength: 12)
-            // Real buttons, not the plain text the footer uses. The footer
-            // navigates; these two *answer a question*, and "die Frage
-            // stellen die Knöpfe" (CONCEPT.md, "Ton der Texte") only holds
-            // if they read as something to press. Drawn like the board's
-            // alert: the safe answer prominent and first — Escape and Return
-            // do not exist in a non-activating panel, so shape and position
-            // are what carry it.
+            Spacer(minLength: 8)
+            // Real buttons, not plain text: these two *answer a question*,
+            // and "die Frage stellen die Knöpfe" (CONCEPT.md, "Ton der
+            // Texte") only holds if they read as something to press. The
+            // safe answer prominent and first — Escape and Return do not
+            // exist in a non-activating panel, so shape and position are
+            // what carry it.
             Button("Finish First") {
                 store.move(
                     cardID: overflow.cardID, to: overflow.origin,
@@ -484,105 +486,21 @@ private struct OverflowQuestionRow: View {
             Button("That's Fine") { store.pendingOverflow = nil }
                 .buttonStyle(.bordered)
         }
-        .font(BoardText.meta)
         .controlSize(.small)
-        .padding(.horizontal, 12)
-        .frame(maxWidth: .infinity)
-        .frame(height: Board.compactCardHeight)
-        .background { Board.wellShape.fill(Board.wellFill(colorScheme)) }
+        .padding(.horizontal, Board.trayRowInset)
+        .padding(.vertical, 6)
+        // Teal, because the question is about the limit and teal is the
+        // limit's colour on the board — the one tint in the tray, and only
+        // while there is something to answer.
+        .background { Board.trayRowShape.fill(Board.wipLimitTint.opacity(Board.trayDropTint)) }
+        .padding(.horizontal, Board.trayPadding)
         .accessibilityElement(children: .contain)
-    }
-}
-
-// MARK: - One card
-
-/// A tray row. The board's anatomy at compact height — priority marks,
-/// title, date badge, repeat glyph, list stripe (see `CardParts`) — and
-/// nothing else: no rename, no editor, no delete, no tooltip, no settle.
-private struct TrayCardView: View {
-    let card: KanbanCard
-
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.colorSchemeContrast) private var contrast
-
-    var body: some View {
-        Group {
-            if card.status == .done {
-                doneBody
-            } else {
-                compactBody
-            }
-        }
-        .background { Board.cardShape.fill(Board.cardFill(colorScheme, isDone: card.status == .done)) }
-        .overlay(alignment: .leading) { CardListStripe(card: card, isSingleLine: true) }
-        .overlay { Board.cardShape.strokeBorder(Board.cardBorder(contrast)) }
-        .overlay { topHighlight }
-        .shadow(
-            color: Board.cardShadowResting.color,
-            radius: Board.cardShadowResting.radius,
-            y: Board.cardShadowResting.y)
-        .shadow(
-            color: card.status == .done ? .clear : Board.cardShadowAmbient.color,
-            radius: Board.cardShadowAmbient.radius,
-            y: Board.cardShadowAmbient.y)
-        .contentShape(Board.cardShape)
-        // Deliberately not a `Button` and not `.focusable()`: cards take no
-        // keyboard focus, on the board or here (BACKLOG.md, "Explizit
-        // abgelehnt").
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(CardParts.accessibilityLabel(for: card))
-        .accessibilityHint(Text("Click to edit"))
-    }
-
-    /// Backlog's row, word for word (`CardView.compactBody`): badge before
-    /// glyph, the same order the full card's footer uses.
-    private var compactBody: some View {
-        HStack(spacing: 8) {
-            CardParts.titleText(for: card)
-                .font(BoardText.titleCompact)
-                .lineLimit(1)
-            Spacer(minLength: 0)
-            if let badge = CardParts.compactBadge(for: card) {
-                CardBadgeView(info: badge)
-            }
-            if card.isRecurring {
-                CardRepeatIcon()
-            }
-        }
-        .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
-        .frame(maxWidth: .infinity, minHeight: Board.compactCardHeight, maxHeight: Board.compactCardHeight, alignment: .leading)
-    }
-
-    /// Erledigt's row: the title alone, in full text colour — the strike is
-    /// the signal (SPEC.md, "Karten-Anzeige"). Static, without the pen
-    /// stroke: that sweep is the board's reward for finishing, and it plays
-    /// where the finishing happened.
-    private var doneBody: some View {
-        CardParts.titleText(for: card)
-            .font(BoardText.titleCompact)
-            .lineLimit(1)
-            .overlay(alignment: .leading) { CardStrikeLine() }
-            .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
-            .frame(maxWidth: .infinity, minHeight: Board.compactCardHeight, maxHeight: Board.compactCardHeight, alignment: .leading)
-    }
-
-    @ViewBuilder
-    private var topHighlight: some View {
-        if colorScheme == .dark {
-            Board.cardShape
-                .strokeBorder(
-                    LinearGradient(colors: [Board.cardTopHighlight, .clear], startPoint: .top, endPoint: .center),
-                    lineWidth: 1)
-                .blendMode(.plusLighter)
-                .allowsHitTesting(false)
-        }
     }
 }
 
 // MARK: - Dragging
 
-/// `.draggable` only when the card may actually move — a lift that can never
+/// `.draggable` only when the row may actually move — a lift that can never
 /// land is a promise the tray does not keep.
 ///
 /// The tray deliberately does not call `store.beginDrag`: without the ghost,

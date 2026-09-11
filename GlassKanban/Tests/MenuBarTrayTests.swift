@@ -4,10 +4,9 @@ import XCTest
 final class MenuBarTrayTests: XCTestCase {
 
     /// Pinned: the cap is what keeps the tray from growing off the bottom of
-    /// the screen when a lane holds twenty cards.
+    /// the screen when a section holds twenty rows.
     func testTheRowCapIsPinned() {
         XCTAssertEqual(MenuBarTray.rowCap, 6)
-        XCTAssertEqual(MenuBarTray.minimumRows, 3)
     }
 
     /// Quit belongs in the tray only when the tray is the only way to reach
@@ -19,21 +18,12 @@ final class MenuBarTrayTests: XCTestCase {
         XCTAssertFalse(MenuBarTray.offersQuit(.both))
     }
 
-    /// Three empty lanes still have to look like lanes.
-    func testAnEmptyTrayStillShowsThreeRows() {
-        XCTAssertEqual(MenuBarTray.laneRows(next: 0, inProgress: 0, done: 0), 3)
-    }
-
-    /// The fullest lane sets the height, and all three follow it.
-    func testTheFullestLaneSetsTheHeight() {
-        XCTAssertEqual(MenuBarTray.laneRows(next: 5, inProgress: 1, done: 2), 5)
-        XCTAssertEqual(MenuBarTray.laneRows(next: 1, inProgress: 2, done: 4), 4)
-        XCTAssertEqual(MenuBarTray.laneRows(next: 1, inProgress: 1, done: 1), 3)
-    }
-
-    func testTheCapHoldsAgainstAHugeLane() {
-        XCTAssertEqual(MenuBarTray.laneRows(next: 20, inProgress: 0, done: 0), MenuBarTray.rowCap)
-        XCTAssertEqual(MenuBarTray.laneRows(next: 0, inProgress: 0, done: 99), MenuBarTray.rowCap)
+    /// Whatever the cap keeps out is counted, never just dropped.
+    func testRowsBeyondTheCapAreCounted() {
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: 0), 0)
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: MenuBarTray.rowCap), 0)
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: MenuBarTray.rowCap + 1), 1)
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: 20), 20 - MenuBarTray.rowCap)
     }
 
     /// A question that is still standing holds the tray. Nothing else may
