@@ -906,8 +906,8 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 **Bewegen — dieselben drei Wege wie auf dem Board:** ziehen, Kontextmenü „Verschieben
 nach", VoiceOver-Aktion. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
 wie auf dem Board. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte, ein Klick
-auf die Backlog-Kopfzeile das Board; die Fußzeile hat „Board öffnen" und — nur ohne
-Dock-Symbol — „Glass Kanban beenden" als Menüzeilen.
+auf die Backlog-Kopfzeile das Board — einen eigenen „Board öffnen"-Knopf gibt es nicht.
+Nur ohne Dock-Symbol steht unten „Glass Kanban beenden" als Menüzeile.
 
 **Die WIP-Frage steht im Tablett, nicht auf dem Board.** Ein Alert nimmt den Fokus, und
 das Panel schlösse unter der eigenen Frage weg. Deshalb trägt jeder Zug seine Herkunft
@@ -939,9 +939,10 @@ sonst verschwände das Symbol mit dem Fenster, das es ersetzen soll. Ein Klick a
 Dock-Symbol holt das geschlossene Board zurück.
 
 Im Modus „Menüleiste" springt beim Start kein Board auf — auch keins, das beim letzten
-Beenden offen war. Die Einstellungen sind dort über „Board öffnen" erreichbar: mit dem
-Fenster kommt die Menüleiste der App. Ein eigener „Einstellungen …"-Knopf im Tablett wäre
-ein dritter Knopf für einen Weg, den der vorhandene schon öffnet.
+Beenden offen war. Die Einstellungen sind dort über das Board erreichbar (Klick auf die
+Backlog-Kopfzeile oder eine Zeile): mit dem Fenster kommt die Menüleiste der App. Ein
+eigener „Einstellungen …"-Knopf im Tablett wäre ein Knopf für einen Weg, den das Panel
+schon öffnet.
 
 ## Karten-Anzeige
 

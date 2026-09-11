@@ -74,12 +74,17 @@ struct MenuBarTrayView: View {
             BacklogHead(
                 count: store.cards(for: .backlog, applyingFilters: false).count,
                 openBoard: { openBoard(nil) })
-            separator
             ForEach(Self.lanes) { status in
-                TraySection(status: status, openBoard: openBoard)
                 separator
+                TraySection(status: status, openBoard: openBoard)
             }
-            footer
+            // No "Open Board" row: the Backlog head is the way to the board,
+            // and every row opens it with its card. What is left down here
+            // is Quit, and only where there is no Dock icon to quit from.
+            if MenuBarTray.offersQuit(presence.selection) {
+                separator
+                TrayActionRow(title: String(localized: "Quit Glass Kanban")) { NSApp.terminate(nil) }
+            }
         }
         .padding(.vertical, Board.trayPadding)
         // The board's own reflow curve, so a row changing section moves at
@@ -122,18 +127,6 @@ struct MenuBarTrayView: View {
         }
         .padding(Board.trayPadding * 2)
         .frame(maxWidth: .infinity)
-    }
-
-    // MARK: - Footer
-
-    /// The ways out, as menu rows.
-    private var footer: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            TrayActionRow(title: String(localized: "Open Board")) { openBoard(nil) }
-            if MenuBarTray.offersQuit(presence.selection) {
-                TrayActionRow(title: String(localized: "Quit Glass Kanban")) { NSApp.terminate(nil) }
-            }
-        }
     }
 
     /// Hands over to the board: the tray closes first, then the window comes
@@ -285,11 +278,9 @@ private struct TraySection: View {
             if hiddenRows > 0 {
                 moreRow
             }
-            // An empty section still has to be somewhere to drop a row —
-            // half a row of nothing is enough to aim at, and says nothing.
-            if cards.isEmpty {
-                Color.clear.frame(height: Board.trayRowHeight / 2)
-            }
+            // Nothing under the head when there are no rows: an empty section
+            // looks exactly like the Backlog head above it. The head itself is
+            // the drop target then — the whole section takes the drop.
         }
         .padding(.horizontal, Board.trayPadding)
         // The drop target is the whole section, tinted the way a menu row
