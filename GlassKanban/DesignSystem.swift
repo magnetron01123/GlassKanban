@@ -84,14 +84,24 @@ enum Board {
     /// The list's colour as a dot in front of the title — the one piece of
     /// context a glance uses, in the smallest form that still reads.
     static let trayDotSize: CGFloat = 7
-    /// The field in front of every name in the panel: the stage symbol in a
-    /// head, the list's dot in a row. One width for both, so head and title
-    /// start on the same x and the panel reads as one list rather than two
-    /// indentations.
+    /// The field in front of a head's name, holding the stage symbol. Only
+    /// heads use it; the rows' glyphs live in their own, indented field
+    /// (`trayRowGlyphSlot`).
     static let traySymbolSlot: CGFloat = 16
     /// From that field to the text. Tighter than the gap between the other
     /// parts of a row: the symbol belongs to the word beside it.
     static let traySymbolGap: CGFloat = 6
+    /// How far a row steps in under its head: exactly to where the head's
+    /// *name* begins, so the rows hang under the word, not under the symbol.
+    /// This is what makes the panel a tree rather than a list — head at the
+    /// margin, entries beneath it, the way the Finder and Reminders sidebars
+    /// do it. A first cut (12.09.2026, morning) put head and title on one x
+    /// and the panel read as seven equal lines with a glyph in front.
+    static let trayRowIndent: CGFloat = traySymbolSlot + traySymbolGap
+    /// The field for a row's own glyph — the list's dot, the capture's plus.
+    /// Narrower than the head's, because it holds smaller things and
+    /// because a second 16-pt column would push the titles too far in.
+    static let trayRowGlyphSlot: CGFloat = 12
     /// The panel's corner: rounder than a menu, flatter than a Control Centre
     /// module — Liquid Glass reads rounder than the same material with a tight
     /// corner. The row highlight sits one step under it, per the nesting rule.

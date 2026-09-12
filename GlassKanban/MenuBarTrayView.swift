@@ -265,7 +265,7 @@ private struct BacklogCaptureRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.leading, Board.trayRowInset + Board.traySymbolSlot + Board.traySymbolGap)
+                    .padding(.leading, Board.trayRowInset + Board.trayRowIndent + Board.trayRowGlyphSlot + Board.traySymbolGap)
                     .padding(.trailing, Board.trayRowInset)
                     .padding(.bottom, 4)
             }
@@ -280,11 +280,11 @@ private struct BacklogCaptureRow: View {
 
     private var row: some View {
         HStack(spacing: Board.traySymbolGap) {
-            // In the heads' symbol field, so this row lines up with
-            // everything above and below it.
+            // In the rows' glyph field, where the other rows keep their
+            // dot: this is a row, not a head.
             Image(systemName: "plus")
                 .font(BoardText.chip)
-                .frame(width: Board.traySymbolSlot)
+                .frame(width: Board.trayRowGlyphSlot)
                 .accessibilityHidden(true)
             if isEditing {
                 TextField(String(localized: "New Task"), text: $draft)
@@ -311,6 +311,9 @@ private struct BacklogCaptureRow: View {
             Spacer(minLength: 0)
         }
         .foregroundStyle(isEditing ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+        // A row under the Backlog head, indented like every other row: what
+        // is typed here falls into the section above.
+        .padding(.leading, Board.trayRowIndent)
         .padding(.horizontal, Board.trayRowInset)
         .frame(height: Board.trayRowHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -610,12 +613,12 @@ private struct TrayRow: View {
 
     var body: some View {
         HStack(spacing: Board.traySymbolGap) {
-            // In the same field the heads put their symbol in, so a title
-            // and the name of its section start on one x.
+            // Under the head's name, not under its symbol: the row is the
+            // head's child, and the indent is what says so.
             Circle()
                 .fill(CardParts.stripeColor(of: card).opacity(card.status == .done ? 0.45 : 0.9))
                 .frame(width: Board.trayDotSize, height: Board.trayDotSize)
-                .frame(width: Board.traySymbolSlot)
+                .frame(width: Board.trayRowGlyphSlot)
             // The strike as a text attribute, not the board's drawn line:
             // the drawn one exists so that completing can animate it, and
             // that reward plays on the board, where the finishing happened.
@@ -645,6 +648,7 @@ private struct TrayRow: View {
                 CardBadgeView(info: badge)
             }
         }
+        .padding(.leading, Board.trayRowIndent)
         .padding(.horizontal, Board.trayRowInset)
         .frame(height: Board.trayRowHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -683,9 +687,9 @@ private struct TrayActionRow: View {
             .font(BoardText.trayRow)
             .foregroundStyle(quiet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
             .lineLimit(1)
-            // Nothing in the field in front — but the field is kept, so this
-            // row's text stands in the same column as every other one.
-            .padding(.leading, Board.traySymbolSlot + Board.traySymbolGap)
+            // No glyph of its own, but the same indent and the same empty
+            // field, so its text stands in the rows' column.
+            .padding(.leading, Board.trayRowIndent + Board.trayRowGlyphSlot + Board.traySymbolGap)
             .padding(.horizontal, Board.trayRowInset)
             .frame(height: Board.trayRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)

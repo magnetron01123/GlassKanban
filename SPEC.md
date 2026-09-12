@@ -893,7 +893,8 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 | Element | Board | Tablett |
 |---|---|---|
 | Spurkopf | Name und Zähl-Chip | **Symbol**, Name und Zahl als Text, 11 pt sekundär; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Gruppen sind durch Luft getrennt, nicht durch Linien |
-| Stufen-Symbol | keins — die Spur erklärt sich durch die Karten darin | vor jedem Kopf: Backlog `tray`, Als Nächstes `circle`, In Bearbeitung `circle.lefthalf.filled`, Erledigt `checkmark.circle`. Im selben 16-pt-Feld wie der Punkt einer Zeile, damit Kopf und Titel in einer Flucht stehen |
+| Stufen-Symbol | keins — die Spur erklärt sich durch die Karten darin | vor jedem Kopf: Backlog `tray`, Als Nächstes `circle`, In Bearbeitung `circle.lefthalf.filled`, Erledigt `checkmark.circle`, am linken Rand |
+| Hierarchie | Papier in der Mulde | **ein Baum, keine Liste:** der Kopf steht am Rand, seine Zeilen rücken bis unter den Kopf*namen* ein (22 pt) — wie die Seitenleiste von Finder und Erinnerungen. Zwei Glyphenspalten, zwei Ebenen: links nur Stufen-Symbole, eingerückt nur Listenpunkte. Eine erste Fassung vom 12.09. setzte Kopfname und Titel auf eine Flucht; das las sich als sieben gleiche Zeilen |
 | Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeits-Badge **nur bei Heute und Überfällig** — graue Daten sind Planung, und die findet auf dem Board statt; Hover hebt die Zeile als hellere Glasschicht |
 | Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |
 | Verweildauer | ab 3 Tagen auf jeder Karte der Arbeitsspuren, mit Uhr-Glyph | nur in „In Bearbeitung", ab derselben Schwelle, als bloße Zahl rechts vor dem Badge. Auf den anderen Abschnitten wäre sie eine Zahl ohne Frage |
