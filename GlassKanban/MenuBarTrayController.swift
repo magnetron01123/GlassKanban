@@ -120,7 +120,10 @@ final class MenuBarTrayController: NSObject {
         // positioning" of the first build (11.09.2026).
         if let hosting = panel.contentViewController {
             hosting.view.layoutSubtreeIfNeeded()
-            panel.setContentSize(hosting.view.fittingSize)
+            // The content's own height once it has reported one; the
+            // fitting size only for the very first opening, before it has.
+            let natural = naturalHeight ?? hosting.view.fittingSize.height
+            panel.setContentSize(NSSize(width: Board.trayWidth, height: clamped(natural)))
         }
         position(panel)
         // Before it is on screen: the capture row goes back to rest, so the
@@ -138,9 +141,25 @@ final class MenuBarTrayController: NSObject {
     /// panel takes it while it is on screen. The resize notification in
     /// `makePanel` then keeps the top edge under the menu bar.
     func contentHeightChanged(_ height: CGFloat) {
-        guard let panel, panel.isVisible, height > 0,
-              abs(panel.contentView!.frame.height - height) > 0.5 else { return }
-        panel.setContentSize(NSSize(width: Board.trayWidth, height: height))
+        guard height > 0 else { return }
+        naturalHeight = height
+        guard let panel, panel.isVisible else { return }
+        let target = clamped(height)
+        guard abs(panel.contentView!.frame.height - target) > 0.5 else { return }
+        panel.setContentSize(NSSize(width: Board.trayWidth, height: target))
+    }
+
+    /// The height the content asked for last — the panel opens at it next
+    /// time without a first frame at the wrong size.
+    private var naturalHeight: CGFloat?
+
+    /// Never taller than the screen it hangs on. The panel grows downward
+    /// with its content (12.09.2026, user: no section scrolls in itself);
+    /// only a screen too short for it cuts it off, and then the whole panel
+    /// scrolls (see `MenuBarTrayView.body`).
+    private func clamped(_ height: CGFloat) -> CGFloat {
+        guard let screen = anchor?.screen ?? NSScreen.main else { return height }
+        return min(height, screen.visibleFrame.height - Board.trayEdgeClearance)
     }
 
     /// Also the way out of the tray for everything that opens the board: the

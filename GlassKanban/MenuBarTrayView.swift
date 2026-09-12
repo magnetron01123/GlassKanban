@@ -35,18 +35,25 @@ struct MenuBarTrayView: View {
         // No background, no clip, no edge here: the panel's body is the
         // glass view this sits in (`TrayGlassController`), and the glass
         // brings its own corner, rim and shadow.
-        content
-            .frame(width: Board.trayWidth)
-            // The panel follows the content's own height — folding the
-            // Backlog, a failure line under the capture, a WIP question
-            // appearing. Measured from here rather than trusted to the
-            // hosting controller: `preferredContentSize` did not move the
-            // window when the Backlog folded shut (12.09.2026), and the
-            // content sat at the bottom of a panel that stayed tall.
-            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
-                MenuBarTrayController.shared.contentHeightChanged(height)
-            }
-            // `store.start()` hangs on the board window's `.task`. In the menu
+        // The panel grows downward with its content and never scrolls a
+        // section in itself (12.09.2026, user). Only when the screen is too
+        // short is the panel clamped to it — and then the whole panel
+        // scrolls. The scroll view is always there so the clamped case needs
+        // no second layout; with room enough it never moves.
+        ScrollView(.vertical) {
+            content
+                .frame(width: Board.trayWidth)
+                // The content's *natural* height — inside the scroll view it
+                // is never squeezed, so this is the height the panel wants.
+                // Measured here rather than trusted to the hosting
+                // controller: `preferredContentSize` did not move the window
+                // when a section folded shut (12.09.2026).
+                .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+                    MenuBarTrayController.shared.contentHeightChanged(height)
+                }
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        // `store.start()` hangs on the board window's `.task`. In the menu
             // bar mode there is no window, so without this the tray would be
             // empty and would never have asked for access. `start()` is
             // idempotent (`hasStarted`), so calling it from both is safe.
@@ -437,21 +444,10 @@ private struct TraySection: View {
         .accessibilityLabel("\(status.displayName), \(countHelp)")
     }
 
-    /// The rows. Unfolded past `Board.traySectionScrollRows` they scroll in
-    /// place — the height is computed from the count, not measured, so the
-    /// panel still knows its size before it is placed.
-    @ViewBuilder
+    /// The rows: what rests, or everything once the line under the pile has
+    /// been opened. The panel grows with them (see `MenuBarTrayView.body`).
     private var rows: some View {
-        if expanded, cards.count > Board.traySectionScrollRows {
-            ScrollView(.vertical) {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(cards) { card in row(for: card) }
-                }
-            }
-            .frame(height: CGFloat(Board.traySectionScrollRows) * Board.trayRowHeight)
-        } else {
-            ForEach(shownCards) { card in row(for: card) }
-        }
+        ForEach(shownCards) { card in row(for: card) }
     }
 
     /// The board's line under the pile, word for word (see

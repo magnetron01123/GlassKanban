@@ -428,7 +428,8 @@ einen Rückbau schützen.
   wie die Spalten des Boards — dieselbe Schnittregel (`BacklogFold`), dieselben Wörter,
   dieselbe zentrierte Zeile unter dem Stapel, Zustand pro Sitzung. Das Board hat die Zeile
   schon; ein zweites Ausklapp-Muster im Panel wäre ein zweites Vokabular. Aufgeklappt
-  zeigt ein Abschnitt alles und scrollt ab 8 Zeilen in sich. Die gemerkte Einstellung
+  zeigt ein Abschnitt alles, und das Panel wächst nach unten mit; nur ein zu kurzer
+  Bildschirm begrenzt es, dann scrollt das Panel als Ganzes (kein Abschnitt in sich). Die gemerkte Einstellung
   `trayBacklogExpanded` lebte einen Tag und ist wieder entfernt. Zurücklegen ins Backlog
   ist erlaubt.
   **Was die drei Messungen ergaben (12.09.2026, Protokoll im Bauplan):** Ein Textfeld im
