@@ -157,12 +157,11 @@ final class MenuBarTrayController: NSObject {
         panel.isOpaque = false
         panel.hasShadow = true
 
-        let hosting = NSHostingController(
-            rootView: MenuBarTrayView().environmentObject(store))
-        // The tray grows and shrinks with its sections, so the panel follows
-        // the content rather than a constant that would drift away from it.
-        hosting.sizingOptions = [.preferredContentSize]
-        panel.contentViewController = hosting
+        // The glass is the panel's own body and the content its child — not
+        // a SwiftUI background beside the content. Only as a child does the
+        // text sit *in* the material rather than printed on it.
+        panel.contentViewController = TrayGlassController(
+            content: MenuBarTrayView().environmentObject(store))
         // A window grows upward from its bottom-left origin, so every resize
         // would walk the tray away from the menu bar without this. The
         // shadow is cached against the old outline and has to be redone too.
@@ -220,6 +219,44 @@ final class MenuBarTrayController: NSObject {
 }
 
 // MARK: - Support
+
+/// The panel's body: Liquid Glass, with the SwiftUI tray as its content.
+///
+/// `NSGlassEffectView` is the material the system's own menu bar panels are
+/// made of — refraction at the edge, the light rim, the shadow. The board
+/// itself cannot use native glass: it follows the window's active state and
+/// cannot be pinned (CONCEPT.md, "Immer-aktiv"), and the board stands
+/// inactive all day. The tray is the other case: it exists only while it is
+/// being used, and is the key window then. Measured 12.09.2026 with another
+/// app frontmost — see the note at `material`.
+///
+/// Sizing: the hosting controller reports its ideal size through
+/// `preferredContentSize`; this controller passes it up, and the panel
+/// follows (see `MenuBarTrayController.makePanel`).
+private final class TrayGlassController: NSViewController {
+    private let hosting: NSHostingController<AnyView>
+
+    init<Content: View>(content: Content) {
+        hosting = NSHostingController(rootView: AnyView(content))
+        hosting.sizingOptions = [.preferredContentSize]
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError("not used") }
+
+    override func loadView() {
+        let glass = NSGlassEffectView()
+        glass.cornerRadius = Board.trayRadius
+        glass.contentView = hosting.view
+        addChild(hosting)
+        view = glass
+        preferredContentSize = hosting.view.fittingSize
+    }
+
+    override func preferredContentSizeDidChange(for viewController: NSViewController) {
+        preferredContentSize = viewController.preferredContentSize
+    }
+}
 
 /// A borderless panel that can still take key status. `NSWindow` refuses it
 /// for borderless windows, and without it the rows' hover tracking and the

@@ -884,19 +884,22 @@ dem Symbol des Bildschirms, auf dem geklickt wurde. Herleitung und die verworfen
 
 **Leitsatz: ein Menüleisten-Panel, kein kleines Board.** Man öffnet es, um mal eben
 etwas zu erledigen. Es erinnert an das Board, ist aber abstrakter: eine Schicht Glas,
-keine Mulden, kein Papier, keine Sätze. Der Zug läuft von oben nach unten — im Menü ist
+keine Mulden, kein Papier, keine Sätze. Das Glas ist — anders als beim Fenster — das
+native Liquid Glass des Systems (`NSGlassEffectView`, Radius 12), und der Inhalt sitzt
+als dessen Kind *im* Material; warum das hier erlaubt ist und beim Board nicht, steht in
+CONCEPT.md („Immer-aktiv"). Der Zug läuft von oben nach unten — im Menü ist
 das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 
 | Element | Board | Tablett |
 |---|---|---|
-| Spurkopf | Name und Zähl-Chip | Name und Zahl als Text, 11 pt sekundär; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt |
-| Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeits-Badge — sonst nichts; Hover hebt die Zeile |
+| Spurkopf | Name und Zähl-Chip | Name und Zahl als Text, 11 pt sekundär; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Gruppen sind durch Luft getrennt, nicht durch Linien |
+| Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeits-Badge **nur bei Heute und Überfällig** — graue Daten sind Planung, und die findet auf dem Board statt; Hover hebt die Zeile als hellere Glasschicht |
 | Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |
 | Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
-| Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | 7 Tage, höchstens 6 Zeilen je Abschnitt; eine letzte Zeile „N weitere" öffnet das Board |
-| Backlog | eigene Spur | Kopfzeile ganz oben — wo der Fluss beginnt — mit Zahl, ohne Zeilen; ein Klick darauf öffnet das Board |
+| Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | 7 Tage; die Arbeitsspuren zeigen höchstens 6 Zeilen, Erledigt höchstens 3 (Bestätigung, keine Liste); eine letzte Zeile „N weitere" öffnet das Board |
+| Backlog | eigene Spur | Kopfzeile ganz oben — wo der Fluss beginnt — mit Zahl und Chevron, ohne Zeilen; ein Klick darauf öffnet das Board |
 | Zugziele | alle drei anderen Spuren | die zwei anderen **gezeigten** — eine Karte, die ins Backlog ginge, verschwände hier spurlos |
-| Ablegeziel | gestrichelter Umriss in Kartenform | der ganze Abschnitt hebt sich, wie eine Menüzeile unter dem Zeiger |
+| Ablegeziel | gestrichelter Umriss in Kartenform | der ganze Abschnitt hebt sich als akzentgetöntes Glas, wie eine Menüzeile unter dem Zeiger |
 | WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen |
 | Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
 | ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |

@@ -15,7 +15,6 @@ import UniformTypeIdentifiers
 /// same limit question and the same sound.
 struct MenuBarTrayView: View {
     @EnvironmentObject private var store: RemindersStore
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.openWindow) private var openWindow
@@ -31,13 +30,11 @@ struct MenuBarTrayView: View {
     static let lanes: [KanbanStatus] = [.next, .inProgress, .done]
 
     var body: some View {
+        // No background, no clip, no edge here: the panel's body is the
+        // glass view this sits in (`TrayGlassController`), and the glass
+        // brings its own corner, rim and shadow.
         content
             .frame(width: Board.trayWidth)
-            .background { trayBackground }
-            .clipShape(Board.trayShape)
-            // The hairline every system panel wears at its edge; without it
-            // the glass has no end against a bright desktop.
-            .overlay { Board.trayShape.strokeBorder(Board.columnBorder(contrast)) }
             // `store.start()` hangs on the board window's `.task`. In the menu
             // bar mode there is no window, so without this the tray would be
             // empty and would never have asked for access. `start()` is
@@ -60,13 +57,15 @@ struct MenuBarTrayView: View {
     }
 
     private var tray: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        // Groups are told apart by air, not by lines (see
+        // `Board.trayGroupSpacing`). The one hairline left is the one before
+        // Quit, which is not a group but a way out.
+        VStack(alignment: .leading, spacing: Board.trayGroupSpacing) {
             // The limit question stands above everything, across the whole
             // tray — it *is* a question about the whole tray: while it
             // stands, no row in here moves.
             if let overflow = trayOverflow {
                 OverflowQuestionRow(overflow: overflow)
-                separator
             }
             // The flow starts here, so this is where the Backlog stands —
             // as a head with its number and nothing under it. Its rows live
@@ -75,18 +74,20 @@ struct MenuBarTrayView: View {
                 count: store.cards(for: .backlog, applyingFilters: false).count,
                 openBoard: { openBoard(nil) })
             ForEach(Self.lanes) { status in
-                separator
                 TraySection(status: status, openBoard: openBoard)
             }
             // No "Open Board" row: the Backlog head is the way to the board,
             // and every row opens it with its card. What is left down here
             // is Quit, and only where there is no Dock icon to quit from.
             if MenuBarTray.offersQuit(presence.selection) {
-                separator
-                TrayActionRow(title: String(localized: "Quit Glass Kanban")) { NSApp.terminate(nil) }
+                VStack(alignment: .leading, spacing: 0) {
+                    separator
+                    TrayActionRow(title: String(localized: "Quit Glass Kanban")) { NSApp.terminate(nil) }
+                }
             }
         }
-        .padding(.vertical, Board.trayPadding)
+        .padding(.top, Board.trayTopPadding)
+        .padding(.bottom, Board.trayPadding)
         // The board's own reflow curve, so a row changing section moves at
         // the board's pace rather than at a second one.
         .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: store.cards)
@@ -98,7 +99,7 @@ struct MenuBarTrayView: View {
             .fill(Board.columnBorder(contrast))
             .frame(height: 1)
             .padding(.horizontal, Board.trayPadding + Board.trayRowInset)
-            .padding(.vertical, Board.trayPadding / 2)
+            .padding(.bottom, Board.trayPadding / 2)
     }
 
     /// The tray's own limit question, if one is standing. The board's own
@@ -161,18 +162,6 @@ struct MenuBarTrayView: View {
         }
     }
 
-    /// The tray is chrome, so glass is right here — the same material the
-    /// window wears, for the same reason (`HUDGlassMaterial`). With
-    /// "Transparenz reduzieren" on it takes the same opaque stand-in the
-    /// window does (see `ContentView.windowBackground`).
-    @ViewBuilder
-    private var trayBackground: some View {
-        if reduceTransparency {
-            Color(nsColor: .windowBackgroundColor)
-        } else {
-            HUDGlassMaterial()
-        }
-    }
 }
 
 // MARK: - The Backlog, as a head
@@ -203,16 +192,21 @@ private struct BacklogHead: View {
             Text("\(count)")
                 .monospacedDigit()
                 .contentTransition(.numericText())
+            // The one head that leads somewhere says so, with the system's
+            // own sign for it. Without it, this head looked exactly like an
+            // empty section's — and only the hover told them apart.
+            Image(systemName: "chevron.right")
+                .font(BoardText.glyph)
+                .accessibilityHidden(true)
         }
         .font(BoardText.chip)
         .foregroundStyle(.secondary)
         .padding(.horizontal, Board.trayRowInset)
-        .padding(.top, 6)
-        .padding(.bottom, 4)
+        .padding(.vertical, 4)
         .frame(maxWidth: .infinity)
         .background {
             if isHovered {
-                Board.trayRowShape.fill(Color.primary.opacity(Board.trayHoverTint))
+                Color.clear.glassEffect(.regular, in: Board.trayRowShape)
             }
         }
         .padding(.horizontal, Board.trayPadding)
@@ -252,8 +246,8 @@ private struct TraySection: View {
     /// What is drawn. Beyond the cap the head counts on and a last row says
     /// how many are not here — a scroll area under a drag is trouble without
     /// a benefit.
-    private var shownCards: [KanbanCard] { Array(cards.prefix(MenuBarTray.rowCap)) }
-    private var hiddenRows: Int { MenuBarTray.hiddenRows(total: cards.count) }
+    private var shownCards: [KanbanCard] { Array(cards.prefix(MenuBarTray.rowCap(for: status))) }
+    private var hiddenRows: Int { MenuBarTray.hiddenRows(total: cards.count, in: status) }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
     private var isOverLimit: Bool { wipLimit.map { cards.count > $0 } ?? false }
@@ -287,8 +281,12 @@ private struct TraySection: View {
         // lights up — not a dashed card outline, which was the board's.
         .background {
             if isTargeted && !isDragSource {
-                Board.trayRowShape
-                    .fill(Color.accentColor.opacity(Board.trayDropTint))
+                // Glass on glass, as the system's own menus highlight: a
+                // lighter layer, not a colour block. Admissible here because
+                // the panel itself is native glass — on the board's pinned
+                // HUD material this would be stacked blur.
+                Color.clear
+                    .glassEffect(.regular.tint(Color.accentColor.opacity(Board.trayDropTint)), in: Board.trayRowShape)
                     .padding(.horizontal, Board.trayPadding)
             }
         }
@@ -387,8 +385,8 @@ private struct TraySection: View {
         .font(BoardText.chip)
         .foregroundStyle(.secondary)
         .padding(.horizontal, Board.trayRowInset)
-        .padding(.top, 6)
-        .padding(.bottom, 4)
+        .padding(.top, 4)
+        .padding(.bottom, 2)
     }
 
     /// The count always tells the whole truth, even where a row is not drawn.
@@ -434,17 +432,22 @@ private struct TrayRow: View {
                 .font(BoardText.trayRow)
                 .lineLimit(1)
             Spacer(minLength: 8)
-            if let badge = CardParts.compactBadge(for: card) {
+            // Only the dates that decide what to finish *now* — today and
+            // overdue, the two that carry a tint. A grey "12. Sep" is
+            // planning information, and planning happens on the board
+            // (SPEC.md, "Menüleiste").
+            if let badge = CardParts.compactBadge(for: card), badge.tint != nil {
                 CardBadgeView(info: badge)
             }
         }
         .padding(.horizontal, Board.trayRowInset)
         .frame(height: Board.trayRowHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
-        // A menu's hover: the row lights up under the pointer, nothing more.
+        // A menu's hover: a lighter layer of the same glass under the
+        // pointer, nothing more.
         .background {
             if isHovered {
-                Board.trayRowShape.fill(Color.primary.opacity(Board.trayHoverTint))
+                Color.clear.glassEffect(.regular, in: Board.trayRowShape)
             }
         }
         .contentShape(Rectangle())
@@ -480,7 +483,7 @@ private struct TrayActionRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 if isHovered {
-                    Board.trayRowShape.fill(Color.primary.opacity(Board.trayHoverTint))
+                    Color.clear.glassEffect(.regular, in: Board.trayRowShape)
                 }
             }
             .padding(.horizontal, Board.trayPadding)

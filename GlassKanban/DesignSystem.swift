@@ -66,6 +66,13 @@ enum Board {
     /// The panel's inner margin, like a menu's — rows and their hover
     /// highlight sit this far in from the glass edge.
     static let trayPadding: CGFloat = 8
+    /// Above the first head: what the system's panels give, so the first
+    /// line does not cling to the rim.
+    static let trayTopPadding: CGFloat = 12
+    /// Between two groups. The groups are told apart by air, not by lines —
+    /// four hairlines in a panel of four groups were four elements that named
+    /// nothing (12.09.2026).
+    static let trayGroupSpacing: CGFloat = 12
     /// A row's own text margin, inside the highlight.
     static let trayRowInset: CGFloat = 10
     /// One menu row. The system's own menu rows are 22–24pt; two more for
@@ -74,9 +81,11 @@ enum Board {
     /// The list's colour as a dot in front of the title — the one piece of
     /// context a glance uses, in the smallest form that still reads.
     static let trayDotSize: CGFloat = 7
-    /// The panel's corner, the system's for a menu bar panel; the row
-    /// highlight one step under it, per the nesting rule.
-    static let trayShape = RoundedRectangle(cornerRadius: 10, style: .continuous)
+    /// The panel's corner: rounder than a menu, flatter than a Control Centre
+    /// module — Liquid Glass reads rounder than the same material with a tight
+    /// corner. The row highlight sits one step under it, per the nesting rule.
+    static let trayRadius: CGFloat = 12
+    static let trayShape = RoundedRectangle(cornerRadius: trayRadius, style: .continuous)
     static let trayRowShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
     /// A row under the pointer, and a section a row is about to land in.
     /// Both faint: a menu highlights, it does not announce.

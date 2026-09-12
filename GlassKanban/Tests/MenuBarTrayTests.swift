@@ -7,6 +7,15 @@ final class MenuBarTrayTests: XCTestCase {
     /// the screen when a section holds twenty rows.
     func testTheRowCapIsPinned() {
         XCTAssertEqual(MenuBarTray.rowCap, 6)
+        XCTAssertEqual(MenuBarTray.doneRowCap, 3)
+    }
+
+    /// The working sections take the full cap; Erledigt is a confirmation,
+    /// not a list, and stops at three.
+    func testErledigtShowsFewerRowsThanTheWorkingSections() {
+        XCTAssertEqual(MenuBarTray.rowCap(for: .next), MenuBarTray.rowCap)
+        XCTAssertEqual(MenuBarTray.rowCap(for: .inProgress), MenuBarTray.rowCap)
+        XCTAssertEqual(MenuBarTray.rowCap(for: .done), MenuBarTray.doneRowCap)
     }
 
     /// Quit belongs in the tray only when the tray is the only way to reach
@@ -20,10 +29,11 @@ final class MenuBarTrayTests: XCTestCase {
 
     /// Whatever the cap keeps out is counted, never just dropped.
     func testRowsBeyondTheCapAreCounted() {
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: 0), 0)
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: MenuBarTray.rowCap), 0)
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: MenuBarTray.rowCap + 1), 1)
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: 20), 20 - MenuBarTray.rowCap)
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: 0, in: .next), 0)
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: MenuBarTray.rowCap, in: .next), 0)
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: MenuBarTray.rowCap + 1, in: .next), 1)
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: 20, in: .inProgress), 20 - MenuBarTray.rowCap)
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: 5, in: .done), 5 - MenuBarTray.doneRowCap)
     }
 
     /// A question that is still standing holds the tray. Nothing else may

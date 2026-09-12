@@ -643,6 +643,13 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   zurück, nur weil das Fenster den Fokus verliert.** Neue Glasflächen sind entsprechend
   über `HUDGlassMaterial` (`state = .active`) zu bauen, nicht über native
   `.glassEffect`-Controls, solange Apple dafür keinen Aktivzustand-Pin anbietet.
+  **Grenze der Regel (12.09.2026):** Sie gilt Dauerflächen — Flächen, die stehen, während
+  man woanders arbeitet. Das Menüleisten-Panel ist keine: Es existiert nur, solange man
+  es bedient, und ist dann Key-Fenster. Deshalb trägt es das native Liquid Glass
+  (`NSGlassEffectView`), samt Hover und Ablegeziel als Glasschichten — gemessen mit
+  einer anderen App im Vordergrund: Refraktion und Lichtsaum bleiben. Das klassische
+  Vibrancy-Material dort war eine graue Scheibe; die Regel hätte das Panel um genau das
+  gebracht, wofür die App benannt ist.
 - Sauberes Typografie- und Abstandssystem nach Apple HIG (SF Pro, klare Hierarchie)
 - Dezente Bewegung: sanfte Animationen beim Spaltenwechsel (Drag & Drop), beim
   Live-Update aus Reminders (z. B. Karte erscheint/verschwindet mit Fade/Slide)

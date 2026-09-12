@@ -13,10 +13,19 @@ enum MenuBarTray {
     /// nothing is hidden — it is only not drawn (see SPEC.md, "Menüleiste").
     static let rowCap = 6
 
+    /// Erledigt shows less: the tray is for finishing, and the finished need
+    /// only be a short confirmation of it — the last few, not the week. Three
+    /// is the small, safe reward; six was a list.
+    static let doneRowCap = 3
+
+    static func rowCap(for status: KanbanStatus) -> Int {
+        status == .done ? doneRowCap : rowCap
+    }
+
     /// How many rows of a section the cap keeps out — the number the last
     /// row names, so nothing is hidden without being counted.
-    static func hiddenRows(total: Int) -> Int {
-        max(0, total - rowCap)
+    static func hiddenRows(total: Int, in status: KanbanStatus) -> Int {
+        max(0, total - rowCap(for: status))
     }
 
     /// Whether the footer offers Quit: only when there is no Dock icon to
