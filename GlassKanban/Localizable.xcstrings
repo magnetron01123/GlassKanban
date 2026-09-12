@@ -761,6 +761,23 @@
         }
       }
     },
+    "Click to dismiss": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klick blendet aus"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click to dismiss"
+          }
+        }
+      }
+    },
     "Click to edit": {
       "extractionState": "manual",
       "localizations": {
@@ -2281,6 +2298,23 @@
         }
       }
     },
+    "Open Board": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Board öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Board"
+          }
+        }
+      }
+    },
     "Open Reminders": {
       "extractionState": "manual",
       "localizations": {
@@ -2583,6 +2617,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Same day"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings…"
           }
         }
       }

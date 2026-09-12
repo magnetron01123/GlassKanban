@@ -152,12 +152,14 @@ final class MenuBarTrayTests: XCTestCase {
         XCTAssertTrue(MenuBarTray.allowsMoves(pendingSource: .board))
     }
 
-    /// The way back out of Erledigt can fail on a recurring series, and only
-    /// the board can say so. In the tray it would fail silently.
-    func testFinishedCardsCannotBeMovedFromTheTray() {
-        XCTAssertFalse(MenuBarTray.allowsMoving(from: .done))
-        XCTAssertTrue(MenuBarTray.allowsMoving(from: .next))
-        XCTAssertTrue(MenuBarTray.allowsMoving(from: .inProgress))
+    /// Every row moves, Erledigt included. The bar on finished cards existed
+    /// only because the refusal a recurring series can raise had nowhere to
+    /// appear in the panel; it appears there now, so the rule that made the
+    /// panel disagree with the board is gone.
+    func testEveryRowMayMoveIncludingFinishedOnes() {
+        for status in KanbanStatus.allCases {
+            XCTAssertTrue(MenuBarTray.allowsMoving(from: status))
+        }
     }
 }
 

@@ -432,6 +432,14 @@ einen Rückbau schützen.
   Bildschirm begrenzt es, dann scrollt das Panel als Ganzes (kein Abschnitt in sich). Die gemerkte Einstellung
   `trayBacklogExpanded` lebte einen Tag und ist wieder entfernt. Zurücklegen ins Backlog
   ist erlaubt.
+  **Nachtrag am selben Abend, nach der Review (Nutzer):** Rechtsklick auf das Symbol öffnet
+  ein Menü (Board, Einstellungen, Beenden) — nötig, weil das Panel ohne Erinnerungs-Zugriff
+  nichts zeichnet und im Menüleisten-Modus sonst kein Ausweg bliebe. Der Zug aus Erledigt
+  heraus ist erlaubt, weil das Panel die eine Absage, die dabei kommen kann, jetzt selbst
+  sagt. Und die **Trennstriche sind zurück**: Am Nachmittag war gegen Linien und für Luft
+  entschieden worden; im direkten Bildvergleich trug Luft allein nicht — zwei kurze
+  Abschnitte übereinander lasen sich als ein Block, und die Systempanels ziehen die Linie.
+  Die Gruppenluft wurde halbiert, das Panel bleibt gleich hoch.
   **Was die drei Messungen ergaben (12.09.2026, Protokoll im Bauplan):** Ein Textfeld im
   nicht aktivierenden Panel nimmt Fokus und Tastatur an, während eine andere App aktiv
   bleibt — die Erfassung brauchte keine Aktivierungs-Weiche. `RegisterEventHotKey` feuert

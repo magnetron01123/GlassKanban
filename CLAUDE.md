@@ -99,14 +99,17 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   in dieser Sandbox in beiden Aktivierungs-Policies feuert — und dass er eine Kollision
   mit einem systemeigenen Kürzel *nicht* meldet. `ShortcutRecorder.swift` ist das Feld in
   den Einstellungen, das eine Tastenkombination fängt, ohne sie auszuführen.
-- **MenuBarTrayController.swift** — das Menüleisten-Symbol und sein Panel, die einzige
+- **MenuBarTrayController.swift** — das Menüleisten-Symbol samt seinem Rechtsklick-Menü
+  und sein Panel, die einzige
   Stelle neben `WindowPlacementController`, die `NSWindow`/`NSStatusItem` anfasst.
   **Bewusst AppKit statt `MenuBarExtra`:** In einem `MenuBarExtra`-Popover lebt ein Zug
   zwar, aber der Drop kommt nie an (gemessen 08.09.2026, Gegenprobe auf dem Board
   positiv). Ein Tablett, dessen Karten nicht ziehbar sind, ist nicht dieses Tablett.
-- **MenuBarTrayView.swift** — das Tablett selbst: drei Abschnitte untereinander im
+- **MenuBarTrayView.swift** — das Tablett selbst: vier Abschnitte untereinander im
   Menü-Stil (`TraySection`, `TrayRow`, `TrayFoldLine` — die Falz-Zeile des Boards in
-  Menügröße —, `TrayActionRow`, `TraySymbol`, `TrayDragPreview`, die WIP-Zeile) und `BacklogCaptureRow`, die einzige
+  Menügröße —, `TrayActionRow`, `TraySymbol`, `TrayDragPreview`,
+  `TrayNoticeRow` — die abgelehnte Schreiboperation inline statt als Alert —, die
+  WIP-Zeile) und `BacklogCaptureRow`, die einzige
   Stelle im Panel, an der geschrieben statt bewegt wird.
   Zieht seine Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`. **Kein kleines Board** —
   die erste Fassung war eines und wurde am 11.09.2026 verworfen (BACKLOG.md,

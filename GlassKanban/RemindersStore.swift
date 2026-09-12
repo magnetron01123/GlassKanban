@@ -238,6 +238,12 @@ final class RemindersStore: ObservableObject {
         /// the alert has to say which one it was.
         let title: String
         let message: String
+        /// Which surface the write came from, so the failure is reported
+        /// where the user is (the same reason `PendingOverflow` carries one).
+        /// An alert over the board is the wrong answer to a move made in the
+        /// panel — in the menu bar mode there may be no board at all, and the
+        /// news would wait behind a window the user never opens.
+        var source: MoveSource = .board
         var id: String { cardID }
     }
 
@@ -1123,7 +1129,8 @@ final class RemindersStore: ObservableObject {
             pendingSaveFailure = SaveFailure(
                 cardID: cardID,
                 title: String(localized: "Not Restored"),
-                message: String(localized: "“\(name)” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice."))
+                message: String(localized: "“\(name)” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice."),
+                source: source)
             return nil
         }
         // Read before the save: afterwards this record is the rolled-on series
@@ -1166,7 +1173,8 @@ final class RemindersStore: ObservableObject {
                 // like a drop that missed — so the user tries again instead of
                 // learning that this list is read-only.
                 pendingSaveFailure = SaveFailure(
-                    cardID: cardID, title: String(localized: "Not Moved"), message: error.localizedDescription)
+                    cardID: cardID, title: String(localized: "Not Moved"),
+                    message: error.localizedDescription, source: source)
                 scheduleRefreshAfterWrite()
                 return nil
             }

@@ -3,30 +3,57 @@ import AppKit
 import EventKit
 import ServiceManagement
 
-/// Each pane states its own height as a constant, rather than letting the
-/// panes measure themselves with `fixedSize`.
+/// How tall a settings pane is.
 ///
-/// That measuring was a visible bug: the window opened at a default size and
-/// only then resized to fit its content, and the correction showed as a
-/// stutter with the tab bar redrawing mid-flight. A height that is known
-/// before the window appears has nothing to correct — the window opens right
-/// the first time, and switching tabs is one deterministic resize rather
-/// than a measure-then-adjust.
+/// **The rule, and it is the app's general one (12.09.2026, user):** a pane is
+/// as tall as its content — the window grows downward rather than scrolling
+/// inside itself — and it scrolls only when the screen is too short to show
+/// the whole of it. The menu bar panel follows the same rule
+/// (`MenuBarTrayController.contentHeightChanged`).
 ///
-/// The two panes differ enough that a shared height would leave Listen half
-/// empty, so they are sized individually. Listen fits a typical set of
-/// reminder lists and scrolls internally beyond that; Allgemein is fixed
-/// content, so its number only changes when a setting is added.
+/// The heights are *computed*, not measured at runtime. Measuring was a
+/// visible bug once: the window opened at a default size and only then
+/// resized to fit, and the correction showed as a stutter with the tab bar
+/// redrawing mid-flight. A height that is known before the window appears has
+/// nothing to correct — the window opens right the first time, and switching
+/// tabs is one deterministic resize rather than a measure-then-adjust. So
+/// "Listen" derives its height from the number of rows it will draw, and
+/// "Allgemein" is fixed content with a number measured against it.
 enum SettingsMetrics {
     static let width: CGFloat = 420
-    static let listsHeight: CGFloat = 260
+
+    /// One list row in a grouped form: the toggle, its colour dot and its
+    /// title. Measured, not guessed — see the note above.
+    static let listRowHeight: CGFloat = 37
+    /// Everything in the Listen pane that is not a row: the form's own
+    /// insets, the section header, the box's padding.
+    static let listsChrome: CGFloat = 64
+
+    /// The Listen pane grows with the number of lists the user actually has.
+    /// A fixed 260 pt scrolled from the seventh list on and stood half empty
+    /// with two.
+    static func listsHeight(rowCount: Int) -> CGFloat {
+        onScreen(listsChrome + CGFloat(max(rowCount, 1)) * listRowHeight)
+    }
+
     /// Measured against the content, not guessed: the pane is a fixed height,
     /// so a footer that grows silently loses its last line. 455 cut the WIP
-    /// rule off mid-sentence the day it stopped being a hover tip.
+    /// rule off mid-sentence the day it stopped being a hover tip; 640 cut the
+    /// whole WIP footer off the day the shortcut row arrived.
     static let generalHeight: CGFloat = 706
+
     /// The recorder's width, so the row keeps its shape whether it says
     /// "Kein Kurzbefehl", "Aufnahme …" or "⌥⌘K".
     static let shortcutWidth: CGFloat = 150
+
+    /// Title bar and tab bar, which sit above the pane inside the same window.
+    private static let windowChrome: CGFloat = 92
+    /// Never taller than the screen the window is on. Past that the pane
+    /// keeps its own scrolling — the only case in which it scrolls at all.
+    static func onScreen(_ height: CGFloat) -> CGFloat {
+        let available = (NSScreen.main?.visibleFrame.height ?? 900) - windowChrome
+        return min(height, max(240, available))
+    }
 }
 
 struct SettingsView: View {
@@ -79,7 +106,14 @@ struct ListsSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(height: SettingsMetrics.listsHeight)
+        .frame(height: SettingsMetrics.listsHeight(rowCount: visibleRowCount))
+    }
+
+    /// What the pane will actually draw: one row per list, or the single line
+    /// that stands in for them when there is no access and nothing to show.
+    private var visibleRowCount: Int {
+        if store.accessState == .denied || store.reminderCalendars.isEmpty { return 2 }
+        return store.reminderCalendars.count
     }
 
     private func inclusionBinding(for calendar: EKCalendar) -> Binding<Bool> {
@@ -273,7 +307,7 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(height: SettingsMetrics.generalHeight)
+        .frame(height: SettingsMetrics.onScreen(SettingsMetrics.generalHeight))
         .onReceive(NotificationCenter.default.publisher(
             for: NSApplication.didBecomeActiveNotification)) { _ in
             syncLaunchAtLogin()

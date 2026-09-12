@@ -69,10 +69,11 @@ enum Board {
     /// Above the first head: what the system's panels give, so the first
     /// line does not cling to the rim.
     static let trayTopPadding: CGFloat = 12
-    /// Between two groups. The groups are told apart by air, not by lines —
-    /// four hairlines in a panel of four groups were four elements that named
-    /// nothing (12.09.2026).
-    static let trayGroupSpacing: CGFloat = 12
+    /// The air on each side of the hairline between two groups. Half what it
+    /// was while air alone did the separating: the line carries the division
+    /// now, so the space around it only has to keep it from touching the
+    /// text (12.09.2026, retaken — see `MenuBarTrayView.separator`).
+    static let trayGroupSpacing: CGFloat = 6
     /// A row's own text margin, inside the highlight.
     static let trayRowInset: CGFloat = 10
     /// One menu row. The system's own menu rows are 22–24pt; two more for

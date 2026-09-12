@@ -31,6 +31,7 @@ struct MenuBarTrayView: View {
     /// section that happened to offer a "+".
     static let lanes: [KanbanStatus] = KanbanStatus.allCases
 
+
     var body: some View {
         // No background, no clip, no edge here: the panel's body is the
         // glass view this sits in (`TrayGlassController`), and the glass
@@ -58,6 +59,11 @@ struct MenuBarTrayView: View {
             // empty and would never have asked for access. `start()` is
             // idempotent (`hasStarted`), so calling it from both is safe.
             .task { await store.start() }
+            // The item's menu asks for the board through here: this view is
+            // the only place in the menu bar mode that holds `openWindow`.
+            .onReceive(NotificationCenter.default.publisher(for: .glassKanbanOpenBoard)) { _ in
+                openBoard(nil)
+            }
     }
 
     @ViewBuilder
@@ -85,7 +91,17 @@ struct MenuBarTrayView: View {
             if let overflow = trayOverflow {
                 OverflowQuestionRow(overflow: overflow)
             }
-            ForEach(Self.lanes) { status in
+            // A write the panel asked for and EventKit refused. Here rather
+            // than in the board's alert: the move was made here, and in the
+            // menu bar mode there may be no board for an alert to appear over
+            // (see `RemindersStore.SaveFailure.source`).
+            if let failure = trayFailure {
+                TrayNoticeRow(title: failure.title, message: failure.message) {
+                    store.pendingSaveFailure = nil
+                }
+            }
+            ForEach(Array(Self.lanes.enumerated()), id: \.element) { index, status in
+                if index > 0 { separator }
                 TraySection(status: status, openBoard: openBoard)
             }
             // No "Open Board" row: every row opens the board with its card,
@@ -106,13 +122,28 @@ struct MenuBarTrayView: View {
         .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: store.cards)
     }
 
-    /// A menu's separator: a hairline, inset like the rows.
+    /// A menu's separator: a hairline, inset like the rows, with the same
+    /// air above and below.
+    ///
+    /// Groups were told apart by air alone until 12.09.2026 — a deliberate
+    /// choice, and the wrong one here. Seen side by side: with two short
+    /// sections above each other ("Als Nächstes 0 / 5", "In Bearbeitung
+    /// 0 / 3") the air read as one block of four grey lines, and the heads
+    /// are too quiet to carry the division on their own. The system's own
+    /// menu bar panels draw the line; this is the closer answer, and the
+    /// group spacing gives back what the line costs.
     private var separator: some View {
         Rectangle()
             .fill(Board.columnBorder(contrast))
             .frame(height: 1)
             .padding(.horizontal, Board.trayPadding + Board.trayRowInset)
-            .padding(.bottom, Board.trayPadding / 2)
+    }
+
+    /// A refusal the panel itself provoked. The board's own stay with the
+    /// board's alert.
+    private var trayFailure: RemindersStore.SaveFailure? {
+        guard let failure = store.pendingSaveFailure, failure.source == .tray else { return nil }
+        return failure
     }
 
     /// The tray's own limit question, if one is standing. The board's own
@@ -153,10 +184,12 @@ struct MenuBarTrayView: View {
     /// and then the scene has to make one.
     private func openBoard(_ cardID: String?) {
         MenuBarTrayController.shared.close()
+        var hadToCreateWindow = false
         if let board = NSApp.windows.first(where: { $0.identifier?.rawValue == "board" }) {
             board.makeKeyAndOrderFront(nil)
         } else {
             openWindow(id: "board")
+            hadToCreateWindow = true
         }
         // Activated *after* the window is up, and with the modern call. The
         // tray's panel is non-activating, so in the menu bar mode the app is
@@ -166,7 +199,16 @@ struct MenuBarTrayView: View {
         // no menu bar of its own and no keyboard focus (measured
         // 08.09.2026). Without the menu bar there is also no way into
         // Settings in that mode.
-        NSApp.activate()
+        // `openWindow(id:)` does not put the window up before this line
+        // returns, and an activation with no window of ours on screen is
+        // dropped — measured 08.09.2026 and again 12.09.2026, when the item's
+        // menu made the board appear behind Finder. One turn of the run loop
+        // is enough for the scene to exist.
+        if hadToCreateWindow {
+            AppearanceDelegate.bringBoardForward()
+        } else {
+            NSApp.activate()
+        }
         // Only after the window is up: `editingCardID` is cleared by
         // `BoardView.closeEditor`, so a value set with no window to close it
         // would simply stay there.
@@ -781,6 +823,54 @@ private struct OverflowQuestionRow: View {
         .background { Board.trayRowShape.fill(Board.wipLimitTint.opacity(Board.trayDropTint)) }
         .padding(.horizontal, Board.trayPadding)
         .accessibilityElement(children: .contain)
+    }
+}
+
+/// What did not happen, and why, without an alert.
+///
+/// An alert would take the focus and close the panel out from under its own
+/// news — the same reason the WIP question is a row here (see
+/// `OverflowQuestionRow`). It states the refusal and stays until it is
+/// clicked away: a failure nobody read is a move that vanished silently, and
+/// that is the failure mode this project has paid the most for.
+private struct TrayNoticeRow: View {
+    let title: String
+    let message: String
+    let dismiss: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(title)
+                .font(BoardText.trayRow)
+                .fontWeight(.medium)
+            Text(message)
+                .font(BoardText.meta)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, Board.trayRowInset)
+        .padding(.vertical, 6)
+        // The board's own colour for a refused write, at the tint the panel
+        // uses for everything that is not a row.
+        .background { Board.trayRowShape.fill(Color.red.opacity(Board.trayDropTint)) }
+        .overlay {
+            if isHovered {
+                Board.trayRowShape.strokeBorder(Color.primary.opacity(0.12))
+            }
+        }
+        .padding(.horizontal, Board.trayPadding)
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
+        .onTapGesture(perform: dismiss)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        // Both halves are already localized by the store; this only joins
+        // them, so it must not be looked up as a key of its own.
+        .accessibilityLabel(Text(verbatim: "\(title). \(message)"))
+        .accessibilityHint(Text("Click to dismiss"))
     }
 }
 

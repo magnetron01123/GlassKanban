@@ -182,9 +182,9 @@ struct BoardView: View {
         // surfaces from `TicketEditSheet`'s own close, after that sheet is
         // already gone, so nowhere on the sheet itself could show it.
         .alert(
-            store.pendingSaveFailure?.title ?? String(localized: "Not Saved"),
+            boardSaveFailure?.title ?? String(localized: "Not Saved"),
             isPresented: saveFailureBinding,
-            presenting: store.pendingSaveFailure
+            presenting: boardSaveFailure
         ) { _ in
             Button("OK") {}
         } message: { failure in
@@ -280,9 +280,16 @@ struct BoardView: View {
             set: { if !$0 { store.pendingDeletion = nil } })
     }
 
+    /// Only the board's own failures. One raised by a move made in the menu
+    /// bar panel is answered there, inline — see `TrayNoticeRow`.
+    private var boardSaveFailure: RemindersStore.SaveFailure? {
+        guard let failure = store.pendingSaveFailure, failure.source == .board else { return nil }
+        return failure
+    }
+
     private var saveFailureBinding: Binding<Bool> {
         Binding(
-            get: { store.pendingSaveFailure != nil },
+            get: { boardSaveFailure != nil },
             set: { if !$0 { store.pendingSaveFailure = nil } })
     }
 

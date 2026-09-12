@@ -31,6 +31,28 @@ weiterentwickelt: Ändert sich Verhalten, ändert sich diese Datei mit.
   Zugangsdaten in der App — einzige Berechtigung ist der macOS-Systemdialog für
   Erinnerungs-Zugriff)
 
+### Fenster wachsen mit ihrem Inhalt (12.09.2026)
+
+**Allgemeine Regel dieser App, überall wo sie gilt:** Ein Fenster ist so hoch wie sein
+Inhalt und wächst nach unten mit — es scrollt **erst**, wenn der Bildschirm nicht mehr
+reicht. Ein Ausschnitt mit Rollbalken mitten in einem Fenster, das noch Platz hätte, ist
+ein Fenster, das seine eigene Größe nicht kennt.
+
+Betroffen sind heute zwei Stellen:
+
+- **Die Einstellungen.** „Listen" ist so hoch, wie die Listen des Nutzers es verlangen
+  (`SettingsMetrics.listsHeight(rowCount:)`); die feste Höhe davor scrollte ab der siebten
+  Liste und stand bei zweien halb leer. „Allgemein" ist fester Inhalt mit einer gemessenen
+  Zahl. Beide gehen durch `SettingsMetrics.onScreen(_:)`, das auf die Bildschirmhöhe
+  begrenzt — nur dort scrollt die Seite dann in sich.
+- **Das Menüleisten-Panel.** Es wächst mit einem aufgeklappten Abschnitt und wird nur von
+  einem zu kurzen Bildschirm begrenzt (siehe „Menüleiste: das Tablett").
+
+Die Höhen sind **gerechnet, nicht zur Laufzeit gemessen**. Messen war einmal ein
+sichtbarer Fehler: Das Fenster ging in einer Standardgröße auf und korrigierte sich erst
+danach, was als Ruckeln mit neu gezeichneter Tab-Leiste zu sehen war. Eine Höhe, die vor
+dem Erscheinen feststeht, hat nichts zu korrigieren.
+
 ### Das Board bleibt auf seinem Bildschirm (14.08.2026)
 
 macOS stellt den Fensterrahmen über Neustarts wieder her, aber nicht über das
@@ -892,7 +914,7 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 
 | Element | Board | Tablett |
 |---|---|---|
-| Spurkopf | Name und Zähl-Chip | **Symbol**, Name und Zahl als Text, 11 pt sekundär; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Gruppen sind durch Luft getrennt, nicht durch Linien |
+| Spurkopf | Name und Zähl-Chip | **Symbol**, Name und Zahl als Text, 11 pt sekundär; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Zwischen zwei Abschnitten eine Haarlinie wie in den Systempanels (12.09.2026 zurückgenommen: Luft allein trug nicht, zwei kurze Abschnitte übereinander lasen sich als ein Block) |
 | Stufen-Symbol | keins — die Spur erklärt sich durch die Karten darin | vor jedem Kopf: Backlog `tray`, Als Nächstes `circle`, In Bearbeitung `circle.lefthalf.filled`, Erledigt `checkmark.circle`, am linken Rand |
 | Hierarchie | Papier in der Mulde | **ein Baum, keine Liste:** der Kopf steht am Rand, seine Zeilen rücken bis unter den Kopf*namen* ein (22 pt) — wie die Seitenleiste von Finder und Erinnerungen. Zwei Glyphenspalten, zwei Ebenen: links nur Stufen-Symbole, eingerückt nur Listenpunkte. Eine erste Fassung vom 12.09. setzte Kopfname und Titel auf eine Flucht; das las sich als sieben gleiche Zeilen |
 | Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeits-Badge **nur bei Heute und Überfällig** — graue Daten sind Planung, und die findet auf dem Board statt; Hover hebt die Zeile als hellere Glasschicht |
@@ -908,12 +930,13 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 | WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen |
 | Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
 | ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |
-| Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Hinweis | **nicht** — der Hinweis gehört dem Board, hier verpuffte der Fehlschlag stumm |
+| Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Alert | **erlaubt** (12.09.2026). Er war gesperrt, weil der Hinweis dem Board gehörte und der Fehlschlag hier stumm verpufft wäre; das Panel sagt ihn jetzt selbst — `SaveFailure` trägt seine `MoveSource`, und die Absage steht als Zeile im Panel (siehe unten) |
+| Abgelehnter Schreibvorgang | Alert über dem Board | Zeile ganz oben im Panel, rot getönt, Titel und Grund in den Worten des Boards; ein Klick blendet sie aus. Kein Alert: er nähme den Fokus, und im Menüleisten-Modus gibt es kein Fenster, über dem er stehen könnte |
 | Erfassen | „+" legt an und öffnet den Editor | Zeile „Neue Aufgabe" unter dem Backlog-Kopf, nur der Titel (siehe unten) |
 | Tooltips, Streak, Statistik, Suche, Editor, Umbenennen, Löschen | ja | nichts davon; Chrome bleibt im Fenster |
 
 **Bewegen — dieselben drei Wege wie auf dem Board:** ziehen, Kontextmenü „Verschieben
-nach", VoiceOver-Aktion. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
+nach", VoiceOver-Aktion. Jede Zeile ist beweglich, Erledigt eingeschlossen. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
 wie auf dem Board. Das Zugbild ist eigens gezeichnet (Punkt und Titel auf eigenem Grund):
 ein Schnappschuss der Zeile zeigte nur den Punkt, weil vibranter Text außerhalb des Glases
 unsichtbar rendert. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte — einen
@@ -946,7 +969,18 @@ man es auf dem Board löscht.
 
 **Das Symbol ist stumm:** ein monochromes Template-Glyph, keine Zahl, kein Badge, keine
 Farbe. Zieht der Nutzer es mit ⌘ aus der Menüleiste, springt die Einstellung auf „Dock" —
-ohne beides wäre die App laufend und unerreichbar.
+ohne beides wäre die App laufend und unerreichbar. **Die Einstellung ist dabei die
+Instanz:** Sagt sie „Menüleiste", steht beim nächsten Start ein Symbol da, auch wenn macOS
+sich das frühere Herausziehen gemerkt hat (12.09.2026 — sonst blieb es für immer weg und
+überschrieb die Wahl des Nutzers stillschweigend).
+
+**Rechtsklick auf das Symbol öffnet ein Menü** mit drei Einträgen: „Board öffnen",
+„Einstellungen …", Trennstrich, „Glass Kanban beenden". Keine Inhalte des Boards — dafür
+ist das Panel da. Jeder der drei ist ein Weg, den das Panel nicht immer anbieten kann: Es
+braucht Zugriff auf Erinnerungen, um überhaupt etwas zu zeichnen, und im Menüleisten-Modus
+gibt es weder Dock-Symbol noch App-Menü — ohne dieses Menü lief eine App ohne Zugriff
+also ohne Ausweg (12.09.2026). „Board öffnen" erzeugt das Fenster auch dann, wenn dieser
+Start noch keines hatte.
 
 ### Anzeigen in: Dock, Menüleiste, beides (08.09.2026)
 

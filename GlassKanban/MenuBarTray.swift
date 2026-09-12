@@ -82,13 +82,17 @@ enum MenuBarTray {
         return days >= KanbanCard.agingThresholdDays
     }
 
-    /// Cards in Erledigt cannot be moved from the tray at all.
+    /// Every row may move, Erledigt included (12.09.2026, user).
     ///
-    /// Not a matter of taste: a move out of Erledigt can fail on a recurring
-    /// series, and the app answers that with the "Not Restored" notice —
-    /// which only the board puts up. In the tray the move would fail in
-    /// silence, which is the one thing this project never does.
-    static func allowsMoving(from status: KanbanStatus) -> Bool {
-        status != .done
-    }
+    /// It was barred until then, for a real reason: a move out of Erledigt is
+    /// the one move that can be refused outright — a repeating series that has
+    /// already rolled on cannot take its finished occurrence back — and the
+    /// answer to that, "Nicht wiederhergestellt", was a board alert the panel
+    /// could not raise. So the failure would have been silent, which is the
+    /// one thing this project never does. The bar is lifted now that the panel
+    /// says it itself: `SaveFailure` carries its `MoveSource` and the panel
+    /// shows the refusal inline (`TrayNoticeRow`). Pulling finished work back
+    /// out is a Kanban move like any other, and refusing it here while the
+    /// board allows it was the panel disagreeing with the app.
+    static func allowsMoving(from status: KanbanStatus) -> Bool { true }
 }

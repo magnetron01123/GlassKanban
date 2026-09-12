@@ -87,6 +87,36 @@ final class AppearanceDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Brings the board forward once it exists, waiting for it if it does not
+    /// yet.
+    ///
+    /// `openWindow(id:)` returns before the window is on screen, so an
+    /// activation fired right after it has nothing of ours to activate and is
+    /// dropped — in the menu bar mode the board then stood behind whatever
+    /// app the user came from (measured 12.09.2026, first through the status
+    /// item's menu). Polling the run loop rather than guessing a delay: the
+    /// window appears on the next turn or two, and this stops the moment it
+    /// does. `ignoringOtherApps` because the request came from a status item
+    /// while another app was frontmost, which is exactly the case the plain
+    /// `activate()` refuses.
+    static func bringBoardForward(remainingTries: Int = 20) {
+        guard remainingTries > 0 else { return }
+        let board = NSApp.windows.first { $0.identifier?.rawValue == "board" }
+        if let board {
+            NSApp.activate(ignoringOtherApps: true)
+            board.makeKeyAndOrderFront(nil)
+        }
+        // Only the window's existence is worth waiting for. Owning the menu
+        // bar is not: in the menu bar mode the app runs as an accessory, and
+        // an accessory app leaves the menu bar to whoever had it — the window
+        // still comes to the front and takes the keyboard, which is what the
+        // request was about.
+        guard board == nil else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            bringBoardForward(remainingTries: remainingTries - 1)
+        }
+    }
+
     private static func closeBoardWindows() {
         for window in NSApp.windows where window.identifier?.rawValue == "board" {
             window.close()
@@ -98,6 +128,11 @@ extension Notification.Name {
     /// Raised by "New Ticket" so the Backlog lane can run the same creation
     /// its "+" button does — one path, one set of rules.
     static let glassKanbanNewTicket = Notification.Name("GlassKanbanNewTicket")
+
+    /// Raised by the menu bar item's own menu when the board has to come up
+    /// and no window exists yet — only SwiftUI can make one, and only from
+    /// inside a view (see `MenuBarTrayController.openBoard`).
+    static let glassKanbanOpenBoard = Notification.Name("GlassKanbanOpenBoard")
 
     /// Raised every time the menu bar panel comes up, so the capture row can
     /// go back to rest. The panel's view is built once and then lives on —

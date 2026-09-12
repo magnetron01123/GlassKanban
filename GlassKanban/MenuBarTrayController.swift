@@ -28,6 +28,9 @@ final class MenuBarTrayController: NSObject {
     private var localClickMonitor: Any?
     private var cancellables: Set<AnyCancellable> = []
     private var visibilityObservation: NSKeyValueObservation?
+    /// True while this controller is setting `isVisible` itself, so the
+    /// observation can tell its own write from the user's ⌘-drag.
+    private var isApplyingVisibility = false
     private weak var store: RemindersStore?
 
     /// Called once from the app delegate. The store comes from there rather
@@ -70,14 +73,32 @@ final class MenuBarTrayController: NSObject {
                 accessibilityDescription: String(localized: "Glass Kanban"))
             button.image?.isTemplate = true
             button.target = self
-            button.action = #selector(toggle)
+            button.action = #selector(handleClick)
+            // Right-click has to arrive as an event of its own; without this
+            // the button only ever reports a left click.
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
+        // macOS remembers a ⌘-drag removal for a `.removalAllowed` item and
+        // restores `isVisible = false` on the next launch, under a key of its
+        // own that this app never sees. Without this line the item stayed
+        // away for good: the app came up, found its item hidden, and the
+        // observation below immediately wrote the setting to "Dock" — so the
+        // user's choice of "Menüleiste" was silently overwritten by a gesture
+        // they had made once, and only a trip through Settings brought it
+        // back (seen 12.09.2026). The setting is the authority; if it says
+        // there is an item, there is one.
+        isApplyingVisibility = true
+        item.isVisible = true
+        isApplyingVisibility = false
         // ⌘-dragging the item off the bar only sets `isVisible` — the app
         // itself would keep running with no Dock icon and no item, reachable
         // by nothing the user has. The setting follows the gesture instead.
-        visibilityObservation = item.observe(\.isVisible, options: [.new]) { _, change in
+        visibilityObservation = item.observe(\.isVisible, options: [.new]) { [weak self] _, change in
             guard change.newValue == false else { return }
             Task { @MainActor in
+                // Not our own write — only the user's gesture changes the
+                // setting.
+                guard self?.isApplyingVisibility != true else { return }
                 let presence = PresenceController.shared.selection
                 PresenceController.shared.selection = presence.afterMenuBarItemRemoved
             }
@@ -95,6 +116,125 @@ final class MenuBarTrayController: NSObject {
     }
 
     // MARK: - The panel
+
+    /// Left opens the panel, right opens the menu — the two gestures every
+    /// menu bar item on this system offers.
+    @objc private func handleClick() {
+        let isRightClick = NSApp.currentEvent?.type == .rightMouseUp
+            || NSApp.currentEvent?.modifierFlags.contains(.control) == true
+        if isRightClick {
+            showMenu()
+        } else {
+            toggle()
+        }
+    }
+
+    /// The item's own menu.
+    ///
+    /// Three entries and no more: the way to the board, the way to the
+    /// settings, and the way out. Every one of them is a route the panel
+    /// itself cannot always offer — the panel needs Reminders access to draw
+    /// anything at all, and in the menu bar mode there is no Dock icon and no
+    /// app menu, so without this an app that had been refused access was
+    /// running with no way to quit it and no way into its settings
+    /// (12.09.2026). Nothing about the board's *content* belongs here: that
+    /// is what the panel is for.
+    private func showMenu() {
+        guard let statusItem else { return }
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+
+        let board = NSMenuItem(
+            title: String(localized: "Open Board"),
+            action: #selector(openBoardFromMenu), keyEquivalent: "")
+        board.keyEquivalentModifierMask = []
+        board.target = self
+        menu.addItem(board)
+
+        let settings = NSMenuItem(
+            title: String(localized: "Settings…"),
+            action: #selector(openSettingsFromMenu), keyEquivalent: "")
+        settings.keyEquivalentModifierMask = []
+        settings.target = self
+        menu.addItem(settings)
+
+        menu.addItem(.separator())
+
+        let quit = NSMenuItem(
+            title: String(localized: "Quit Glass Kanban"),
+            // No key equivalents anywhere in this menu: in the menu bar mode
+            // the app has no menu bar of its own, so a printed ⌘Q would be a
+            // shortcut that does nothing.
+            action: #selector(quitFromMenu), keyEquivalent: "")
+        // Cleared explicitly: an item with an empty key equivalent still
+        // carries ⌘ in its modifier mask, and AppKit draws a placeholder
+        // glyph for it — a mark in the menu that means nothing.
+        quit.keyEquivalentModifierMask = []
+        quit.target = self
+        menu.addItem(quit)
+
+        // The panel and the menu must not stand at once — they hang from the
+        // same item.
+        close()
+        // Handed to the item rather than popped up by hand, so macOS places
+        // it under the item and highlights the item while it is open. Taken
+        // away again immediately: while an item carries a menu, a left click
+        // opens that menu instead of reaching the action.
+        statusItem.menu = menu
+        statusItem.button?.performClick(nil)
+        statusItem.menu = nil
+    }
+
+    @objc private func quitFromMenu() {
+        NSApp.terminate(nil)
+    }
+
+    @objc private func openBoardFromMenu() {
+        openBoard()
+    }
+
+    /// Brings the board up, creating it if this launch never had one.
+    ///
+    /// `AppearanceDelegate.showBoardWindow` can only order an existing window
+    /// front, and in the menu bar mode the scene is suppressed at launch — so
+    /// on a run where the board was never opened there is no window to order.
+    /// Only SwiftUI can make one, through `openWindow(id:)`, which lives in
+    /// the panel's view; the panel is loaded first so that the view is alive
+    /// to hear the request even if the user has never opened it.
+    private func openBoard() {
+        if NSApp.windows.contains(where: { $0.identifier?.rawValue == "board" }) {
+            AppearanceDelegate.showBoardWindow()
+            NSApp.activate()
+            return
+        }
+        loadPanelIfNeeded()
+        NotificationCenter.default.post(name: .glassKanbanOpenBoard, object: nil)
+    }
+
+    /// Builds the panel and lays it out once, without showing it — enough for
+    /// SwiftUI to instantiate the view hierarchy behind it.
+    private func loadPanelIfNeeded() {
+        guard panel == nil, let store else { return }
+        let panel = makePanel(store: store)
+        self.panel = panel
+        panel.contentViewController?.view.layoutSubtreeIfNeeded()
+    }
+
+    @objc private func openSettingsFromMenu() {
+        // The board first, and active: the Settings scene opens against the
+        // app's own menu bar, which in the menu bar mode exists only while a
+        // window of ours is frontmost. Without this the pane opened behind
+        // everything, or not at all.
+        openBoard()
+        NSApp.activate()
+        // The action AppKit installs for a SwiftUI `Settings` scene. Sent by
+        // name because it is not a declared selector; if a future system
+        // renames it, the menu item simply does nothing rather than crashing,
+        // and the board is up by then either way.
+        DispatchQueue.main.async {
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        }
+    }
 
     @objc func toggle() {
         if panel?.isVisible == true {
