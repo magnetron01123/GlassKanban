@@ -453,10 +453,9 @@ private struct TraySection: View {
     /// The board's line under the pile, word for word (see
     /// `ColumnView.moreLabel`): "noch nicht fällig" when the fold is purely
     /// a later, "weitere" when the pile is merely long, "ältere" for
-    /// Erledigt. Same form too — centred, bare text, a chevron that turns,
-    /// hover lifts it to primary and nothing else. In a panel of left-aligned
-    /// rows this is the one line that steps out of the column, and that is
-    /// what tells it apart from a ticket: no dot, no glass under the pointer.
+    /// Erledigt. Bare text, a chevron that turns, hover lifts it to primary
+    /// and nothing else — what tells it apart from a ticket is what it lacks:
+    /// no dot in the glyph field, no glass under the pointer.
     private var foldLine: some View {
         TrayFoldLine(label: foldLabel, expanded: expanded) {
             expanded.toggle()
@@ -654,10 +653,17 @@ private struct TrayRow: View {
 }
 
 /// The board's fold line, in the panel: `ColumnView.moreButton` at menu
-/// size. Centred under the pile, bare text one weight up, a chevron that
-/// turns, secondary until the pointer lifts it — no glass, because glass is
-/// what a *row* does under the pointer, and this is the one line that is
-/// not one.
+/// size. Bare text one weight up, a chevron that turns, secondary until the
+/// pointer lifts it — no glass, because glass is what a *row* does under the
+/// pointer, and this is the one line that is not one. In the rows' column
+/// rather than centred as on the board, with the chevron in the glyph field
+/// like the capture's plus: in a panel where every line starts at the left,
+/// a centred one read as misplaced (12.09.2026, user).
+///
+/// One view through both states, unlike the board's two: the board swaps
+/// the line so it dissolves instead of racing down the lane, but here the
+/// pointer is usually still on the line when it swaps, and the new view
+/// never received the hover's end — it stayed lifted and read as bold.
 private struct TrayFoldLine: View {
     let label: String
     let expanded: Bool
@@ -666,28 +672,32 @@ private struct TrayFoldLine: View {
     @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: Board.traySymbolGap) {
+            // The chevron where a row keeps its dot and the capture its
+            // plus: the glyph field names the kind of line, and this one
+            // is the fold. Trailing, it stood alone at the end of a short
+            // label and read as misaligned against "Neue Aufgabe"
+            // (12.09.2026, user).
+            Image(systemName: "chevron.down")
+                .font(BoardText.glyph)
+                .rotationEffect(.degrees(expanded ? -180 : 0))
+                .frame(width: Board.trayRowGlyphSlot)
             Text(label)
                 .font(BoardText.trayRow)
                 .fontWeight(.medium)
                 .monospacedDigit()
-            Image(systemName: "chevron.down")
-                .font(BoardText.glyph)
-                .rotationEffect(.degrees(expanded ? -180 : 0))
+                .contentTransition(.numericText())
         }
         .foregroundStyle(isHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 5)
+        .padding(.leading, Board.trayRowIndent)
+        .padding(.horizontal, Board.trayRowInset)
+        .frame(height: Board.trayRowHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) { isHovered = hovering }
         }
         .onTapGesture(perform: action)
-        // Like the board's: the collapsed and the expanded line are two
-        // views — one fades where it stands, the other fades in where it
-        // belongs, and nothing races across the panel in between.
-        .id(expanded)
-        .transition(.opacity)
         .accessibilityAddTraits(.isButton)
     }
 }

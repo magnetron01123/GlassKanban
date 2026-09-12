@@ -246,11 +246,22 @@ final class MenuBarTrayController: NSObject {
         localClickMonitor = NSEvent.addLocalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown]
         ) { [weak self] event in
-            if event.window !== self?.panel {
+            // Not for a click on the status item itself: that one reaches
+            // `toggle()` right after this, and a close here would turn it
+            // into close-then-open — the item could never shut the panel
+            // (12.09.2026, user).
+            if event.window !== self?.panel, !Self.isStatusBarWindow(event.window) {
                 Task { @MainActor in self?.close() }
             }
             return event
         }
+    }
+
+    /// The status bar's own windows — the item's button lives in one per
+    /// display, so the class is checked rather than one window identity.
+    private static func isStatusBarWindow(_ window: NSWindow?) -> Bool {
+        guard let window else { return false }
+        return String(describing: type(of: window)).contains("StatusBar")
     }
 
     private func stopWatchingForClicksOutside() {
