@@ -19,12 +19,57 @@ final class MenuBarTrayTests: XCTestCase {
         XCTAssertEqual(MenuBarTray.rowCap(for: .done), MenuBarTray.doneRowCap)
     }
 
-    /// The Backlog has no cap: opened, it shows every card it holds and
-    /// scrolls in place. A "13 more" under a section that exists to be
-    /// pulled from would hide exactly the cards one pulls (12.09.2026, user).
-    func testTheBacklogShowsEverything() {
-        XCTAssertNil(MenuBarTray.rowCap(for: .backlog))
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: 40, in: .backlog), 0)
+    /// The Backlog rests at eight — the board's fifteen would be half the
+    /// screen in a panel — and shows the rest behind the board's own line.
+    func testTheBacklogRestsAtItsOwnCap() {
+        XCTAssertEqual(MenuBarTray.rowCap(for: .backlog), MenuBarTray.backlogRowCap)
+        XCTAssertEqual(MenuBarTray.backlogRowCap, 8)
+    }
+
+    // MARK: - What rests, what folds
+
+    private let calendar = Calendar(identifier: .gregorian)
+    private var now: Date { calendar.date(from: DateComponents(year: 2026, month: 9, day: 12))! }
+
+    private func card(_ title: String, due: Date? = nil, recurring: Bool = false,
+                      status: KanbanStatus = .backlog) -> KanbanCard {
+        KanbanCard(
+            id: title, title: title, notesPreview: "", notesExcerpt: "", dueDate: due,
+            priority: 0, status: status, listID: "l", listName: "L", listColor: .accentColor,
+            completionDate: nil, isRecurring: recurring, lastModifiedDate: nil, creationDate: nil)
+    }
+
+    /// The Backlog folds exactly as the board does: a recurring card whose
+    /// turn has not come rests behind the line, here as there.
+    func testTheBacklogFoldsNotYetDueCardsLikeTheBoard() {
+        let later = calendar.date(byAdding: .day, value: 10, to: now)!
+        let cards = [card("ripe"), card("chore", due: later, recurring: true)]
+        let resting = MenuBarTray.restingRows(
+            cards, in: .backlog, foldsNotYetDue: true, calendar: calendar, now: now)
+        XCTAssertEqual(resting.map(\.title), ["ripe"])
+        // The same preference as the board's switches the cut off.
+        let all = MenuBarTray.restingRows(
+            cards, in: .backlog, foldsNotYetDue: false, calendar: calendar, now: now)
+        XCTAssertEqual(all.count, 2)
+    }
+
+    /// Past the cap the pile folds regardless of ripeness.
+    func testTheBacklogCapFoldsARipePile() {
+        let cards = (0..<12).map { card("c\($0)") }
+        let resting = MenuBarTray.restingRows(
+            cards, in: .backlog, foldsNotYetDue: true, calendar: calendar, now: now)
+        XCTAssertEqual(resting.count, MenuBarTray.backlogRowCap)
+    }
+
+    /// The other sections rest at their first rows, nothing more subtle.
+    func testTheOtherSectionsRestAtTheirFirstRows() {
+        let cards = (0..<10).map { card("c\($0)", status: .next) }
+        XCTAssertEqual(
+            MenuBarTray.restingRows(cards, in: .next, foldsNotYetDue: true).count, MenuBarTray.rowCap)
+        XCTAssertEqual(
+            MenuBarTray.restingRows(cards, in: .done, foldsNotYetDue: true).count, MenuBarTray.doneRowCap)
+        XCTAssertEqual(
+            MenuBarTray.restingRows(Array(cards.prefix(2)), in: .inProgress, foldsNotYetDue: true).count, 2)
     }
 
     // MARK: - The stage symbols
@@ -91,15 +136,6 @@ final class MenuBarTrayTests: XCTestCase {
         XCTAssertTrue(MenuBarTray.offersQuit(.menuBar))
         XCTAssertFalse(MenuBarTray.offersQuit(.dock))
         XCTAssertFalse(MenuBarTray.offersQuit(.both))
-    }
-
-    /// Whatever the cap keeps out is counted, never just dropped.
-    func testRowsBeyondTheCapAreCounted() {
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: 0, in: .next), 0)
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: MenuBarTray.rowCap, in: .next), 0)
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: MenuBarTray.rowCap + 1, in: .next), 1)
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: 20, in: .inProgress), 20 - MenuBarTray.rowCap)
-        XCTAssertEqual(MenuBarTray.hiddenRows(total: 5, in: .done), 5 - MenuBarTray.doneRowCap)
     }
 
     /// A question that is still standing holds the tray. Nothing else may

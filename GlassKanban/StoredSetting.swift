@@ -40,8 +40,6 @@ enum StoredSetting: String, CaseIterable {
     case presence = "appPresence"
     /// The global key combination that opens the menu bar panel.
     case trayShortcut
-    /// Whether the panel's Backlog section is unfolded. Off by default.
-    case trayBacklogExpanded
     /// Which values this board overwrote, so it can recognise its own echo.
     case correctionLedger
     /// Which recurring series have spent their pull.
@@ -84,8 +82,6 @@ enum StoredSetting: String, CaseIterable {
         // would arrive as a shortcut that silently does nothing — a sync that
         // breaks the setting it carries.
         case .trayShortcut: .thisDevice
-        // A fold in a panel is where this desk left it, not a policy.
-        case .trayBacklogExpanded: .thisDevice
 
         // Brightness is a property of the room and the screen, not of the user.
         case .appearance: .thisDevice

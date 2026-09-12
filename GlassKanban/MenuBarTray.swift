@@ -18,23 +18,41 @@ enum MenuBarTray {
     /// is the small, safe reward; six was a list.
     static let doneRowCap = 3
 
-    /// `nil` for the Backlog: it shows everything it holds (12.09.2026,
-    /// user) and scrolls in place beyond `Board.trayBacklogVisibleRows`
-    /// instead of cutting off. The working sections keep their cap — they
-    /// are meant to be short, and a long one is the board's problem to show.
-    static func rowCap(for status: KanbanStatus) -> Int? {
+    /// The Backlog's resting cap. Eight rather than the board's fifteen,
+    /// because the panel has a fraction of the height — the same kind of
+    /// difference as Erledigt's three rows against the board's seven days.
+    static let backlogRowCap = 8
+
+    static func rowCap(for status: KanbanStatus) -> Int {
         switch status {
-        case .backlog: nil
+        case .backlog: backlogRowCap
         case .done: doneRowCap
         case .next, .inProgress: rowCap
         }
     }
 
-    /// How many rows of a section the cap keeps out — the number the last
-    /// row names, so nothing is hidden without being counted.
-    static func hiddenRows(total: Int, in status: KanbanStatus) -> Int {
-        guard let cap = rowCap(for: status) else { return 0 }
-        return max(0, total - cap)
+    /// The rows a section shows at rest — the board's own fold rules, at
+    /// the panel's caps. The Backlog cuts exactly as `BacklogFold` does
+    /// (not-yet-due first, then the cap), so a card resting behind the fold
+    /// on the board rests behind it here too; every other section is simply
+    /// its first rows. What is not at rest is never gone: the line under the
+    /// pile brings it in, with the board's words (12.09.2026, user:
+    /// consistency between panel and app over a fold of the panel's own).
+    static func restingRows(
+        _ cards: [KanbanCard],
+        in status: KanbanStatus,
+        foldsNotYetDue: Bool,
+        calendar: Calendar = .current,
+        now: Date = .now
+    ) -> [KanbanCard] {
+        switch status {
+        case .backlog:
+            BacklogFold.restingCut(
+                cards, limit: backlogRowCap, foldsNotYetDue: foldsNotYetDue,
+                calendar: calendar, now: now)
+        case .next, .inProgress, .done:
+            Array(cards.prefix(rowCap(for: status)))
+        }
     }
 
     /// Whether the footer offers Quit: only when there is no Dock icon to

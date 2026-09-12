@@ -49,7 +49,6 @@ PLURAL_EXEMPT = {
     "%lld of them not yet due": "'1 of them not yet due' reads correctly",
     "%lld of %lld": "bare ratio, no noun to inflect",
     "%lld of %lld cards": "the noun follows the limit, which is never 1 in practice",
-    "%lld more": "'1 more' / '1 weitere' read correctly; the noun is the row above",
     "Board is filtered — %lld active (⌘F)": "no noun to inflect",
     "In this column for %lld days": "only shown from agingThresholdDays (3) upwards",
     "Last %lld Days": "fixed window, WrappedStats.trendWindowDays == 30",

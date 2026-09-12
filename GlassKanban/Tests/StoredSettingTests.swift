@@ -21,7 +21,6 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.appearance.key, "appAppearance")
         XCTAssertEqual(StoredSetting.presence.key, "appPresence")
         XCTAssertEqual(StoredSetting.trayShortcut.key, "trayShortcut")
-        XCTAssertEqual(StoredSetting.trayBacklogExpanded.key, "trayBacklogExpanded")
         XCTAssertEqual(StoredSetting.correctionLedger.key, "correctionLedger")
         XCTAssertEqual(StoredSetting.tagReleaseMemory.key, "tagReleaseMemory")
         XCTAssertEqual(StoredSetting.columnStorageLocation.key, "columnStorageLocation")
@@ -60,7 +59,6 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.excludedCalendars.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.presence.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.trayShortcut.scope, .thisDevice)
-        XCTAssertEqual(StoredSetting.trayBacklogExpanded.scope, .thisDevice)
     }
 
     /// The storage breadcrumbs describe *this* Mac's sandbox. Travelling, they

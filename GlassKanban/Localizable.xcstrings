@@ -232,23 +232,6 @@
         }
       }
     },
-    "%lld more": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld weitere"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld more"
-          }
-        }
-      }
-    },
     "%lld not yet due": {
       "extractionState": "manual",
       "localizations": {
@@ -829,23 +812,6 @@
         }
       }
     },
-    "Collapsed": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zugeklappt"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Collapsed"
-          }
-        }
-      }
-    },
     "Couldn't Start at Login": {
       "extractionState": "manual",
       "localizations": {
@@ -1063,23 +1029,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit"
-          }
-        }
-      }
-    },
-    "Expanded": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aufgeklappt"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expanded"
           }
         }
       }

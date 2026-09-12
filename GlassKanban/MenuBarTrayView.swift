@@ -344,14 +344,10 @@ private struct TraySection: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isTargeted = false
-    @State private var isHeadHovered = false
-    /// The one fold in the panel. Shut by default: the Backlog is the long
-    /// section, and the panel opens for the short ones. Remembered per
-    /// machine (`StoredSetting.trayBacklogExpanded`).
-    @AppStorage(StoredSetting.trayBacklogExpanded.key) private var isBacklogExpanded = false
-
-    private var isCollapsible: Bool { status == .backlog }
-    private var isExpanded: Bool { !isCollapsible || isBacklogExpanded }
+    /// Whether the fold under this section is open. Per session, as on the
+    /// board: the panel opens at rest every time (see the notification
+    /// below), the way the board launches folded.
+    @State private var expanded = false
 
     /// Unfiltered, always: the tray has no find control, no badge and no
     /// empty notice to explain why a card is missing (see
@@ -363,13 +359,13 @@ private struct TraySection: View {
         return status == .done ? DoneWindow.recent(all) : all
     }
 
-    /// What is drawn. Beyond the cap the head counts on and a last row says
-    /// how many are not here — a scroll area under a drag is trouble without
-    /// a benefit.
-    private var shownCards: [KanbanCard] {
-        MenuBarTray.rowCap(for: status).map { Array(cards.prefix($0)) } ?? cards
+    /// At rest, by the board's rules at the panel's caps.
+    private var restingCards: [KanbanCard] {
+        MenuBarTray.restingRows(cards, in: status, foldsNotYetDue: store.foldNotYetDue)
     }
-    private var hiddenRows: Int { MenuBarTray.hiddenRows(total: cards.count, in: status) }
+    private var shownCards: [KanbanCard] { expanded ? cards : restingCards }
+    private var foldedCards: [KanbanCard] { Array(cards.dropFirst(restingCards.count)) }
+    private var foldedCount: Int { foldedCards.count }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
     private var isOverLimit: Bool { wipLimit.map { cards.count > $0 } ?? false }
@@ -388,19 +384,23 @@ private struct TraySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
-            if isExpanded {
-                rows
-            }
-            // The capture belongs to the Backlog and stays reachable folded or
-            // not — it is the reason the panel is worth opening from another
-            // app at all.
+            // The capture first, right under the head: a fixed place to type
+            // into from another app, whatever the length of the pile below.
+            // The count above it is the receipt.
             if status == .backlog {
                 BacklogCaptureRow()
+            }
+            rows
+            if foldedCount > 0 {
+                foldLine
             }
             // Nothing else under a head without rows: an empty section is its
             // head, and the head is the drop target then.
         }
-        .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: isBacklogExpanded)
+        .animation(reduceMotion ? nil : Board.foldAnimation, value: expanded)
+        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayWillOpen)) { _ in
+            expanded = false
+        }
         .padding(.horizontal, Board.trayPadding)
         // The drop target is the whole section, tinted the way a menu row
         // lights up — not a dashed card outline, which was the board's.
@@ -437,30 +437,45 @@ private struct TraySection: View {
         .accessibilityLabel("\(status.displayName), \(countHelp)")
     }
 
-    /// The rows of an open section. The Backlog shows all of them and, past
-    /// `Board.trayBacklogVisibleRows`, scrolls in place — its height is
-    /// computed from the count, not measured, so the panel still knows its
-    /// size before it is placed (see `MenuBarTrayController.open`).
+    /// The rows. Unfolded past `Board.traySectionScrollRows` they scroll in
+    /// place — the height is computed from the count, not measured, so the
+    /// panel still knows its size before it is placed.
     @ViewBuilder
     private var rows: some View {
-        if status == .backlog, cards.count > Board.trayBacklogVisibleRows {
+        if expanded, cards.count > Board.traySectionScrollRows {
             ScrollView(.vertical) {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     ForEach(cards) { card in row(for: card) }
                 }
             }
-            .frame(height: CGFloat(Board.trayBacklogVisibleRows) * Board.trayRowHeight)
+            .frame(height: CGFloat(Board.traySectionScrollRows) * Board.trayRowHeight)
         } else {
             ForEach(shownCards) { card in row(for: card) }
-            if hiddenRows > 0 {
-                moreRow
-            }
         }
     }
 
-    private func toggleFold() {
-        guard isCollapsible else { return }
-        isBacklogExpanded.toggle()
+    /// The board's line under the pile, word for word (see
+    /// `ColumnView.moreLabel`): "noch nicht fällig" when the fold is purely
+    /// a later, "weitere" when the pile is merely long, "ältere" for
+    /// Erledigt. Same form too — centred, bare text, a chevron that turns,
+    /// hover lifts it to primary and nothing else. In a panel of left-aligned
+    /// rows this is the one line that steps out of the column, and that is
+    /// what tells it apart from a ticket: no dot, no glass under the pointer.
+    private var foldLine: some View {
+        TrayFoldLine(label: foldLabel, expanded: expanded) {
+            expanded.toggle()
+        }
+    }
+
+    private var foldLabel: String {
+        switch (status, expanded) {
+        case (.done, false): String(localized: "Show \(foldedCount) older")
+        case (.done, true): String(localized: "Hide older")
+        case (_, false) where BacklogFold.canNameNotYetDue(folded: foldedCards):
+            String(localized: "\(foldedCount) not yet due")
+        case (_, false): String(localized: "Show \(foldedCount) more")
+        case (_, true): String(localized: "Show less")
+        }
     }
 
     /// Rows, with the three move routes the board offers — drag, the
@@ -519,12 +534,6 @@ private struct TraySection: View {
         store.openInReminders(cardID: card.id)
     }
 
-    /// The rows the cap keeps out, named in one quiet line. A click opens
-    /// the board, where all of them are.
-    private var moreRow: some View {
-        TrayActionRow(title: String(localized: "\(hiddenRows) more"), quiet: true) { openBoard(nil) }
-    }
-
     // MARK: - Head
 
     /// A menu's section head: the name and one number, both secondary. The
@@ -549,34 +558,13 @@ private struct TraySection: View {
                 }
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 .accessibilityValue(countHelp)
-            // The fold's chevron, in a slot every head keeps free so the
-            // counts stand in one column across all four.
-            if isCollapsible {
-                Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                    .font(BoardText.glyph)
-                    .frame(width: Board.trayHeadTrailingSlot, alignment: .trailing)
-                    .accessibilityHidden(true)
-            } else {
-                Color.clear.frame(width: Board.trayHeadTrailingSlot, height: 1)
-            }
         }
         .font(BoardText.chip)
         .foregroundStyle(.secondary)
         .padding(.horizontal, Board.trayRowInset)
         .padding(.top, 4)
         .padding(.bottom, 2)
-        // Only the head that does something lights up under the pointer.
-        .background {
-            if isCollapsible && isHeadHovered {
-                Color.clear.glassEffect(.regular, in: Board.trayRowShape)
-            }
-        }
-        .contentShape(Rectangle())
-        .onHover { if isCollapsible { isHeadHovered = $0 } }
-        .onTapGesture(perform: toggleFold)
         .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(isCollapsible ? .isButton : [])
-        .accessibilityValue(isCollapsible ? Text(isExpanded ? "Expanded" : "Collapsed") : Text(""))
     }
 
     /// The count always tells the whole truth, even where a row is not drawn.
@@ -666,6 +654,45 @@ private struct TrayRow: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(CardParts.accessibilityLabel(for: card))
         .accessibilityHint(Text("Click to edit"))
+    }
+}
+
+/// The board's fold line, in the panel: `ColumnView.moreButton` at menu
+/// size. Centred under the pile, bare text one weight up, a chevron that
+/// turns, secondary until the pointer lifts it — no glass, because glass is
+/// what a *row* does under the pointer, and this is the one line that is
+/// not one.
+private struct TrayFoldLine: View {
+    let label: String
+    let expanded: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Text(label)
+                .font(BoardText.trayRow)
+                .fontWeight(.medium)
+                .monospacedDigit()
+            Image(systemName: "chevron.down")
+                .font(BoardText.glyph)
+                .rotationEffect(.degrees(expanded ? -180 : 0))
+        }
+        .foregroundStyle(isHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 5)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) { isHovered = hovering }
+        }
+        .onTapGesture(perform: action)
+        // Like the board's: the collapsed and the expanded line are two
+        // views — one fades where it stands, the other fades in where it
+        // belongs, and nothing races across the panel in between.
+        .id(expanded)
+        .transition(.opacity)
+        .accessibilityAddTraits(.isButton)
     }
 }
 

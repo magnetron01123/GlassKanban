@@ -900,8 +900,9 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 | Verweildauer | ab 3 Tagen auf jeder Karte der Arbeitsspuren, mit Uhr-Glyph | nur in „In Bearbeitung", ab derselben Schwelle, als bloße Zahl rechts vor dem Badge. Auf den anderen Abschnitten wäre sie eine Zahl ohne Frage |
 | Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach" | „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
 | Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
-| Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | 7 Tage; die Arbeitsspuren zeigen höchstens 6 Zeilen, Erledigt höchstens 3 (Bestätigung, keine Liste); eine letzte Zeile „N weitere" öffnet das Board |
-| Backlog | eigene Spur mit Falz | **ein Abschnitt wie die anderen, mit Falz am Kopf** (12.09.2026): Vorgabe zugeklappt — dann nur Kopf mit Zahl, Chevron und der Zeile „Neue Aufgabe". Aufgeklappt zeigt er **alle** Karten in Board-Reihenfolge, ab 8 Zeilen scrollt der Abschnitt in sich (das Panel darf „Erledigt" nicht vom Bildschirm schieben). Der Zustand bleibt pro Rechner gemerkt (`trayBacklogExpanded`). Zwischenstufen vom selben Tag — Kopf allein, Kopf mit Zeile „Auf dem Board" — waren ein Flicken über der fehlenden Pull-Quelle (BACKLOG.md) |
+| Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | in Ruhe die letzten 3 (Bestätigung, keine Liste), die Falz-Zeile öffnet das 7-Tage-Fenster |
+| Backlog | eigene Spur mit Falz-Zeile | **ein Abschnitt wie die anderen, mit der Falz-Zeile des Boards** (12.09.2026): in Ruhe schneidet er wie `BacklogFold` — erst die noch nicht fälligen weg (dieselbe Einstellung „Noch nicht Fälliges einklappen"), dann der Deckel, hier 8 statt 15. Darunter die Zeile des Boards, Wort für Wort: „N noch nicht fällig", „N weitere anzeigen", „Weniger anzeigen". Aufgeklappt alle Karten, ab 8 Zeilen scrollt der Abschnitt in sich. Zustand pro Sitzung wie auf dem Board; das Panel öffnet in Ruhe. Zuvor am selben Tag verworfen: Kopf allein, Kopf mit „Auf dem Board", Falz am Kopf mit gemerktem Zustand (BACKLOG.md) |
+| Falz-Zeile | zentriert unter dem Stapel, Text medium sekundär, Chevron dreht, Hover hebt auf primär, kein Glas | **identisch** — im Panel die eine Zeile, die aus der linken Spalte tritt, und ohne Punkt und Glas-Hover: genau das unterscheidet sie von einem Ticket. Gilt für alle vier Abschnitte: Als Nächstes und In Bearbeitung ab 6, Erledigt ab 3 („N ältere anzeigen" öffnet das 7-Tage-Fenster des Boards; die 30 Tage bleiben dem Board) |
 | Zugziele | alle drei anderen Spuren | alle drei anderen Abschnitte, Backlog eingeschlossen — Zurücklegen ist ein Kanban-Zug, und die Karte landet in einer Zahl, die man sieht |
 | Ablegeziel | gestrichelter Umriss in Kartenform | der ganze Abschnitt hebt sich als akzentgetöntes Glas, wie eine Menüzeile unter dem Zeiger |
 | WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen |
@@ -915,8 +916,8 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 nach", VoiceOver-Aktion. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
 wie auf dem Board. Das Zugbild ist eigens gezeichnet (Punkt und Titel auf eigenem Grund):
 ein Schnappschuss der Zeile zeigte nur den Punkt, weil vibranter Text außerhalb des Glases
-unsichtbar rendert. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte, „N weitere"
-öffnet es ohne — einen eigenen „Board öffnen"-Knopf gibt es nicht.
+unsichtbar rendert. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte — einen
+eigenen „Board öffnen"-Knopf gibt es nicht.
 Nur ohne Dock-Symbol steht unten „Glass Kanban beenden" als Menüzeile.
 
 **Die WIP-Frage steht im Tablett, nicht auf dem Board.** Ein Alert nimmt den Fokus, und
@@ -928,8 +929,9 @@ Tablett geschlossen, steht die Frage beim nächsten Öffnen wieder da: Sie wird 
 zugelassen noch still zurückgelegt. Der Zustand ist unterdessen sichtbar — die Zahl im
 Kopf trägt die teale Kapsel, im Tablett wie auf dem Board.
 
-**Schnellerfassung ins Backlog.** Als letzte Zeile des Backlog-Abschnitts — zugeklappt
-wie aufgeklappt — steht „Neue Aufgabe" mit einem `plus` im Glyphenfeld. Ein Klick macht sie zum Textfeld,
+**Schnellerfassung ins Backlog.** Als erste Zeile des Backlog-Abschnitts, direkt unter
+dem Kopf, steht „Neue Aufgabe" mit einem `plus` im Glyphenfeld — eine feste Stelle, egal
+wie lang der Stapel darunter ist. Ein Klick macht sie zum Textfeld,
 und getippt wird, ohne dass die App nach vorn kommt (gemessen 12.09.2026: ein Textfeld im
 nicht aktivierenden Panel bekommt den Fokus und die Tasten, während eine andere App aktiv
 bleibt). Return legt ein Ticket im Backlog an — dieselbe Liste wie das „+" wählt

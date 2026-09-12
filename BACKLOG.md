@@ -422,11 +422,15 @@ einen Rückbau schützen.
   Zeilen las sich als leerer Abschnitt mit „+"; eine Zeile „Auf dem Board" darunter war
   ein Flicken, der auf das Fehlende zeigte — dreifach dieselbe Tür (Chevron, Klick,
   Zeile), und die Pull-Kette blieb unvollständig. Abgewogen: Abschnitt mit Deckel 3;
-  reiner Kopf; Kopf als Ablegeziel; Falz am Kopf. **Entschieden: Falz, Vorgabe zu,
-  aufgeklappt alle Karten** — nicht die obersten drei, weil ein „13 weitere" genau die
-  Karten verstecken würde, aus denen man zieht. Der Preis (Höhe) ist per Falz vom Nutzer
-  gedeckelt, darüber hinaus scrollt der Abschnitt. Damit ist auch das Zurücklegen ins
-  Backlog erlaubt.
+  reiner Kopf; Kopf als Ablegeziel; Falz am Kopf. Zunächst gebaut: Falz am Kopf,
+  Vorgabe zu, gemerkt. **Noch am selben Tag ersetzt (Nutzer: Konsistenz zwischen Menü und
+  App wiegt schwerer als eine eigene Falz):** Alle vier Abschnitte stehen offen und falten
+  wie die Spalten des Boards — dieselbe Schnittregel (`BacklogFold`), dieselben Wörter,
+  dieselbe zentrierte Zeile unter dem Stapel, Zustand pro Sitzung. Das Board hat die Zeile
+  schon; ein zweites Ausklapp-Muster im Panel wäre ein zweites Vokabular. Aufgeklappt
+  zeigt ein Abschnitt alles und scrollt ab 8 Zeilen in sich. Die gemerkte Einstellung
+  `trayBacklogExpanded` lebte einen Tag und ist wieder entfernt. Zurücklegen ins Backlog
+  ist erlaubt.
   **Was die drei Messungen ergaben (12.09.2026, Protokoll im Bauplan):** Ein Textfeld im
   nicht aktivierenden Panel nimmt Fokus und Tastatur an, während eine andere App aktiv
   bleibt — die Erfassung brauchte keine Aktivierungs-Weiche. `RegisterEventHotKey` feuert
@@ -659,7 +663,6 @@ Abweichung gilt der Code.
 | `completionSoundEnabled` | UserDefaults | lokal — Kopfhörer am Laptop |
 | `appPresence` (Dock/Menüleiste/beides, umgesetzt 08.09.2026) | UserDefaults | lokal — wo die App sichtbar ist, gehört dem Rechner |
 | `trayShortcut` (Kurzbefehl fürs Panel, umgesetzt 12.09.2026) | UserDefaults | lokal — die Tastatur gehört dem Schreibtisch, und ein Kürzel, das auf dem anderen Mac mit einer dortigen App kollidiert, wäre ein Sync-Schaden |
-| `trayBacklogExpanded` (Falz im Panel, 12.09.2026) | UserDefaults | lokal — wo dieser Schreibtisch den Falz gelassen hat, keine Regel |
 | `correctionLedger` | UserDefaults | **strikt lokal** |
 | `tagReleaseMemory` | UserDefaults | strikt lokal |
 | `pendingTagCleanup` | columns.json | lokal — Arbeitsliste dieses Prozesses |
