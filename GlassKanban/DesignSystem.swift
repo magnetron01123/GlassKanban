@@ -78,6 +78,9 @@ enum Board {
     /// One menu row. The system's own menu rows are 22–24pt; two more for
     /// a target that is dragged onto, not just clicked.
     static let trayRowHeight: CGFloat = 26
+    /// Room a head keeps at its trailing end for the chevron — in *every*
+    /// head, so the counts stand in one column; only the Backlog fills it.
+    static let trayHeadTrailingSlot: CGFloat = 10
     /// The list's colour as a dot in front of the title — the one piece of
     /// context a glance uses, in the smallest form that still reads.
     static let trayDotSize: CGFloat = 7

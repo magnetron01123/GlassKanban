@@ -194,9 +194,11 @@ private struct BacklogHead: View {
                 .contentTransition(.numericText())
             // The one head that leads somewhere says so, with the system's
             // own sign for it. Without it, this head looked exactly like an
-            // empty section's — and only the hover told them apart.
+            // empty section's — and only the hover told them apart. It sits
+            // in the slot every head keeps free, so the counts stay in line.
             Image(systemName: "chevron.right")
                 .font(BoardText.glyph)
+                .frame(width: Board.trayHeadTrailingSlot, alignment: .trailing)
                 .accessibilityHidden(true)
         }
         .font(BoardText.chip)
@@ -381,6 +383,9 @@ private struct TraySection: View {
                 }
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 .accessibilityValue(countHelp)
+            // The Backlog head's chevron slot, kept empty: one column of
+            // counts across all four heads.
+            Color.clear.frame(width: Board.trayHeadTrailingSlot, height: 1)
         }
         .font(BoardText.chip)
         .foregroundStyle(.secondary)

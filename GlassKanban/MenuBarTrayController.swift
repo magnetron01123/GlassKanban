@@ -119,6 +119,9 @@ final class MenuBarTrayController: NSObject {
         position(panel)
         panel.orderFrontRegardless()
         panel.makeKey()
+        // The shadow is cached against whatever outline the window had
+        // before its first display; redone once the glass has drawn.
+        DispatchQueue.main.async { panel.invalidateShadow() }
         startWatchingForClicksOutside()
     }
 
@@ -249,7 +252,22 @@ private final class TrayGlassController: NSViewController {
         glass.cornerRadius = Board.trayRadius
         glass.contentView = hosting.view
         addChild(hosting)
-        view = glass
+        // A masked container around the glass, not the glass itself as the
+        // window's content view. Seen 12.09.2026: the glass rounded its
+        // fill, but the window still carried a square outline at the top
+        // corners — a rectangular shadow contour behind the round edge. The
+        // mask makes everything outside the radius transparent, and the
+        // window shadow follows the shape that is left.
+        let container = NSView()
+        container.wantsLayer = true
+        container.layer?.cornerRadius = Board.trayRadius
+        container.layer?.cornerCurve = .continuous
+        container.layer?.masksToBounds = true
+        container.layer?.backgroundColor = .clear
+        glass.frame = container.bounds
+        glass.autoresizingMask = [.width, .height]
+        container.addSubview(glass)
+        view = container
         preferredContentSize = hosting.view.fittingSize
     }
 
