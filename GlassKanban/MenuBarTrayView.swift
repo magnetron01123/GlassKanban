@@ -73,9 +73,17 @@ struct MenuBarTrayView: View {
             // The head and the capture belong together — one group, no air
             // between them: what is typed here lands in the count above.
             VStack(alignment: .leading, spacing: 0) {
-                BacklogHead(
-                    count: store.cards(for: .backlog, applyingFilters: false).count,
-                    openBoard: { openBoard(nil) })
+                let backlogCount = store.cards(for: .backlog, applyingFilters: false).count
+                BacklogHead(count: backlogCount, openBoard: { openBoard(nil) })
+                // Where the rows are. With only the capture line under it,
+                // the head read as an empty section that happened to offer
+                // a "+" (12.09.2026, user) — the same quiet row the other
+                // sections use for what the cap keeps out says here that
+                // the Backlog is full and lives on the board. Left out when
+                // there is nothing, because then that reading is right.
+                if backlogCount > 0 {
+                    TrayActionRow(title: String(localized: "On the board"), quiet: true) { openBoard(nil) }
+                }
                 BacklogCaptureRow()
             }
             ForEach(Self.lanes) { status in
@@ -493,7 +501,7 @@ private struct TraySection: View {
         TrayRow(card: card)
             .contentShape(.dragPreview, Board.trayRowShape)
             .onTapGesture { openBoard(card.id) }
-            .modifier(TrayDraggable(cardID: card.id, enabled: movable))
+            .modifier(TrayDraggable(card: card, enabled: movable))
             .contextMenu {
                 // Offered on every row, Erledigt included — the one thing a
                 // finished card still has to say is what it was, and
@@ -763,15 +771,46 @@ private struct OverflowQuestionRow: View {
 /// a drag that ends nowhere leaves no half state behind (SPEC.md, "Was das
 /// Board gegen sich selbst absichert").
 private struct TrayDraggable: ViewModifier {
-    let cardID: String
+    let card: KanbanCard
     let enabled: Bool
 
     func body(content: Content) -> some View {
         if enabled {
-            content.draggable(cardID)
+            // With an explicit preview. The default one is a snapshot of
+            // the row — and the row's text is vibrant text *in* the glass,
+            // which renders as nothing once it is lifted out of it: the
+            // user dragged a bare coloured dot across the screen (seen
+            // 12.09.2026). The preview below is drawn plain, on a solid
+            // ground, with an ordinary label colour.
+            content.draggable(card.id) { TrayDragPreview(card: card) }
         } else {
             content
         }
+    }
+}
+
+/// What travels under the pointer: the row again, but on paper of its own —
+/// nothing vibrant, nothing that needs a material behind it to be visible.
+private struct TrayDragPreview: View {
+    let card: KanbanCard
+
+    var body: some View {
+        HStack(spacing: Board.traySymbolGap) {
+            Circle()
+                .fill(CardParts.stripeColor(of: card).opacity(0.9))
+                .frame(width: Board.trayDotSize, height: Board.trayDotSize)
+                .frame(width: Board.trayRowGlyphSlot)
+            CardParts.titleText(for: card)
+                .font(BoardText.trayRow)
+                .lineLimit(1)
+        }
+        .foregroundStyle(Color(nsColor: .labelColor))
+        .padding(.horizontal, Board.trayRowInset)
+        .frame(height: Board.trayRowHeight)
+        .frame(maxWidth: Board.trayWidth - 2 * Board.trayPadding, alignment: .leading)
+        .fixedSize(horizontal: true, vertical: false)
+        .background(Board.trayRowShape.fill(Color(nsColor: .windowBackgroundColor)))
+        .overlay(Board.trayRowShape.strokeBorder(Color(nsColor: .separatorColor)))
     }
 }
 
