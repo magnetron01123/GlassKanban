@@ -183,12 +183,15 @@ final class MenuBarTrayController: NSObject {
     /// on, clamped so it never runs off the edge.
     private func position(_ panel: NSPanel) {
         guard let anchor else { return }
+        // Flush against the menu bar, like every menu the system opens
+        // from it — no gap (12.09.2026). The clearance token only keeps the
+        // panel off the screen's side edges.
         var origin = NSPoint(
             x: anchor.midX - panel.frame.width / 2,
-            y: anchor.menuBarBottom - panel.frame.height - Board.trayGap)
+            y: anchor.menuBarBottom - panel.frame.height)
         let visible = anchor.screen.visibleFrame
-        origin.x = min(max(origin.x, visible.minX + Board.trayGap),
-                       visible.maxX - panel.frame.width - Board.trayGap)
+        origin.x = min(max(origin.x, visible.minX + Board.trayEdgeClearance),
+                       visible.maxX - panel.frame.width - Board.trayEdgeClearance)
         panel.setFrameOrigin(origin)
     }
 

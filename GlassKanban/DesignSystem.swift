@@ -60,9 +60,9 @@ enum Board {
     /// is opened to finish something, and "Romina bei Live Akt…" is not a
     /// thing one can finish. The width of the system's own panels.
     static let trayWidth: CGFloat = 340
-    /// Air between the tray and the menu bar it hangs from, and its minimum
-    /// clearance from a screen edge.
-    static let trayGap: CGFloat = 8
+    /// The tray's minimum clearance from a screen's side edge. Against the
+    /// menu bar it sits flush, like every menu that opens from there.
+    static let trayEdgeClearance: CGFloat = 8
     /// The panel's inner margin, like a menu's — rows and their hover
     /// highlight sit this far in from the glass edge.
     static let trayPadding: CGFloat = 8
