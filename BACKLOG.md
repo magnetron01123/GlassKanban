@@ -396,6 +396,30 @@ einen Rückbau schützen.
   Nächstes" gespeist wird). Das gebaute Verhalten steht in SPEC.md („Menüleiste: das
   Tablett").
 
+  **Ergänzungen, entschieden am 12.09.2026 (Nutzer) — Bauplan
+  `plans/menubar-panel-erweiterungen.md`:** Das Panel hat sich als Hand bewährt (Zug und
+  Überblick); fünf Ergänzungen kommen dazu, alle nach dem Maßstab „was man tut, weil man
+  gerade in einer anderen App steckt":
+  1. **Symbole vor den Köpfen**, die die Stufe zeigen, nicht dekorieren — `tray`,
+     `circle`, `circle.lefthalf.filled`, `checkmark.circle`: der Eingang, dann drei
+     Kreise, die sich füllen. Systemvokabular, monochrom, sekundär. Das Board behält seine
+     Köpfe ohne Symbole: Dort erklärt die Spalte sich über die Karten darin; das Panel
+     ist abstrakt und braucht deshalb das Zeichen. Damit ist die Zeile „keine Icons an
+     Köpfen" vom 11.09. für das Panel zurückgenommen — für das Board gilt sie weiter.
+  2. **Verweildauer in „In Bearbeitung"** ab derselben Schwelle wie auf dem Board
+     (`agingThresholdDays`): das eine Signal, das beim Fertigwerden hilft.
+  3. **„In Erinnerungen öffnen"** im Kontextmenü, auch für Erledigt-Zeilen (die sonst
+     keins haben).
+  4. **Schnellerfassung ins Backlog** — eine Zeile unter dem Backlog-Kopf, Return legt an.
+     **Spannung, benannt:** Am 05.09. stand „kein Anlegen im Element". Das galt dem
+     Tablett als Board-Kopie, in dem Anlegen ein zweiter „+"-Knopf gewesen wäre. Für ein
+     Menüleisten-Panel ist Erfassen die natürlichste Handlung — der Gedanke kommt, während
+     man woanders arbeitet, und das Backlog ist genau der Ort dafür („Get it out of your
+     head"). Entschieden für die Erfassung; der Editor bleibt dem Board.
+  5. **Globaler Kurzbefehl** zum Öffnen, in den Einstellungen setzbar, Vorgabe leer.
+  Weiterhin nicht: Statistik, Streak, Suche, Filter, Tastaturnavigation über Zeilen, ein
+  Zustand am Symbol, eine Rückgängig-Zeile.
+
   **Spannung, bewusst offen (Minimalismus):** Menüleiste, Widget und Fenster wären drei
   Orte für dieselbe Sache. Nicht alle drei bauen — vor dem Widget entscheiden, ob die
   Menüleiste es ersetzt oder ergänzt. Der Unterschied liegt im Zug: Das Widget zeigt,
