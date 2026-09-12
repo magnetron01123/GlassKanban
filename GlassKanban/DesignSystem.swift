@@ -84,6 +84,14 @@ enum Board {
     /// The list's colour as a dot in front of the title — the one piece of
     /// context a glance uses, in the smallest form that still reads.
     static let trayDotSize: CGFloat = 7
+    /// The field in front of every name in the panel: the stage symbol in a
+    /// head, the list's dot in a row. One width for both, so head and title
+    /// start on the same x and the panel reads as one list rather than two
+    /// indentations.
+    static let traySymbolSlot: CGFloat = 16
+    /// From that field to the text. Tighter than the gap between the other
+    /// parts of a row: the symbol belongs to the word beside it.
+    static let traySymbolGap: CGFloat = 6
     /// The panel's corner: rounder than a menu, flatter than a Control Centre
     /// module — Liquid Glass reads rounder than the same material with a tight
     /// corner. The row highlight sits one step under it, per the nesting rule.
@@ -96,8 +104,9 @@ enum Board {
     static let trayDropTint: Double = 0.12
 
     /// A card only reports its dwell time once it has lingered this long —
-    /// below it, sitting in a column is simply normal.
-    static let agingThresholdDays = 3
+    /// below it, sitting in a column is simply normal. The number itself
+    /// lives on `KanbanCard`, where the panel's rule can also read it.
+    static let agingThresholdDays = KanbanCard.agingThresholdDays
 
     // Radii, stepped down with nesting depth so a card's corner never looks
     // wider than the lane holding it.

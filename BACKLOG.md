@@ -396,8 +396,9 @@ einen Rückbau schützen.
   Nächstes" gespeist wird). Das gebaute Verhalten steht in SPEC.md („Menüleiste: das
   Tablett").
 
-  **Ergänzungen, entschieden am 12.09.2026 (Nutzer) — Bauplan
-  `plans/menubar-panel-erweiterungen.md`:** Das Panel hat sich als Hand bewährt (Zug und
+  **Ergänzungen, entschieden und umgesetzt am 12.09.2026 (Nutzer)** — das gebaute
+  Verhalten steht in SPEC.md („Menüleiste: das Tablett" und „Anzeigen in"), hier bleibt
+  nur die Entscheidung: Das Panel hat sich als Hand bewährt (Zug und
   Überblick); fünf Ergänzungen kommen dazu, alle nach dem Maßstab „was man tut, weil man
   gerade in einer anderen App steckt":
   1. **Symbole vor den Köpfen**, die die Stufe zeigen, nicht dekorieren — `tray`,
@@ -417,6 +418,14 @@ einen Rückbau schützen.
      man woanders arbeitet, und das Backlog ist genau der Ort dafür („Get it out of your
      head"). Entschieden für die Erfassung; der Editor bleibt dem Board.
   5. **Globaler Kurzbefehl** zum Öffnen, in den Einstellungen setzbar, Vorgabe leer.
+  **Was die drei Messungen ergaben (12.09.2026, Protokoll im Bauplan):** Ein Textfeld im
+  nicht aktivierenden Panel nimmt Fokus und Tastatur an, während eine andere App aktiv
+  bleibt — die Erfassung brauchte keine Aktivierungs-Weiche. `RegisterEventHotKey` feuert
+  in dieser Sandbox in beiden Aktivierungs-Policies. **Aber es meldet keine fremde
+  Belegung:** ⌘Leertaste und ⌘Tab lassen sich fehlerfrei registrieren und feuern nie —
+  die Konfliktmeldung kann also nur den gemeldeten Fall nennen, und die Fußzeile sagt den
+  Rest. Hover- und Ablegeglas wurden nachgeholt und tragen (weiche Glasschicht, kein
+  zweites Rechteck).
   Weiterhin nicht: Statistik, Streak, Suche, Filter, Tastaturnavigation über Zeilen, ein
   Zustand am Symbol, eine Rückgängig-Zeile.
 
@@ -640,6 +649,7 @@ Abweichung gilt der Code.
 | `appAppearance` | UserDefaults | lokal — Bildschirm im Büro ≠ zu Hause |
 | `completionSoundEnabled` | UserDefaults | lokal — Kopfhörer am Laptop |
 | `appPresence` (Dock/Menüleiste/beides, umgesetzt 08.09.2026) | UserDefaults | lokal — wo die App sichtbar ist, gehört dem Rechner |
+| `trayShortcut` (Kurzbefehl fürs Panel, umgesetzt 12.09.2026) | UserDefaults | lokal — die Tastatur gehört dem Schreibtisch, und ein Kürzel, das auf dem anderen Mac mit einer dortigen App kollidiert, wäre ein Sync-Schaden |
 | `correctionLedger` | UserDefaults | **strikt lokal** |
 | `tagReleaseMemory` | UserDefaults | strikt lokal |
 | `pendingTagCleanup` | columns.json | lokal — Arbeitsliste dieses Prozesses |

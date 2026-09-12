@@ -23,7 +23,10 @@ enum SettingsMetrics {
     /// Measured against the content, not guessed: the pane is a fixed height,
     /// so a footer that grows silently loses its last line. 455 cut the WIP
     /// rule off mid-sentence the day it stopped being a hover tip.
-    static let generalHeight: CGFloat = 640
+    static let generalHeight: CGFloat = 706
+    /// The recorder's width, so the row keeps its shape whether it says
+    /// "Kein Kurzbefehl", "Aufnahme …" or "⌥⌘K".
+    static let shortcutWidth: CGFloat = 150
 }
 
 struct SettingsView: View {
@@ -96,6 +99,7 @@ struct GeneralSettingsView: View {
     @EnvironmentObject private var store: RemindersStore
     @ObservedObject private var appearance = AppearanceController.shared
     @ObservedObject private var presence = PresenceController.shared
+    @ObservedObject private var trayShortcut = TrayShortcutController.shared
 
     /// Seeded with the real state rather than a placeholder corrected in
     /// `onAppear`: that correction is a state change on the first frame, so
@@ -191,15 +195,34 @@ struct GeneralSettingsView: View {
                         Text(option.displayName).tag(option)
                     }
                 }
+                // Under the switch that decides whether there is a panel at
+                // all, and disabled with it: a key combination that answers
+                // with nothing is worse than none.
+                LabeledContent("Shortcut") {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        ShortcutRecorder(
+                            shortcut: trayShortcut.shortcut,
+                            record: { TrayShortcutController.shared.record($0) })
+                            // A control, not a banner: left to itself the
+                            // button takes the whole trailing half of the row.
+                            .frame(width: SettingsMetrics.shortcutWidth)
+                        if trayShortcut.isTaken {
+                            Text("In use by another app")
+                                .font(BoardText.meta)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .disabled(!presence.selection.showsMenuBarItem)
             } header: {
                 Text("Menu Bar")
             } footer: {
-                // Names the two facts and stops: what is up there, and what
-                // happens to the app without a Dock icon. The second one is
-                // the question this switch actually raises — an app whose
-                // window can be closed while it keeps running is the part a
-                // user has to be told, not persuaded of.
-                Text("The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed.")
+                // Names the facts and stops: what is up there, what happens
+                // to the app without a Dock icon, and the one thing about the
+                // shortcut a user cannot see — the system does not report a
+                // combination another app already holds, so it simply stays
+                // with that app (measured 12.09.2026).
+                Text("The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app.")
             }
 
             // Where workflows differ most. Backlog is the pool of options the

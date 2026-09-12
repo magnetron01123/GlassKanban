@@ -872,7 +872,7 @@ hochgehaltene Karte zurück; ein Klick auf die Flamme legte die Statistik vorher
 den offenen Editor. Die Toolbar bleibt sichtbar und scharf — sie ist Chrome, kein Inhalt
 — konkurriert aber nicht mit dem, was gerade in der Hand ist.
 
-### Menüleiste: das Tablett (08.09.2026, Form neu gefasst 11.09.2026)
+### Menüleiste: das Tablett (08.09.2026, Form neu gefasst 11.09.2026, erweitert 12.09.2026)
 
 Neben dem Board kann die App in der Menüleiste liegen. Ein Klick auf das Symbol öffnet
 das **Tablett**: ein Panel von 340 pt Breite im Stil der Systempanels, darin **drei
@@ -892,9 +892,12 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 
 | Element | Board | Tablett |
 |---|---|---|
-| Spurkopf | Name und Zähl-Chip | Name und Zahl als Text, 11 pt sekundär; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Gruppen sind durch Luft getrennt, nicht durch Linien |
+| Spurkopf | Name und Zähl-Chip | **Symbol**, Name und Zahl als Text, 11 pt sekundär; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Gruppen sind durch Luft getrennt, nicht durch Linien |
+| Stufen-Symbol | keins — die Spur erklärt sich durch die Karten darin | vor jedem Kopf: Backlog `tray`, Als Nächstes `circle`, In Bearbeitung `circle.lefthalf.filled`, Erledigt `checkmark.circle`. Im selben 16-pt-Feld wie der Punkt einer Zeile, damit Kopf und Titel in einer Flucht stehen |
 | Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeits-Badge **nur bei Heute und Überfällig** — graue Daten sind Planung, und die findet auf dem Board statt; Hover hebt die Zeile als hellere Glasschicht |
 | Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |
+| Verweildauer | ab 3 Tagen auf jeder Karte der Arbeitsspuren, mit Uhr-Glyph | nur in „In Bearbeitung", ab derselben Schwelle, als bloße Zahl rechts vor dem Badge. Auf den anderen Abschnitten wäre sie eine Zahl ohne Frage |
+| Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach" | „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
 | Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
 | Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | 7 Tage; die Arbeitsspuren zeigen höchstens 6 Zeilen, Erledigt höchstens 3 (Bestätigung, keine Liste); eine letzte Zeile „N weitere" öffnet das Board |
 | Backlog | eigene Spur | Kopfzeile ganz oben — wo der Fluss beginnt — mit Zahl und Chevron, ohne Zeilen; ein Klick darauf öffnet das Board |
@@ -904,7 +907,8 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 | Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
 | ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |
 | Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Hinweis | **nicht** — der Hinweis gehört dem Board, hier verpuffte der Fehlschlag stumm |
-| Tooltips, Streak, Statistik, Suche, „+", Editor, Umbenennen, Löschen | ja | nichts davon; Chrome bleibt im Fenster |
+| Erfassen | „+" legt an und öffnet den Editor | Zeile „Neue Aufgabe" unter dem Backlog-Kopf, nur der Titel (siehe unten) |
+| Tooltips, Streak, Statistik, Suche, Editor, Umbenennen, Löschen | ja | nichts davon; Chrome bleibt im Fenster |
 
 **Bewegen — dieselben drei Wege wie auf dem Board:** ziehen, Kontextmenü „Verschieben
 nach", VoiceOver-Aktion. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
@@ -920,6 +924,20 @@ die erste Frage unbeantwortet überschreiben, und das wäre stilles Zulassen. Wi
 Tablett geschlossen, steht die Frage beim nächsten Öffnen wieder da: Sie wird weder still
 zugelassen noch still zurückgelegt. Der Zustand ist unterdessen sichtbar — die Zahl im
 Kopf trägt die teale Kapsel, im Tablett wie auf dem Board.
+
+**Schnellerfassung ins Backlog.** Unter dem Backlog-Kopf, in derselben Gruppe, steht die
+Zeile „Neue Aufgabe" mit einem `plus` im Symbolfeld. Ein Klick macht sie zum Textfeld,
+und getippt wird, ohne dass die App nach vorn kommt (gemessen 12.09.2026: ein Textfeld im
+nicht aktivierenden Panel bekommt den Fokus und die Tasten, während eine andere App aktiv
+bleibt). Return legt ein Ticket im Backlog an — dieselbe Liste wie das „+" wählt
+(`targetCalendarForNewTicket`), nur der Titel, kein Editor — leert das Feld und **behält
+den Fokus**: mehrere Gedanken hintereinander sind der Normalfall. Return im leeren Feld,
+Escape und Fokusverlust führen zurück zur Ruhezeile. **Kein Entwurf überlebt das
+Schließen** des Panels: Was im Kopf war, ist danach angelegt oder weg. Die Rückmeldung ist
+die Zahl im Kopf darüber, die um eins springt — kein Klang, keine Meldung. Scheitert der
+Schreibvorgang, steht der Grund als Zeile unter dem Feld und der Titel bleibt stehen;
+kein Alert, der den Fokus nähme. Kein ⌘Z: Zurückgenommen wird ein erfasstes Ticket, indem
+man es auf dem Board löscht.
 
 **Das Symbol ist stumm:** ein monochromes Template-Glyph, keine Zahl, kein Badge, keine
 Farbe. Zieht der Nutzer es mit ⌘ aus der Menüleiste, springt die Einstellung auf „Dock" —
@@ -940,6 +958,19 @@ dem Nutzer (BACKLOG.md, „Was wohin gehört"), und wirkt sofort.
 Solange ein Menüleisten-Symbol da ist, beendet das Schließen des Boards die App **nicht** —
 sonst verschwände das Symbol mit dem Fenster, das es ersetzen soll. Ein Klick auf das
 Dock-Symbol holt das geschlossene Board zurück.
+
+**Kurzbefehl (12.09.2026).** Unter „Anzeigen in" steht ein Feld, in dem der Nutzer eine
+globale Tastenkombination aufnimmt; sie öffnet und schließt das Panel aus jeder App und
+tut genau das, was ein Klick auf das Symbol tut. Vorgabe ist **keiner**. Nötig ist
+mindestens ⌃, ⌥ oder ⌘ — ⇧K wäre ein großes K und würde diesen Buchstaben überall
+schlucken. Escape bricht die Aufnahme ab, Rückschritt löscht. Die Kombination gehört dem
+Rechner (BACKLOG.md, „Was wohin gehört") und gilt nur, solange ein Menüleisten-Symbol da
+ist — ohne Symbol kein Panel, also kein Kürzel. **Grenze, gemessen am 12.09.2026:** Das
+System meldet nur eine Kollision mit einem Kürzel dieser App selbst; eine Kombination, die
+das System oder eine andere App schon hält (⌘Leertaste, ⌘Tab), lässt sich anstandslos
+aufnehmen und feuert dann nie. Deshalb steht „Von einer anderen App belegt" nur im
+gemeldeten Fall, und die Fußzeile sagt, dass ein anderweitig belegtes Kürzel bei der
+anderen App bleibt.
 
 Im Modus „Menüleiste" springt beim Start kein Board auf — auch keins, das beim letzten
 Beenden offen war. Die Einstellungen sind dort über das Board erreichbar (Klick auf die

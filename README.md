@@ -29,10 +29,13 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
   Bedienelement; **Listen-Auswahl** und **WIP-Limits** in den Einstellungen
 - **Motivation, dezent:** Streak-Flamme (🔥) mit Statistik-Fenster („Jetzt" und
   „Rückblick" — Auslastung, Durchlaufzeit-Schätzung, bester Tag, häufigste Liste)
-- **In der Menüleiste:** ein Klick auf das Symbol öffnet ein schmales Panel — „Als
-  Nächstes", „In Bearbeitung" und „Erledigt" untereinander, Zeilen wie in einem Menü,
-  ziehbar von Abschnitt zu Abschnitt. In den Einstellungen wählbar: Dock, Menüleiste oder beides; ohne
-  Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist
+- **In der Menüleiste:** ein Klick auf das Symbol — oder eine frei wählbare
+  Tastenkombination — öffnet ein schmales Panel: „Als Nächstes", „In Bearbeitung" und
+  „Erledigt" untereinander, Zeilen wie in einem Menü, ziehbar von Abschnitt zu Abschnitt.
+  Ganz oben das Backlog mit einer Zeile „Neue Aufgabe": ein Gedanke lässt sich hier
+  aufschreiben, ohne die App nach vorn zu holen. In den Einstellungen wählbar: Dock,
+  Menüleiste oder beides; ohne Dock-Symbol läuft die App weiter, wenn das Board
+  geschlossen ist
 - **Das Board bleibt auf seinem Bildschirm:** Wird der Monitor abgezogen, auf dem es
   steht, und später wieder angesteckt, kehrt das Fenster dorthin zurück — statt auf dem
   eingebauten Display liegenzubleiben

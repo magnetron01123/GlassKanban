@@ -35,6 +35,10 @@ final class MenuBarTrayController: NSObject {
     /// in the SwiftUI hierarchy is alive to hand it over.
     func start(store: RemindersStore) {
         self.store = store
+        // The shortcut does exactly what a click on the item does, so it is
+        // the same call and not a second path into the panel.
+        GlobalHotkey.shared.action = { [weak self] in self?.toggle() }
+        TrayShortcutController.shared.applyStored()
         PresenceController.shared.$selection
             .receive(on: RunLoop.main)
             .sink { [weak self] presence in self?.apply(presence) }
@@ -48,6 +52,8 @@ final class MenuBarTrayController: NSObject {
         } else {
             removeStatusItem()
         }
+        // No item, no panel — and then no shortcut either.
+        GlobalHotkey.shared.set(enabled: presence.showsMenuBarItem)
     }
 
     // MARK: - The item
@@ -90,7 +96,7 @@ final class MenuBarTrayController: NSObject {
 
     // MARK: - The panel
 
-    @objc private func toggle() {
+    @objc func toggle() {
         if panel?.isVisible == true {
             close()
         } else {
@@ -117,6 +123,9 @@ final class MenuBarTrayController: NSObject {
             panel.setContentSize(hosting.view.fittingSize)
         }
         position(panel)
+        // Before it is on screen: the capture row goes back to rest, so the
+        // panel opens the same way every time (see `BacklogCaptureRow`).
+        NotificationCenter.default.post(name: .glassKanbanTrayWillOpen, object: nil)
         panel.orderFrontRegardless()
         panel.makeKey()
         // The shadow is cached against whatever outline the window had

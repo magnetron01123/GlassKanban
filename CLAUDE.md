@@ -65,7 +65,8 @@ Zwei Targets (App + Tests), `GlassKanban/` mit rund 12.000 Zeilen SwiftUI; Proje
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
-  Korrektur-Antworten an fremde Schreiber; `PendingOverflow` trägt seit 08.09.2026
+  Korrektur-Antworten an fremde Schreiber; `createTicket(title:)` ist der Schreibpfad der
+  Schnellerfassung im Panel — dieselbe Listenwahl wie das „+", nur ohne Editor; `PendingOverflow` trägt seit 08.09.2026
   ein `MoveSource` mit, damit Board und Tablett je nur ihre eigene WIP-Frage
   stellen. Mit Abstand die größte Datei und die einzige
   Stelle mit Seiteneffekten. (Die frühere *Tag-Hygiene* ist mit dem Formwechsel vom
@@ -92,14 +93,21 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Nutzer je etwas getan hatte (behoben 26.07.2026, siehe `StatusTaggerTests`). Die Datei
   entfällt mit der Aufräumung, frühestens eine Version nach 1.0.
 - **Models.swift** — `KanbanStatus`, `KanbanCard`, Filter- und Sortierlogik.
+- **GlobalHotkey.swift** — der globale Kurzbefehl fürs Panel: `RegisterEventHotKey`
+  (Carbon) und `TrayShortcutController`, der ihn speichert und anwendet. Carbon, weil das
+  der einzige Weg ohne Bedienungshilfen-Berechtigung ist; **gemessen 12.09.2026**, dass er
+  in dieser Sandbox in beiden Aktivierungs-Policies feuert — und dass er eine Kollision
+  mit einem systemeigenen Kürzel *nicht* meldet. `ShortcutRecorder.swift` ist das Feld in
+  den Einstellungen, das eine Tastenkombination fängt, ohne sie auszuführen.
 - **MenuBarTrayController.swift** — das Menüleisten-Symbol und sein Panel, die einzige
   Stelle neben `WindowPlacementController`, die `NSWindow`/`NSStatusItem` anfasst.
   **Bewusst AppKit statt `MenuBarExtra`:** In einem `MenuBarExtra`-Popover lebt ein Zug
   zwar, aber der Drop kommt nie an (gemessen 08.09.2026, Gegenprobe auf dem Board
   positiv). Ein Tablett, dessen Karten nicht ziehbar sind, ist nicht dieses Tablett.
 - **MenuBarTrayView.swift** — das Tablett selbst: drei Abschnitte untereinander im
-  Menü-Stil (`TraySection`, `TrayRow`, `TrayActionRow`, die WIP-Zeile). Zieht seine
-  Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`. **Kein kleines Board** —
+  Menü-Stil (`TraySection`, `TrayRow`, `TrayActionRow`, `TraySymbol`, die WIP-Zeile) und
+  `BacklogCaptureRow`, die einzige Stelle im Panel, an der geschrieben statt bewegt wird.
+  Zieht seine Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`. **Kein kleines Board** —
   die erste Fassung war eines und wurde am 11.09.2026 verworfen (BACKLOG.md,
   „Fensterverhalten").
 - **CardParts.swift** — die Bausteine einer Karte (Prioritätsmarken, Titel,
@@ -125,7 +133,10 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   das Board steht und wohin es zurückgehört), `AppPresence` (Dock, Menüleiste oder
   beides — samt der Regel, dass das Schließen des Boards die App nur ohne
   Menüleisten-Symbol beendet), `MenuBarTray` (was das Tablett zeigt: Zeilendeckel,
-  wann ein Zug erlaubt ist), `MoveSource` (auf welcher
+  wann ein Zug erlaubt ist, wann eine Zeile ihre Verweildauer nennt),
+  `TrayShortcut` (eine Tastenkombination als Wert: was gültig ist, wie sie geschrieben und
+  gelesen wird — der mitgeführte Buchstabe ist Absicht, weil ein Key-Code eine Position
+  und kein Zeichen ist), `MoveSource` (auf welcher
   Oberfläche ein Zug gemacht wurde — ohne das stellte das Board die WIP-Frage auch
   für einen Zug im Tablett), `StoredSetting` (jeder
   `UserDefaults`-Wert und ob er dem Nutzer oder dem Rechner gehört — die Einordnung

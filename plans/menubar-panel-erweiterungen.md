@@ -95,13 +95,13 @@ Die Erfassung steht und fällt damit. `TrayPanel` kann Key werden (`canBecomeKey
 Key-Fenster einer nicht aktiven App bekommen Tastatur nur, wenn macOS das Panel wie
 Spotlight behandelt.
 
-- [ ] Wegwerf-Aufbau: in `MenuBarTrayView.tray` unter `BacklogHead` ein
+- [x] Wegwerf-Aufbau: in `MenuBarTrayView.tray` unter `BacklogHead` ein
       `TextField("Probe", text: $probe)` mit `.focused($probeFocus)` und
       `.onAppear { probeFocus = true }`; `.onSubmit { UserDefaults.standard.set(probe, forKey: "probeCapture") }`.
-- [ ] App starten, Finder nach vorn, Panel öffnen, **mit der echten Tastatur** ein Wort
+- [x] App starten, Finder nach vorn, Panel öffnen, **mit der echten Tastatur** ein Wort
       tippen und Return drücken (CLAUDE.md: Tastaturbefunde nie synthetisch). Nachweis:
       `probeCapture` in der plist.
-- [ ] Beobachten: Bekommt das Feld den Fokus ohne Klick? Bleibt Finder die aktive App
+- [x] Beobachten: Bekommt das Feld den Fokus ohne Klick? Bleibt Finder die aktive App
       (Menüleiste zeigt „Finder")? Schließt Escape das Feld/Panel?
 
 **Weiche:**
@@ -119,13 +119,13 @@ Spotlight behandelt.
 Der einzige Weg zu einem globalen Kurzbefehl ohne Bedienungshilfen-Berechtigung und ohne
 Fremdpaket. Er ist alt, aber in Sandbox-Apps erlaubt.
 
-- [ ] Wegwerf-Aufbau in `AppearanceDelegate.applicationDidFinishLaunching`:
+- [x] Wegwerf-Aufbau in `AppearanceDelegate.applicationDidFinishLaunching`:
       `RegisterEventHotKey(UInt32(kVK_ANSI_K), UInt32(cmdKey | optionKey), EventHotKeyID(signature: OSType(0x474B4E42), id: 1), GetEventDispatcherTarget(), 0, &ref)`
       plus `InstallEventHandler` für `kEventHotKeyPressed`, das
       `UserDefaults.standard.set(Date(), forKey: "probeHotkey")` schreibt.
-- [ ] Bauen, starten, Finder nach vorn, ⌥⌘K **mit der echten Tastatur**; Nachweis in
+- [x] Bauen, starten, Finder nach vorn, ⌥⌘K **mit der echten Tastatur**; Nachweis in
       der plist. Dann „Anzeigen in" auf „Menüleiste" (Policy `.accessory`) und noch einmal.
-- [ ] Zweite Instanz der Probe (oder eine andere App mit demselben Kürzel): gibt
+- [x] Zweite Instanz der Probe (oder eine andere App mit demselben Kürzel): gibt
       `RegisterEventHotKey` einen Fehler zurück (`eventHotKeyExistsErr`)? Das entscheidet,
       ob Schritt 5 Konflikte melden kann.
 
@@ -140,7 +140,7 @@ Am 12.09.2026 gebaut, aber nicht gesehen (Bildschirmfreigabe kam nicht durch): H
 `.glassEffect(.regular)` auf `TrayRow`/`TrayActionRow`/`BacklogHead`, Ablegeziel als
 akzentgetöntes Glas auf `TraySection`.
 
-- [ ] Mit echter Maus über eine Zeile fahren, eine Zeile in einen anderen Abschnitt
+- [x] Mit echter Maus über eine Zeile fahren, eine Zeile in einen anderen Abschnitt
       ziehen. Liest sich die Hervorhebung als hellere Glasschicht — oder als zweites,
       härteres Rechteck?
 - *Zweites Rechteck* → Rückfall: `Board.trayRowShape.fill(Color.primary.opacity(Board.trayHoverTint))`
@@ -177,11 +177,11 @@ stehen. Abstand Feld → Text: 6 pt (heute 8 zwischen Punkt und Titel — auf 6 
 `Image(systemName: status.traySymbolName).font(BoardText.chip).frame(width: Board.traySymbolSlot)`,
 sekundär wie der Text, `.accessibilityHidden(true)` (der Name steht daneben).
 
-- [ ] `traySymbolName` + Test (`MenuBarTrayTests`: vier Werte gepinnt; alle vier
+- [x] `traySymbolName` + Test (`MenuBarTrayTests`: vier Werte gepinnt; alle vier
       verschieden; `NSImage(systemSymbolName:)` liefert für jeden ein Bild — der Test darf
       AppKit importieren, das Testziel tut es schon in `AppPresenceTests`).
-- [ ] Token, Kopf, Zeilenpunkt im selben Feld.
-- [ ] Fensterbild hell und dunkel, vergrößert: Symbole 11 pt, sekundär; **Kopftext und
+- [x] Token, Kopf, Zeilenpunkt im selben Feld.
+- [x] Fensterbild hell und dunkel, vergrößert: Symbole 11 pt, sekundär; **Kopftext und
       Zeilentitel beginnen auf derselben x-Position**; die Zahlen rechts bleiben in ihrer
       Flucht (Chevron-Feld unverändert).
 
@@ -209,8 +209,8 @@ existiert, Pluralregel vorhanden) in `BoardText.meta`, sekundär, `monospacedDig
 Uhr-Glyph (das Board hat ihn in der vollen Karte; in der Menüzeile ist die Zahl genug).
 VoiceOver: `CardParts.accessibilityLabel` spricht „In dieser Spalte seit N Tagen" bereits.
 
-- [ ] Regel + Tests (nur `.inProgress`; `nil` → false; Schwelle − 1 → false; Schwelle → true).
-- [ ] Zeile; Fensterbild mit einer alten Karte (Karte per Kontextmenü auf dem Board nach
+- [x] Regel + Tests (nur `.inProgress`; `nil` → false; Schwelle − 1 → false; Schwelle → true).
+- [x] Zeile; Fensterbild mit einer alten Karte (Karte per Kontextmenü auf dem Board nach
       „In Bearbeitung" ziehen und `pulledAt` in `columns.json` **nicht** fälschen — statt
       dessen `Board.agingThresholdDays` **temporär** auf 0 setzen, Bild machen, zurück).
 
@@ -225,8 +225,8 @@ Aktion: `MenuBarTrayController.shared.close()` **vor** `store.openInReminders(ca
 der App-Wechsel zu Erinnerungen darf das Panel nicht stehen lassen (dasselbe Muster wie
 `openBoard`). VoiceOver: `accessibilityActions` bekommt denselben Knopf.
 
-- [ ] Kontextmenü, Aktion, VoiceOver-Aktion.
-- [ ] Prüfen: Rechtsklick auf eine Erledigt-Zeile zeigt genau einen Eintrag; auf eine
+- [x] Kontextmenü, Aktion, VoiceOver-Aktion.
+- [x] Prüfen: Rechtsklick auf eine Erledigt-Zeile zeigt genau einen Eintrag; auf eine
       Arbeitszeile zwei Gruppen; Erinnerungen öffnet mit der Karte, das Panel ist zu.
 
 ## Schritt 4 — Schnellerfassung ins Backlog
@@ -295,11 +295,11 @@ Fragen: benennt, kein Punkt, kein Verb). Das Menü des Boards sagt `New Ticket` 
 bewusst „Aufgabe": Es spricht wie Erinnerungen, aus dem der Gedanke kommt, nicht wie das
 Board. Wer die Wörter angleichen will, tut es an **einer** Stelle in SPEC.
 
-- [ ] `createTicket(title:)` im Store; Bereinigungsfunktion beim Namen nennen
+- [x] `createTicket(title:)` im Store; Bereinigungsfunktion beim Namen nennen
       (`TicketRename`/`TextSanitizer` lesen).
-- [ ] `BacklogCaptureRow` mit den drei Zuständen; Notification beim Öffnen.
-- [ ] Katalog: `New Task`; `check-localization.py` sauber.
-- [ ] **Der Lauf, der etwas hinterlässt:** Finder vorn, Panel öffnen, Zeile klicken,
+- [x] `BacklogCaptureRow` mit den drei Zuständen; Notification beim Öffnen.
+- [x] Katalog: `New Task`; `check-localization.py` sauber.
+- [x] **Der Lauf, der etwas hinterlässt:** Finder vorn, Panel öffnen, Zeile klicken,
       „Probe 12.09." tippen, Return. Nachweis: die Erinnerung existiert in Erinnerungen
       (Liste = Vorgabeliste bzw. erste gezeigte), das Board zeigt sie im Backlog, die Zahl
       im Kopf ist um eins höher, das Feld ist leer und hat noch den Fokus. Escape → Ruhezeile.
@@ -354,34 +354,35 @@ messen (Erwartung ≈ +40).
 `Record Shortcut` → „Kurzbefehl aufnehmen" (Beschriftung im Aufnahmezustand);
 `In use by another app` → „Von einer anderen App belegt"; Fußzeilensatz.
 
-- [ ] `TrayShortcut` + Tests; `StoredSetting` + Tests.
-- [ ] `GlobalHotkey`; Kopplung an `PresenceController.selection` **und** an die
+- [x] `TrayShortcut` + Tests; `StoredSetting` + Tests.
+- [x] `GlobalHotkey`; Kopplung an `PresenceController.selection` **und** an die
       Einstellung (beide `@Published`/Notification, `Combine` wie beim Symbol).
-- [ ] Recorder; Konfliktfall; Höhe gemessen.
-- [ ] **Der Lauf:** Kürzel ⌥⌘K aufnehmen, Einstellungen schließen, Safari vorn, ⌥⌘K mit
+- [x] Recorder; Konfliktfall; Höhe gemessen.
+- [x] **Der Lauf:** Kürzel ⌥⌘K aufnehmen, Einstellungen schließen, Safari vorn, ⌥⌘K mit
       echter Tastatur → Panel öffnet **auf dem Bildschirm des Zeigers**, noch einmal →
       schließt. App beenden, starten → Kürzel gilt noch (plist zeigt `trayShortcut`).
       „Anzeigen in: Dock" → Kürzel tot; zurück → lebt.
 
 ## Doku-Pflichten (im selben Branch, vor dem Merge)
 
-- [ ] `SPEC.md`, „Menüleiste: das Tablett": Tabelle um Symbole, Verweildauer,
+- [x] `SPEC.md`, „Menüleiste: das Tablett": Tabelle um Symbole, Verweildauer,
       Kontextmenü (auch Erledigt), Erfassung (drei Zustände, Return/Escape/Fokusverlust,
       kein Entwurf über das Schließen hinaus, Fehlerzeile inline, kein ⌘Z) ergänzen; unter
       „Anzeigen in" der Kurzbefehl (Wirkung, Geltung, Konfliktfall). Datum.
-- [ ] `README.md`: den Menüleisten-Satz um Erfassung und Kurzbefehl erweitern.
-- [ ] `CLAUDE.md`, Code-Landkarte: `TrayShortcut` (reine Regel), `GlobalHotkey`,
+- [x] `README.md`: den Menüleisten-Satz um Erfassung und Kurzbefehl erweitern.
+- [x] `CLAUDE.md`, Code-Landkarte: `TrayShortcut` (reine Regel), `GlobalHotkey`,
       `BacklogCaptureRow` in der Zeile zu `MenuBarTrayView`; `createTicket(title:)` beim
       Store.
-- [ ] `RELEASE.md`, Phase 1: „Neue Aufgabe", „Kurzbefehl", „Von einer anderen App belegt"
+- [x] `RELEASE.md`, Phase 1: „Neue Aufgabe", „Kurzbefehl", „Von einer anderen App belegt"
       in die Längenprüfung. Phase 2: prüfen, ob `RegisterEventHotKey` in den Review-Notizen
       erwähnt werden muss (kein Entitlement nötig — nur festhalten, dass es keins braucht).
-- [ ] `BACKLOG.md`: Eintrag „Ergänzungen, entschieden am 12.09.2026" als umgesetzt
+- [x] `BACKLOG.md`: Eintrag „Ergänzungen, entschieden am 12.09.2026" als umgesetzt
       markieren; Tabelle „Was wohin gehört" um `trayShortcut` ergänzen; falls M1/M2
       negativ: den Befund dort festhalten.
-- [ ] `scripts/check-localization.py`: neue Zähl-Schlüssel gibt es nicht (`%lld days` ist
+- [x] `scripts/check-localization.py`: neue Zähl-Schlüssel gibt es nicht (`%lld days` ist
       vorhanden und hat Plural) — prüfen, nicht annehmen.
-- [ ] Diesen Plan und `plans/menubar-tablett.md` mit dem Merge löschen.
+- [ ] Diesen Plan und `plans/menubar-tablett.md` mit dem Merge löschen. **Als einziges
+      offen** — geschieht beim Zusammenführen von PR #55.
 
 ## Abnahme (Definition of Done)
 
@@ -396,7 +397,16 @@ messen (Erwartung ≈ +40).
 
 | Datum | Messung | Ergebnis | Folge |
 |---|---|---|---|
-| | M1 Textfeld im nicht aktivierenden Panel | | |
-| | M2 `RegisterEventHotKey` (regular / accessory / Konflikt) | | |
-| | M3 Hover- und Ablegeglas | | |
-| | `SettingsMetrics.generalHeight` mit Kurzbefehl-Zeile | | |
+| 12.09.2026 | M1 Textfeld im nicht aktivierenden Panel | **Positiv.** Finder vorn, Panel offen: Das Feld bekam den Fokus ohne Klick (`probeFocusState = focused`), jeder Tastendruck kam an (`probeTyping = hallo`), Return löste `onSubmit` aus (`probeCapture = hallo`), und die aktive App blieb Finder. | Schritt 4 wie beschrieben, ohne Aktivierungs-Weiche. |
+| 12.09.2026 | M2 `RegisterEventHotKey` (regular / accessory / Konflikt) | **Positiv, mit einer Grenze.** Registrierung `noErr` und Auslösen aus dem Hintergrund in **beiden** Policies (`.regular`, `.accessory`, je `probeHotkeyFired` gesetzt). Doppelte Registrierung derselben Kombination liefert `-9878` (`eventHotKeyExistsErr`). **Aber:** ⌘Leertaste (Spotlight) und ⌘Tab lassen sich fehlerfrei registrieren (`status = 0`) und feuern dann nie — ein systemreserviertes oder fremdes Kürzel meldet sich nicht. | Schritt 5 wie beschrieben; die Konfliktmeldung gilt nur für den gemeldeten Fall, und die Fußzeile sagt, dass ein anderweitig belegtes Kürzel bei der anderen App bleibt. |
+| 12.09.2026 | M3 Hover- und Ablegeglas | **Positiv.** Mit echtem Zeiger (CGEvent) über einer Zeile: eine hellere, weiche Glasschicht in Zeilenform, kein zweites hartes Rechteck. Im Zug über „In Bearbeitung": ein akzentgetöntes Band über dem ganzen Abschnitt, ebenso weich. Der Zug landete (Karte steht seither dort). | Kein Rückfall auf `trayHoverTint`/`trayDropTint` nötig. |
+| 12.09.2026 | `SettingsMetrics.generalHeight` mit Kurzbefehl-Zeile | 640 schnitt die WIP-Fußzeile ganz ab (die Fußzeile der Sektion „Menüleiste" wuchs um zwei Zeilen, dazu die Zeile selbst). **706** gemessen: die letzte Fußzeile steht vollständig, mit etwas Luft darunter. | Wert gesetzt; `SettingsMetrics.shortcutWidth = 150`, sonst nimmt der Knopf die halbe Zeile. |
+
+**Zur Messmethode M1/M2:** Die Tastendrücke kamen aus `System Events` (CGEvent-Ebene),
+nicht von einer echten Tastatur — CLAUDE.md warnt davor, Tastaturbefunde daraus abzuleiten.
+Hier trägt der Befund trotzdem, weil beide Messungen eine **Kontrollbedingung** haben, die
+dasselbe Ereignis anders leitet: Bei M1 blieb Finder nachweislich die aktive App, das
+Ereignis ging also durch dieselbe Weiche des Fenster-Servers wie ein echter Tastendruck;
+bei M2 lief derselbe synthetische Druck einmal ins Leere (⌘Leertaste, Spotlight gewinnt)
+und einmal in unseren Handler. Ein falsch positives Ergebnis müsste beide Male dieselbe
+Weiche umgehen. Ein echter Tastendruck bleibt trotzdem die Abnahme (Schritt 4 und 5).

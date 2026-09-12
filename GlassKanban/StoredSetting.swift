@@ -38,6 +38,8 @@ enum StoredSetting: String, CaseIterable {
     case appearance = "appAppearance"
     /// Dock, menu bar, or both.
     case presence = "appPresence"
+    /// The global key combination that opens the menu bar panel.
+    case trayShortcut
     /// Which values this board overwrote, so it can recognise its own echo.
     case correctionLedger
     /// Which recurring series have spent their pull.
@@ -74,6 +76,12 @@ enum StoredSetting: String, CaseIterable {
         case .wipLimits: .everyDevice
         // How the backlog reads is a working preference, the same on any desk.
         case .foldNotYetDue: .everyDevice
+
+        // The keyboard belongs to the desk. A combination recorded here can
+        // be the one another app already holds over there, and the clash
+        // would arrive as a shortcut that silently does nothing — a sync that
+        // breaks the setting it carries.
+        case .trayShortcut: .thisDevice
 
         // Brightness is a property of the room and the screen, not of the user.
         case .appearance: .thisDevice

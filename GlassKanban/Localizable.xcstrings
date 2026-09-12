@@ -1347,6 +1347,23 @@
         }
       }
     },
+    "In use by another app": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von einer anderen App belegt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In use by another app"
+          }
+        }
+      }
+    },
     "Last %lld Days": {
       "extractionState": "manual",
       "localizations": {
@@ -1738,6 +1755,23 @@
         }
       }
     },
+    "New Task": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Aufgabe"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Task"
+          }
+        }
+      }
+    },
     "New Ticket": {
       "extractionState": "manual",
       "localizations": {
@@ -1891,6 +1925,23 @@
         }
       }
     },
+    "No Shortcut": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Kurzbefehl"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Shortcut"
+          }
+        }
+      }
+    },
     "No URL": {
       "extractionState": "manual",
       "localizations": {
@@ -1921,6 +1972,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No access to Reminders. Allow it in System Settings under “Privacy & Security”."
+          }
+        }
+      }
+    },
+    "No list can take a new task": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Liste nimmt eine neue Aufgabe an"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No list can take a new task"
           }
         }
       }
@@ -2383,6 +2451,23 @@
         }
       }
     },
+    "Recording…": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording…"
+          }
+        }
+      }
+    },
     "Recurring tasks whose next due date hasn't arrived yet rest behind the fold at the bottom of the Backlog — one click brings them forward, nothing is ever hidden for good. Beyond %lld cards, the rest folds regardless.": {
       "extractionState": "manual",
       "localizations": {
@@ -2532,6 +2617,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Same day"
+          }
+        }
+      }
+    },
+    "Shortcut": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurzbefehl"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut"
           }
         }
       }
@@ -2815,19 +2917,19 @@
         }
       }
     },
-    "The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed.": {
+    "The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app.": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "In der Menüleiste liegen Als Nächstes, In Bearbeitung und Erledigt. Ohne Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist."
+            "value": "In der Menüleiste liegen Als Nächstes, In Bearbeitung und Erledigt. Ohne Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist. Der Kurzbefehl öffnet und schließt das Panel aus jeder App; einer, den eine andere App schon benutzt, bleibt bei dieser App."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed."
+            "value": "The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app."
           }
         }
       }

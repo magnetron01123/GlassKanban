@@ -70,9 +70,14 @@ struct MenuBarTrayView: View {
             // The flow starts here, so this is where the Backlog stands —
             // as a head with its number and nothing under it. Its rows live
             // on the board, and the head says so by taking you there.
-            BacklogHead(
-                count: store.cards(for: .backlog, applyingFilters: false).count,
-                openBoard: { openBoard(nil) })
+            // The head and the capture belong together — one group, no air
+            // between them: what is typed here lands in the count above.
+            VStack(alignment: .leading, spacing: 0) {
+                BacklogHead(
+                    count: store.cards(for: .backlog, applyingFilters: false).count,
+                    openBoard: { openBoard(nil) })
+                BacklogCaptureRow()
+            }
             ForEach(Self.lanes) { status in
                 TraySection(status: status, openBoard: openBoard)
             }
@@ -185,7 +190,8 @@ private struct BacklogHead: View {
     @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Board.traySymbolGap) {
+            TraySymbol(status: .backlog)
             Text(KanbanStatus.backlog.displayName)
                 .lineLimit(1)
             Spacer(minLength: 0)
@@ -219,6 +225,166 @@ private struct BacklogHead: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel("\(KanbanStatus.backlog.displayName), \(String(localized: "\(count) cards"))")
         .accessibilityHint(Text("Open Board"))
+    }
+}
+
+// MARK: - Capture
+
+/// The one place in the panel where something is written rather than moved.
+///
+/// **Why this exists here at all.** The board's own rule was "kein Anlegen im
+/// Element" (05.09.2026) — a second creation surface beside the "+" would
+/// have been the board twice. The panel is the other case: it is open in the
+/// two seconds a thought lasts, and the way to the board is exactly the
+/// distance in which the thought is lost. It captures a *title* and nothing
+/// else, so it stays a capture and does not become a second editor
+/// (BACKLOG.md, 12.09.2026).
+///
+/// Three states and no fourth: at rest a row like any other, in edit a field
+/// in the same place, and after a refusal the same field with the reason
+/// under it and the text still in it. Nothing survives the panel closing —
+/// half a sentence that comes back days later is noise, not a draft.
+private struct BacklogCaptureRow: View {
+    @EnvironmentObject private var store: RemindersStore
+
+    @State private var isEditing = false
+    @State private var draft = ""
+    /// Why the last save was refused, in the system's own words. Inline and
+    /// not an alert: an alert takes the focus, and the panel would close over
+    /// the title that was just typed.
+    @State private var failure: String?
+    @State private var isHovered = false
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            row
+            if let failure {
+                Text(failure)
+                    .font(BoardText.meta)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, Board.trayRowInset + Board.traySymbolSlot + Board.traySymbolGap)
+                    .padding(.trailing, Board.trayRowInset)
+                    .padding(.bottom, 4)
+            }
+        }
+        .padding(.horizontal, Board.trayPadding)
+        // Every opening starts at rest — the panel's view is built once and
+        // then lives on, so without this a draft would outlive its moment.
+        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayWillOpen)) { _ in
+            rest()
+        }
+    }
+
+    private var row: some View {
+        HStack(spacing: Board.traySymbolGap) {
+            // In the heads' symbol field, so this row lines up with
+            // everything above and below it.
+            Image(systemName: "plus")
+                .font(BoardText.chip)
+                .frame(width: Board.traySymbolSlot)
+                .accessibilityHidden(true)
+            if isEditing {
+                TextField(String(localized: "New Task"), text: $draft)
+                    .textFieldStyle(.plain)
+                    .font(BoardText.trayRow)
+                    .focused($isFocused)
+                    .onSubmit(submit)
+                    // Escape gives up the draft, as it does in every field
+                    // this app has.
+                    .onExitCommand(perform: rest)
+                    .onChange(of: draft) { _, _ in failure = nil }
+                    // Clicking anywhere else in the panel ends the capture.
+                    // A field that keeps a blinking caret while the user is
+                    // dragging rows around claims a focus it is not using.
+                    .onChange(of: isFocused) { _, focused in
+                        if !focused { rest() }
+                    }
+            } else {
+                Text("New Task")
+                    .font(BoardText.trayRow)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(isEditing ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+        .padding(.horizontal, Board.trayRowInset)
+        .frame(height: Board.trayRowHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            if isHovered && !isEditing {
+                Color.clear.glassEffect(.regular, in: Board.trayRowShape)
+            }
+        }
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
+        .onTapGesture { beginEditing() }
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(Text("New Task"))
+    }
+
+    private func beginEditing() {
+        guard !isEditing else { return }
+        draft = ""
+        failure = nil
+        isEditing = true
+        isFocused = true
+    }
+
+    /// Return. With something in the field it is written and the field stays
+    /// open for the next thought — several in a row is the normal case, not
+    /// the exception. Empty, it is the way out.
+    private func submit() {
+        let title = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else {
+            rest()
+            return
+        }
+        switch store.createTicket(title: title) {
+        case .created:
+            // No confirmation of its own: the number in the head above jumps
+            // and the field is empty. That is the receipt, and it is where
+            // the eye already is.
+            draft = ""
+            failure = nil
+            isFocused = true
+        case .empty:
+            rest()
+        case .failed(let reason):
+            // The text stays exactly where it was — a refused save must not
+            // also cost the sentence.
+            failure = reason
+            isFocused = true
+        }
+    }
+
+    private func rest() {
+        isEditing = false
+        isFocused = false
+        draft = ""
+        failure = nil
+    }
+}
+
+/// The stage as a glyph, in front of a head's name.
+///
+/// Secondary like the name it belongs to, and hidden from VoiceOver: the
+/// name stands right beside it and says the same thing. The panel was
+/// legible without these and still too abstract — four rows of grey text
+/// with numbers, telling nothing apart at a glance (12.09.2026, user).
+private struct TraySymbol: View {
+    let status: KanbanStatus
+
+    var body: some View {
+        Image(systemName: status.traySymbolName)
+            // The head's own size and weight: the glyph is a word in that
+            // line, not a decoration beside it.
+            .font(BoardText.chip)
+            .frame(width: Board.traySymbolSlot)
+            .accessibilityHidden(true)
     }
 }
 
@@ -326,7 +492,14 @@ private struct TraySection: View {
             .onTapGesture { openBoard(card.id) }
             .modifier(TrayDraggable(cardID: card.id, enabled: movable))
             .contextMenu {
+                // Offered on every row, Erledigt included — the one thing a
+                // finished card still has to say is what it was, and
+                // everything the board's editor leaves out (recurrence,
+                // subtasks, attachments) lives over there. The board's own
+                // menu puts it first too.
+                Button("Open in Reminders") { openInReminders(card) }
                 if movable {
+                    Divider()
                     Menu("Move to") {
                         ForEach(moveTargets(for: card)) { target in
                             Button(target.displayName) { move(card, to: target) }
@@ -335,6 +508,7 @@ private struct TraySection: View {
                 }
             }
             .accessibilityActions {
+                Button("Open in Reminders") { openInReminders(card) }
                 if movable {
                     ForEach(moveTargets(for: card)) { target in
                         Button("Move to \(target.displayName)") { move(card, to: target) }
@@ -354,6 +528,15 @@ private struct TraySection: View {
         store.move(cardID: card.id, to: target, undoManager: nil, source: .tray)
     }
 
+    /// The panel closes first, then Reminders comes forward — the same order
+    /// every hand-over here follows (see `MenuBarTrayView.openBoard`). Left
+    /// standing, the panel would hang over the app it just opened until the
+    /// next click somewhere else.
+    private func openInReminders(_ card: KanbanCard) {
+        MenuBarTrayController.shared.close()
+        store.openInReminders(cardID: card.id)
+    }
+
     /// The rows the cap keeps out, named in one quiet line. A click opens
     /// the board, where all of them are.
     private var moreRow: some View {
@@ -366,7 +549,8 @@ private struct TraySection: View {
     /// number takes the board's teal capsule only while the section is over
     /// its limit — at rest it is plain text, which is all a head needs.
     private var header: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Board.traySymbolGap) {
+            TraySymbol(status: status)
             Text(status.displayName)
                 .lineLimit(1)
             Spacer(minLength: 0)
@@ -425,10 +609,13 @@ private struct TrayRow: View {
     @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Board.traySymbolGap) {
+            // In the same field the heads put their symbol in, so a title
+            // and the name of its section start on one x.
             Circle()
                 .fill(CardParts.stripeColor(of: card).opacity(card.status == .done ? 0.45 : 0.9))
                 .frame(width: Board.trayDotSize, height: Board.trayDotSize)
+                .frame(width: Board.traySymbolSlot)
             // The strike as a text attribute, not the board's drawn line:
             // the drawn one exists so that completing can animate it, and
             // that reward plays on the board, where the finishing happened.
@@ -437,6 +624,19 @@ private struct TrayRow: View {
                 .font(BoardText.trayRow)
                 .lineLimit(1)
             Spacer(minLength: 8)
+            // How long this one has been open, and only where that is a
+            // question (see `MenuBarTray.showsDwellTime`). No clock glyph:
+            // the board's full card has one because it has room for it, and
+            // in a menu row the bare number is quieter and just as clear.
+            if let days = card.daysInColumn(),
+               MenuBarTray.showsDwellTime(status: card.status, days: days) {
+                Text("\(days) days")
+                    .font(BoardText.meta)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
             // Only the dates that decide what to finish *now* — today and
             // overdue, the two that carry a tint. A grey "12. Sep" is
             // planning information, and planning happens on the board
@@ -483,6 +683,9 @@ private struct TrayActionRow: View {
             .font(BoardText.trayRow)
             .foregroundStyle(quiet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
             .lineLimit(1)
+            // Nothing in the field in front — but the field is kept, so this
+            // row's text stands in the same column as every other one.
+            .padding(.leading, Board.traySymbolSlot + Board.traySymbolGap)
             .padding(.horizontal, Board.trayRowInset)
             .frame(height: Board.trayRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -100,6 +100,7 @@ targets:
       - path: GlassKanban/AppPresence.swift
       - path: GlassKanban/MenuBarTray.swift
       - path: GlassKanban/MoveSource.swift
+      - path: GlassKanban/TrayShortcut.swift
       - path: GlassKanban/Models.swift
       - path: GlassKanban/StatusTagger.swift
       - path: GlassKanban/TextSanitizer.swift

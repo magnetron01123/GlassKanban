@@ -99,6 +99,12 @@ extension Notification.Name {
     /// its "+" button does — one path, one set of rules.
     static let glassKanbanNewTicket = Notification.Name("GlassKanbanNewTicket")
 
+    /// Raised every time the menu bar panel comes up, so the capture row can
+    /// go back to rest. The panel's view is built once and then lives on —
+    /// it has no `onAppear` per opening — and a half-typed title that
+    /// reappeared days later would be noise, not a draft.
+    static let glassKanbanTrayWillOpen = Notification.Name("GlassKanbanTrayWillOpen")
+
     /// Raised by the "Find …" menu item so the board can open its popover.
     /// The popover's presentation lives in `BoardView`'s own state; a menu
     /// command has no route into that except through the app's own bus.

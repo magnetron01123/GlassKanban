@@ -1325,6 +1325,68 @@ final class RemindersStore: ObservableObject {
         return cardID
     }
 
+    /// What came of a capture from the menu bar panel. The panel has no
+    /// alert to put a failure in — it would take the focus and close the
+    /// panel out from under the very title that was just typed — so the
+    /// reason travels back to the row, which says it inline and keeps the
+    /// text in the field.
+    enum CaptureOutcome {
+        case created(String)
+        /// Nothing was typed. Not a failure and not worth a word — the
+        /// caller simply closes the field.
+        case empty
+        case failed(String)
+    }
+
+    /// Creates a Backlog ticket from a title alone — the menu bar panel's
+    /// capture.
+    ///
+    /// The same list as the "+" picks (`targetCalendarForNewTicket`), and
+    /// nothing else: notes, date and priority stay with the board, one click
+    /// away on the finished card. Deliberately not `createTicketForEditing`
+    /// with an editor behind it — the panel exists for the thought that
+    /// would otherwise be lost on the way to opening the app, and an editor
+    /// is the way to the app.
+    ///
+    /// No undo entry, on purpose. The panel has no ⌘Z (SPEC.md), so the entry
+    /// would only be reachable from the board, where undoing something that
+    /// happened in another window is a surprise. A captured ticket is taken
+    /// back by deleting it — where it is, on the board.
+    ///
+    /// `newlyCreatedCardID` stays untouched: that is the fence around an
+    /// *empty* new ticket in the editor (see `finalizeNewTicket`), and a
+    /// title is never empty.
+    @discardableResult
+    func createTicket(title: String) -> CaptureOutcome {
+        // Trimmed, and that is the whole clean-up. `TicketRename` is not
+        // reused here: it exists to stop an edit from wiping a stored title,
+        // and there is no stored title yet.
+        let cleaned = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return .empty }
+        guard let calendar = targetCalendarForNewTicket() else {
+            // Every list is either read-only or hidden from the board. The
+            // "+" answers this by doing nothing at all; the panel says it.
+            return .failed(String(localized: "No list can take a new task"))
+        }
+        let reminder = EKReminder(eventStore: eventStore)
+        reminder.calendar = calendar
+        reminder.title = cleaned
+        do {
+            try eventStore.save(reminder, commit: true)
+        } catch {
+            scheduleRefreshAfterWrite()
+            return .failed(error.localizedDescription)
+        }
+        // Optimistic, like the "+" and like `move`: the count in the panel's
+        // Backlog head is the only receipt the capture gives, and it cannot
+        // wait out the debounced refresh.
+        if let card = card(from: reminder) {
+            cards.append(card)
+        }
+        scheduleRefreshAfterWrite()
+        return .created(reminder.calendarItemIdentifier)
+    }
+
     /// Called by the editor as it closes. A brand-new ticket that is still
     /// empty in every field was a creation that got abandoned — it is removed
     /// silently, no undo entry: there is nothing to restore. `keep` is passed

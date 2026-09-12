@@ -19,6 +19,24 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
         }
     }
 
+    /// The stage as a glyph, for the menu bar panel's section heads
+    /// (SPEC.md, "Menüleiste"). The system's own task vocabulary: the tray
+    /// you put things into, then a circle that fills up as the work does.
+    ///
+    /// Only in the panel. On the board a lane explains itself through the
+    /// cards in it and through the space beside them; in a menu-sized row
+    /// there is no space to explain, so the glyph does it. Pinned by a test:
+    /// a symbol is a contract with the eye, not a value to be tidied up
+    /// later.
+    var traySymbolName: String {
+        switch self {
+        case .backlog: "tray"
+        case .next: "circle"
+        case .inProgress: "circle.lefthalf.filled"
+        case .done: "checkmark.circle"
+        }
+    }
+
     /// How much a card in this lane reveals. The information gradient is the
     /// board's focus mechanism: the working lanes carry everything, the
     /// backlog carries what you need to decide, and finished work carries
@@ -175,6 +193,16 @@ struct KanbanCard: Identifiable, Equatable {
         default: 3
         }
     }
+
+    /// A card only reports its dwell time once it has lingered this long —
+    /// below it, sitting in a column is simply normal.
+    ///
+    /// Lives here rather than beside the other design tokens because the
+    /// menu bar panel decides by it too, and that decision is a rule in the
+    /// test target (`MenuBarTray.showsDwellTime`). `Board.agingThresholdDays`
+    /// hands this same number on, so there is one threshold and not two that
+    /// drift apart.
+    static let agingThresholdDays = 3
 
     /// Whole days this card has been sitting in its column. The card shows it
     /// only from `agingThresholdDays` on — fresh is normal and needs no label;

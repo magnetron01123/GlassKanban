@@ -40,6 +40,21 @@ enum MenuBarTray {
         pendingSource != .tray
     }
 
+    /// Which rows say how long they have been sitting: only "In
+    /// Bearbeitung", and only from the board's own threshold on.
+    ///
+    /// The panel is for finishing, and "this has been started for five days"
+    /// is the one fact that helps with that. On the other sections the same
+    /// number would be a figure without a question behind it: a Backlog item
+    /// is *supposed* to lie there, and a finished one is done. Below the
+    /// threshold nothing is said at all — a number that appears the moment a
+    /// card is pulled would be a stopwatch, and this app does not run one
+    /// (CONCEPT.md, "Belohnen, nie bestrafen").
+    static func showsDwellTime(status: KanbanStatus, days: Int?) -> Bool {
+        guard status == .inProgress, let days else { return false }
+        return days >= KanbanCard.agingThresholdDays
+    }
+
     /// Cards in Erledigt cannot be moved from the tray at all.
     ///
     /// Not a matter of taste: a move out of Erledigt can fail on a recurring
