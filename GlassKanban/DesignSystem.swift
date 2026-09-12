@@ -78,6 +78,11 @@ enum Board {
     /// One menu row. The system's own menu rows are 22–24pt; two more for
     /// a target that is dragged onto, not just clicked.
     static let trayRowHeight: CGFloat = 26
+    /// How many Backlog rows stand in view before the section scrolls in
+    /// place. Eight is roughly the height of the three working sections
+    /// together — the Backlog may be long, but it must not push "Erledigt"
+    /// off the bottom of the screen.
+    static let trayBacklogVisibleRows = 8
     /// Room a head keeps at its trailing end for the chevron — in *every*
     /// head, so the counts stand in one column; only the Backlog fills it.
     static let trayHeadTrailingSlot: CGFloat = 10

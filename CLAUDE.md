@@ -105,8 +105,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   zwar, aber der Drop kommt nie an (gemessen 08.09.2026, Gegenprobe auf dem Board
   positiv). Ein Tablett, dessen Karten nicht ziehbar sind, ist nicht dieses Tablett.
 - **MenuBarTrayView.swift** — das Tablett selbst: drei Abschnitte untereinander im
-  Menü-Stil (`TraySection`, `TrayRow`, `TrayActionRow`, `TraySymbol`, die WIP-Zeile) und
-  `BacklogCaptureRow`, die einzige Stelle im Panel, an der geschrieben statt bewegt wird.
+  Menü-Stil (`TraySection` — mit dem Falz des Backlogs —, `TrayRow`, `TrayActionRow`,
+  `TraySymbol`, `TrayDragPreview`, die WIP-Zeile) und `BacklogCaptureRow`, die einzige
+  Stelle im Panel, an der geschrieben statt bewegt wird.
   Zieht seine Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`. **Kein kleines Board** —
   die erste Fassung war eines und wurde am 11.09.2026 verworfen (BACKLOG.md,
   „Fensterverhalten").

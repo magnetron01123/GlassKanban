@@ -18,14 +18,23 @@ enum MenuBarTray {
     /// is the small, safe reward; six was a list.
     static let doneRowCap = 3
 
-    static func rowCap(for status: KanbanStatus) -> Int {
-        status == .done ? doneRowCap : rowCap
+    /// `nil` for the Backlog: it shows everything it holds (12.09.2026,
+    /// user) and scrolls in place beyond `Board.trayBacklogVisibleRows`
+    /// instead of cutting off. The working sections keep their cap — they
+    /// are meant to be short, and a long one is the board's problem to show.
+    static func rowCap(for status: KanbanStatus) -> Int? {
+        switch status {
+        case .backlog: nil
+        case .done: doneRowCap
+        case .next, .inProgress: rowCap
+        }
     }
 
     /// How many rows of a section the cap keeps out — the number the last
     /// row names, so nothing is hidden without being counted.
     static func hiddenRows(total: Int, in status: KanbanStatus) -> Int {
-        max(0, total - rowCap(for: status))
+        guard let cap = rowCap(for: status) else { return 0 }
+        return max(0, total - cap)
     }
 
     /// Whether the footer offers Quit: only when there is no Dock icon to

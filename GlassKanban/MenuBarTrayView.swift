@@ -24,10 +24,12 @@ struct MenuBarTrayView: View {
     /// footer of whichever mode was current when the tray was first opened.
     @ObservedObject private var presence = PresenceController.shared
 
-    /// The sections with rows, top to bottom, in board order. The Backlog
-    /// stands above them as a head alone (`BacklogHead`) — planning belongs
-    /// to the board.
-    static let lanes: [KanbanStatus] = [.next, .inProgress, .done]
+    /// The four sections, top to bottom, in board order. The Backlog is one
+    /// of them since 12.09.2026 (user): it folds shut by default and shows
+    /// everything it holds when opened — earlier it stood as a head alone,
+    /// and a head with only the capture line under it read as an empty
+    /// section that happened to offer a "+".
+    static let lanes: [KanbanStatus] = KanbanStatus.allCases
 
     var body: some View {
         // No background, no clip, no edge here: the panel's body is the
@@ -35,6 +37,15 @@ struct MenuBarTrayView: View {
         // brings its own corner, rim and shadow.
         content
             .frame(width: Board.trayWidth)
+            // The panel follows the content's own height — folding the
+            // Backlog, a failure line under the capture, a WIP question
+            // appearing. Measured from here rather than trusted to the
+            // hosting controller: `preferredContentSize` did not move the
+            // window when the Backlog folded shut (12.09.2026), and the
+            // content sat at the bottom of a panel that stayed tall.
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+                MenuBarTrayController.shared.contentHeightChanged(height)
+            }
             // `store.start()` hangs on the board window's `.task`. In the menu
             // bar mode there is no window, so without this the tray would be
             // empty and would never have asked for access. `start()` is
@@ -67,35 +78,17 @@ struct MenuBarTrayView: View {
             if let overflow = trayOverflow {
                 OverflowQuestionRow(overflow: overflow)
             }
-            // The flow starts here, so this is where the Backlog stands —
-            // as a head with its number and nothing under it. Its rows live
-            // on the board, and the head says so by taking you there.
-            // The head and the capture belong together — one group, no air
-            // between them: what is typed here lands in the count above.
-            VStack(alignment: .leading, spacing: 0) {
-                let backlogCount = store.cards(for: .backlog, applyingFilters: false).count
-                BacklogHead(count: backlogCount, openBoard: { openBoard(nil) })
-                // Where the rows are. With only the capture line under it,
-                // the head read as an empty section that happened to offer
-                // a "+" (12.09.2026, user) — the same quiet row the other
-                // sections use for what the cap keeps out says here that
-                // the Backlog is full and lives on the board. Left out when
-                // there is nothing, because then that reading is right.
-                if backlogCount > 0 {
-                    TrayActionRow(title: String(localized: "On the board"), quiet: true) { openBoard(nil) }
-                }
-                BacklogCaptureRow()
-            }
             ForEach(Self.lanes) { status in
                 TraySection(status: status, openBoard: openBoard)
             }
-            // No "Open Board" row: the Backlog head is the way to the board,
-            // and every row opens it with its card. What is left down here
-            // is Quit, and only where there is no Dock icon to quit from.
+            // No "Open Board" row: every row opens the board with its card,
+            // and "N more" opens it plain. What is left down here is Quit,
+            // and only where there is no Dock icon to quit from.
             if MenuBarTray.offersQuit(presence.selection) {
                 VStack(alignment: .leading, spacing: 0) {
                     separator
                     TrayActionRow(title: String(localized: "Quit Glass Kanban")) { NSApp.terminate(nil) }
+                        .padding(.horizontal, Board.trayPadding)
                 }
             }
         }
@@ -177,65 +170,6 @@ struct MenuBarTrayView: View {
 
 }
 
-// MARK: - The Backlog, as a head
-
-/// The first head in the tray, and the only one with nothing under it.
-///
-/// The Backlog is where the flow begins, so a number for it at the bottom
-/// read as an afterthought — and a number the user could not act on
-/// contradicted a panel in which everything else moves. Two ways out were
-/// weighed on 11.09.2026 and set aside: showing the ripe rows behind a
-/// disclosure (the pull chain complete in the panel, but the panel grows and
-/// starts planning), and leaving the Backlog out entirely (the panel goes
-/// quiet about where "Als Nächstes" is fed from). This is the third: the head
-/// stands in its place in the flow, counts, and a click on it opens the board,
-/// where the rows are. It lights up under the pointer so that it is
-/// recognisably the one head that does something.
-private struct BacklogHead: View {
-    let count: Int
-    let openBoard: () -> Void
-
-    @State private var isHovered = false
-
-    var body: some View {
-        HStack(spacing: Board.traySymbolGap) {
-            TraySymbol(status: .backlog)
-            Text(KanbanStatus.backlog.displayName)
-                .lineLimit(1)
-            Spacer(minLength: 0)
-            Text("\(count)")
-                .monospacedDigit()
-                .contentTransition(.numericText())
-            // The one head that leads somewhere says so, with the system's
-            // own sign for it. Without it, this head looked exactly like an
-            // empty section's — and only the hover told them apart. It sits
-            // in the slot every head keeps free, so the counts stay in line.
-            Image(systemName: "chevron.right")
-                .font(BoardText.glyph)
-                .frame(width: Board.trayHeadTrailingSlot, alignment: .trailing)
-                .accessibilityHidden(true)
-        }
-        .font(BoardText.chip)
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, Board.trayRowInset)
-        .padding(.vertical, 4)
-        .frame(maxWidth: .infinity)
-        .background {
-            if isHovered {
-                Color.clear.glassEffect(.regular, in: Board.trayRowShape)
-            }
-        }
-        .padding(.horizontal, Board.trayPadding)
-        .contentShape(Rectangle())
-        .onHover { isHovered = $0 }
-        .onTapGesture(perform: openBoard)
-        .accessibilityElement(children: .ignore)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityLabel("\(KanbanStatus.backlog.displayName), \(String(localized: "\(count) cards"))")
-        .accessibilityHint(Text("Open Board"))
-    }
-}
-
 // MARK: - Capture
 
 /// The one place in the panel where something is written rather than moved.
@@ -278,7 +212,6 @@ private struct BacklogCaptureRow: View {
                     .padding(.bottom, 4)
             }
         }
-        .padding(.horizontal, Board.trayPadding)
         // Every opening starts at rest — the panel's view is built once and
         // then lives on, so without this a draft would outlive its moment.
         .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayWillOpen)) { _ in
@@ -411,6 +344,14 @@ private struct TraySection: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isTargeted = false
+    @State private var isHeadHovered = false
+    /// The one fold in the panel. Shut by default: the Backlog is the long
+    /// section, and the panel opens for the short ones. Remembered per
+    /// machine (`StoredSetting.trayBacklogExpanded`).
+    @AppStorage(StoredSetting.trayBacklogExpanded.key) private var isBacklogExpanded = false
+
+    private var isCollapsible: Bool { status == .backlog }
+    private var isExpanded: Bool { !isCollapsible || isBacklogExpanded }
 
     /// Unfiltered, always: the tray has no find control, no badge and no
     /// empty notice to explain why a card is missing (see
@@ -425,7 +366,9 @@ private struct TraySection: View {
     /// What is drawn. Beyond the cap the head counts on and a last row says
     /// how many are not here — a scroll area under a drag is trouble without
     /// a benefit.
-    private var shownCards: [KanbanCard] { Array(cards.prefix(MenuBarTray.rowCap(for: status))) }
+    private var shownCards: [KanbanCard] {
+        MenuBarTray.rowCap(for: status).map { Array(cards.prefix($0)) } ?? cards
+    }
     private var hiddenRows: Int { MenuBarTray.hiddenRows(total: cards.count, in: status) }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
@@ -445,16 +388,19 @@ private struct TraySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
-            ForEach(shownCards) { card in
-                row(for: card)
+            if isExpanded {
+                rows
             }
-            if hiddenRows > 0 {
-                moreRow
+            // The capture belongs to the Backlog and stays reachable folded or
+            // not — it is the reason the panel is worth opening from another
+            // app at all.
+            if status == .backlog {
+                BacklogCaptureRow()
             }
-            // Nothing under the head when there are no rows: an empty section
-            // looks exactly like the Backlog head above it. The head itself is
-            // the drop target then — the whole section takes the drop.
+            // Nothing else under a head without rows: an empty section is its
+            // head, and the head is the drop target then.
         }
+        .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: isBacklogExpanded)
         .padding(.horizontal, Board.trayPadding)
         // The drop target is the whole section, tinted the way a menu row
         // lights up — not a dashed card outline, which was the board's.
@@ -489,6 +435,32 @@ private struct TraySection: View {
             }))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(status.displayName), \(countHelp)")
+    }
+
+    /// The rows of an open section. The Backlog shows all of them and, past
+    /// `Board.trayBacklogVisibleRows`, scrolls in place — its height is
+    /// computed from the count, not measured, so the panel still knows its
+    /// size before it is placed (see `MenuBarTrayController.open`).
+    @ViewBuilder
+    private var rows: some View {
+        if status == .backlog, cards.count > Board.trayBacklogVisibleRows {
+            ScrollView(.vertical) {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(cards) { card in row(for: card) }
+                }
+            }
+            .frame(height: CGFloat(Board.trayBacklogVisibleRows) * Board.trayRowHeight)
+        } else {
+            ForEach(shownCards) { card in row(for: card) }
+            if hiddenRows > 0 {
+                moreRow
+            }
+        }
+    }
+
+    private func toggleFold() {
+        guard isCollapsible else { return }
+        isBacklogExpanded.toggle()
     }
 
     /// Rows, with the three move routes the board offers — drag, the
@@ -528,9 +500,8 @@ private struct TraySection: View {
             }
     }
 
-    /// The tray's own three sections — the Backlog is not a target here,
-    /// because it is not shown and a card sent there would leave without a
-    /// trace.
+    /// Every other section, the Backlog included: a card put back there
+    /// lands in a count that is on screen, and in the rows behind the fold.
     private func moveTargets(for card: KanbanCard) -> [KanbanStatus] {
         MenuBarTrayView.lanes.filter { $0 != card.status }
     }
@@ -578,15 +549,34 @@ private struct TraySection: View {
                 }
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 .accessibilityValue(countHelp)
-            // The Backlog head's chevron slot, kept empty: one column of
-            // counts across all four heads.
-            Color.clear.frame(width: Board.trayHeadTrailingSlot, height: 1)
+            // The fold's chevron, in a slot every head keeps free so the
+            // counts stand in one column across all four.
+            if isCollapsible {
+                Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                    .font(BoardText.glyph)
+                    .frame(width: Board.trayHeadTrailingSlot, alignment: .trailing)
+                    .accessibilityHidden(true)
+            } else {
+                Color.clear.frame(width: Board.trayHeadTrailingSlot, height: 1)
+            }
         }
         .font(BoardText.chip)
         .foregroundStyle(.secondary)
         .padding(.horizontal, Board.trayRowInset)
         .padding(.top, 4)
         .padding(.bottom, 2)
+        // Only the head that does something lights up under the pointer.
+        .background {
+            if isCollapsible && isHeadHovered {
+                Color.clear.glassEffect(.regular, in: Board.trayRowShape)
+            }
+        }
+        .contentShape(Rectangle())
+        .onHover { if isCollapsible { isHeadHovered = $0 } }
+        .onTapGesture(perform: toggleFold)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isCollapsible ? .isButton : [])
+        .accessibilityValue(isCollapsible ? Text(isExpanded ? "Expanded" : "Collapsed") : Text(""))
     }
 
     /// The count always tells the whole truth, even where a row is not drawn.
@@ -706,7 +696,6 @@ private struct TrayActionRow: View {
                     Color.clear.glassEffect(.regular, in: Board.trayRowShape)
                 }
             }
-            .padding(.horizontal, Board.trayPadding)
             .contentShape(Rectangle())
             .onHover { isHovered = $0 }
             .onTapGesture(perform: action)

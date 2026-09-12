@@ -829,6 +829,23 @@
         }
       }
     },
+    "Collapsed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugeklappt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapsed"
+          }
+        }
+      }
+    },
     "Couldn't Start at Login": {
       "extractionState": "manual",
       "localizations": {
@@ -1046,6 +1063,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit"
+          }
+        }
+      }
+    },
+    "Expanded": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgeklappt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expanded"
           }
         }
       }
@@ -2230,23 +2264,6 @@
         }
       }
     },
-    "On the board": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auf dem Board"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "On the board"
-          }
-        }
-      }
-    },
     "One task keeps the streak alive": {
       "extractionState": "manual",
       "localizations": {
@@ -2311,23 +2328,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Apple Reminders to create or edit tasks (⌘N)"
-          }
-        }
-      }
-    },
-    "Open Board": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Board öffnen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Board"
           }
         }
       }

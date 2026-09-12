@@ -19,6 +19,14 @@ final class MenuBarTrayTests: XCTestCase {
         XCTAssertEqual(MenuBarTray.rowCap(for: .done), MenuBarTray.doneRowCap)
     }
 
+    /// The Backlog has no cap: opened, it shows every card it holds and
+    /// scrolls in place. A "13 more" under a section that exists to be
+    /// pulled from would hide exactly the cards one pulls (12.09.2026, user).
+    func testTheBacklogShowsEverything() {
+        XCTAssertNil(MenuBarTray.rowCap(for: .backlog))
+        XCTAssertEqual(MenuBarTray.hiddenRows(total: 40, in: .backlog), 0)
+    }
+
     // MARK: - The stage symbols
 
     /// Pinned, all four. A symbol in front of a head is a contract with the

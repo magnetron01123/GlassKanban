@@ -134,6 +134,15 @@ final class MenuBarTrayController: NSObject {
         startWatchingForClicksOutside()
     }
 
+    /// The content reports its own height (see `MenuBarTrayView.body`); the
+    /// panel takes it while it is on screen. The resize notification in
+    /// `makePanel` then keeps the top edge under the menu bar.
+    func contentHeightChanged(_ height: CGFloat) {
+        guard let panel, panel.isVisible, height > 0,
+              abs(panel.contentView!.frame.height - height) > 0.5 else { return }
+        panel.setContentSize(NSSize(width: Board.trayWidth, height: height))
+    }
+
     /// Also the way out of the tray for everything that opens the board: the
     /// panel is ours, so it goes when we say (measured M1 — a `MenuBarExtra`
     /// popover would have stayed open beside the window it just opened).
@@ -283,8 +292,16 @@ private final class TrayGlassController: NSViewController {
         preferredContentSize = hosting.view.fittingSize
     }
 
+    /// The panel follows its content while it is open. `open()` sizes it
+    /// once from `fittingSize`, but a window does not track its content
+    /// controller's `preferredContentSize` by itself — the Backlog unfolding
+    /// grew the content and left the panel at its old height, with the head
+    /// pushed out of the top (12.09.2026). The resize notification in
+    /// `MenuBarTrayController.makePanel` then keeps the top edge where it is.
     override func preferredContentSizeDidChange(for viewController: NSViewController) {
         preferredContentSize = viewController.preferredContentSize
+        guard let window = view.window, window.isVisible else { return }
+        window.setContentSize(viewController.preferredContentSize)
     }
 }
 
