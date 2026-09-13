@@ -24,7 +24,7 @@ struct MenuBarTrayView: View {
     /// and then lives on — a plain read of the shared value showed the
     /// footer of whichever mode was current when the tray was first opened.
     @ObservedObject private var presence = PresenceController.shared
-    /// Whether the screen is too short for the panel (see `TrayFit`).
+    /// The panel's current height (see `TrayFit`).
     @ObservedObject private var fit = MenuBarTrayController.shared.fit
 
     /// The section a row is being dragged out of, so that section alone does
@@ -59,13 +59,16 @@ struct MenuBarTrayView: View {
         // short is the panel clamped to it — and then the whole panel
         // scrolls. The scroll view is always there so the clamped case needs
         // no second layout; with room enough it never moves.
-        // Only when the screen is too short is there a scroll view: a scroll
-        // view lays its content out at the *final* height while the rows
-        // are still sliding, believed the content taller than the panel
-        // during every unfold, showed the system's 16 pt scroller and
-        // centred the 340 pt content in the 324 pt left — everything 8 pt
-        // to the left until the edge caught up (measured 13.09.2026;
-        // `.scrollIndicators(.hidden)` did not stop it).
+        // One structure, always — never a scroll view in one case and bare
+        // content in the other. The two branches were two identities: when an
+        // unfold made the panel taller than the screen, the switch rebuilt
+        // every section with its fold shut, the height fell back, the switch
+        // went back, and the edge travelled into nothing (probe, 13.09.2026,
+        // on a simulated 600 pt screen). Scrolling only happens once the
+        // content really is taller than the panel (`.basedOnSize`), and the
+        // scroller never shows: with `.hidden` the system's 16 pt scroller
+        // still took its place during an unfold and pushed the content 8 pt
+        // to the left; `.never` refuses it outright.
         //
         // The root is given the panel's own height, explicitly, on every
         // layout of the hosting view (`TrayFit.hostHeight`), and pins the
@@ -76,15 +79,10 @@ struct MenuBarTrayView: View {
         // Before the first layout the height is unknown, and the root is as
         // tall as its content — which is exactly what the first measurement
         // asks.
-        Group {
-            if fit.isClamped {
-                ScrollView(.vertical) { measured }
-                    .scrollBounceBehavior(.basedOnSize)
-            } else {
-                measured
-            }
-        }
-        .frame(width: Board.trayWidth, height: fit.hostHeight > 0 ? fit.hostHeight : nil, alignment: .top)
+        ScrollView(.vertical) { measured }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.never)
+            .frame(width: Board.trayWidth, height: fit.hostHeight > 0 ? fit.hostHeight : nil, alignment: .top)
         // `store.start()` hangs on the board window's `.task`. In the menu
             // bar mode there is no window, so without this the tray would be
             // empty and would never have asked for access. `start()` is
