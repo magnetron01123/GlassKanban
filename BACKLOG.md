@@ -321,8 +321,9 @@ einen Rückbau schützen.
     (`Über deinem Limit` mit den beiden Knöpfen). Offen ist nur die Form im kleinen
     Element — kein Sheet über einem Popover; eher eine Zeile in der Mulde, die den Zug
     hält, bis geantwortet ist. Nie stilles Zulassen, nie stilles Verbot.
-  - *Das Symbol in der Menüleiste ist stumm.* Ein monochromes Template-Glyph — drei
-    Spuren, zwei mit Karten — ohne Zahl, ohne Badge, ohne Farbe. Eine Zahl in der
+  - *Das Symbol in der Menüleiste ist stumm.* Ein monochromes Template-Glyph — das
+    Board, vier Spuren in einem Rahmen (gebaut mit dreien aus SF Symbols, am
+    13.09.2026 auf vier nachgezeichnet) — ohne Zahl, ohne Badge, ohne Farbe. Eine Zahl in der
     Menüleiste ist ein Dauer-Badge, und ein Dauer-Badge ist das, was Reminders'
     rote Zahl aus einer Aufgabenliste in eine Anklage macht. Verworfen wurde auch, das
     Glyph bei freiem „In Bearbeitung"-Platz hohl zu zeichnen: ein Zustand, der den
