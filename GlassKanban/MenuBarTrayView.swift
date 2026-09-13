@@ -43,6 +43,9 @@ struct MenuBarTrayView: View {
     /// Reminders' own icon, as installed — read once; the app does not change
     /// while the panel is open. `nil` only where Reminders is missing, and
     /// then the row still reads.
+    /// This app's own icon, for the row that leads to its board.
+    static let boardIcon: NSImage? = NSApp.applicationIconImage
+
     static let remindersIcon: NSImage? = {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.reminders")
         else { return nil }
@@ -154,15 +157,21 @@ struct MenuBarTrayView: View {
                 TraySection(status: status, openBoard: openBoard, liftedFrom: $liftedFrom)
             }
             // The foot, the way the system's panels end: a hairline, then the
-            // way to the deeper app — Bluetooth's "Bluetooth-Einstellungen …",
-            // ours "Erinnerungen öffnen". Reminders is the store, with the
-            // search, subtasks and attachments this panel leaves out, and the
-            // board carries the same way out in its toolbar (13.09.2026). No
-            // "Open Board" row: every row opens the board with its card, and
-            // "N more" opens it plain. Quit only where there is no Dock icon
-            // to quit from.
+            // ways out. First the board itself: a row opens it *with* a card,
+            // but in the menu bar mode the panel is the one thing on screen,
+            // and a user who wants the board and not a card had no row to
+            // click — the way to the app has to be visible, and it stands
+            // above the way to Reminders (13.09.2026, user; reverses the
+            // "no Open Board row" of 12.09.). Then Reminders, the store with
+            // the search, subtasks and attachments this panel leaves out —
+            // Bluetooth's "Bluetooth-Einstellungen …" is the pattern. Quit
+            // only where there is no Dock icon to quit from.
             VStack(alignment: .leading, spacing: 0) {
                 separator
+                TrayActionRow(title: String(localized: "Open Board"), icon: Self.boardIcon) {
+                    openBoard(nil)
+                }
+                .padding(.horizontal, Board.trayPadding)
                 TrayActionRow(title: String(localized: "Open Reminders"), icon: Self.remindersIcon) {
                     MenuBarTrayController.shared.close()
                     store.openRemindersApp()

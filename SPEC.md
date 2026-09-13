@@ -946,9 +946,13 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 nach", VoiceOver-Aktion. Jede Zeile ist beweglich, Erledigt eingeschlossen. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
 wie auf dem Board. Das Zugbild ist eigens gezeichnet (Punkt und Titel auf eigenem Grund):
 ein Schnappschuss der Zeile zeigte nur den Punkt, weil vibranter Text außerhalb des Glases
-unsichtbar rendert. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte — einen
-eigenen „Board öffnen"-Knopf gibt es nicht.
-**Der Fuß des Panels, wie Apples Panels enden:** eine Haarlinie, darunter „Erinnerungen
+unsichtbar rendert. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte; „Board
+öffnen" im Fuß öffnet es ohne Karte (siehe unten).
+**Der Fuß des Panels, wie Apples Panels enden:** eine Haarlinie, darunter zuerst **„Board
+öffnen"** mit dem App-Symbol von Glass Kanban (13.09.2026, Nutzer: im Menüleisten-Modus ist
+das Panel das Einzige auf dem Bildschirm, und wer das Board und keine Karte will, hatte
+keine Zeile dafür — der Weg zur eigenen App steht über dem zur fremden; damit ist die
+Regel „kein eigener Board-öffnen-Knopf" vom 12.09. zurückgenommen), dann „Erinnerungen
 öffnen" als Menüzeile (13.09.2026) — der Weg in die tiefere App, den Bluetooth mit
 „Bluetooth-Einstellungen …" und Time Machine mit „… öffnen …" gehen; Erinnerungen ist
 der Speicher mit Suche, Unteraufgaben und Anhängen, und das Board trägt denselben
