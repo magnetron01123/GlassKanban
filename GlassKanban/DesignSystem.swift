@@ -116,6 +116,22 @@ enum Board {
     /// corner. The row highlight sits one step under it, per the nesting rule.
     static let trayRadius: CGFloat = 12
     static let trayRowShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+    /// The columns a row's trailing facts stand in — the dwell time and the
+    /// due date —, each reserved by every row of a section as soon as one
+    /// row shows it, the way an `NSMenu` gives every item the key-equivalent
+    /// column once one item has a shortcut. Without that, titles beside a
+    /// fact ended a word earlier than titles without one, and the ragged
+    /// edge read as disorder (13.09.2026, user). Minimums, not widths: the
+    /// widest labels measured at 11 pt are "Überfällig" (51 pt) and
+    /// "99 Tage" (42 pt); a label that ever measures more pushes the title
+    /// instead of losing its own last letters.
+    static let trayDueColumn: CGFloat = 52
+    static let trayDwellColumn: CGFloat = 44
+    /// An overdue date written as text: the system's own red, as Reminders
+    /// writes its overdue dates. Not `overdueFill` — that one is darkened
+    /// for white text *on* it and, used as text, dropped to ~2:1 on the dark
+    /// panel (review, 13.09.2026).
+    static let overdueText = Color.red
     /// A section a row is about to land in. Faint: a menu highlights, it
     /// does not announce.
     static let trayDropTint: Double = 0.12

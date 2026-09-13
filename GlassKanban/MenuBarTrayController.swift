@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Combine
+import Carbon.HIToolbox
 
 /// The menu bar item and the panel it opens.
 ///
@@ -26,6 +27,8 @@ final class MenuBarTrayController: NSObject {
     private var panel: NSPanel?
     private var outsideClickMonitor: Any?
     private var localClickMonitor: Any?
+    private var escapeMonitor: Any?
+    private var keyLossObserver: NSObjectProtocol?
     private var cancellables: Set<AnyCancellable> = []
     private var visibilityObservation: NSKeyValueObservation?
     /// True while this controller is setting `isVisible` itself, so the
@@ -396,6 +399,29 @@ final class MenuBarTrayController: NSObject {
             }
             return event
         }
+        // Escape closes the panel, as it closes every menu. The panel is key
+        // while open (`makeKey()` in `open()`), so the key arrives here. Not
+        // while the capture field holds a draft: there Escape gives up the
+        // draft first (`BacklogCaptureRow.onExitCommand`), and the next one
+        // closes — Spotlight's own two steps.
+        escapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, event.window === panel, event.keyCode == kVK_Escape,
+                  !(panel?.firstResponder is NSTextView) else { return event }
+            Task { @MainActor in self.close() }
+            return nil
+        }
+        // And when the key status goes elsewhere without a click — ⌘-Tab to
+        // another app, a hot key that opens another window. A menu closes
+        // then; a panel that stayed would also be one Escape can no longer
+        // reach, because the key now goes where the focus went (review,
+        // 13.09.2026). Menus and drags do not take key status, so a row's
+        // context menu and a lifted row are unaffected (measured the same
+        // day).
+        keyLossObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification, object: panel, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.close() }
+        }
     }
 
     /// The status bar's own windows — the item's button lives in one per
@@ -408,8 +434,12 @@ final class MenuBarTrayController: NSObject {
     private func stopWatchingForClicksOutside() {
         if let outsideClickMonitor { NSEvent.removeMonitor(outsideClickMonitor) }
         if let localClickMonitor { NSEvent.removeMonitor(localClickMonitor) }
+        if let escapeMonitor { NSEvent.removeMonitor(escapeMonitor) }
+        if let keyLossObserver { NotificationCenter.default.removeObserver(keyLossObserver) }
         outsideClickMonitor = nil
         localClickMonitor = nil
+        escapeMonitor = nil
+        keyLossObserver = nil
     }
 }
 

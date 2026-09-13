@@ -788,11 +788,13 @@ nativen Mac-App statt eines austauschbaren Tools?
   in der nativen Reminders-App hat) als kleiner Akzent/Punkt auf der Karte — verbindet das Board
   visuell mit der bestehenden, vertrauten Reminders-Farbcodierung, ganz ohne neue Konzepte.
 
-### Was das Menüleisten-Panel gekostet hat: die Messungen (08.–13.09.2026)
+### Das Menüleisten-Panel: Messungen und Herleitungen (08.–13.09.2026)
 
 Die Bauform des Panels (SPEC.md, „Menüleiste: das Tablett") ist nicht gewählt, sondern
 gemessen. Die Pläne, in denen die Messungen standen, sind mit dem Merge gelöscht
-(`plans/README.md`); die Befunde, an denen Code hängt, bleiben hier.
+(`plans/README.md`); die Befunde, an denen Code hängt, bleiben hier. Die Geschichte der
+*Form* — Mulden, Falz, Trennstriche, was der Nutzer wann verwarf — steht in BACKLOG.md
+(„Fensterverhalten"), nicht doppelt hier.
 
 | Datum | Messung | Ergebnis | Folge |
 |---|---|---|---|
@@ -804,7 +806,12 @@ gemessen. Die Pläne, in denen die Messungen standen, sind mit dem Merge gelösc
 | 12.09.2026 | Textfeld im nicht aktivierenden Panel | **Positiv.** Finder vorn, Panel offen: Fokus ohne Klick, jeder Tastendruck kam an, Return löste `onSubmit`, Finder blieb aktiv. | Schnellerfassung ohne Aktivierungs-Weiche. |
 | 12.09.2026 | `RegisterEventHotKey` (Carbon) in der Sandbox | **Positiv, mit Grenze.** `noErr` und Auslösen aus dem Hintergrund in `.regular` *und* `.accessory`; doppelte Registrierung liefert `-9878`. **Aber:** ⌘Leertaste und ⌘Tab registrieren fehlerfrei und feuern nie — ein systemreserviertes Kürzel meldet sich nicht. | Konfliktmeldung nur für den gemeldeten Fall; die Fußzeile der Einstellungen sagt, dass ein anderweitig belegtes Kürzel bei der anderen App bleibt. |
 | 12.09.2026 | Hover- und Ablegeglas (`glassEffect` auf Zeile und Abschnitt) | **Positiv.** Weiche, hellere Glasschicht statt hartem Rechteck; das akzentgetönte Band über dem Zielabschnitt ebenso. Der Zug landete. | Kein Rückfall auf Farbflächen. |
-| 13.09.2026 | Geometrie und Schrift gegen Systemmenüs und -panels | Menü hängt 4 pt links vom Symbol, 1 pt unter der Leiste; Highlight 5 pt vom Rand, Text 16 pt; Zeilen 13 pt regular; Panel-Köpfe (Bluetooth) 13 pt fett. | `Board.trayMenuEdgeInset`, `trayPadding`, `trayRowInset`, `BoardText.header` für die Köpfe. |
+| 13.09.2026 | Geometrie gegen das eigene `NSMenu` und Time Machines | Menü hängt 4 pt links vom Symbol (die Messung vom Vortag las 3 und ließ das Panel 1 pt neben seinen Nachbarn stehen), 1 pt unter der Leiste; Highlight 5 pt vom Rand, Text und Haarlinien 16 pt. Zentriert unter dem Symbol, wie zuvor, sah es anders aus als jedes Menü daneben. | `Board.trayMenuEdgeInset`, `trayPadding`, `trayRowInset`. |
+| 13.09.2026 | Schrift gegen Systemmenü und Apples Panels | Zeilen 13 pt regular = `NSFont.menuFont`, Textbreite auf 1 px gleich. Köpfe: ein `NSMenu`-Abschnittskopf ist 11 pt halbfett — aber das ist die *Untergruppe* in einem Menü; Apples Panels (Bluetooth, Bildschirmsynchronisierung) setzen ihre Köpfe **13 pt fett über 13-pt-Zeilen**. Mit 11 pt lasen sich unsere Köpfe als Fußnoten ihrer Zeilen (Nutzer). | Köpfe in `BoardText.header` (13 pt semibold) — dasselbe Token wie der Spaltenkopf des Boards. |
+| 13.09.2026 | Die Fälligkeit als Kapsel im Menü | Die rote Kapsel des Boards war dreimal gestapelt das Lauteste im Panel und las sich als stehende Anklage (Prinzip 2: Aufmerksamkeit gehört Ereignissen, nicht Dauerzuständen). Menüs setzen Zusatzinfos als Text rechts (Time Machine: „Heute, 08:36"), Erinnerungen schreibt Überfälliges als roten Text. Erste Fassung nahm `overdueFill` als Textfarbe — ~2:1 auf dunklem Glas (Review); „Heute" verlor die Tönung und glich der Verweildauer. | Text statt Kapsel: Überfällig in Systemrot (`Board.overdueText`), Heute in der Textfarbe, Verweildauer sekundär. Titel neben einem Datum endeten ein Wort früher als Titel ohne — deshalb die Spalte pro Abschnitt, nach dem Vorbild der Kürzel-Spalte im `NSMenu`, für Datum *und* Verweildauer. |
+| 13.09.2026 | „Einstellungen …" im Rechtsklick-Menü | `NSApp.sendAction(Selector(("showSettingsWindow:")))` wird angenommen und ignoriert — der Eintrag tat zweimal nichts. | `openSettings` aus der SwiftUI-Umgebung des Tabletts, per Notification angestoßen. |
+| 13.09.2026 | Escape und Fokusverlust | Das Panel ist Key-Fenster, der Tastendruck kam an, nichts antwortete (Kontrolle: alter Build offen, neuer zu). Nach ⌘-Tab wäre es nicht mehr Key und Escape ginge an die andere App — ein Menü schließt dann. | Lokaler Monitor für Escape (nicht im Textfeld: dort verwirft das erste Escape den Entwurf), `didResignKey` schließt. Kontextmenü und Zug nehmen den Key-Status nicht — gemessen, beide bleiben offen. |
+| 13.09.2026 | Transparenz gegen Apples Bluetooth-Panel, derselbe Hintergrund | Helligkeit 247,2 gegen 247,1; Durchschein des Hintergrunds (Streifen-Kontrast) 1,15 gegen 2,22, nackt 4,94. Gleiches Material, gleiches Bild. | Nichts geändert — eine Tönung bewegte das Panel von Apples Panels *weg*. |
 
 **Zur Messmethode der Tastaturbefunde:** Die Tastendrücke kamen von der CGEvent-Ebene,
 nicht von einer echten Tastatur — CLAUDE.md warnt davor, daraus Befunde abzuleiten. Hier

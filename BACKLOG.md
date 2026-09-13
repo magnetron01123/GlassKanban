@@ -445,14 +445,17 @@ einen Rückbau schützen.
   Nutzer hatte die Falz nur für Backlog und Erledigt verlangt, und der eigene 6er-Deckel
   ließ eine gezogene Karte verschwinden. Von 47 nachgeprüften Funden hielten 9, 9 waren
   schon behoben, 29 hielten nicht.
-  **Was die drei Messungen ergaben (12.09.2026, Protokoll im Bauplan):** Ein Textfeld im
-  nicht aktivierenden Panel nimmt Fokus und Tastatur an, während eine andere App aktiv
-  bleibt — die Erfassung brauchte keine Aktivierungs-Weiche. `RegisterEventHotKey` feuert
-  in dieser Sandbox in beiden Aktivierungs-Policies. **Aber es meldet keine fremde
-  Belegung:** ⌘Leertaste und ⌘Tab lassen sich fehlerfrei registrieren und feuern nie —
-  die Konfliktmeldung kann also nur den gemeldeten Fall nennen, und die Fußzeile sagt den
-  Rest. Hover- und Ablegeglas wurden nachgeholt und tragen (weiche Glasschicht, kein
-  zweites Rechteck).
+  **Die Messungen** (Textfeld im nicht aktivierenden Panel, Carbon-Kurzbefehl in der
+  Sandbox, Hover- und Ablegeglas, Geometrie und Schrift gegen die Systemmenüs) stehen
+  in CONCEPT.md („Das Menüleisten-Panel: Messungen und Herleitungen").
+  **Anlage an die Systemmenüs (13.09.2026, Nutzer):** Das Panel hängt, misst und
+  schreibt wie ein Systemmenü — linke Kante, Innenabstände, Zeilenschrift; die Köpfe in
+  der Größe, die Apples Panels ihren Köpfen geben (13 pt, nicht die 11 pt eines
+  Menü-Untertitels). Die Fälligkeit wurde von der Kapsel zum Text, mit reservierter
+  Spalte pro Abschnitt, damit die Titel auf einer Flucht enden. Escape und Fokusverlust
+  schließen, „Bearbeiten" steht im Kontextmenü, „Einstellungen …" im Rechtsklick-Menü
+  tut, was es sagt. Verworfen im selben Zug: Titel an Wortgrenzen kürzen („Explizit
+  abgelehnt"). Die Transparenz wurde gegen Apples Panel gemessen und blieb.
   Weiterhin nicht: Statistik, Streak, Suche, Filter, Tastaturnavigation über Zeilen, ein
   Zustand am Symbol, eine Rückgängig-Zeile.
 
@@ -1082,6 +1085,13 @@ Gebaut wurde stattdessen eine Meldung, die den Systemzustand benennt (SPEC.md).
   habe statt gegen die tatsächliche Feature-History — erst „immer sichtbar mit 0", dann
   wieder „ganz versteckt". Beides falsch. **Vor Änderungen an bestehendem UI-Verhalten
   immer `git log --all` auf die betroffene Datei prüfen.**
+
+- **Titel im Menüleisten-Panel an Wortgrenzen kürzen** — gebaut und am 13.09.2026 vom
+  Nutzer zurückgenommen (`602a3f5`, revertiert). Die Zeile maß ihren Platz und ließ ganze
+  Wörter fallen („Hausratversicherung…" statt „Hausratversicherung abschli…"). Entscheidung:
+  **Apple-Standard** — das System kürzt zeichenweise, und jedes Menü, jede Liste auf dem Mac
+  tut es genauso; eine eigene Kürzung wäre eine Abweichung, die nur im Vergleich mit dem
+  System auffällt. Nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst öffnet.
 
 ## Kleiner Rest aus dem Nutzer-Review (10.08.2026)
 

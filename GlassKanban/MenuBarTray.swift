@@ -86,6 +86,16 @@ enum MenuBarTray {
         return days >= KanbanCard.agingThresholdDays
     }
 
+    /// Which rows name their date: only the dates that decide what to
+    /// finish *now* — today and overdue — and never on a finished card. A
+    /// grey "12. Sep" is planning, and planning happens on the board. The
+    /// same test that tints the board's badge (`KanbanCard.isUrgent`), so
+    /// the section that reserves the column and the row that fills it can
+    /// never disagree.
+    static func showsDueDate(_ card: KanbanCard, calendar: Calendar = .current, now: Date = .now) -> Bool {
+        card.status != .done && card.isUrgent(calendar: calendar, now: now)
+    }
+
     /// Every row may move, Erledigt included (12.09.2026, user).
     ///
     /// It was barred until then, for a real reason: a move out of Erledigt is

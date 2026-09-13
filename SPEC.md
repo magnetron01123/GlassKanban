@@ -894,7 +894,7 @@ hochgehaltene Karte zurück; ein Klick auf die Flamme legte die Statistik vorher
 den offenen Editor. Die Toolbar bleibt sichtbar und scharf — sie ist Chrome, kein Inhalt
 — konkurriert aber nicht mit dem, was gerade in der Hand ist.
 
-### Menüleiste: das Tablett (08.09.2026, Form neu gefasst 11.09.2026, erweitert 12.09.2026)
+### Menüleiste: das Tablett (08.09.2026, Form neu gefasst 11.09.2026, erweitert 12.09.2026, an die Systemmenüs angelegt 13.09.2026)
 
 Neben dem Board kann die App in der Menüleiste liegen. Ein Klick auf das Symbol öffnet
 das **Tablett**: ein Panel von 340 pt Breite im Stil der Systempanels, darin **vier
@@ -902,12 +902,14 @@ Abschnitte untereinander, in Board-Reihenfolge** — „Backlog", „Als Nächst
 Bearbeitung", „Erledigt" —, jeder mit Kopf und Zahl, darunter Zeilen wie in einem Menü. Es
 hängt unter dem Symbol des Bildschirms, auf dem geklickt wurde, **so wie macOS das Menü
 eines Menüleistensymbols hängt:** linke Kante 4 pt links der linken Symbolkante, Oberkante
-1 pt unter der Menüleiste — gemessen am eigenen `NSMenu` desselben Symbols und gegengeprüft
-am Time-Machine-Menü (13.09.2026; die erste Messung vom Vortag lag 1 pt daneben). Innen
-ebenso: Zeilen-Hover 5 pt vom Glasrand, Text und Haarlinien 16 pt — wie ein Systemmenü.
-Zentriert unter dem Symbol, wie davor, sah es anders aus als jedes Menü daneben. Herleitung und die verworfenen Formen
-— darunter die erste gebaute Fassung mit drei Mulden nebeneinander — stehen in BACKLOG.md
-(„Fensterverhalten").
+1 pt unter der Menüleiste. Innen ebenso: Zeilen-Hover 5 pt vom Glasrand, Text und
+Haarlinien 16 pt — die Maße eines Systemmenüs, nachgemessen (CONCEPT.md, „Das
+Menüleisten-Panel: Messungen"). **Es schließt, wie ein Menü schließt:** Klick daneben,
+Klick auf das Symbol, Escape — steht der Cursor in der Erfassung, verwirft das erste Escape
+den Entwurf, das zweite schließt (Spotlights zwei Schritte) — und der Verlust des
+Tastaturfokus ohne Klick (⌘-Tab), denn sonst stünde es da, ohne dass Escape es noch
+erreichte. Die verworfenen Formen — darunter die erste gebaute Fassung mit drei Mulden
+nebeneinander — stehen in BACKLOG.md („Fensterverhalten").
 
 **Leitsatz: ein Menüleisten-Panel, kein kleines Board.** Man öffnet es, um mal eben
 etwas zu erledigen. Es erinnert an das Board, ist aber abstrakter: eine Schicht Glas,
@@ -919,23 +921,23 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 
 | Element | Board | Tablett |
 |---|---|---|
-| Spurkopf | Name und Zähl-Chip | **Symbol**, Name und Zahl als Text, 13 pt semibold sekundär — der Spaltenkopf des Boards, und die Größe, die Apples Panels ihren Köpfen geben (Bluetooth: 13 pt fett über 13-pt-Zeilen, gemessen 13.09.2026; mit 11 pt lasen sich die Köpfe als Fußnoten ihrer Zeilen); die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Zwischen zwei Abschnitten eine Haarlinie wie in den Systempanels (12.09.2026 zurückgenommen: Luft allein trug nicht, zwei kurze Abschnitte übereinander lasen sich als ein Block) |
+| Spurkopf | Name und Zähl-Chip | **Symbol**, Name und Zahl als Text, 13 pt semibold sekundär — der Spaltenkopf des Boards, und die Größe, die Apples Panels ihren Köpfen geben; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Zwischen zwei Abschnitten eine Haarlinie wie in den Systempanels |
 | Stufen-Symbol | keins — die Spur erklärt sich durch die Karten darin | vor jedem Kopf: Backlog `tray`, Als Nächstes `circle`, In Bearbeitung `circle.lefthalf.filled`, Erledigt `checkmark.circle`, am linken Rand |
-| Hierarchie | Papier in der Mulde | **ein Baum, keine Liste:** der Kopf steht am Rand, seine Zeilen rücken bis unter den Kopf*namen* ein (22 pt) — wie die Seitenleiste von Finder und Erinnerungen. Zwei Glyphenspalten, zwei Ebenen: links nur Stufen-Symbole, eingerückt nur Listenpunkte. Eine erste Fassung vom 12.09. setzte Kopfname und Titel auf eine Flucht; das las sich als sieben gleiche Zeilen |
-| Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeits-Badge **nur bei Heute und Überfällig** — graue Daten sind Planung, und die findet auf dem Board statt; Hover hebt die Zeile als hellere Glasschicht |
+| Hierarchie | Papier in der Mulde | **ein Baum, keine Liste:** der Kopf steht am Rand, seine Zeilen rücken bis unter den Kopf*namen* ein (22 pt) — wie die Seitenleiste von Finder und Erinnerungen. Zwei Glyphenspalten, zwei Ebenen: links nur Stufen-Symbole, eingerückt nur Listenpunkte |
+| Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeit **nur bei Heute und Überfällig** (`MenuBarTray.showsDueDate`), als schlichter Text rechts, 11 pt — Überfällig in Systemrot, wie Erinnerungen es schreibt, Heute in der Textfarbe, die Verweildauer daneben sekundär: die drei Gewichte des Board-Badges als drei Textfarben, keine Kapsel (warum: CONCEPT.md, „Das Menüleisten-Panel: Messungen"). Graue Daten sind Planung, und die findet auf dem Board statt. **Zeigt eine Zeile des Abschnitts eine Fälligkeit oder eine Verweildauer, halten alle seine Zeilen die Spalte dafür frei**, damit die Titel auf einer Flucht enden — wie ein Menü allen Einträgen die Kürzel-Spalte gibt, sobald einer eins hat; Mindestbreiten, ein längeres Wort schiebt den Titel, statt selbst gekürzt zu werden. Zu lange Titel kürzt das System zeichenweise (BACKLOG.md, „Explizit abgelehnt"). Hover hebt die Zeile als hellere Glasschicht |
 | Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |
-| Verweildauer | ab 3 Tagen auf jeder Karte der Arbeitsspuren, mit Uhr-Glyph | nur in „In Bearbeitung", ab derselben Schwelle, als bloße Zahl rechts vor dem Badge. Auf den anderen Abschnitten wäre sie eine Zahl ohne Frage |
-| Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach" | „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
+| Verweildauer | ab 3 Tagen auf jeder Karte der Arbeitsspuren, mit Uhr-Glyph | nur in „In Bearbeitung", ab derselben Schwelle, als bloße Zahl rechts vor der Fälligkeit, in ihrer eigenen Spalte. Auf den anderen Abschnitten wäre sie eine Zahl ohne Frage |
+| Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach" | dieselben, in derselben Reihenfolge: „Bearbeiten" öffnet das Board mit dem Editor der Karte (dasselbe wie ein Klick auf die Zeile), „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
 | Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
 | Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | in Ruhe die letzten 3 (Bestätigung, keine Liste), die Falz-Zeile öffnet das 7-Tage-Fenster |
-| Backlog | eigene Spur mit Falz-Zeile | **ein Abschnitt wie die anderen, mit der Falz-Zeile des Boards** (12.09.2026): in Ruhe schneidet er wie `BacklogFold` — erst die noch nicht fälligen weg (dieselbe Einstellung „Noch nicht Fälliges einklappen"), dann der Deckel, hier 8 statt 15. Darunter die Zeile des Boards, Wort für Wort: „N noch nicht fällig", „N weitere anzeigen", „Weniger anzeigen". Aufgeklappt alle Karten; das Panel wächst nach unten mit, kein Abschnitt scrollt in sich — nur ein zu kurzer Bildschirm begrenzt das Panel, und dann scrollt es als Ganzes. Zustand pro Sitzung wie auf dem Board; das Panel öffnet in Ruhe. Zuvor am selben Tag verworfen: Kopf allein, Kopf mit „Auf dem Board", Falz am Kopf mit gemerktem Zustand (BACKLOG.md) |
-| Falz-Zeile | zentriert unter dem Stapel, Text medium sekundär, Chevron dreht, Hover hebt auf primär, kein Glas | dieselbe Zeile, **linksbündig in der Zeilenspalte, das Chevron vorn im Glyphenfeld** wie das Plus der Erfassung (zentriert und mit Chevron hinten wirkte sie im Menü deplatziert, 12.09.2026); ohne Punkt und ohne Glas-Hover, genau das unterscheidet sie von einem Ticket. Gilt **nur für Backlog und Erledigt**, wie auf dem Board: Als Nächstes und In Bearbeitung falten nie — ihr WIP-Limit hält sie kurz, und eine dorthin gezogene Karte muss dort zu sehen sein, wo sie gelandet ist (ein Tag lang galt hier ein eigener 6er-Deckel, und eine Karte verschwand dahinter). Erledigt ab 3 („N ältere anzeigen" öffnet das 7-Tage-Fenster des Boards; die 30 Tage bleiben dem Board) |
+| Backlog | eigene Spur mit Falz-Zeile | **ein Abschnitt wie die anderen, mit der Falz-Zeile des Boards** (12.09.2026): in Ruhe schneidet er wie `BacklogFold` — erst die noch nicht fälligen weg (dieselbe Einstellung „Noch nicht Fälliges einklappen"), dann der Deckel, hier 8 statt 15. Darunter die Zeile des Boards, Wort für Wort: „N noch nicht fällig", „N weitere anzeigen", „Weniger anzeigen". Aufgeklappt alle Karten; das Panel wächst nach unten mit, kein Abschnitt scrollt in sich — nur ein zu kurzer Bildschirm begrenzt das Panel, und dann scrollt es als Ganzes. Zustand pro Sitzung wie auf dem Board; das Panel öffnet in Ruhe |
+| Falz-Zeile | zentriert unter dem Stapel, Text medium sekundär, Chevron dreht, Hover hebt auf primär, kein Glas | dieselbe Zeile, **linksbündig in der Zeilenspalte, das Chevron vorn im Glyphenfeld** wie das Plus der Erfassung; ohne Punkt und ohne Glas-Hover, genau das unterscheidet sie von einem Ticket. Gilt **nur für Backlog und Erledigt**, wie auf dem Board: Als Nächstes und In Bearbeitung falten nie — ihr WIP-Limit hält sie kurz, und eine dorthin gezogene Karte muss dort zu sehen sein, wo sie gelandet ist. Erledigt ab 3 („N ältere anzeigen" öffnet das 7-Tage-Fenster des Boards; die 30 Tage bleiben dem Board) |
 | Zugziele | alle drei anderen Spuren | alle drei anderen Abschnitte, Backlog eingeschlossen — Zurücklegen ist ein Kanban-Zug, und die Karte landet in einer Zahl, die man sieht |
 | Ablegeziel | gestrichelter Umriss in Kartenform | der ganze Abschnitt hebt sich als akzentgetöntes Glas, wie eine Menüzeile unter dem Zeiger |
 | WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen; passt beides nicht in eine Zeile — auf Deutsch der Normalfall —, stehen die Knöpfe unter der Frage, statt dass Spaltenname und Zahlen abgeschnitten werden |
 | Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
 | ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |
-| Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Alert | **erlaubt** (12.09.2026). Er war gesperrt, weil der Hinweis dem Board gehörte und der Fehlschlag hier stumm verpufft wäre; das Panel sagt ihn jetzt selbst — `SaveFailure` trägt seine `MoveSource`, und die Absage steht als Zeile im Panel (siehe unten) |
+| Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Alert | erlaubt; die Absage steht als Zeile im Panel (siehe unten), weil `SaveFailure` seine `MoveSource` trägt |
 | Abgelehnter Schreibvorgang | Alert über dem Board | Zeile ganz oben im Panel, rot getönt, Titel und Grund in den Worten des Boards; ein Klick blendet sie aus. Kein Alert: er nähme den Fokus, und im Menüleisten-Modus gibt es kein Fenster, über dem er stehen könnte |
 | Erfassen | „+" legt an und öffnet den Editor | Zeile „Neue Aufgabe" unter dem Backlog-Kopf, nur der Titel (siehe unten) |
 | Tooltips, Streak, Statistik, Suche, Editor, Umbenennen, Löschen | ja | nichts davon; Chrome bleibt im Fenster |
@@ -986,8 +988,8 @@ braucht Zugriff auf Erinnerungen, um überhaupt etwas zu zeichnen, und im Menül
 gibt es weder Dock-Symbol noch App-Menü — ohne dieses Menü lief eine App ohne Zugriff
 also ohne Ausweg (12.09.2026). „Board öffnen" erzeugt das Fenster auch dann, wenn dieser
 Start noch keines hatte. „Einstellungen …" öffnet nur die Einstellungen, nicht das Board mit
-(13.09.2026 — der alte Weg über `showSettingsWindow:` wird vom System angenommen und dann
-ignoriert; der Eintrag tat nichts, bis er über `openSettings` lief).
+(über `openSettings` — der einzige Weg, der trägt; CONCEPT.md, „Das Menüleisten-Panel:
+Messungen").
 
 **Auslassungspunkte folgen der Apple-Regel:** Sie stehen nur hinter einem Befehl, der vor
 seinem Abschluss noch eine Eingabe oder Wahl verlangt — „Einstellungen …", „Finden …" —,
