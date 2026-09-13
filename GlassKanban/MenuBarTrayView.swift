@@ -24,6 +24,8 @@ struct MenuBarTrayView: View {
     /// and then lives on — a plain read of the shared value showed the
     /// footer of whichever mode was current when the tray was first opened.
     @ObservedObject private var presence = PresenceController.shared
+    /// Whether the screen is too short for the panel (see `TrayFit`).
+    @ObservedObject private var fit = MenuBarTrayController.shared.fit
 
     /// The section a row is being dragged out of, so that section alone does
     /// not light up as a target for its own row. Kept here rather than in the
@@ -57,19 +59,32 @@ struct MenuBarTrayView: View {
         // short is the panel clamped to it — and then the whole panel
         // scrolls. The scroll view is always there so the clamped case needs
         // no second layout; with room enough it never moves.
-        ScrollView(.vertical) {
-            content
-                .frame(width: Board.trayWidth)
-                // The content's *natural* height — inside the scroll view it
-                // is never squeezed, so this is the height the panel wants.
-                // Measured here rather than trusted to the hosting
-                // controller: `preferredContentSize` did not move the window
-                // when a section folded shut (12.09.2026).
-                .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
-                    MenuBarTrayController.shared.contentHeightChanged(height)
-                }
+        // Only when the screen is too short is there a scroll view: a scroll
+        // view lays its content out at the *final* height while the rows
+        // are still sliding, believed the content taller than the panel
+        // during every unfold, showed the system's 16 pt scroller and
+        // centred the 340 pt content in the 324 pt left — everything 8 pt
+        // to the left until the edge caught up (measured 13.09.2026;
+        // `.scrollIndicators(.hidden)` did not stop it).
+        //
+        // The root is given the panel's own height, explicitly, on every
+        // layout of the hosting view (`TrayFit.hostHeight`), and pins the
+        // content to its top. `NSHostingView` centres a root that is smaller
+        // than itself, and for the half second of a fold the rows *are*
+        // smaller than the edge — a `Color.clear` filler did not stop it:
+        // the head still dipped 7 pt and came back (measured 13.09.2026).
+        // Before the first layout the height is unknown, and the root is as
+        // tall as its content — which is exactly what the first measurement
+        // asks.
+        Group {
+            if fit.isClamped {
+                ScrollView(.vertical) { measured }
+                    .scrollBounceBehavior(.basedOnSize)
+            } else {
+                measured
+            }
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .frame(width: Board.trayWidth, height: fit.hostHeight > 0 ? fit.hostHeight : nil, alignment: .top)
         // `store.start()` hangs on the board window's `.task`. In the menu
             // bar mode there is no window, so without this the tray would be
             // empty and would never have asked for access. `start()` is
@@ -87,6 +102,18 @@ struct MenuBarTrayView: View {
             // on 13.09.2026.
             .onReceive(NotificationCenter.default.publisher(for: .glassKanbanOpenSettings)) { _ in
                 openSettings()
+            }
+    }
+
+    /// The content at its own width, reporting its own height — the height
+    /// the panel wants. Measured here rather than trusted to the hosting
+    /// controller: `preferredContentSize` did not move the window when a
+    /// section folded shut (12.09.2026).
+    private var measured: some View {
+        content
+            .frame(width: Board.trayWidth)
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+                MenuBarTrayController.shared.contentHeightChanged(height)
             }
     }
 
@@ -490,9 +517,10 @@ private struct TraySection: View {
             // Nothing else under a head without rows: an empty section is its
             // head, and the head is the drop target then.
         }
+        .animation(reduceMotion ? nil : Board.foldAnimation, value: expanded)
         .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayResets)) { _ in
-            // Shut without animation — see the capture row's receiver for
-            // why a reset must not be seen to move.
+            // Shut without the fold's own animation — see the capture row's
+            // receiver for why a reset must not be seen to move.
             var quiet = Transaction()
             quiet.disablesAnimations = true
             withTransaction(quiet) {
@@ -560,15 +588,17 @@ private struct TraySection: View {
     /// no dot in the glyph field, no glass under the pointer.
     private var foldLine: some View {
         TrayFoldLine(label: foldLabel, expanded: expanded) {
-            // The rows appear, they do not arrive: a menu does not animate
-            // its own contents, and the board's half-second fold ran here
-            // against a window that had already jumped to its new height —
-            // rows fading in under a head that had long moved (13.09.2026,
-            // user: "heftig, viel zu lang"). What moves is the panel's edge,
-            // once and briefly (`MenuBarTrayController.contentHeightChanged`).
-            var quiet = Transaction()
-            quiet.disablesAnimations = true
-            withTransaction(quiet) { expanded.toggle() }
+            // The board's own fold, curve and duration: the rows slide as
+            // the board's cards do, and the panel's bottom edge travels with
+            // them on the same curve (`MenuBarTrayController.foldStarted`) —
+            // one motion, downward. The edge is told how far, not asked to
+            // measure: the rows are fixed-height, so the travel is exactly
+            // the folded rows' height and is known before layout, where the
+            // content's own report still answers with the old height.
+            let travel = CGFloat(foldedCount) * Board.trayRowHeight * (expanded ? -1 : 1)
+            expanded.toggle()
+            NotificationCenter.default.post(
+                name: .glassKanbanTrayFolds, object: nil, userInfo: ["travel": travel])
         }
     }
 

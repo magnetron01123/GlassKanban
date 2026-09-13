@@ -107,14 +107,6 @@ enum Board {
     /// do it. A first cut (12.09.2026, morning) put head and title on one x
     /// and the panel read as seven equal lines with a glyph in front.
     static let trayRowIndent: CGFloat = traySymbolSlot + traySymbolGap
-    /// How long the panel's bottom edge takes to reach a new height. The
-    /// only thing that animates when a section folds or a row changes
-    /// section: the rows themselves appear in place — a menu does not
-    /// animate its contents, and the board's half-second fold played here
-    /// inside a window that had already jumped, which read as heavy and
-    /// long (13.09.2026, user). The hover curve's pace: brief, ease-out,
-    /// under a fast hand.
-    static let trayResizeDuration: TimeInterval = 0.18
     /// An app icon in a menu row — the size a menu draws them (the Finder's
     /// "Open With", Spotlight), in the heads' symbol field.
     static let trayAppIconSize: CGFloat = 16
@@ -396,7 +388,8 @@ enum Board {
     ///
     /// The revealed cards drop their scale-in for the same reason — see
     /// `ColumnView.isFolding`.
-    static let foldAnimation: Animation = .easeInOut(duration: 0.5)
+    static let foldDuration: TimeInterval = 0.5
+    static let foldAnimation: Animation = .easeInOut(duration: foldDuration)
     /// How long a just-arrived card waits before its settle plays — the
     /// transit above plus a small margin. The board's feedback runs on two
     /// clocks: the *hand's* (haptics and the chime, immediate at the drop —
