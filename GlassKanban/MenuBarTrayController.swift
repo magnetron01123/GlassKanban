@@ -264,15 +264,26 @@ final class MenuBarTrayController: NSObject {
         // jumped into place once SwiftUI had measured — the "strange
         // positioning" of the first build (11.09.2026).
         if let glass = panel.contentViewController as? TrayGlassController {
-            // The content's own height once it has reported one; asked of
-            // the content only for the very first opening.
-            let natural = naturalHeight ?? glass.naturalContentHeight
+            // The content's own report wins. The measurement below only
+            // exists to make the content lay out and report before the
+            // panel is shown: its return value is the scroll view's, which
+            // answers a zero proposal with zero — the panel opened 10 pt tall
+            // (13.09.2026). The report it triggers is the real height.
+            let measured = naturalHeight == nil ? glass.naturalContentHeight : 0
+            let natural = naturalHeight ?? measured
             let target = clamped(natural)
             panel.setContentSize(NSSize(width: Board.trayWidth, height: target))
         }
         position(panel)
         panel.orderFrontRegardless()
         panel.makeKey()
+        // And once more on the next turn: a report that arrived while the
+        // panel was not yet visible was stored but not applied, and nothing
+        // reports again until the content changes.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let natural = self.naturalHeight else { return }
+            self.contentHeightChanged(natural)
+        }
         // The shadow is cached against whatever outline the window had
         // before its first display; redone once the glass has drawn.
         DispatchQueue.main.async { panel.invalidateShadow() }
@@ -380,10 +391,9 @@ final class MenuBarTrayController: NSObject {
     private var travelTo: CGFloat = 0
     private var travelTop: CGFloat = 0
 
-    /// Whether the panel is being held to the screen's height — the one
-    /// case in which its content scrolls (`MenuBarTrayView.body`).
+    /// What the panel's SwiftUI root needs to know about the window it sits
+    /// in (`MenuBarTrayView.body`).
     final class TrayFit: ObservableObject {
-        @Published var isClamped = false
         /// The hosting view's height right now — the panel's, frame by
         /// frame while the edge travels — so the SwiftUI root can be exactly
         /// that tall (`MenuBarTrayView.body`).
@@ -407,8 +417,6 @@ final class MenuBarTrayController: NSObject {
     private func clamped(_ height: CGFloat) -> CGFloat {
         guard let screen = anchor?.screen ?? NSScreen.main else { return height }
         let limit = screen.visibleFrame.height - Board.trayEdgeClearance
-        let isClamped = height > limit
-        if fit.isClamped != isClamped { fit.isClamped = isClamped }
         return min(height, limit)
     }
 

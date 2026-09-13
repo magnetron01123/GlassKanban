@@ -611,6 +611,12 @@ final class RemindersStore: ObservableObject {
             cards = []
             streakStats = StreakStats()
             wrappedStats = WrappedStats()
+            // An answer, not a wait: with nothing to draw from, the board's
+            // notice ("no lists" / "choose lists") is the whole of the result.
+            // Returning without this left `emptiness` on `.loading` forever,
+            // which draws nothing — four empty lanes and no word why (review,
+            // 13.09.2026).
+            hasLoadedOnce = true
             return
         }
 
