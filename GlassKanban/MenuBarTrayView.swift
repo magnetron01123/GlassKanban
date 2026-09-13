@@ -713,8 +713,19 @@ private struct TrayRow: View {
             // overdue, the two that carry a tint. A grey "12. Sep" is
             // planning information, and planning happens on the board
             // (SPEC.md, "Menüleiste").
+            // As text, not the board's capsule: in a menu the extra fact
+            // stands as plain text at the right (Time Machine's "Heute,
+            // 08:36"), and Reminders itself writes an overdue date as red
+            // text. The capsule was the loudest thing in the panel — three
+            // of them stacked read as a standing charge (13.09.2026, user),
+            // and it cost the title a dozen points it now keeps.
             if let badge = CardParts.compactBadge(for: card), badge.tint != nil {
-                CardBadgeView(info: badge)
+                Text(badge.label)
+                    .font(BoardText.meta)
+                    .monospacedDigit()
+                    .foregroundStyle(badge.isEmphasized ? AnyShapeStyle(Board.overdueFill) : AnyShapeStyle(.secondary))
+                    .lineLimit(1)
+                    .fixedSize()
             }
         }
         .padding(.leading, Board.trayRowIndent)
