@@ -7,8 +7,8 @@ import Carbon.HIToolbox
 /// system-wide shortcut that needs no Accessibility permission and no third
 /// party package — an `NSEvent` global monitor would demand the user hand this
 /// app the right to watch every keystroke they ever type, for one key
-/// combination. Measured 12.09.2026 (plans/menubar-panel-erweiterungen.md,
-/// M2): in this sandboxed app it registers with `noErr` and fires from the
+/// combination. Measured 12.09.2026 (CONCEPT.md, "Was das
+/// Menüleisten-Panel gekostet hat"): in this sandboxed app it registers with `noErr` and fires from the
 /// background in both activation policies.
 ///
 /// **What it cannot do**, measured the same day: ⌘Space and ⌘Tab register
