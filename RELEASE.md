@@ -78,8 +78,10 @@ Systemregion (Plattformverhalten, kein Fehler).
 **Noch offen:** VoiceOver-Stichprobe in beiden Sprachen an einer Karte und einem
 Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels). Dazu
 seit 08.09.2026 die Längenprüfung der Menüleisten-Texte, mit dem Stand vom 12.09.2026:
-„Glass Kanban beenden" und „Neue Aufgabe" im Panel, „Board öffnen" und
-„Einstellungen …" im Menü des Symbols, die vier Spurköpfe mit ihrer Zahl,
+„Erinnerungen öffnen", „Glass Kanban beenden" und „Neue Aufgabe" im Panel, „Board
+öffnen" und „Einstellungen …" im Menü des Symbols, die vier Spurköpfe mit ihrer Zahl,
+„Überfällig"/„Heute" in der 52-pt-Datumsspalte (Mindestbreite — ein längeres Wort
+schiebt den Titel),
 und in den Einstellungen die drei Werte von „Anzeigen in", „Kurzbefehl" mit „Kein
 Kurzbefehl"/„Aufnahme …" im 150 pt breiten Feld sowie „Von einer anderen App belegt"
 darunter. Das Panel ist mit 340 pt fest und seine Zeilen einzeilig — was dort nicht

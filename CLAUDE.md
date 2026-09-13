@@ -99,16 +99,18 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   in dieser Sandbox in beiden Aktivierungs-Policies feuert — und dass er eine Kollision
   mit einem systemeigenen Kürzel *nicht* meldet. `ShortcutRecorder.swift` ist das Feld in
   den Einstellungen, das eine Tastenkombination fängt, ohne sie auszuführen.
-- **MenuBarTrayController.swift** — das Menüleisten-Symbol samt seinem Rechtsklick-Menü
-  und sein Panel — Lage, Größe und die vier Schließer (Klick daneben, Klick aufs Symbol,
-  Escape, Verlust des Key-Status) —, die einzige
+- **MenuBarTrayController.swift** — das Menüleisten-Symbol (sein Glyph — das Board mit
+  vier Spuren — ist hier gezeichnet, weil SF Symbols bei drei endet) samt seinem
+  Rechtsklick-Menü und sein Panel — Lage, Größe und die vier Schließer (Klick daneben,
+  Klick aufs Symbol, Escape, Verlust des Key-Status) —, die einzige
   Stelle neben `WindowPlacementController`, die `NSWindow`/`NSStatusItem` anfasst.
   **Bewusst AppKit statt `MenuBarExtra`:** In einem `MenuBarExtra`-Popover lebt ein Zug
   zwar, aber der Drop kommt nie an (gemessen 08.09.2026, Gegenprobe auf dem Board
   positiv). Ein Tablett, dessen Karten nicht ziehbar sind, ist nicht dieses Tablett.
 - **MenuBarTrayView.swift** — das Tablett selbst: vier Abschnitte untereinander im
   Menü-Stil (`TraySection`, `TrayRow`, `TrayFoldLine` — die Falz-Zeile des Boards in
-  Menügröße —, `TrayActionRow`, `TraySymbol`, `TrayDragPreview`,
+  Menügröße —, `TrayActionRow` — die Fußzeile „Erinnerungen öffnen" mit dem App-Symbol,
+  und „Beenden" —, `TraySymbol`, `TrayDragPreview`,
   `TrayNoticeRow` — die abgelehnte Schreiboperation inline statt als Alert —, die
   WIP-Zeile) und `BacklogCaptureRow`, die einzige
   Stelle im Panel, an der geschrieben statt bewegt wird.
