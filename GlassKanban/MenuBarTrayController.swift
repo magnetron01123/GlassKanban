@@ -49,6 +49,12 @@ final class MenuBarTrayController: NSObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] presence in self?.apply(presence) }
             .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: .glassKanbanTrayFolds)
+            .sink { [weak self] note in
+                guard let travel = note.userInfo?["travel"] as? CGFloat else { return }
+                self?.foldStarted(travel: travel)
+            }
+            .store(in: &cancellables)
         apply(PresenceController.shared.selection)
     }
 
@@ -257,12 +263,12 @@ final class MenuBarTrayController: NSObject {
         // the panel still had its placeholder height, hung too low, and then
         // jumped into place once SwiftUI had measured — the "strange
         // positioning" of the first build (11.09.2026).
-        if let hosting = panel.contentViewController {
-            hosting.view.layoutSubtreeIfNeeded()
-            // The content's own height once it has reported one; the
-            // fitting size only for the very first opening, before it has.
-            let natural = naturalHeight ?? hosting.view.fittingSize.height
-            panel.setContentSize(NSSize(width: Board.trayWidth, height: clamped(natural)))
+        if let glass = panel.contentViewController as? TrayGlassController {
+            // The content's own height once it has reported one; asked of
+            // the content only for the very first opening.
+            let natural = naturalHeight ?? glass.naturalContentHeight
+            let target = clamped(natural)
+            panel.setContentSize(NSSize(width: Board.trayWidth, height: target))
         }
         position(panel)
         panel.orderFrontRegardless()
@@ -282,24 +288,98 @@ final class MenuBarTrayController: NSObject {
         guard let panel, panel.isVisible else { return }
         let target = clamped(height)
         guard abs(panel.contentView!.frame.height - target) > 0.5 else { return }
+        if isClosing { stopTravel() }
+        // While a fold is travelling, `foldStarted` owns the frame; the
+        // content's report (which arrives once, near the end of the rows'
+        // animation — measured 13.09.2026, not per frame) is reconciled when
+        // the travel ends. Everything else — a row changing section, a
+        // notice appearing, the reset on closing — sets the height in one
+        // step, as a menu would.
+        guard !isTravelling else { return }
         var frame = panel.frame
         // The top edge stays under the menu bar; the bottom edge is what
         // moves (`position(_:)` holds the same rule on every resize).
         frame.origin.y = frame.maxY - target
         frame.size.height = target
-        guard !isClosing else {
-            panel.setFrame(frame, display: true)
-            return
-        }
-        // The one motion a fold or a move makes in the panel: its edge
-        // travels, briefly, the way a Control Centre module grows. The
-        // contents inside have already changed (see `TraySection.foldLine`).
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = Board.trayResizeDuration
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            panel.animator().setFrame(frame, display: true)
-        }
+        panel.setFrame(frame, display: true)
+        panel.invalidateShadow()
     }
+
+    /// A section has just begun to fold on `Board.foldAnimation`, by
+    /// `travel` points. The edge goes with it — same curve, same half
+    /// second, started in the same turn — driven by hand, one whole-point
+    /// frame per display refresh. Not `animator()`: AppKit's own window
+    /// animation raced the content's report to a 131 pt jump and a creep
+    /// (13.09.2026). One writer of the frame for the duration; the
+    /// content's report is applied afterwards only if the two disagree.
+    func foldStarted(travel: CGFloat) {
+        guard let panel, panel.isVisible, travel != 0 else { return }
+        let target = clamped((naturalHeight ?? panel.frame.height) + travel)
+        guard abs(panel.frame.height - target) > 0.5 else { return }
+        stopTravel()
+        travelStart = CACurrentMediaTime()
+        travelFrom = panel.frame.height
+        travelTo = target
+        travelTop = panel.frame.maxY
+        isTravelling = true
+        let link = panel.displayLink(target: self, selector: #selector(travelTick))
+        travelLink = link
+        link.add(to: .main, forMode: .common)
+    }
+
+    @objc private func travelTick() {
+        guard let panel else { return }
+        let progress = min(1, (CACurrentMediaTime() - travelStart) / Board.foldDuration)
+        let height = (travelFrom + (travelTo - travelFrom) * Self.easeInOut(progress)).rounded()
+        panel.setFrame(
+            NSRect(x: panel.frame.minX, y: travelTop - height, width: panel.frame.width, height: height),
+            display: true)
+        guard progress >= 1 else { return }
+        stopTravel()
+        panel.invalidateShadow()
+        if let natural = naturalHeight { contentHeightChanged(natural) }
+    }
+
+    private func stopTravel() {
+        travelLink?.invalidate()
+        travelLink = nil
+        isTravelling = false
+    }
+
+    /// The curve SwiftUI's `.easeInOut` is — the cubic Bézier (0.42, 0,
+    /// 0.58, 1) — so the edge and the rows are on one curve, not two that
+    /// merely share a name. Solved for x by bisection; it runs sixty times
+    /// a second for half a second.
+    private static func easeInOut(_ x: Double) -> Double {
+        func bezier(_ t: Double, _ p1: Double, _ p2: Double) -> Double {
+            let u = 1 - t
+            return 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t
+        }
+        var low = 0.0, high = 1.0
+        for _ in 0..<24 {
+            let mid = (low + high) / 2
+            if bezier(mid, 0.42, 0.58) < x { low = mid } else { high = mid }
+        }
+        return bezier((low + high) / 2, 0, 1)
+    }
+
+    private var isTravelling = false
+    private var travelLink: CADisplayLink?
+    private var travelStart: CFTimeInterval = 0
+    private var travelFrom: CGFloat = 0
+    private var travelTo: CGFloat = 0
+    private var travelTop: CGFloat = 0
+
+    /// Whether the panel is being held to the screen's height — the one
+    /// case in which its content scrolls (`MenuBarTrayView.body`).
+    final class TrayFit: ObservableObject {
+        @Published var isClamped = false
+        /// The hosting view's height right now — the panel's, frame by
+        /// frame while the edge travels — so the SwiftUI root can be exactly
+        /// that tall (`MenuBarTrayView.body`).
+        @Published var hostHeight: CGFloat = 0
+    }
+    let fit = TrayFit()
 
     /// Set while `close()` puts the panel to rest, so the shrink back to the
     /// resting height is applied in one step and not seen — the panel is
@@ -316,7 +396,10 @@ final class MenuBarTrayController: NSObject {
     /// scrolls (see `MenuBarTrayView.body`).
     private func clamped(_ height: CGFloat) -> CGFloat {
         guard let screen = anchor?.screen ?? NSScreen.main else { return height }
-        return min(height, screen.visibleFrame.height - Board.trayEdgeClearance)
+        let limit = screen.visibleFrame.height - Board.trayEdgeClearance
+        let isClamped = height > limit
+        if fit.isClamped != isClamped { fit.isClamped = isClamped }
+        return min(height, limit)
     }
 
     /// Also the way out of the tray for everything that opens the board: the
@@ -373,10 +456,9 @@ final class MenuBarTrayController: NSObject {
         NotificationCenter.default.addObserver(
             forName: NSWindow.didResizeNotification, object: panel, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.position(panel)
-                panel.invalidateShadow()
-            }
+            // The shadow is redone by whoever changed the height, once it is
+            // at rest — not here, sixty times a second during a fold.
+            MainActor.assumeIsolated { self?.position(panel) }
         }
         return panel
     }
@@ -508,19 +590,71 @@ final class MenuBarTrayController: NSObject {
 /// follows (see `MenuBarTrayController.makePanel`).
 private final class TrayGlassController: NSViewController {
     private let hosting: NSHostingController<AnyView>
+    private let glass = NSGlassEffectView()
+
+    /// The height the content wants, before it has ever reported one.
+    /// Proposed at height *zero*: the root fills whatever it is offered
+    /// (asked with "infinite" it answered ten billion), but a `ZStack` is as
+    /// tall as its tallest child, and at zero the filler is nothing and the
+    /// content is itself. `sizeThatFits` also lays the hierarchy out at the
+    /// proposal and leaves it there (probe, 13.09.2026), so everything is
+    /// put back afterwards.
+    var naturalContentHeight: CGFloat {
+        let frame = view.frame, hostingFrame = hosting.view.frame, windowFrame = view.window?.frame
+        let height = hosting.sizeThatFits(in: NSSize(width: Board.trayWidth, height: 0)).height
+        if let windowFrame { view.window?.setFrame(windowFrame, display: false) }
+        view.frame = frame
+        hosting.view.frame = hostingFrame
+        return height
+    }
 
     init<Content: View>(content: Content) {
         hosting = NSHostingController(rootView: AnyView(content))
-        hosting.sizingOptions = [.preferredContentSize]
+        // No sizing options: with them the hosting view sizes itself to the
+        // content's ideal, and the window's height is pinned to that by
+        // constraint — the edge's travel set 25 frames that the window never
+        // took (probe, 13.09.2026). The panel decides its height; the
+        // hosting view is laid out to it in `viewDidLayout`.
+        hosting.sizingOptions = []
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
 
+    /// The masked container, and the one place the frames inside it are
+    /// set. The glass does not lay its content view out — it keeps whatever
+    /// frame it was given, anchored at AppKit's bottom-left, and a view
+    /// controller's `viewDidLayout` never fired for it. Every earlier form
+    /// of the fold suffered from exactly that (13.09.2026): the content hung
+    /// from the bottom while the edge travelled, or was centred by the
+    /// hosting view, or vanished. `layout()` runs on every size change of a
+    /// layer-backed view, so glass and hosting view are sized to the
+    /// container here, and the SwiftUI root fills the hosting view and pins
+    /// its content to the top (`MenuBarTrayView.body`).
+    private final class TrayContainerView: NSView {
+        var glass: NSView?
+        var hosting: NSView?
+        override func layout() {
+            super.layout()
+            glass?.frame = bounds
+            hosting?.frame = bounds
+            let fit = MenuBarTrayController.shared.fit
+            if fit.hostHeight != bounds.height { fit.hostHeight = bounds.height }
+        }
+    }
+
     override func loadView() {
-        let glass = NSGlassEffectView()
         glass.cornerRadius = Board.trayRadius
-        glass.contentView = hosting.view
+        // Not the glass's `contentView`: the glass sizes that by its
+        // intrinsic size and anchors it at the bottom — the content hung
+        // from the panel's bottom edge while the edge travelled, and with no
+        // intrinsic size it was not drawn at all (13.09.2026). As a sibling
+        // over the glass, the hosting view is laid out by the container.
+        // The hosting view lives by constraints unless told otherwise, and
+        // with no sizing options it has none — its frame stayed at zero and
+        // nothing was drawn (13.09.2026). Frames it is, set by the container.
+        hosting.view.translatesAutoresizingMaskIntoConstraints = true
+        hosting.view.autoresizingMask = [.width, .height]
         addChild(hosting)
         // A masked container around the glass, not the glass itself as the
         // window's content view. Seen 12.09.2026: the glass rounded its
@@ -528,7 +662,9 @@ private final class TrayGlassController: NSViewController {
         // corners — a rectangular shadow contour behind the round edge. The
         // mask makes everything outside the radius transparent, and the
         // window shadow follows the shape that is left.
-        let container = NSView()
+        let container = TrayContainerView()
+        container.glass = glass
+        container.hosting = hosting.view
         container.wantsLayer = true
         container.layer?.cornerRadius = Board.trayRadius
         container.layer?.cornerCurve = .continuous
@@ -537,9 +673,11 @@ private final class TrayGlassController: NSViewController {
         glass.frame = container.bounds
         glass.autoresizingMask = [.width, .height]
         container.addSubview(glass)
+        hosting.view.frame = container.bounds
+        container.addSubview(hosting.view)
         view = container
-        preferredContentSize = hosting.view.fittingSize
     }
+
 
     /// The panel follows its content while it is open. `open()` sizes it
     /// once from `fittingSize`, but a window does not track its content
@@ -548,9 +686,12 @@ private final class TrayGlassController: NSViewController {
     /// pushed out of the top (12.09.2026). The resize notification in
     /// `MenuBarTrayController.makePanel` then keeps the top edge where it is.
     override func preferredContentSizeDidChange(for viewController: NSViewController) {
+        // Passed up for the first opening only. While the panel is on
+        // screen, `MenuBarTrayController.contentHeightChanged` is the one
+        // writer of its frame: this hook also setting the size raced the
+        // fold to a 131 pt jump at an intermediate value, and held the old
+        // height for 0.4 s on the way back (measured 13.09.2026).
         preferredContentSize = viewController.preferredContentSize
-        guard let window = view.window, window.isVisible else { return }
-        window.setContentSize(viewController.preferredContentSize)
     }
 }
 

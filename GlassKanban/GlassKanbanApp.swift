@@ -142,6 +142,10 @@ extension Notification.Name {
     /// every fold shuts. The panel's view is built once and then lives on —
     /// it has no `onAppear` per opening — and a half-typed title that
     /// reappeared days later would be noise, not a draft.
+    /// A section in the tray has just begun to fold, by the height in
+    /// `userInfo["travel"]`; the panel's edge travels with the rows
+    /// (`MenuBarTrayController.foldStarted`).
+    static let glassKanbanTrayFolds = Notification.Name("GlassKanbanTrayFolds")
     static let glassKanbanTrayResets = Notification.Name("GlassKanbanTrayResets")
 
     /// Raised by the "Find…" menu item so the board can open its popover.

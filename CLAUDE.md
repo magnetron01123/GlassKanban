@@ -101,8 +101,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   den Einstellungen, das eine Tastenkombination fängt, ohne sie auszuführen.
 - **MenuBarTrayController.swift** — das Menüleisten-Symbol (sein Glyph — das Board mit
   vier Spuren — ist hier gezeichnet, weil SF Symbols bei drei endet) samt seinem
-  Rechtsklick-Menü und sein Panel — Lage, Größe und die vier Schließer (Klick daneben,
-  Klick aufs Symbol, Escape, Verlust des Key-Status) —, die einzige
+  Rechtsklick-Menü und sein Panel — Lage, Größe, die Reise der Unterkante bei einer Falz
+  (Display-Link auf der Board-Kurve) und die vier Schließer (Klick daneben, Klick aufs
+  Symbol, Escape, Verlust des Key-Status) —, die einzige
   Stelle neben `WindowPlacementController`, die `NSWindow`/`NSStatusItem` anfasst.
   **Bewusst AppKit statt `MenuBarExtra`:** In einem `MenuBarExtra`-Popover lebt ein Zug
   zwar, aber der Drop kommt nie an (gemessen 08.09.2026, Gegenprobe auf dem Board
