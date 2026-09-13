@@ -983,8 +983,10 @@ Schreibvorgang, steht der Grund als Zeile unter dem Feld und der Titel bleibt st
 kein Alert, der den Fokus nähme. Kein ⌘Z: Zurückgenommen wird ein erfasstes Ticket, indem
 man es auf dem Board löscht.
 
-**Das Symbol ist stumm:** ein monochromes Template-Glyph, keine Zahl, kein Badge, keine
-Farbe. Zieht der Nutzer es mit ⌘ aus der Menüleiste, springt die Einstellung auf „Dock" —
+**Das Symbol ist stumm:** ein monochromes Template-Glyph — das Board, **vier Spuren in
+einem Rahmen**, eigens gezeichnet in der Geometrie von `rectangle.split.3x1`, weil SF
+Symbols bei drei Spuren endet und drei Spuren für ein Board mit vier Spalten wie eine
+andere App lasen (13.09.2026) —, keine Zahl, kein Badge, keine Farbe. Zieht der Nutzer es mit ⌘ aus der Menüleiste, springt die Einstellung auf „Dock" —
 ohne beides wäre die App laufend und unerreichbar. **Die Einstellung ist dabei die
 Instanz:** Sagt sie „Menüleiste", steht beim nächsten Start ein Symbol da, auch wenn macOS
 sich das frühere Herausziehen gemerkt hat (12.09.2026 — sonst blieb es für immer weg und

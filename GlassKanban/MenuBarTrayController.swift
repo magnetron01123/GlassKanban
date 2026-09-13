@@ -71,10 +71,7 @@ final class MenuBarTrayController: NSObject {
         // bar. Allowed here — but never silently, see the observation below.
         item.behavior = .removalAllowed
         if let button = item.button {
-            button.image = NSImage(
-                systemSymbolName: "rectangle.split.3x1",
-                accessibilityDescription: String(localized: "Glass Kanban"))
-            button.image?.isTemplate = true
+            button.image = Self.boardGlyph
             button.target = self
             button.action = #selector(handleClick)
             // Right-click has to arrive as an event of its own; without this
@@ -423,6 +420,34 @@ final class MenuBarTrayController: NSObject {
             Task { @MainActor in self?.close() }
         }
     }
+
+    /// The item's glyph: the board — four lanes in one frame. Drawn here
+    /// because SF Symbols stops at `rectangle.split.3x1`, and three lanes
+    /// for a four-column board read as a different app (13.09.2026, user).
+    /// The geometry is the symbol's own, measured at 4× (13.09.2026): a
+    /// 19 × 14 pt canvas, a 1 pt stroke, 1.5 pt corners, dividers at equal
+    /// parts. One point wider than the symbol's 15 × 12 frame so that four
+    /// lanes keep whole-point widths and every line sits on a half-point —
+    /// on a 1× display that is the difference between a crisp line and a
+    /// grey smear two pixels wide (seen on the first draw).
+    static let boardGlyph: NSImage = {
+        let image = NSImage(size: NSSize(width: 19, height: 14), flipped: false) { _ in
+            let frame = NSRect(x: 1.5, y: 1.5, width: 16, height: 11)
+            let path = NSBezierPath(roundedRect: frame, xRadius: 1.5, yRadius: 1.5)
+            for lane in 1...3 {
+                let x = frame.minX + frame.width * CGFloat(lane) / 4
+                path.move(to: NSPoint(x: x, y: frame.minY))
+                path.line(to: NSPoint(x: x, y: frame.maxY))
+            }
+            path.lineWidth = 1
+            NSColor.black.setStroke()
+            path.stroke()
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = String(localized: "Glass Kanban")
+        return image
+    }()
 
     /// The status bar's own windows — the item's button lives in one per
     /// display, so the class is checked rather than one window identity.
