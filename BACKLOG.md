@@ -457,6 +457,11 @@ einen Rückbau schützen.
   schließen, „Bearbeiten" steht im Kontextmenü, „Einstellungen …" im Rechtsklick-Menü
   tut, was es sagt. Verworfen im selben Zug: Titel an Wortgrenzen kürzen („Explizit
   abgelehnt"). Die Transparenz wurde gegen Apples Panel gemessen und blieb.
+  **Fußzeile „Board öffnen" (13.09.2026, Nutzer):** Die Entscheidung vom 12.09., keinen
+  eigenen Board-Knopf zu bauen, weil jede Zeile das Board öffnet, ist zurückgenommen: Im
+  Menüleisten-Modus gibt es kein Fenster und kein Dock-Symbol, und wer das Board ohne
+  Karte will, stand vor einem Panel ohne Weg hinein. Als erste Fußzeile über
+  „Erinnerungen öffnen", mit dem App-Symbol — die eigene App vor der fremden.
   **Fußzeile „Erinnerungen öffnen" (13.09.2026, Nutzer unsicher, entschieden dafür):**
   Spannung mit Prinzip 1 — eine Zeile Dauer-Chrome mehr. Abgewogen gegen den Rechtsklick
   auf das Symbol (der Notausgang, nicht der Ort, an dem man gerade schaut) und gegen
