@@ -960,8 +960,9 @@ Absprung in der Toolbar. Davor das **App-Symbol von Erinnerungen** (16 pt, wie e
 App-Symbole zeichnet — Finders „Öffnen mit", Spotlight), im Symbolfeld der Köpfe; die Zeile
 steht in der Flucht der Kopfnamen, nicht der Zeilen: Sie ist ein Weg aus dem Panel, kein
 Eintrag in einem Abschnitt, und Apples Panels beginnen ihre Fußzeile am Textrand. Ohne
-Auslassungspunkte, es geschieht sofort; das Panel schließt davor. Nur ohne Dock-Symbol
-folgt „Glass Kanban beenden" als zweite Zeile, in derselben Flucht, ohne Symbol.
+Auslassungspunkte, es geschieht sofort; das Panel schließt davor. **Beenden steht nicht
+im Panel** — nur im Rechtsklick-Menü des Symbols, wie bei jedem Menüleisten-Symbol
+(13.09.2026; bis dahin stand es ohne Dock-Symbol als letzte Zeile).
 
 **Die WIP-Frage steht im Tablett, nicht auf dem Board.** Ein Alert nimmt den Fokus, und
 das Panel schlösse unter der eigenen Frage weg. Deshalb trägt jeder Zug seine Herkunft

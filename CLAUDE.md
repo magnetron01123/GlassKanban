@@ -110,8 +110,8 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   positiv). Ein Tablett, dessen Karten nicht ziehbar sind, ist nicht dieses Tablett.
 - **MenuBarTrayView.swift** — das Tablett selbst: vier Abschnitte untereinander im
   Menü-Stil (`TraySection`, `TrayRow`, `TrayFoldLine` — die Falz-Zeile des Boards in
-  Menügröße —, `TrayActionRow` — die Fußzeile „Erinnerungen öffnen" mit dem App-Symbol,
-  und „Beenden" —, `TraySymbol`, `TrayDragPreview`,
+  Menügröße —, `TrayActionRow` — die Fußzeilen „Board öffnen" und „Erinnerungen öffnen"
+  mit App-Symbol —, `TraySymbol`, `TrayDragPreview`,
   `TrayNoticeRow` — die abgelehnte Schreiboperation inline statt als Alert —, die
   WIP-Zeile) und `BacklogCaptureRow`, die einzige
   Stelle im Panel, an der geschrieben statt bewegt wird.

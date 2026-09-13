@@ -140,15 +140,6 @@ final class MenuBarTrayTests: XCTestCase {
         XCTAssertFalse(MenuBarTray.showsDwellTime(status: .inProgress, days: nil))
     }
 
-    /// Quit belongs in the tray only when the tray is the only way to reach
-    /// the app — with a Dock icon there is already one, and a second would be
-    /// chrome that says what the Dock already says.
-    func testQuitIsOfferedOnlyWithoutADockIcon() {
-        XCTAssertTrue(MenuBarTray.offersQuit(.menuBar))
-        XCTAssertFalse(MenuBarTray.offersQuit(.dock))
-        XCTAssertFalse(MenuBarTray.offersQuit(.both))
-    }
-
     /// A question that is still standing holds the tray. Nothing else may
     /// move until it is answered — a second drag would overwrite it, which
     /// is answering it silently.
