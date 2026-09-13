@@ -34,7 +34,7 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
   „Backlog", „Als Nächstes", „In Bearbeitung" und „Erledigt" untereinander, Zeilen wie in
   einem Menü, ziehbar von Abschnitt zu Abschnitt, mit Kontextmenü. Unter dem Backlog-Kopf
   eine Zeile „Neue Aufgabe": ein Gedanke lässt sich hier aufschreiben, ohne die App nach
-  vorn zu holen. Rechtsklick auf das Symbol: Board, Einstellungen, Beenden. In den
+  vorn zu holen; am Fuß der Absprung nach Erinnerungen. Rechtsklick auf das Symbol: Board, Einstellungen, Beenden. In den
   Einstellungen wählbar: Dock, Menüleiste oder beides; ohne Dock-Symbol läuft die App
   weiter, wenn das Board geschlossen ist
 - **Das Board bleibt auf seinem Bildschirm:** Wird der Monitor abgezogen, auf dem es

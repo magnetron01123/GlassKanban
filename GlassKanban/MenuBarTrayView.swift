@@ -119,12 +119,22 @@ struct MenuBarTrayView: View {
                 if index > 0 { separator }
                 TraySection(status: status, openBoard: openBoard, liftedFrom: $liftedFrom)
             }
-            // No "Open Board" row: every row opens the board with its card,
-            // and "N more" opens it plain. What is left down here is Quit,
-            // and only where there is no Dock icon to quit from.
-            if MenuBarTray.offersQuit(presence.selection) {
-                VStack(alignment: .leading, spacing: 0) {
-                    separator
+            // The foot, the way the system's panels end: a hairline, then the
+            // way to the deeper app — Bluetooth's "Bluetooth-Einstellungen …",
+            // ours "Erinnerungen öffnen". Reminders is the store, with the
+            // search, subtasks and attachments this panel leaves out, and the
+            // board carries the same way out in its toolbar (13.09.2026). No
+            // "Open Board" row: every row opens the board with its card, and
+            // "N more" opens it plain. Quit only where there is no Dock icon
+            // to quit from.
+            VStack(alignment: .leading, spacing: 0) {
+                separator
+                TrayActionRow(title: String(localized: "Open Reminders")) {
+                    MenuBarTrayController.shared.close()
+                    store.openRemindersApp()
+                }
+                .padding(.horizontal, Board.trayPadding)
+                if MenuBarTray.offersQuit(presence.selection) {
                     TrayActionRow(title: String(localized: "Quit Glass Kanban")) { NSApp.terminate(nil) }
                         .padding(.horizontal, Board.trayPadding)
                 }

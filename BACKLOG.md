@@ -456,6 +456,13 @@ einen Rückbau schützen.
   schließen, „Bearbeiten" steht im Kontextmenü, „Einstellungen …" im Rechtsklick-Menü
   tut, was es sagt. Verworfen im selben Zug: Titel an Wortgrenzen kürzen („Explizit
   abgelehnt"). Die Transparenz wurde gegen Apples Panel gemessen und blieb.
+  **Fußzeile „Erinnerungen öffnen" (13.09.2026, Nutzer unsicher, entschieden dafür):**
+  Spannung mit Prinzip 1 — eine Zeile Dauer-Chrome mehr. Abgewogen gegen den Rechtsklick
+  auf das Symbol (der Notausgang, nicht der Ort, an dem man gerade schaut) und gegen
+  Weglassen (pro Zeile gibt es den Absprung, für die Liste als Ganzes gab es keinen ohne
+  Umweg über das Board). Entscheidend: Jedes Systempanel endet mit genau dieser Zeile,
+  und das Board trägt denselben Knopf permanent in der Toolbar — Systemvokabular, kein
+  Rauschen. Am Fuß, nicht im Kopf: Wege stehen in Apples Panels unten.
   Weiterhin nicht: Statistik, Streak, Suche, Filter, Tastaturnavigation über Zeilen, ein
   Zustand am Symbol, eine Rückgängig-Zeile.
 
