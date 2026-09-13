@@ -381,14 +381,19 @@ enum Board {
     /// this board with no physical metaphor at all, which is right for the
     /// one gesture that moves nothing — the cards were always there.
     ///
-    /// Half a second, against 0.22 for a card changing lanes: roughly ten
-    /// times the distance travelled, so a little over twice the time. Not
-    /// proportional — that would take seconds — but far enough from the
-    /// board's working pace to read as a different kind of act.
+    /// 0.35 s, against 0.22 for a card changing lanes: one and a half times
+    /// the time for roughly ten times the distance. Not proportional — that
+    /// would take seconds — but far enough from the board's working pace
+    /// to read as a different kind of act, and in the range the system
+    /// gives its own disclosures (an outline view opens in ~0.25–0.3 s, a
+    /// Control Centre module grows in ~0.3 s). It was half a second until
+    /// 13.09.2026; in the menu bar panel, where the same fold plays, that
+    /// read as slow (user). One value for board and panel, on purpose:
+    /// the same gesture must look the same in both.
     ///
     /// The revealed cards drop their scale-in for the same reason — see
     /// `ColumnView.isFolding`.
-    static let foldDuration: TimeInterval = 0.5
+    static let foldDuration: TimeInterval = 0.35
     static let foldAnimation: Animation = .easeInOut(duration: foldDuration)
     /// How long a just-arrived card waits before its settle plays — the
     /// transit above plus a small margin. The board's feedback runs on two
