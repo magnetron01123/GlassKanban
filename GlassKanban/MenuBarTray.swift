@@ -59,11 +59,6 @@ enum MenuBarTray {
         }
     }
 
-    /// Whether the footer offers Quit: only when there is no Dock icon to
-    /// quit from, and no board window that has to be open for the app menu
-    /// to exist.
-    static func offersQuit(_ presence: AppPresence) -> Bool { !presence.showsDockIcon }
-
     /// While the tray's own WIP question stands, nothing else in the tray
     /// moves — a second drag would overwrite the first question unanswered,
     /// which is silently allowing what the user was asked about.

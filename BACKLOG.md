@@ -369,8 +369,10 @@ einen Rückbau schützen.
 
   **Die Einstellung:** In „Allgemein" ein Auswahlfeld *Anzeigen in* — **Dock** (heutiges
   Verhalten, Vorgabe) · **Menüleiste** · **Dock und Menüleiste**; Geltung `.thisDevice`,
-  denn wo die App sichtbar ist, gehört dem Rechner. Bei „Menüleiste" bekommt das Element
-  „Beenden" und „Board öffnen"; ohne Dock gibt es sonst keinen Weg zu beidem.
+  denn wo die App sichtbar ist, gehört dem Rechner. Bei „Menüleiste" bekam das Element
+  „Beenden" und „Board öffnen"; ohne Dock gibt es sonst keinen Weg zu beidem — seit dem
+  13.09.2026 liegt „Board öffnen" für alle Modi im Fuß des Panels und „Beenden" allein
+  im Rechtsklick-Menü des Symbols (SPEC.md).
 
   **Was bewusst nicht drin ist:** Streak-Pille, Statistik, Suche, „+", Filter, ⌘Z, Löschen,
   Editor (Chrome bleibt im Fenster). Ein Menü-Modus mit Untermenüs. Eine Zahl am Symbol.

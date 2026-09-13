@@ -19,11 +19,6 @@ struct MenuBarTrayView: View {
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
-    /// Observed, not just read: the tray's own footer changes with it (see
-    /// `MenuBarTray.offersQuit`), and the panel's hosting view is built once
-    /// and then lives on — a plain read of the shared value showed the
-    /// footer of whichever mode was current when the tray was first opened.
-    @ObservedObject private var presence = PresenceController.shared
     /// The panel's current height (see `TrayFit`).
     @ObservedObject private var fit = MenuBarTrayController.shared.fit
 
@@ -164,8 +159,7 @@ struct MenuBarTrayView: View {
             // above the way to Reminders (13.09.2026, user; reverses the
             // "no Open Board row" of 12.09.). Then Reminders, the store with
             // the search, subtasks and attachments this panel leaves out —
-            // Bluetooth's "Bluetooth-Einstellungen …" is the pattern. Quit
-            // only where there is no Dock icon to quit from.
+            // Bluetooth's "Bluetooth-Einstellungen …" is the pattern.
             VStack(alignment: .leading, spacing: 0) {
                 separator
                 TrayActionRow(title: String(localized: "Open Board"), icon: Self.boardIcon) {
@@ -177,10 +171,9 @@ struct MenuBarTrayView: View {
                     store.openRemindersApp()
                 }
                 .padding(.horizontal, Board.trayPadding)
-                if MenuBarTray.offersQuit(presence.selection) {
-                    TrayActionRow(title: String(localized: "Quit Glass Kanban")) { NSApp.terminate(nil) }
-                        .padding(.horizontal, Board.trayPadding)
-                }
+                // No Quit here: the item's own menu has it, where every menu
+                // bar item keeps it. A panel that could end the app read as
+                // more than a panel (13.09.2026, user).
             }
         }
         .padding(.top, Board.trayTopPadding)
