@@ -254,6 +254,12 @@ final class MenuBarTrayController: NSObject {
         let panel = self.panel ?? makePanel(store: store)
         self.panel = panel
         anchor = TrayAnchor.atClick(statusItem: statusItem)
+        // Back to rest *before* the content is measured, so the height read
+        // below is the resting one. Posted after the measurement, as it was,
+        // a panel closed with a section unfolded reopened at the tall height
+        // and then folded shut in front of the user (review, 12.09.2026). The
+        // same reset runs in `close()`; this one is the backstop.
+        NotificationCenter.default.post(name: .glassKanbanTrayResets, object: nil)
         // Lay the content out *before* placing the panel. Positioned first,
         // the panel still had its placeholder height, hung too low, and then
         // jumped into place once SwiftUI had measured — the "strange
@@ -266,9 +272,6 @@ final class MenuBarTrayController: NSObject {
             panel.setContentSize(NSSize(width: Board.trayWidth, height: clamped(natural)))
         }
         position(panel)
-        // Before it is on screen: the capture row goes back to rest, so the
-        // panel opens the same way every time (see `BacklogCaptureRow`).
-        NotificationCenter.default.post(name: .glassKanbanTrayWillOpen, object: nil)
         panel.orderFrontRegardless()
         panel.makeKey()
         // The shadow is cached against whatever outline the window had
@@ -307,6 +310,12 @@ final class MenuBarTrayController: NSObject {
     /// popover would have stayed open beside the window it just opened).
     func close() {
         stopWatchingForClicksOutside()
+        // Every closing leaves the panel at rest — no draft, no open fold.
+        // Posted while the panel is still up so the content reports its
+        // resting height now; the receivers apply it without animation, and
+        // the panel is ordered out in the same turn, so nothing is seen to
+        // shrink.
+        NotificationCenter.default.post(name: .glassKanbanTrayResets, object: nil)
         panel?.orderOut(nil)
         anchor = nil
     }
@@ -360,12 +369,11 @@ final class MenuBarTrayController: NSObject {
     /// on, clamped so it never runs off the edge.
     private func position(_ panel: NSPanel) {
         guard let anchor else { return }
-        // Flush against the menu bar, like every menu the system opens
-        // from it — no gap (12.09.2026). The clearance token only keeps the
-        // panel off the screen's side edges.
+        // Hung the way the system hangs a status item's menu: left-aligned
+        // to the item, a hair below the bar (see the tokens' note).
         var origin = NSPoint(
-            x: anchor.midX - panel.frame.width / 2,
-            y: anchor.menuBarBottom - panel.frame.height)
+            x: anchor.itemMinX - Board.trayMenuEdgeInset,
+            y: anchor.menuBarBottom - Board.trayMenuTopGap - panel.frame.height)
         let visible = anchor.screen.visibleFrame
         origin.x = min(max(origin.x, visible.minX + Board.trayEdgeClearance),
                        visible.maxX - panel.frame.width - Board.trayEdgeClearance)
@@ -493,7 +501,8 @@ private final class TrayPanel: NSPanel {
 /// widths.
 private struct TrayAnchor {
     let screen: NSScreen
-    let midX: CGFloat
+    /// The status item's left edge, carried over to the clicked screen.
+    let itemMinX: CGFloat
     /// The bottom edge of the menu bar on that screen.
     let menuBarBottom: CGFloat
 
@@ -502,12 +511,12 @@ private struct TrayAnchor {
         let mouse = NSEvent.mouseLocation
         guard let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) })
             ?? NSScreen.main else { return nil }
-        var midX = mouse.x
+        var itemMinX = mouse.x
         if let button = statusItem?.button, let window = button.window,
            let itemScreen = window.screen {
-            let rightOffset = itemScreen.frame.maxX - window.frame.midX
-            midX = screen.frame.maxX - rightOffset
+            let rightOffset = itemScreen.frame.maxX - window.frame.minX
+            itemMinX = screen.frame.maxX - rightOffset
         }
-        return TrayAnchor(screen: screen, midX: midX, menuBarBottom: screen.visibleFrame.maxY)
+        return TrayAnchor(screen: screen, itemMinX: itemMinX, menuBarBottom: screen.visibleFrame.maxY)
     }
 }

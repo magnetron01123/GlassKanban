@@ -75,10 +75,12 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
     /// Nächstes" needs a Backlog to choose from. Backlog and Erledigt are not
     /// pull-fed, so emptiness alone is reason enough to speak.
     ///
-    /// Here rather than inside `ColumnView` because the menu bar tray shows
-    /// the same outline in the same places, and a rule about when the board
-    /// invites must not exist twice — the tray would have inherited a copy
-    /// that drifts on the next edit.
+    /// Here rather than inside `ColumnView` because it is a property of the
+    /// lane, not of the view that draws it — `ColumnView` decides only
+    /// whether to ask at all (filtered board, empty-board notice up). The menu
+    /// bar panel asked it too in its first form (08.09.2026); today's panel
+    /// shows no invitation — an empty section is its head (SPEC.md, "Leere
+    /// Spur").
     func invitesWhenEmpty(nextIsEmpty: Bool, backlogIsEmpty: Bool) -> Bool {
         switch self {
         case .inProgress: !(nextIsEmpty && backlogIsEmpty)

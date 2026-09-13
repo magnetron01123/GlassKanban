@@ -251,12 +251,13 @@ struct GeneralSettingsView: View {
             } header: {
                 Text("Menu Bar")
             } footer: {
-                // Names the facts and stops: what is up there, what happens
+                // Names the facts and stops: what is up there — all four
+                // sections since the Backlog became one (12.09.2026) —, what happens
                 // to the app without a Dock icon, and the one thing about the
                 // shortcut a user cannot see — the system does not report a
                 // combination another app already holds, so it simply stays
                 // with that app (measured 12.09.2026).
-                Text("The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app.")
+                Text("The menu bar shows Backlog, Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app.")
             }
 
             // Where workflows differ most. Backlog is the pool of options the

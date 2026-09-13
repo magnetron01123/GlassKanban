@@ -2934,19 +2934,19 @@
         }
       }
     },
-    "The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app.": {
+    "The menu bar shows Backlog, Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app.": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "In der Menüleiste liegen Als Nächstes, In Bearbeitung und Erledigt. Ohne Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist. Der Kurzbefehl öffnet und schließt das Panel aus jeder App; einer, den eine andere App schon benutzt, bleibt bei dieser App."
+            "value": "In der Menüleiste liegen Backlog, Als Nächstes, In Bearbeitung und Erledigt. Ohne Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist. Der Kurzbefehl öffnet und schließt das Panel aus jeder App; einer, den eine andere App schon benutzt, bleibt bei dieser App."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The menu bar shows Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app."
+            "value": "The menu bar shows Backlog, Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app."
           }
         }
       }

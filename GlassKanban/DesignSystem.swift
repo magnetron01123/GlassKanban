@@ -60,9 +60,15 @@ enum Board {
     /// is opened to finish something, and "Romina bei Live Akt…" is not a
     /// thing one can finish. The width of the system's own panels.
     static let trayWidth: CGFloat = 340
-    /// The tray's minimum clearance from a screen's side edge. Against the
-    /// menu bar it sits flush, like every menu that opens from there.
+    /// The tray's minimum clearance from a screen's side edge.
     static let trayEdgeClearance: CGFloat = 8
+    /// How the panel hangs from its status item — the system's own numbers,
+    /// measured against this app's own `NSMenu` opened from the same item
+    /// (12.09.2026): the menu's left edge stands 3 pt left of the item's left
+    /// edge, and its top 1 pt below the menu bar. Centred under the item, as
+    /// the panel was before, it looked unlike every other menu up there.
+    static let trayMenuEdgeInset: CGFloat = 3
+    static let trayMenuTopGap: CGFloat = 1
     /// The panel's inner margin, like a menu's — rows and their hover
     /// highlight sit this far in from the glass edge.
     static let trayPadding: CGFloat = 8

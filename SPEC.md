@@ -897,10 +897,13 @@ den offenen Editor. Die Toolbar bleibt sichtbar und scharf — sie ist Chrome, k
 ### Menüleiste: das Tablett (08.09.2026, Form neu gefasst 11.09.2026, erweitert 12.09.2026)
 
 Neben dem Board kann die App in der Menüleiste liegen. Ein Klick auf das Symbol öffnet
-das **Tablett**: ein Panel von 340 pt Breite im Stil der Systempanels, darin **drei
-Abschnitte untereinander, in Board-Reihenfolge** — „Als Nächstes", „In Bearbeitung",
-„Erledigt" —, jeder mit Kopf und Zahl, darunter Zeilen wie in einem Menü. Es hängt unter
-dem Symbol des Bildschirms, auf dem geklickt wurde. Herleitung und die verworfenen Formen
+das **Tablett**: ein Panel von 340 pt Breite im Stil der Systempanels, darin **vier
+Abschnitte untereinander, in Board-Reihenfolge** — „Backlog", „Als Nächstes", „In
+Bearbeitung", „Erledigt" —, jeder mit Kopf und Zahl, darunter Zeilen wie in einem Menü. Es
+hängt unter dem Symbol des Bildschirms, auf dem geklickt wurde, **so wie macOS das Menü
+eines Menüleistensymbols hängt:** linke Kante 3 pt links der linken Symbolkante, Oberkante
+1 pt unter der Menüleiste — gemessen am eigenen `NSMenu` desselben Symbols (12.09.2026).
+Zentriert unter dem Symbol, wie davor, sah es anders aus als jedes Menü daneben. Herleitung und die verworfenen Formen
 — darunter die erste gebaute Fassung mit drei Mulden nebeneinander — stehen in BACKLOG.md
 („Fensterverhalten").
 
@@ -924,10 +927,10 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 | Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
 | Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | in Ruhe die letzten 3 (Bestätigung, keine Liste), die Falz-Zeile öffnet das 7-Tage-Fenster |
 | Backlog | eigene Spur mit Falz-Zeile | **ein Abschnitt wie die anderen, mit der Falz-Zeile des Boards** (12.09.2026): in Ruhe schneidet er wie `BacklogFold` — erst die noch nicht fälligen weg (dieselbe Einstellung „Noch nicht Fälliges einklappen"), dann der Deckel, hier 8 statt 15. Darunter die Zeile des Boards, Wort für Wort: „N noch nicht fällig", „N weitere anzeigen", „Weniger anzeigen". Aufgeklappt alle Karten; das Panel wächst nach unten mit, kein Abschnitt scrollt in sich — nur ein zu kurzer Bildschirm begrenzt das Panel, und dann scrollt es als Ganzes. Zustand pro Sitzung wie auf dem Board; das Panel öffnet in Ruhe. Zuvor am selben Tag verworfen: Kopf allein, Kopf mit „Auf dem Board", Falz am Kopf mit gemerktem Zustand (BACKLOG.md) |
-| Falz-Zeile | zentriert unter dem Stapel, Text medium sekundär, Chevron dreht, Hover hebt auf primär, kein Glas | dieselbe Zeile, **linksbündig in der Zeilenspalte, das Chevron vorn im Glyphenfeld** wie das Plus der Erfassung (zentriert und mit Chevron hinten wirkte sie im Menü deplatziert, 12.09.2026); ohne Punkt und ohne Glas-Hover, genau das unterscheidet sie von einem Ticket. Gilt für alle vier Abschnitte: Als Nächstes und In Bearbeitung ab 6, Erledigt ab 3 („N ältere anzeigen" öffnet das 7-Tage-Fenster des Boards; die 30 Tage bleiben dem Board) |
+| Falz-Zeile | zentriert unter dem Stapel, Text medium sekundär, Chevron dreht, Hover hebt auf primär, kein Glas | dieselbe Zeile, **linksbündig in der Zeilenspalte, das Chevron vorn im Glyphenfeld** wie das Plus der Erfassung (zentriert und mit Chevron hinten wirkte sie im Menü deplatziert, 12.09.2026); ohne Punkt und ohne Glas-Hover, genau das unterscheidet sie von einem Ticket. Gilt **nur für Backlog und Erledigt**, wie auf dem Board: Als Nächstes und In Bearbeitung falten nie — ihr WIP-Limit hält sie kurz, und eine dorthin gezogene Karte muss dort zu sehen sein, wo sie gelandet ist (ein Tag lang galt hier ein eigener 6er-Deckel, und eine Karte verschwand dahinter). Erledigt ab 3 („N ältere anzeigen" öffnet das 7-Tage-Fenster des Boards; die 30 Tage bleiben dem Board) |
 | Zugziele | alle drei anderen Spuren | alle drei anderen Abschnitte, Backlog eingeschlossen — Zurücklegen ist ein Kanban-Zug, und die Karte landet in einer Zahl, die man sieht |
 | Ablegeziel | gestrichelter Umriss in Kartenform | der ganze Abschnitt hebt sich als akzentgetöntes Glas, wie eine Menüzeile unter dem Zeiger |
-| WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen |
+| WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen; passt beides nicht in eine Zeile — auf Deutsch der Normalfall —, stehen die Knöpfe unter der Frage, statt dass Spaltenname und Zahlen abgeschnitten werden |
 | Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
 | ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |
 | Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Alert | **erlaubt** (12.09.2026). Er war gesperrt, weil der Hinweis dem Board gehörte und der Fehlschlag hier stumm verpufft wäre; das Panel sagt ihn jetzt selbst — `SaveFailure` trägt seine `MoveSource`, und die Absage steht als Zeile im Panel (siehe unten) |

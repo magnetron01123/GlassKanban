@@ -7,12 +7,6 @@ import Foundation
 /// every one of these has a failure mode that is invisible on screen until
 /// it is the wrong day.
 enum MenuBarTray {
-    /// Rows a section shows at most. Three sections of twenty rows would
-    /// hang the tray off the bottom of the screen. The count in the head
-    /// always tells the whole truth and the last row names the rest, so
-    /// nothing is hidden — it is only not drawn (see SPEC.md, "Menüleiste").
-    static let rowCap = 6
-
     /// Erledigt shows less: the tray is for finishing, and the finished need
     /// only be a short confirmation of it — the last few, not the week. Three
     /// is the small, safe reward; six was a list.
@@ -23,21 +17,29 @@ enum MenuBarTray {
     /// difference as Erledigt's three rows against the board's seven days.
     static let backlogRowCap = 8
 
-    static func rowCap(for status: KanbanStatus) -> Int {
+    /// Where a section folds, and `nil` where it does not.
+    ///
+    /// Only the two lanes that fold on the board fold here: the Backlog and
+    /// Erledigt (12.09.2026, user: "bei Fertig und Backlog … wie beim Board
+    /// selbst"). "Als Nächstes" and "In Bearbeitung" never fold on the board —
+    /// their WIP limit keeps them short, and a card pulled there must be seen
+    /// where it landed. The panel had given them a six-row fold of its own for
+    /// a day, and a card dropped into a full section then vanished behind it
+    /// (review, 12.09.2026).
+    static func rowCap(for status: KanbanStatus) -> Int? {
         switch status {
         case .backlog: backlogRowCap
         case .done: doneRowCap
-        case .next, .inProgress: rowCap
+        case .next, .inProgress: nil
         }
     }
 
-    /// The rows a section shows at rest — the board's own fold rules, at
-    /// the panel's caps. The Backlog cuts exactly as `BacklogFold` does
+    /// The rows a section shows at rest — the board's own fold rules, at the
+    /// panel's caps. The Backlog cuts exactly as `BacklogFold` does
     /// (not-yet-due first, then the cap), so a card resting behind the fold
-    /// on the board rests behind it here too; every other section is simply
-    /// its first rows. What is not at rest is never gone: the line under the
-    /// pile brings it in, with the board's words (12.09.2026, user:
-    /// consistency between panel and app over a fold of the panel's own).
+    /// on the board rests behind it here too; Erledigt is its newest rows; the
+    /// working sections show everything. What is not at rest is never gone:
+    /// the line under the pile brings it in, with the board's words.
     static func restingRows(
         _ cards: [KanbanCard],
         in status: KanbanStatus,
@@ -50,8 +52,10 @@ enum MenuBarTray {
             BacklogFold.restingCut(
                 cards, limit: backlogRowCap, foldsNotYetDue: foldsNotYetDue,
                 calendar: calendar, now: now)
-        case .next, .inProgress, .done:
-            Array(cards.prefix(rowCap(for: status)))
+        case .done:
+            Array(cards.prefix(doneRowCap))
+        case .next, .inProgress:
+            cards
         }
     }
 

@@ -4,19 +4,19 @@ import AppKit
 /// The rules the menu bar tray draws by.
 final class MenuBarTrayTests: XCTestCase {
 
-    /// Pinned: the cap is what keeps the tray from growing off the bottom of
-    /// the screen when a section holds twenty rows.
-    func testTheRowCapIsPinned() {
-        XCTAssertEqual(MenuBarTray.rowCap, 6)
+    /// Pinned: Erledigt is a confirmation, not a list, and stops at three.
+    func testTheDoneCapIsPinned() {
         XCTAssertEqual(MenuBarTray.doneRowCap, 3)
+        XCTAssertEqual(MenuBarTray.rowCap(for: .done), MenuBarTray.doneRowCap)
     }
 
-    /// The working sections take the full cap; Erledigt is a confirmation,
-    /// not a list, and stops at three.
-    func testErledigtShowsFewerRowsThanTheWorkingSections() {
-        XCTAssertEqual(MenuBarTray.rowCap(for: .next), MenuBarTray.rowCap)
-        XCTAssertEqual(MenuBarTray.rowCap(for: .inProgress), MenuBarTray.rowCap)
-        XCTAssertEqual(MenuBarTray.rowCap(for: .done), MenuBarTray.doneRowCap)
+    /// Only the lanes that fold on the board fold in the panel. "Als
+    /// Nächstes" and "In Bearbeitung" have no fold there — a card pulled into
+    /// them must be seen where it landed, and their WIP limit keeps them
+    /// short.
+    func testTheWorkingSectionsNeverFold() {
+        XCTAssertNil(MenuBarTray.rowCap(for: .next))
+        XCTAssertNil(MenuBarTray.rowCap(for: .inProgress))
     }
 
     /// The Backlog rests at eight — the board's fifteen would be half the
@@ -62,14 +62,14 @@ final class MenuBarTrayTests: XCTestCase {
     }
 
     /// The other sections rest at their first rows, nothing more subtle.
-    func testTheOtherSectionsRestAtTheirFirstRows() {
+    func testTheOtherSectionsRestAtTheirRules() {
         let cards = (0..<10).map { card("c\($0)", status: .next) }
-        XCTAssertEqual(
-            MenuBarTray.restingRows(cards, in: .next, foldsNotYetDue: true).count, MenuBarTray.rowCap)
+        // A full working section shows every card — the defect this rule
+        // closes was a card dropped into it vanishing behind a fold.
+        XCTAssertEqual(MenuBarTray.restingRows(cards, in: .next, foldsNotYetDue: true).count, 10)
+        XCTAssertEqual(MenuBarTray.restingRows(cards, in: .inProgress, foldsNotYetDue: true).count, 10)
         XCTAssertEqual(
             MenuBarTray.restingRows(cards, in: .done, foldsNotYetDue: true).count, MenuBarTray.doneRowCap)
-        XCTAssertEqual(
-            MenuBarTray.restingRows(Array(cards.prefix(2)), in: .inProgress, foldsNotYetDue: true).count, 2)
     }
 
     // MARK: - The stage symbols
@@ -163,8 +163,9 @@ final class MenuBarTrayTests: XCTestCase {
     }
 }
 
-/// The board's rule for when an empty lane speaks — shared with the tray, so
-/// the two cannot say different things about the same empty lane.
+/// The board's rule for when an empty lane speaks. The panel draws no
+/// invitation — an empty section is its head (SPEC.md, "Leere Spur") — and
+/// these board-side tests stayed in this file from the panel's first form.
 final class EmptyLaneInvitationTests: XCTestCase {
 
     /// "In Bearbeitung" invites a pull only when there is something to pull.

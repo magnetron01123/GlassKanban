@@ -440,6 +440,11 @@ einen Rückbau schützen.
   entschieden worden; im direkten Bildvergleich trug Luft allein nicht — zwei kurze
   Abschnitte übereinander lasen sich als ein Block, und die Systempanels ziehen die Linie.
   Die Gruppenluft wurde halbiert, das Panel bleibt gleich hoch.
+  **Nach der zweiten Review (13.09.2026, Nutzer):** Das Panel hängt linksbündig wie ein
+  Systemmenü statt zentriert. Als Nächstes und In Bearbeitung falten nicht mehr — der
+  Nutzer hatte die Falz nur für Backlog und Erledigt verlangt, und der eigene 6er-Deckel
+  ließ eine gezogene Karte verschwinden. Von 47 nachgeprüften Funden hielten 9, 9 waren
+  schon behoben, 29 hielten nicht.
   **Was die drei Messungen ergaben (12.09.2026, Protokoll im Bauplan):** Ein Textfeld im
   nicht aktivierenden Panel nimmt Fokus und Tastatur an, während eine andere App aktiv
   bleibt — die Erfassung brauchte keine Aktivierungs-Weiche. `RegisterEventHotKey` feuert

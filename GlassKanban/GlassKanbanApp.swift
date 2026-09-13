@@ -134,11 +134,12 @@ extension Notification.Name {
     /// inside a view (see `MenuBarTrayController.openBoard`).
     static let glassKanbanOpenBoard = Notification.Name("GlassKanbanOpenBoard")
 
-    /// Raised every time the menu bar panel comes up, so the capture row can
-    /// go back to rest. The panel's view is built once and then lives on —
+    /// Raised when the menu bar panel closes and again as it opens, so
+    /// everything in it goes back to rest: the capture row drops its draft,
+    /// every fold shuts. The panel's view is built once and then lives on —
     /// it has no `onAppear` per opening — and a half-typed title that
     /// reappeared days later would be noise, not a draft.
-    static let glassKanbanTrayWillOpen = Notification.Name("GlassKanbanTrayWillOpen")
+    static let glassKanbanTrayResets = Notification.Name("GlassKanbanTrayResets")
 
     /// Raised by the "Find …" menu item so the board can open its popover.
     /// The popover's presentation lives in `BoardView`'s own state; a menu

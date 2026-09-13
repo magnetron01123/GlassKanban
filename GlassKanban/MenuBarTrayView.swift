@@ -1,8 +1,8 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The menu bar tray: three sections, one under the other — "Als Nächstes",
-/// "In Bearbeitung", "Erledigt" — in the shape a menu bar panel has.
+/// The menu bar tray: four sections, one under the other — "Backlog", "Als
+/// Nächstes", "In Bearbeitung", "Erledigt" — in the shape a menu bar panel has.
 ///
 /// **Not a small board.** The first build (08.09.2026) put the board's three
 /// lanes side by side with wells, paper cards and the empty lane's
@@ -23,6 +23,12 @@ struct MenuBarTrayView: View {
     /// and then lives on — a plain read of the shared value showed the
     /// footer of whichever mode was current when the tray was first opened.
     @ObservedObject private var presence = PresenceController.shared
+
+    /// The section a row is being dragged out of, so that section alone does
+    /// not light up as a target for its own row. Kept here rather than in the
+    /// store: `store.draggingCardID` also drives the board's 40 % ghost, and a
+    /// drag in the panel must not ghost the card in the window behind it.
+    @State private var liftedFrom: KanbanStatus?
 
     /// The four sections, top to bottom, in board order. The Backlog is one
     /// of them since 12.09.2026 (user): it folds shut by default and shows
@@ -102,7 +108,7 @@ struct MenuBarTrayView: View {
             }
             ForEach(Array(Self.lanes.enumerated()), id: \.element) { index, status in
                 if index > 0 { separator }
-                TraySection(status: status, openBoard: openBoard)
+                TraySection(status: status, openBoard: openBoard, liftedFrom: $liftedFrom)
             }
             // No "Open Board" row: every row opens the board with its card,
             // and "N more" opens it plain. What is left down here is Quit,
@@ -261,10 +267,14 @@ private struct BacklogCaptureRow: View {
                     .padding(.bottom, 4)
             }
         }
-        // Every opening starts at rest — the panel's view is built once and
-        // then lives on, so without this a draft would outlive its moment.
-        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayWillOpen)) { _ in
-            rest()
+        // Every closing and opening leaves it at rest — the panel's view is
+        // built once and then lives on, so without this a draft would outlive
+        // its moment. Without animation: the reset is not an event the user
+        // made, and it runs while the panel is being ordered out.
+        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayResets)) { _ in
+            var quiet = Transaction()
+            quiet.disablesAnimations = true
+            withTransaction(quiet) { rest() }
         }
     }
 
@@ -315,7 +325,11 @@ private struct BacklogCaptureRow: View {
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
         .onTapGesture { beginEditing() }
-        .accessibilityAddTraits(.isButton)
+        // A button at rest; in the editing state the field speaks for
+        // itself. Left on unconditionally, the propagated trait made
+        // VoiceOver announce the text field as a button — the same mistake
+        // the card's rename field already paid for (see `CardView`).
+        .accessibilityAddTraits(isEditing ? [] : .isButton)
         .accessibilityLabel(Text("New Task"))
     }
 
@@ -389,6 +403,8 @@ private struct TraySection: View {
     let status: KanbanStatus
     /// Handing a card — or nothing — over to the board.
     let openBoard: (String?) -> Void
+    /// Which section the row in flight came from (see `MenuBarTrayView`).
+    @Binding var liftedFrom: KanbanStatus?
 
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -424,11 +440,11 @@ private struct TraySection: View {
         MenuBarTray.allowsMoves(pendingSource: store.pendingOverflow?.source)
     }
 
-    /// Only sections that would actually receive the row light up.
-    private var isDragSource: Bool {
-        guard let draggingID = store.draggingCardID else { return false }
-        return cards.contains { $0.id == draggingID }
-    }
+    /// Only sections that would actually receive the row light up. This read
+    /// `store.draggingCardID` until 13.09.2026 — which the panel never sets,
+    /// so the check was always false and a lifted row's own section lit up
+    /// and ticked for a drop that does nothing.
+    private var isDragSource: Bool { liftedFrom == status }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -447,8 +463,16 @@ private struct TraySection: View {
             // head, and the head is the drop target then.
         }
         .animation(reduceMotion ? nil : Board.foldAnimation, value: expanded)
-        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayWillOpen)) { _ in
-            expanded = false
+        .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayResets)) { _ in
+            // Shut without the fold's own animation — see the capture row's
+            // receiver for why a reset must not be seen to move.
+            var quiet = Transaction()
+            quiet.disablesAnimations = true
+            withTransaction(quiet) {
+                expanded = false
+                // Also the backstop for a drag that ended nowhere.
+                liftedFrom = nil
+            }
         }
         .padding(.horizontal, Board.trayPadding)
         // The drop target is the whole section, tinted the way a menu row
@@ -476,7 +500,7 @@ private struct TraySection: View {
             },
             exited: { isTargeted = false },
             perform: { id in
-                store.endDrag()
+                liftedFrom = nil
                 // No undo manager: the tray has no ⌘Z and no text focus, so a
                 // registered entry would only be reachable from the board,
                 // where it would be a surprise.
@@ -525,7 +549,10 @@ private struct TraySection: View {
         TrayRow(card: card)
             .contentShape(.dragPreview, Board.trayRowShape)
             .onTapGesture { openBoard(card.id) }
-            .modifier(TrayDraggable(card: card, enabled: movable))
+            .modifier(TrayDraggable(
+                card: card, enabled: movable,
+                lifted: { liftedFrom = status },
+                ended: { liftedFrom = nil }))
             .contextMenu {
                 // Offered on every row, Erledigt included — the one thing a
                 // finished card still has to say is what it was, and
@@ -724,6 +751,8 @@ private struct TrayFoldLine: View {
                 .font(BoardText.glyph)
                 .rotationEffect(.degrees(expanded ? -180 : 0))
                 .frame(width: Board.trayRowGlyphSlot)
+                // The label says it; the glyph would be an unnamed stop.
+                .accessibilityHidden(true)
             Text(label)
                 .font(BoardText.trayRow)
                 .fontWeight(.medium)
@@ -740,6 +769,9 @@ private struct TrayFoldLine: View {
             withAnimation(.easeInOut(duration: 0.15)) { isHovered = hovering }
         }
         .onTapGesture(perform: action)
+        // One element, like every row: without it the button trait fell on
+        // each child, and VoiceOver read an unnamed button beside the label.
+        .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -792,27 +824,24 @@ private struct OverflowQuestionRow: View {
     @EnvironmentObject private var store: RemindersStore
 
     var body: some View {
-        HStack(spacing: 8) {
-            Text(store.overflowTitle(for: overflow))
-                .font(BoardText.trayRow)
-                .monospacedDigit()
-                .lineLimit(1)
-            Spacer(minLength: 8)
-            // Real buttons, not plain text: these two *answer a question*,
-            // and "die Frage stellen die Knöpfe" (CONCEPT.md, "Ton der
-            // Texte") only holds if they read as something to press. The
-            // safe answer prominent and first — Escape and Return do not
-            // exist in a non-activating panel, so shape and position are
-            // what carry it.
-            Button("Finish First") {
-                store.move(
-                    cardID: overflow.cardID, to: overflow.origin,
-                    undoManager: nil, feedback: false)
-                store.pendingOverflow = nil
+        // One line when it fits, two when it does not. In German it usually
+        // does not: "Erst abschließen" and "Passt schon" beside the question
+        // left 45 pt too few in a 340 pt panel, and SwiftUI took them out of
+        // the lane name and the ratio — the very numbers the question is
+        // about (review, 12.09.2026).
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                question
+                Spacer(minLength: 8)
+                answers
             }
-            .buttonStyle(.borderedProminent)
-            Button("That's Fine") { store.pendingOverflow = nil }
-                .buttonStyle(.bordered)
+            VStack(alignment: .leading, spacing: 6) {
+                question
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    answers
+                }
+            }
         }
         .controlSize(.small)
         .padding(.horizontal, Board.trayRowInset)
@@ -823,6 +852,32 @@ private struct OverflowQuestionRow: View {
         .background { Board.trayRowShape.fill(Board.wipLimitTint.opacity(Board.trayDropTint)) }
         .padding(.horizontal, Board.trayPadding)
         .accessibilityElement(children: .contain)
+    }
+
+    private var question: some View {
+        Text(store.overflowTitle(for: overflow))
+            .font(BoardText.trayRow)
+            .monospacedDigit()
+            .lineLimit(1)
+    }
+
+    /// Real buttons, not plain text: these two *answer a question*, and "die
+    /// Frage stellen die Knöpfe" (CONCEPT.md, "Ton der Texte") only holds if
+    /// they read as something to press. The safe answer prominent and first —
+    /// Escape and Return do not exist in a non-activating panel, so shape and
+    /// position are what carry it.
+    private var answers: some View {
+        HStack(spacing: 8) {
+            Button("Finish First") {
+                store.move(
+                    cardID: overflow.cardID, to: overflow.origin,
+                    undoManager: nil, feedback: false)
+                store.pendingOverflow = nil
+            }
+            .buttonStyle(.borderedProminent)
+            Button("That's Fine") { store.pendingOverflow = nil }
+                .buttonStyle(.bordered)
+        }
     }
 }
 
@@ -881,10 +936,14 @@ private struct TrayNoticeRow: View {
 ///
 /// The tray deliberately does not call `store.beginDrag`: without the ghost,
 /// a drag that ends nowhere leaves no half state behind (SPEC.md, "Was das
-/// Board gegen sich selbst absichert").
+/// Board gegen sich selbst absichert"). It reports the lift to its own state
+/// instead, with the board's gesture (`ColumnView`): threshold 0 so it stays
+/// ahead of the system drag, and a travel check so a plain click is no lift.
 private struct TrayDraggable: ViewModifier {
     let card: KanbanCard
     let enabled: Bool
+    let lifted: () -> Void
+    let ended: () -> Void
 
     func body(content: Content) -> some View {
         if enabled {
@@ -894,7 +953,15 @@ private struct TrayDraggable: ViewModifier {
             // user dragged a bare coloured dot across the screen (seen
             // 12.09.2026). The preview below is drawn plain, on a solid
             // ground, with an ordinary label colour.
-            content.draggable(card.id) { TrayDragPreview(card: card) }
+            content
+                .draggable(card.id) { TrayDragPreview(card: card) }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            guard value.translation != .zero else { return }
+                            lifted()
+                        }
+                        .onEnded { _ in ended() })
         } else {
             content
         }

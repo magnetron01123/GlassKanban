@@ -143,9 +143,8 @@ struct ColumnView: View {
         // filtered, and "Fertigwerden beginnt hier" over a lane that holds
         // three cards is the app stating something untrue about the board.
         guard cards.isEmpty, store.emptiness == nil, !store.isFiltering else { return false }
-        // The rule itself lives on `KanbanStatus`: the menu bar tray shows
-        // the same outline in the same places, and the board's conditions for
-        // it must not exist twice.
+        // The rule itself lives on `KanbanStatus`: it is a property of the
+        // lane, not of this view.
         return status.invitesWhenEmpty(
             nextIsEmpty: store.cards(for: .next).isEmpty,
             backlogIsEmpty: store.cards(for: .backlog).isEmpty)
