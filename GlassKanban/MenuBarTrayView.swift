@@ -517,7 +517,6 @@ private struct TraySection: View {
             // Nothing else under a head without rows: an empty section is its
             // head, and the head is the drop target then.
         }
-        .animation(reduceMotion ? nil : Board.foldAnimation, value: expanded)
         .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayResets)) { _ in
             // Shut without the fold's own animation — see the capture row's
             // receiver for why a reset must not be seen to move.
@@ -596,7 +595,15 @@ private struct TraySection: View {
             // the folded rows' height and is known before layout, where the
             // content's own report still answers with the old height.
             let travel = CGFloat(foldedCount) * Board.trayRowHeight * (expanded ? -1 : 1)
-            expanded.toggle()
+            // Driven exactly as `ColumnView.fold` drives the board's: an
+            // explicit `withAnimation` on the shared curve, none under
+            // Reduce Motion. Recognition is the point — the same gesture
+            // must look the same in both places (13.09.2026, user).
+            if reduceMotion {
+                expanded.toggle()
+            } else {
+                withAnimation(Board.foldAnimation) { expanded.toggle() }
+            }
             NotificationCenter.default.post(
                 name: .glassKanbanTrayFolds, object: nil, userInfo: ["travel": travel])
         }
@@ -621,6 +628,9 @@ private struct TraySection: View {
     private func row(for card: KanbanCard, reservesDwellColumn: Bool, reservesDueColumn: Bool) -> some View {
         let movable = MenuBarTray.allowsMoving(from: card.status) && allowsMoves
         TrayRow(card: card, reservesDwellColumn: reservesDwellColumn, reservesDueColumn: reservesDueColumn)
+            // The board's own transition for a card the fold reveals or
+            // hides (`ColumnView`, `isFolding`): a fade, no scale.
+            .transition(.opacity)
             .contentShape(.dragPreview, Board.trayRowShape)
             .onTapGesture { openBoard(card.id) }
             .modifier(TrayDraggable(
