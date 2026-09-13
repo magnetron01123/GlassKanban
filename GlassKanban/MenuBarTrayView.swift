@@ -398,7 +398,7 @@ private struct TraySymbol: View {
         Image(systemName: status.traySymbolName)
             // The head's own size and weight: the glyph is a word in that
             // line, not a decoration beside it.
-            .font(BoardText.chip)
+            .font(BoardText.header)
             .frame(width: Board.traySymbolSlot)
             .accessibilityHidden(true)
     }
@@ -632,7 +632,12 @@ private struct TraySection: View {
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 .accessibilityValue(countHelp)
         }
-        .font(BoardText.chip)
+        // The board's own lane-head type, and the size the system's panels
+        // give their heads: Bluetooth's and Screen Mirroring's titles are 13
+        // pt bold over 13 pt rows (measured 13.09.2026). At 11 pt — an
+        // `NSMenu` section header's size — the heads read as footnotes to
+        // their rows (user, same day).
+        .font(BoardText.header)
         .foregroundStyle(.secondary)
         .padding(.horizontal, Board.trayRowInset)
         .padding(.top, 4)
