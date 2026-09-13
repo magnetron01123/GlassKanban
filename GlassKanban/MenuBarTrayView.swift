@@ -38,6 +38,15 @@ struct MenuBarTrayView: View {
     /// section that happened to offer a "+".
     static let lanes: [KanbanStatus] = KanbanStatus.allCases
 
+    /// Reminders' own icon, as installed — read once; the app does not change
+    /// while the panel is open. `nil` only where Reminders is missing, and
+    /// then the row still reads.
+    static let remindersIcon: NSImage? = {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.reminders")
+        else { return nil }
+        return NSWorkspace.shared.icon(forFile: url.path)
+    }()
+
 
     var body: some View {
         // No background, no clip, no edge here: the panel's body is the
@@ -129,7 +138,7 @@ struct MenuBarTrayView: View {
             // to quit from.
             VStack(alignment: .leading, spacing: 0) {
                 separator
-                TrayActionRow(title: String(localized: "Open Reminders")) {
+                TrayActionRow(title: String(localized: "Open Reminders"), icon: Self.remindersIcon) {
                     MenuBarTrayController.shared.close()
                     store.openRemindersApp()
                 }
@@ -856,6 +865,10 @@ private struct TrayFoldLine: View {
 /// so the tray reads as one list.
 private struct TrayActionRow: View {
     let title: String
+    /// An app's icon in front of the title — the one glyph a menu row draws
+    /// at full colour, as the Finder's "Open With" and Spotlight do, so the
+    /// row says at a glance which app it leads to.
+    var icon: NSImage? = nil
     /// Secondary text for a row that is more a note than a command.
     var quiet = false
     let action: () -> Void
@@ -863,13 +876,28 @@ private struct TrayActionRow: View {
     @State private var isHovered = false
 
     var body: some View {
-        Text(title)
-            .font(BoardText.trayRow)
-            .foregroundStyle(quiet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-            .lineLimit(1)
-            // No glyph of its own, but the same indent and the same empty
-            // field, so its text stands in the rows' column.
-            .padding(.leading, Board.trayRowIndent + Board.trayRowGlyphSlot + Board.traySymbolGap)
+        // The heads' geometry, not the rows': the foot is a way out of the
+        // panel, a line of its own rank, and Apple's panels start their
+        // footer at the text margin. The icon takes the field the stage
+        // symbols keep, so the panel has two glyph columns and no third.
+        HStack(spacing: Board.traySymbolGap) {
+            Group {
+                if let icon {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: Board.trayAppIconSize, height: Board.trayAppIconSize)
+                } else {
+                    Color.clear
+                }
+            }
+            .frame(width: Board.traySymbolSlot)
+            .accessibilityHidden(true)
+            Text(title)
+                .font(BoardText.trayRow)
+                .foregroundStyle(quiet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+                .lineLimit(1)
+        }
             .padding(.horizontal, Board.trayRowInset)
             .frame(height: Board.trayRowHeight)
             .frame(maxWidth: .infinity, alignment: .leading)

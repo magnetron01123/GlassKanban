@@ -952,8 +952,12 @@ eigenen „Board öffnen"-Knopf gibt es nicht.
 öffnen" als Menüzeile (13.09.2026) — der Weg in die tiefere App, den Bluetooth mit
 „Bluetooth-Einstellungen …" und Time Machine mit „… öffnen …" gehen; Erinnerungen ist
 der Speicher mit Suche, Unteraufgaben und Anhängen, und das Board trägt denselben
-Absprung in der Toolbar. Ohne Auslassungspunkte, es geschieht sofort; das Panel schließt
-davor. Nur ohne Dock-Symbol folgt „Glass Kanban beenden" als zweite Zeile.
+Absprung in der Toolbar. Davor das **App-Symbol von Erinnerungen** (16 pt, wie ein Menü
+App-Symbole zeichnet — Finders „Öffnen mit", Spotlight), im Symbolfeld der Köpfe; die Zeile
+steht in der Flucht der Kopfnamen, nicht der Zeilen: Sie ist ein Weg aus dem Panel, kein
+Eintrag in einem Abschnitt, und Apples Panels beginnen ihre Fußzeile am Textrand. Ohne
+Auslassungspunkte, es geschieht sofort; das Panel schließt davor. Nur ohne Dock-Symbol
+folgt „Glass Kanban beenden" als zweite Zeile, in derselben Flucht, ohne Symbol.
 
 **Die WIP-Frage steht im Tablett, nicht auf dem Board.** Ein Alert nimmt den Fokus, und
 das Panel schlösse unter der eigenen Frage weg. Deshalb trägt jeder Zug seine Herkunft
