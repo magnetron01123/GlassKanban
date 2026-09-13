@@ -325,7 +325,12 @@ final class MenuBarTrayController: NSObject {
     /// content's report is applied afterwards only if the two disagree.
     func foldStarted(travel: CGFloat) {
         guard let panel, panel.isVisible, travel != 0 else { return }
-        let target = clamped((naturalHeight ?? panel.frame.height) + travel)
+        // From where the edge is *going*, if it is still on its way: the
+        // content only reports near the end of a travel, so a second fold
+        // started during the first read a stale height, travelled to the
+        // wrong place and snapped at the end (review, 13.09.2026).
+        let base = isTravelling ? travelTo : (naturalHeight ?? panel.frame.height)
+        let target = clamped(base + travel)
         guard abs(panel.frame.height - target) > 0.5 else { return }
         stopTravel()
         // Reduce Motion: the rows do not animate on the board either, and
