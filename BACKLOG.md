@@ -1083,6 +1083,13 @@ Gebaut wurde stattdessen eine Meldung, die den Systemzustand benennt (SPEC.md).
   wieder „ganz versteckt". Beides falsch. **Vor Änderungen an bestehendem UI-Verhalten
   immer `git log --all` auf die betroffene Datei prüfen.**
 
+- **Titel im Menüleisten-Panel an Wortgrenzen kürzen** — gebaut und am 13.09.2026 vom
+  Nutzer zurückgenommen (`602a3f5`, revertiert). Die Zeile maß ihren Platz und ließ ganze
+  Wörter fallen („Hausratversicherung…" statt „Hausratversicherung abschli…"). Entscheidung:
+  **Apple-Standard** — das System kürzt zeichenweise, und jedes Menü, jede Liste auf dem Mac
+  tut es genauso; eine eigene Kürzung wäre eine Abweichung, die nur im Vergleich mit dem
+  System auffällt. Nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst öffnet.
+
 ## Kleiner Rest aus dem Nutzer-Review (10.08.2026)
 
 Verworfen beim Schließen der fünf verbliebenen Befunde:
@@ -1108,9 +1115,3 @@ Verworfen beim Schließen der fünf verbliebenen Befunde:
 Nicht mehr offen: **Escape schließt den Karten-Editor** — der Befund aus dem Review war ein
 Artefakt der synthetischen Tastendrücke (die Taste ging an eine andere App). Am 10.08.2026
 live nachgeprüft: Escape schließt, und eine gerade angelegte Karte wird dabei verworfen.
-- **Titel im Menüleisten-Panel an Wortgrenzen kürzen** — gebaut und am 13.09.2026 vom
-  Nutzer zurückgenommen (`602a3f5`, revertiert). Die Zeile maß ihren Platz und ließ ganze
-  Wörter fallen („Hausratversicherung…" statt „Hausratversicherung abschli…"). Entscheidung:
-  **Apple-Standard** — das System kürzt zeichenweise, und jedes Menü, jede Liste auf dem Mac
-  tut es genauso; eine eigene Kürzung wäre eine Abweichung, die nur im Vergleich mit dem
-  System auffällt. Nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst öffnet.

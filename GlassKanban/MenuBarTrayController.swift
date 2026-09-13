@@ -28,6 +28,7 @@ final class MenuBarTrayController: NSObject {
     private var outsideClickMonitor: Any?
     private var localClickMonitor: Any?
     private var escapeMonitor: Any?
+    private var keyLossObserver: NSObjectProtocol?
     private var cancellables: Set<AnyCancellable> = []
     private var visibilityObservation: NSKeyValueObservation?
     /// True while this controller is setting `isVisible` itself, so the
@@ -409,6 +410,18 @@ final class MenuBarTrayController: NSObject {
             Task { @MainActor in self.close() }
             return nil
         }
+        // And when the key status goes elsewhere without a click — ⌘-Tab to
+        // another app, a hot key that opens another window. A menu closes
+        // then; a panel that stayed would also be one Escape can no longer
+        // reach, because the key now goes where the focus went (review,
+        // 13.09.2026). Menus and drags do not take key status, so a row's
+        // context menu and a lifted row are unaffected (measured the same
+        // day).
+        keyLossObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification, object: panel, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.close() }
+        }
     }
 
     /// The status bar's own windows — the item's button lives in one per
@@ -422,9 +435,11 @@ final class MenuBarTrayController: NSObject {
         if let outsideClickMonitor { NSEvent.removeMonitor(outsideClickMonitor) }
         if let localClickMonitor { NSEvent.removeMonitor(localClickMonitor) }
         if let escapeMonitor { NSEvent.removeMonitor(escapeMonitor) }
+        if let keyLossObserver { NotificationCenter.default.removeObserver(keyLossObserver) }
         outsideClickMonitor = nil
         localClickMonitor = nil
         escapeMonitor = nil
+        keyLossObserver = nil
     }
 }
 

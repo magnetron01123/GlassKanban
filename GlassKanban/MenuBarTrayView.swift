@@ -438,12 +438,6 @@ private struct TraySection: View {
         MenuBarTray.restingRows(cards, in: status, foldsNotYetDue: store.foldNotYetDue)
     }
     private var shownCards: [KanbanCard] { expanded ? cards : restingCards }
-
-    /// One row with a date gives every row in the section the date column
-    /// (`Board.trayDueColumn`), so all their titles end on one line.
-    private var showsDueColumn: Bool {
-        shownCards.contains { CardParts.compactBadge(for: $0)?.tint != nil }
-    }
     private var foldedCards: [KanbanCard] { Array(cards.dropFirst(restingCards.count)) }
     private var foldedCount: Int { foldedCards.count }
 
@@ -528,7 +522,16 @@ private struct TraySection: View {
     /// The rows: what rests, or everything once the line under the pile has
     /// been opened. The panel grows with them (see `MenuBarTrayView.body`).
     private var rows: some View {
-        ForEach(shownCards) { card in row(for: card) }
+        // Decided once for the section, not once per row: one row with a
+        // dwell time or a date gives every row the column for it
+        // (`Board.trayDwellColumn`, `trayDueColumn`), so all titles end on
+        // one line.
+        let shown = shownCards
+        let dwell = shown.contains { MenuBarTray.showsDwellTime(status: $0.status, days: $0.daysInColumn()) }
+        let due = shown.contains { MenuBarTray.showsDueDate($0) }
+        return ForEach(shown) { card in
+            row(for: card, reservesDwellColumn: dwell, reservesDueColumn: due)
+        }
     }
 
     /// The board's line under the pile, word for word (see
@@ -559,9 +562,9 @@ private struct TraySection: View {
     /// Route" (SPEC.md, "WIP-Limits"), and a tray in which VoiceOver can move
     /// nothing is not this tray.
     @ViewBuilder
-    private func row(for card: KanbanCard) -> some View {
+    private func row(for card: KanbanCard, reservesDwellColumn: Bool, reservesDueColumn: Bool) -> some View {
         let movable = MenuBarTray.allowsMoving(from: card.status) && allowsMoves
-        TrayRow(card: card, reservesDueColumn: showsDueColumn)
+        TrayRow(card: card, reservesDwellColumn: reservesDwellColumn, reservesDueColumn: reservesDueColumn)
             .contentShape(.dragPreview, Board.trayRowShape)
             .onTapGesture { openBoard(card.id) }
             .modifier(TrayDraggable(
@@ -569,16 +572,15 @@ private struct TraySection: View {
                 lifted: { liftedFrom = status },
                 ended: { liftedFrom = nil }))
             .contextMenu {
-                // Offered on every row, Erledigt included — the one thing a
-                // finished card still has to say is what it was, and
-                // everything the board's editor leaves out (recurrence,
-                // subtasks, attachments) lives over there. The board's own
-                // menu puts it first too.
-                Button("Open in Reminders") { openInReminders(card) }
-                // What a tap on the row does, named — the board's menu has
-                // it, and a menu that says less than the one on the board
-                // makes the row look like it can do less (13.09.2026).
+                // The board's menu, in the board's order. "Edit" is what a
+                // tap on the row does, named — a menu that says less than
+                // the one on the board makes the row look like it can do
+                // less (13.09.2026). "Open in Reminders" on every row,
+                // Erledigt included: the one thing a finished card still has
+                // to say is what it was, and everything the board's editor
+                // leaves out (recurrence, subtasks, attachments) lives there.
                 Button("Edit") { openBoard(card.id) }
+                Button("Open in Reminders") { openInReminders(card) }
                 if movable {
                     Divider()
                     Menu("Move to") {
@@ -589,8 +591,8 @@ private struct TraySection: View {
                 }
             }
             .accessibilityActions {
-                Button("Open in Reminders") { openInReminders(card) }
                 Button("Edit") { openBoard(card.id) }
+                Button("Open in Reminders") { openInReminders(card) }
                 if movable {
                     ForEach(moveTargets(for: card)) { target in
                         Button("Move to \(target.displayName)") { move(card, to: target) }
@@ -683,11 +685,28 @@ private struct TraySection: View {
 /// glance uses; the date is the one fact that decides what to finish first.
 private struct TrayRow: View {
     let card: KanbanCard
-    /// Whether the section keeps the date column open on this row even if
-    /// it has no date of its own (see `TraySection.showsDueColumn`).
+    /// Whether the section keeps each trailing column open on this row even
+    /// if it has nothing of its own to put there (see `TraySection.rows`).
+    let reservesDwellColumn: Bool
     let reservesDueColumn: Bool
 
     @State private var isHovered = false
+
+    private var dwellLabel: String? {
+        guard let days = card.daysInColumn(),
+              MenuBarTray.showsDwellTime(status: card.status, days: days) else { return nil }
+        return String(localized: "\(days) days")
+    }
+
+    private var dueBadge: CardParts.BadgeInfo? {
+        guard MenuBarTray.showsDueDate(card) else { return nil }
+        return CardParts.compactBadge(for: card)
+    }
+
+    private var dueStyle: AnyShapeStyle {
+        guard let dueBadge else { return AnyShapeStyle(.secondary) }
+        return dueBadge.isEmphasized ? AnyShapeStyle(Board.overdueText) : AnyShapeStyle(.primary)
+    }
 
     var body: some View {
         HStack(spacing: Board.traySymbolGap) {
@@ -705,38 +724,43 @@ private struct TrayRow: View {
                 .font(BoardText.trayRow)
                 .lineLimit(1)
             Spacer(minLength: 8)
+            // The trailing facts, each in its column. An empty label still
+            // holds the column open, so the titles of a section end on one
+            // line (see `TraySection.rows`); `minWidth` rather than `width`,
+            // so a label wider than measured pushes the title instead of
+            // losing its own last letters.
             // How long this one has been open, and only where that is a
             // question (see `MenuBarTray.showsDwellTime`). No clock glyph:
             // the board's full card has one because it has room for it, and
             // in a menu row the bare number is quieter and just as clear.
-            if let days = card.daysInColumn(),
-               MenuBarTray.showsDwellTime(status: card.status, days: days) {
-                Text("\(days) days")
+            if reservesDwellColumn {
+                Text(dwellLabel ?? "")
                     .font(BoardText.meta)
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .fixedSize()
+                    .frame(minWidth: Board.trayDwellColumn, alignment: .trailing)
             }
-            // Only the dates that decide what to finish *now* — today and
-            // overdue, the two that carry a tint. A grey "12. Sep" is
-            // planning information, and planning happens on the board
-            // (SPEC.md, "Menüleiste").
-            // As text, not the board's capsule: in a menu the extra fact
-            // stands as plain text at the right (Time Machine's "Heute,
-            // 08:36"), and Reminders itself writes an overdue date as red
-            // text. The capsule was the loudest thing in the panel — three
-            // of them stacked read as a standing charge (13.09.2026, user),
-            // and it cost the title a dozen points it now keeps.
-            if let badge = CardParts.compactBadge(for: card), badge.tint != nil {
-                Text(badge.label)
+            // Only the dates that decide what to finish *now* (see
+            // `MenuBarTray.showsDueDate`). As text, not the board's capsule:
+            // in a menu the extra fact stands as plain text at the right
+            // (Time Machine's "Heute, 08:36"), and Reminders itself writes
+            // an overdue date as red text. The capsule was the loudest thing
+            // in the panel — three of them stacked read as a standing charge
+            // (13.09.2026, user). The board's three weights survive as text
+            // colours: red for overdue, primary for today, and the dwell
+            // time beside them stays secondary — orange as 11 pt text fails
+            // contrast (see `CardBadgeView`), so today lifts by weight of
+            // colour, not by hue.
+            if reservesDueColumn {
+                Text(dueBadge?.label ?? "")
                     .font(BoardText.meta)
                     .monospacedDigit()
-                    .foregroundStyle(badge.isEmphasized ? AnyShapeStyle(Board.overdueFill) : AnyShapeStyle(.secondary))
+                    .foregroundStyle(dueStyle)
                     .lineLimit(1)
-                    .frame(width: Board.trayDueColumn, alignment: .trailing)
-            } else if reservesDueColumn {
-                Color.clear.frame(width: Board.trayDueColumn, height: 1)
+                    .fixedSize()
+                    .frame(minWidth: Board.trayDueColumn, alignment: .trailing)
             }
         }
         .padding(.leading, Board.trayRowIndent)
@@ -905,7 +929,8 @@ private struct OverflowQuestionRow: View {
     /// Real buttons, not plain text: these two *answer a question*, and "die
     /// Frage stellen die Knöpfe" (CONCEPT.md, "Ton der Texte") only holds if
     /// they read as something to press. The safe answer prominent and first —
-    /// Escape and Return do not exist in a non-activating panel, so shape and
+    /// Return does not reach these buttons in the panel, and Escape closes
+    /// the panel rather than answering (the question stays), so shape and
     /// position are what carry it.
     private var answers: some View {
         HStack(spacing: 8) {

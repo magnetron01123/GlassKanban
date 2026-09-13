@@ -114,6 +114,17 @@ final class MenuBarTrayTests: XCTestCase {
         XCTAssertFalse(MenuBarTray.showsDwellTime(status: .done, days: old))
     }
 
+    /// A row names its date only when the date decides what to finish now.
+    func testOnlyTodayAndOverdueAreNamedAndNeverOnAFinishedCard() {
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
+        let nextWeek = calendar.date(byAdding: .day, value: 7, to: now)!
+        XCTAssertTrue(MenuBarTray.showsDueDate(card("today", due: now), calendar: calendar, now: now))
+        XCTAssertTrue(MenuBarTray.showsDueDate(card("late", due: yesterday), calendar: calendar, now: now))
+        XCTAssertFalse(MenuBarTray.showsDueDate(card("later", due: nextWeek), calendar: calendar, now: now))
+        XCTAssertFalse(MenuBarTray.showsDueDate(card("undated"), calendar: calendar, now: now))
+        XCTAssertFalse(MenuBarTray.showsDueDate(card("done", due: yesterday, status: .done), calendar: calendar, now: now))
+    }
+
     /// The board's threshold, not a second one: a card that says "3 Tage" on
     /// the board must not stay silent in the panel.
     func testTheDwellTimeStartsAtTheBoardsThreshold() {
