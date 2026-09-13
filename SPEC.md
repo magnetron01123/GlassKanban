@@ -948,7 +948,12 @@ wie auf dem Board. Das Zugbild ist eigens gezeichnet (Punkt und Titel auf eigene
 ein Schnappschuss der Zeile zeigte nur den Punkt, weil vibranter Text außerhalb des Glases
 unsichtbar rendert. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte — einen
 eigenen „Board öffnen"-Knopf gibt es nicht.
-Nur ohne Dock-Symbol steht unten „Glass Kanban beenden" als Menüzeile.
+**Der Fuß des Panels, wie Apples Panels enden:** eine Haarlinie, darunter „Erinnerungen
+öffnen" als Menüzeile (13.09.2026) — der Weg in die tiefere App, den Bluetooth mit
+„Bluetooth-Einstellungen …" und Time Machine mit „… öffnen …" gehen; Erinnerungen ist
+der Speicher mit Suche, Unteraufgaben und Anhängen, und das Board trägt denselben
+Absprung in der Toolbar. Ohne Auslassungspunkte, es geschieht sofort; das Panel schließt
+davor. Nur ohne Dock-Symbol folgt „Glass Kanban beenden" als zweite Zeile.
 
 **Die WIP-Frage steht im Tablett, nicht auf dem Board.** Ein Alert nimmt den Fokus, und
 das Panel schlösse unter der eigenen Frage weg. Deshalb trägt jeder Zug seine Herkunft
