@@ -546,7 +546,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zugriff auf Erinnerungen…"
+            "value": "Zugriff auf Erinnerungen …"
           }
         },
         "en": {
@@ -761,6 +761,23 @@
         }
       }
     },
+    "Click to dismiss": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klick blendet aus"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click to dismiss"
+          }
+        }
+      }
+    },
     "Click to edit": {
       "extractionState": "manual",
       "localizations": {
@@ -914,6 +931,40 @@
         }
       }
     },
+    "Dock": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock"
+          }
+        }
+      }
+    },
+    "Dock and Menu Bar": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock und Menüleiste"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock and Menu Bar"
+          }
+        }
+      }
+    },
     "Done": {
       "extractionState": "manual",
       "localizations": {
@@ -1033,7 +1084,7 @@
         }
       }
     },
-    "Find …": {
+    "Find…": {
       "extractionState": "manual",
       "localizations": {
         "de": {
@@ -1045,7 +1096,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Find …"
+            "value": "Find…"
           }
         }
       }
@@ -1177,6 +1228,23 @@
         }
       }
     },
+    "Glass Kanban": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glass Kanban"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glass Kanban"
+          }
+        }
+      }
+    },
     "Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders.": {
       "extractionState": "manual",
       "localizations": {
@@ -1275,6 +1343,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "In this column for %lld days"
+          }
+        }
+      }
+    },
+    "In use by another app": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von einer anderen App belegt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In use by another app"
           }
         }
       }
@@ -1534,6 +1619,23 @@
         }
       }
     },
+    "Menu Bar": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menüleiste"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu Bar"
+          }
+        }
+      }
+    },
     "Milestone reached: %lld": {
       "extractionState": "manual",
       "localizations": {
@@ -1649,6 +1751,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Move to %@"
+          }
+        }
+      }
+    },
+    "New Task": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Aufgabe"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Task"
           }
         }
       }
@@ -1806,6 +1925,23 @@
         }
       }
     },
+    "No Shortcut": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Kurzbefehl"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Shortcut"
+          }
+        }
+      }
+    },
     "No URL": {
       "extractionState": "manual",
       "localizations": {
@@ -1836,6 +1972,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No access to Reminders. Allow it in System Settings under “Privacy & Security”."
+          }
+        }
+      }
+    },
+    "No list can take a new task": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Liste nimmt eine neue Aufgabe an"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No list can take a new task"
           }
         }
       }
@@ -2145,6 +2298,23 @@
         }
       }
     },
+    "Open Board": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Board öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Board"
+          }
+        }
+      }
+    },
     "Open Reminders": {
       "extractionState": "manual",
       "localizations": {
@@ -2247,6 +2417,23 @@
         }
       }
     },
+    "Quit Glass Kanban": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glass Kanban beenden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Glass Kanban"
+          }
+        }
+      }
+    },
     "Recap": {
       "extractionState": "manual",
       "localizations": {
@@ -2260,6 +2447,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recap"
+          }
+        }
+      }
+    },
+    "Recording…": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording…"
           }
         }
       }
@@ -2417,6 +2621,40 @@
         }
       }
     },
+    "Settings…": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings…"
+          }
+        }
+      }
+    },
+    "Shortcut": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurzbefehl"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut"
+          }
+        }
+      }
+    },
     "Show %lld more": {
       "extractionState": "manual",
       "localizations": {
@@ -2464,6 +2702,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show All"
+          }
+        }
+      }
+    },
+    "Show In": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anzeigen in"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show In"
           }
         }
       }
@@ -2675,6 +2930,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "That's Fine"
+          }
+        }
+      }
+    },
+    "The menu bar shows Backlog, Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In der Menüleiste liegen Backlog, Als Nächstes, In Bearbeitung und Erledigt. Ohne Dock-Symbol läuft die App weiter, wenn das Board geschlossen ist. Der Kurzbefehl öffnet und schließt das Panel aus jeder App; einer, den eine andere App schon benutzt, bleibt bei dieser App."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The menu bar shows Backlog, Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app."
           }
         }
       }

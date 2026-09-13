@@ -19,6 +19,8 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.completionSound.key, "completionSoundEnabled")
         XCTAssertEqual(StoredSetting.foldNotYetDue.key, "foldNotYetDue")
         XCTAssertEqual(StoredSetting.appearance.key, "appAppearance")
+        XCTAssertEqual(StoredSetting.presence.key, "appPresence")
+        XCTAssertEqual(StoredSetting.trayShortcut.key, "trayShortcut")
         XCTAssertEqual(StoredSetting.correctionLedger.key, "correctionLedger")
         XCTAssertEqual(StoredSetting.tagReleaseMemory.key, "tagReleaseMemory")
         XCTAssertEqual(StoredSetting.columnStorageLocation.key, "columnStorageLocation")
@@ -55,6 +57,8 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.appearance.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.completionSound.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.excludedCalendars.scope, .thisDevice)
+        XCTAssertEqual(StoredSetting.presence.scope, .thisDevice)
+        XCTAssertEqual(StoredSetting.trayShortcut.scope, .thisDevice)
     }
 
     /// The storage breadcrumbs describe *this* Mac's sandbox. Travelling, they

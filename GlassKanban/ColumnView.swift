@@ -143,14 +143,11 @@ struct ColumnView: View {
         // filtered, and "Fertigwerden beginnt hier" over a lane that holds
         // three cards is the app stating something untrue about the board.
         guard cards.isEmpty, store.emptiness == nil, !store.isFiltering else { return false }
-        switch status {
-        case .inProgress:
-            return !(store.cards(for: .next).isEmpty && store.cards(for: .backlog).isEmpty)
-        case .next:
-            return !store.cards(for: .backlog).isEmpty
-        case .backlog, .done:
-            return true
-        }
+        // The rule itself lives on `KanbanStatus`: it is a property of the
+        // lane, not of this view.
+        return status.invitesWhenEmpty(
+            nextIsEmpty: store.cards(for: .next).isEmpty,
+            backlogIsEmpty: store.cards(for: .backlog).isEmpty)
     }
 
     /// Completions done today, for the Erledigt header hint.

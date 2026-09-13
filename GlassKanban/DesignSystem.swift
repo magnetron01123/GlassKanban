@@ -53,9 +53,80 @@ enum Board {
     /// three rows would be 114. The slack sits in the notes zone, where the
     /// card wants air anyway (see `CardView.fullBody`).
     static let fullCardHeight: CGFloat = compactCardHeight * 4
+    // The menu bar tray. A menu bar panel, not a small board (retaken
+    // 11.09.2026): one layer of glass, sections and rows like a menu.
+
+    /// Wide enough for a title to be read, not just recognised — the tray
+    /// is opened to finish something, and "Romina bei Live Akt…" is not a
+    /// thing one can finish. The width of the system's own panels.
+    static let trayWidth: CGFloat = 340
+    /// The tray's minimum clearance from a screen's side edge.
+    static let trayEdgeClearance: CGFloat = 8
+    /// How the panel hangs from its status item — the system's own numbers,
+    /// measured against this app's own `NSMenu` opened from the same item and
+    /// checked against Time Machine's (13.09.2026): the menu's left edge
+    /// stands 4 pt left of the item's left edge, and its top 1 pt below the
+    /// menu bar. A first measurement the day before read 3 and left the panel
+    /// one point off its neighbours. Centred under the item, as the panel was
+    /// before, it looked unlike every other menu up there.
+    static let trayMenuEdgeInset: CGFloat = 4
+    static let trayMenuTopGap: CGFloat = 1
+    /// The panel's inner margin, a menu's own: a menu's highlight stands 5 pt
+    /// in from its edge (measured 13.09.2026), and so do the rows' here.
+    static let trayPadding: CGFloat = 5
+    /// Above the first head: what the system's panels give, so the first
+    /// line does not cling to the rim.
+    static let trayTopPadding: CGFloat = 9
+    /// The air on each side of the hairline between two groups. Half what it
+    /// was while air alone did the separating: the line carries the division
+    /// now, so the space around it only has to keep it from touching the
+    /// text (12.09.2026, retaken — see `MenuBarTrayView.separator`).
+    static let trayGroupSpacing: CGFloat = 6
+    /// A row's own text margin, inside the highlight. With `trayPadding` it
+    /// puts the first letter 16 pt from the glass edge — where a menu's text
+    /// and its separators begin (measured 13.09.2026), so a head in here and
+    /// an item in the menu beside it start on one line.
+    static let trayRowInset: CGFloat = 11
+    /// One menu row. The system's own menu rows are 22–24pt; two more for
+    /// a target that is dragged onto, not just clicked.
+    static let trayRowHeight: CGFloat = 26
+    /// The list's colour as a dot in front of the title — the one piece of
+    /// context a glance uses, in the smallest form that still reads.
+    static let trayDotSize: CGFloat = 7
+    /// The field in front of a head's name, holding the stage symbol. Only
+    /// heads use it; the rows' glyphs live in their own, indented field
+    /// (`trayRowGlyphSlot`).
+    static let traySymbolSlot: CGFloat = 16
+    /// From that field to the text. Tighter than the gap between the other
+    /// parts of a row: the symbol belongs to the word beside it.
+    static let traySymbolGap: CGFloat = 6
+    /// How far a row steps in under its head: exactly to where the head's
+    /// *name* begins, so the rows hang under the word, not under the symbol.
+    /// This is what makes the panel a tree rather than a list — head at the
+    /// margin, entries beneath it, the way the Finder and Reminders sidebars
+    /// do it. A first cut (12.09.2026, morning) put head and title on one x
+    /// and the panel read as seven equal lines with a glyph in front.
+    static let trayRowIndent: CGFloat = traySymbolSlot + traySymbolGap
+    /// The field for a row's own glyph — the list's dot, the capture's plus.
+    /// Narrower than the head's, because it holds smaller things and
+    /// because a second 16-pt column would push the titles too far in.
+    static let trayRowGlyphSlot: CGFloat = 12
+    /// The panel's corner: rounder than a menu, flatter than a Control Centre
+    /// module — Liquid Glass reads rounder than the same material with a tight
+    /// corner. The row highlight sits one step under it, per the nesting rule.
+    static let trayRadius: CGFloat = 12
+    static let trayRowShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+    /// A section a row is about to land in. Faint: a menu highlights, it
+    /// does not announce.
+    static let trayDropTint: Double = 0.12
+    /// Around the panel's waiting and refused-access states, which are a
+    /// sentence and a button rather than rows.
+    static let trayNoticePadding: CGFloat = 16
+
     /// A card only reports its dwell time once it has lingered this long —
-    /// below it, sitting in a column is simply normal.
-    static let agingThresholdDays = 3
+    /// below it, sitting in a column is simply normal. The number itself
+    /// lives on `KanbanCard`, where the panel's rule can also read it.
+    static let agingThresholdDays = KanbanCard.agingThresholdDays
 
     // Radii, stepped down with nesting depth so a card's corner never looks
     // wider than the lane holding it.
@@ -392,6 +463,9 @@ enum BoardText {
     static let header = Font.system(size: 13, weight: .semibold)
     /// Running text — notes excerpt, popover copy.
     static let body = Font.system(size: 12)
+    /// A row in the menu bar tray — the system's menu size, because the
+    /// tray is a menu bar panel and not a small board.
+    static let trayRow = Font.system(size: 13)
     /// Chips: date badges, lane counts, dwell time.
     static let chip = Font.system(size: 11, weight: .semibold)
     /// Quiet metadata — list name, "Show N more", weekday letters.

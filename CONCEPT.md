@@ -643,6 +643,13 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   zurück, nur weil das Fenster den Fokus verliert.** Neue Glasflächen sind entsprechend
   über `HUDGlassMaterial` (`state = .active`) zu bauen, nicht über native
   `.glassEffect`-Controls, solange Apple dafür keinen Aktivzustand-Pin anbietet.
+  **Grenze der Regel (12.09.2026):** Sie gilt Dauerflächen — Flächen, die stehen, während
+  man woanders arbeitet. Das Menüleisten-Panel ist keine: Es existiert nur, solange man
+  es bedient, und ist dann Key-Fenster. Deshalb trägt es das native Liquid Glass
+  (`NSGlassEffectView`), samt Hover und Ablegeziel als Glasschichten — gemessen mit
+  einer anderen App im Vordergrund: Refraktion und Lichtsaum bleiben. Das klassische
+  Vibrancy-Material dort war eine graue Scheibe; die Regel hätte das Panel um genau das
+  gebracht, wofür die App benannt ist.
 - Sauberes Typografie- und Abstandssystem nach Apple HIG (SF Pro, klare Hierarchie)
 - Dezente Bewegung: sanfte Animationen beim Spaltenwechsel (Drag & Drop), beim
   Live-Update aus Reminders (z. B. Karte erscheint/verschwindet mit Fade/Slide)
@@ -780,6 +787,31 @@ nativen Mac-App statt eines austauschbaren Tools?
 - **Listenfarbe aus Reminders übernehmen:** `EKCalendar.color` (die Farbe, die eine Liste schon
   in der nativen Reminders-App hat) als kleiner Akzent/Punkt auf der Karte — verbindet das Board
   visuell mit der bestehenden, vertrauten Reminders-Farbcodierung, ganz ohne neue Konzepte.
+
+### Was das Menüleisten-Panel gekostet hat: die Messungen (08.–13.09.2026)
+
+Die Bauform des Panels (SPEC.md, „Menüleiste: das Tablett") ist nicht gewählt, sondern
+gemessen. Die Pläne, in denen die Messungen standen, sind mit dem Merge gelöscht
+(`plans/README.md`); die Befunde, an denen Code hängt, bleiben hier.
+
+| Datum | Messung | Ergebnis | Folge |
+|---|---|---|---|
+| 08.09.2026 | Drag in einem `MenuBarExtra`-Popover (`.window`) | **Negativ.** Der Zug lebt — Preview folgt, Popover bleibt offen —, aber `dropDestination` empfängt nichts, weder `isTargeted` noch der Drop. Gegenprobe mit demselben synthetischen HID-Zug auf dem Board: Karte wechselt die Spalte, die Methode trägt. | Kein `MenuBarExtra`: `NSStatusItem` + eigenes, nicht aktivierendes `NSPanel` (`MenuBarTrayController`). Dort feuern `isTargeted` und Drop, das Panel bleibt offen. |
+| 08.09.2026 | Popover schließt bei „Board öffnen"? | **Negativ.** `openWindow` + `NSApp.activate` bringt das Board, das Popover bleibt daneben stehen. | Mit dem eigenen Panel selbst gesteuert: `close()` vor dem Öffnen. |
+| 08.09.2026 | Activation Policy zur Laufzeit | **Sauber.** `.accessory` nimmt das Dock-Symbol sofort, `.regular` bringt es zurück. | „Anzeigen in" wirkt sofort, ohne Neustart. |
+| 08.09.2026 | `defaultLaunchBehavior(.suppressed)` | Verhindert nur das *Öffnen* der Szene; ein beim Beenden offenes Board stellt macOS trotzdem wieder her. | Im Delegate: Board-Fenster bei Start und `didFinishRestoringWindows` schließen. |
+| 08.09.2026 | Nebenbefund | Eine SwiftUI-`Window`-Szene *ist* die App: das Schließen des Boards beendete den Prozess samt Symbol. | `applicationShouldTerminateAfterLastWindowClosed` folgt `AppPresence.quitsWithLastWindow`. |
+| 12.09.2026 | Textfeld im nicht aktivierenden Panel | **Positiv.** Finder vorn, Panel offen: Fokus ohne Klick, jeder Tastendruck kam an, Return löste `onSubmit`, Finder blieb aktiv. | Schnellerfassung ohne Aktivierungs-Weiche. |
+| 12.09.2026 | `RegisterEventHotKey` (Carbon) in der Sandbox | **Positiv, mit Grenze.** `noErr` und Auslösen aus dem Hintergrund in `.regular` *und* `.accessory`; doppelte Registrierung liefert `-9878`. **Aber:** ⌘Leertaste und ⌘Tab registrieren fehlerfrei und feuern nie — ein systemreserviertes Kürzel meldet sich nicht. | Konfliktmeldung nur für den gemeldeten Fall; die Fußzeile der Einstellungen sagt, dass ein anderweitig belegtes Kürzel bei der anderen App bleibt. |
+| 12.09.2026 | Hover- und Ablegeglas (`glassEffect` auf Zeile und Abschnitt) | **Positiv.** Weiche, hellere Glasschicht statt hartem Rechteck; das akzentgetönte Band über dem Zielabschnitt ebenso. Der Zug landete. | Kein Rückfall auf Farbflächen. |
+| 13.09.2026 | Geometrie und Schrift gegen Systemmenüs und -panels | Menü hängt 4 pt links vom Symbol, 1 pt unter der Leiste; Highlight 5 pt vom Rand, Text 16 pt; Zeilen 13 pt regular; Panel-Köpfe (Bluetooth) 13 pt fett. | `Board.trayMenuEdgeInset`, `trayPadding`, `trayRowInset`, `BoardText.header` für die Köpfe. |
+
+**Zur Messmethode der Tastaturbefunde:** Die Tastendrücke kamen von der CGEvent-Ebene,
+nicht von einer echten Tastatur — CLAUDE.md warnt davor, daraus Befunde abzuleiten. Hier
+tragen sie, weil jede Messung eine **Kontrollbedingung** hatte, die dasselbe Ereignis anders
+leitete: Beim Textfeld blieb Finder nachweislich aktiv, das Ereignis nahm also dieselbe
+Weiche des Fenster-Servers wie ein echter Druck; beim Kurzbefehl lief derselbe synthetische
+Druck einmal ins Leere (⌘Leertaste, Spotlight gewinnt) und einmal in unseren Handler.
 
 ## Was hier bewusst *nicht* steht
 

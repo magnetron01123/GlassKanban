@@ -19,6 +19,24 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
         }
     }
 
+    /// The stage as a glyph, for the menu bar panel's section heads
+    /// (SPEC.md, "Menüleiste"). The system's own task vocabulary: the tray
+    /// you put things into, then a circle that fills up as the work does.
+    ///
+    /// Only in the panel. On the board a lane explains itself through the
+    /// cards in it and through the space beside them; in a menu-sized row
+    /// there is no space to explain, so the glyph does it. Pinned by a test:
+    /// a symbol is a contract with the eye, not a value to be tidied up
+    /// later.
+    var traySymbolName: String {
+        switch self {
+        case .backlog: "tray"
+        case .next: "circle"
+        case .inProgress: "circle.lefthalf.filled"
+        case .done: "checkmark.circle"
+        }
+    }
+
     /// How much a card in this lane reveals. The information gradient is the
     /// board's focus mechanism: the working lanes carry everything, the
     /// backlog carries what you need to decide, and finished work carries
@@ -47,6 +65,29 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
     /// once is the expensive mistake. Keeping the interruption to one lane
     /// also keeps the app's only modal nag to a single, justified spot.
     var asksBeforeExceedingLimit: Bool { self == .inProgress }
+
+    /// Whether an empty lane of this status puts up its standing invitation
+    /// — the dashed outline with a sentence in it (SPEC.md, "Leere Spalte:
+    /// der angedeutete Platz").
+    ///
+    /// Two lanes are fed by a pull and must not invite one that cannot
+    /// happen: "In Bearbeitung" needs something upstream to take, "Als
+    /// Nächstes" needs a Backlog to choose from. Backlog and Erledigt are not
+    /// pull-fed, so emptiness alone is reason enough to speak.
+    ///
+    /// Here rather than inside `ColumnView` because it is a property of the
+    /// lane, not of the view that draws it — `ColumnView` decides only
+    /// whether to ask at all (filtered board, empty-board notice up). The menu
+    /// bar panel asked it too in its first form (08.09.2026); today's panel
+    /// shows no invitation — an empty section is its head (SPEC.md, "Leere
+    /// Spur").
+    func invitesWhenEmpty(nextIsEmpty: Bool, backlogIsEmpty: Bool) -> Bool {
+        switch self {
+        case .inProgress: !(nextIsEmpty && backlogIsEmpty)
+        case .next: !backlogIsEmpty
+        case .backlog, .done: true
+        }
+    }
 
     /// Default limit for a fresh install. Personal Kanban's rule of thumb for
     /// one person: 2–3 things actually in progress, a slightly roomier queue
@@ -154,6 +195,16 @@ struct KanbanCard: Identifiable, Equatable {
         default: 3
         }
     }
+
+    /// A card only reports its dwell time once it has lingered this long —
+    /// below it, sitting in a column is simply normal.
+    ///
+    /// Lives here rather than beside the other design tokens because the
+    /// menu bar panel decides by it too, and that decision is a rule in the
+    /// test target (`MenuBarTray.showsDwellTime`). `Board.agingThresholdDays`
+    /// hands this same number on, so there is one threshold and not two that
+    /// drift apart.
+    static let agingThresholdDays = 3
 
     /// Whole days this card has been sitting in its column. The card shows it
     /// only from `agingThresholdDays` on — fresh is normal and needs no label;

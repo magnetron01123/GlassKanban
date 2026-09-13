@@ -7,9 +7,22 @@ import SwiftUI
 /// `NSApp` exists, and an early attempt to set the appearance there crashed
 /// the app on every launch — a failure the build and the unit tests both
 /// pass straight through, because it only exists at runtime.
+@MainActor
 final class AppearanceDelegate: NSObject, NSApplicationDelegate {
+    /// The board's data, owned here rather than by the `App` struct.
+    ///
+    /// In the menu bar mode there is no window, so a `@StateObject` on the
+    /// scene would be created only once the board is opened — and the tray,
+    /// which is AppKit and lives outside every scene, would have nothing to
+    /// read. One store, held by the one object that exists in both modes.
+    let store = RemindersStore()
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         AppearanceController.shared.applyStored()
+        // Same moment, same reason: the activation policy decides whether a
+        // Dock icon appears at all, and that has to be settled before the
+        // app is on screen rather than corrected afterwards.
+        PresenceController.shared.applyStored()
     }
 
     /// The board has to be told which display it belongs to from here: a
@@ -17,6 +30,97 @@ final class AppearanceDelegate: NSObject, NSApplicationDelegate {
     /// (see `WindowPlacementController`).
     func applicationDidFinishLaunching(_ notification: Notification) {
         WindowPlacementController.shared.start()
+        MenuBarTrayController.shared.start(store: store)
+        closeRestoredBoardInMenuBarMode()
+    }
+
+    /// A `Window` scene is the whole app as far as SwiftUI is concerned, so
+    /// closing the board quit. With an item in the menu bar that is the one
+    /// thing it must not do — see `AppPresence.quitsWithLastWindow`.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        PresenceController.shared.selection.quitsWithLastWindow
+    }
+
+    /// `.defaultLaunchBehavior(.suppressed)` stops SwiftUI from *opening* the
+    /// board at launch, and that much was measured (08.09.2026, M3). What it
+    /// does not stop is macOS restoring a window that was open when the app
+    /// last quit — so in the menu bar mode a board came back anyway, which is
+    /// exactly the login-time surprise the setting exists to prevent.
+    ///
+    /// The board window carries `identifier == "board"` from its scene
+    /// (measured 08.09.2026); the status bar windows carry none. Run twice,
+    /// because restoration finishes after launch does.
+    private func closeRestoredBoardInMenuBarMode() {
+        guard !PresenceController.shared.selection.opensBoardAtLaunch else { return }
+        closeBoardWindows()
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didFinishRestoringWindowsNotification,
+            object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated {
+                guard !PresenceController.shared.selection.opensBoardAtLaunch else { return }
+                Self.closeBoardWindows()
+            }
+        }
+    }
+
+    private func closeBoardWindows() { Self.closeBoardWindows() }
+
+    /// Clicking the Dock icon of a running app with no window open has to
+    /// bring the board back.
+    ///
+    /// This never came up before: closing the board *quit* the app, so the
+    /// state "running, no window" did not exist. It does now (see
+    /// `AppPresence.quitsWithLastWindow`), and without this the Dock icon
+    /// answered a click with nothing at all. The window itself survives its
+    /// close — measured 08.09.2026, it stays in `NSApp.windows` carrying
+    /// `identifier == "board"` — so ordering it front is the whole of it.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard !flag else { return true }
+        Self.showBoardWindow()
+        return true
+    }
+
+    static func showBoardWindow() {
+        for window in NSApp.windows where window.identifier?.rawValue == "board" {
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    /// Brings the board forward once it exists, waiting for it if it does not
+    /// yet.
+    ///
+    /// `openWindow(id:)` returns before the window is on screen, so an
+    /// activation fired right after it has nothing of ours to activate and is
+    /// dropped — in the menu bar mode the board then stood behind whatever
+    /// app the user came from (measured 12.09.2026, first through the status
+    /// item's menu). Polling the run loop rather than guessing a delay: the
+    /// window appears on the next turn or two, and this stops the moment it
+    /// does. `ignoringOtherApps` because the request came from a status item
+    /// while another app was frontmost, which is exactly the case the plain
+    /// `activate()` refuses.
+    static func bringBoardForward(remainingTries: Int = 20) {
+        guard remainingTries > 0 else { return }
+        let board = NSApp.windows.first { $0.identifier?.rawValue == "board" }
+        if let board {
+            NSApp.activate(ignoringOtherApps: true)
+            board.makeKeyAndOrderFront(nil)
+        }
+        // Only the window's existence is worth waiting for. Owning the menu
+        // bar is not: in the menu bar mode the app runs as an accessory, and
+        // an accessory app leaves the menu bar to whoever had it — the window
+        // still comes to the front and takes the keyboard, which is what the
+        // request was about.
+        guard board == nil else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            bringBoardForward(remainingTries: remainingTries - 1)
+        }
+    }
+
+    private static func closeBoardWindows() {
+        for window in NSApp.windows where window.identifier?.rawValue == "board" {
+            window.close()
+        }
     }
 }
 
@@ -25,7 +129,22 @@ extension Notification.Name {
     /// its "+" button does — one path, one set of rules.
     static let glassKanbanNewTicket = Notification.Name("GlassKanbanNewTicket")
 
-    /// Raised by the "Find …" menu item so the board can open its popover.
+    /// Raised by the menu bar item's own menu when the board has to come up
+    /// and no window exists yet — only SwiftUI can make one, and only from
+    /// inside a view (see `MenuBarTrayController.openBoard`).
+    static let glassKanbanOpenBoard = Notification.Name("GlassKanbanOpenBoard")
+    /// The item's menu asking for the Settings window — answered by the
+    /// tray view, which holds `openSettings` (see `MenuBarTrayView`).
+    static let glassKanbanOpenSettings = Notification.Name("GlassKanbanOpenSettings")
+
+    /// Raised when the menu bar panel closes and again as it opens, so
+    /// everything in it goes back to rest: the capture row drops its draft,
+    /// every fold shuts. The panel's view is built once and then lives on —
+    /// it has no `onAppear` per opening — and a half-typed title that
+    /// reappeared days later would be noise, not a draft.
+    static let glassKanbanTrayResets = Notification.Name("GlassKanbanTrayResets")
+
+    /// Raised by the "Find…" menu item so the board can open its popover.
     /// The popover's presentation lives in `BoardView`'s own state; a menu
     /// command has no route into that except through the app's own bus.
     static let glassKanbanShowFind = Notification.Name("GlassKanbanShowFind")
@@ -33,8 +152,10 @@ extension Notification.Name {
 
 @main
 struct GlassKanbanApp: App {
-    @StateObject private var store = RemindersStore()
     @NSApplicationDelegateAdaptor(AppearanceDelegate.self) private var appearanceDelegate
+    @ObservedObject private var presence = PresenceController.shared
+
+    private var store: RemindersStore { appearanceDelegate.store }
 
     var body: some Scene {
         // Single window (one board); macOS restores its frame automatically.
@@ -43,6 +164,11 @@ struct GlassKanbanApp: App {
                 .environmentObject(store)
         }
         .defaultSize(width: 1280, height: 760)
+        // In the menu bar mode the board waits to be asked for. SwiftUI opens
+        // a `Window` scene at launch on its own, so with "start at login" on
+        // a board would spring up at every single login (measured 08.09.2026,
+        // M3: this modifier really does keep it shut).
+        .defaultLaunchBehavior(presence.selection.opensBoardAtLaunch ? .automatic : .suppressed)
         .commands {
             CommandMenu("Board") {
                 // Every board command answers the same two questions the
@@ -59,7 +185,7 @@ struct GlassKanbanApp: App {
                 // Mac user looks for by name was findable only by hovering.
                 // The button keeps its own `.keyboardShortcut`; this entry is
                 // where the convention says to look for it.
-                Button("Find …") {
+                Button("Find…") {
                     NotificationCenter.default.post(name: .glassKanbanShowFind, object: nil)
                 }
                 .keyboardShortcut("f")

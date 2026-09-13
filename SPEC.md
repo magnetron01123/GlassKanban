@@ -31,6 +31,28 @@ weiterentwickelt: Ändert sich Verhalten, ändert sich diese Datei mit.
   Zugangsdaten in der App — einzige Berechtigung ist der macOS-Systemdialog für
   Erinnerungs-Zugriff)
 
+### Fenster wachsen mit ihrem Inhalt (12.09.2026)
+
+**Allgemeine Regel dieser App, überall wo sie gilt:** Ein Fenster ist so hoch wie sein
+Inhalt und wächst nach unten mit — es scrollt **erst**, wenn der Bildschirm nicht mehr
+reicht. Ein Ausschnitt mit Rollbalken mitten in einem Fenster, das noch Platz hätte, ist
+ein Fenster, das seine eigene Größe nicht kennt.
+
+Betroffen sind heute zwei Stellen:
+
+- **Die Einstellungen.** „Listen" ist so hoch, wie die Listen des Nutzers es verlangen
+  (`SettingsMetrics.listsHeight(rowCount:)`); die feste Höhe davor scrollte ab der siebten
+  Liste und stand bei zweien halb leer. „Allgemein" ist fester Inhalt mit einer gemessenen
+  Zahl. Beide gehen durch `SettingsMetrics.onScreen(_:)`, das auf die Bildschirmhöhe
+  begrenzt — nur dort scrollt die Seite dann in sich.
+- **Das Menüleisten-Panel.** Es wächst mit einem aufgeklappten Abschnitt und wird nur von
+  einem zu kurzen Bildschirm begrenzt (siehe „Menüleiste: das Tablett").
+
+Die Höhen sind **gerechnet, nicht zur Laufzeit gemessen**. Messen war einmal ein
+sichtbarer Fehler: Das Fenster ging in einer Standardgröße auf und korrigierte sich erst
+danach, was als Ruckeln mit neu gezeichneter Tab-Leiste zu sehen war. Eine Höhe, die vor
+dem Erscheinen feststeht, hat nichts zu korrigieren.
+
 ### Das Board bleibt auf seinem Bildschirm (14.08.2026)
 
 macOS stellt den Fensterrahmen über Neustarts wieder her, aber nicht über das
@@ -871,6 +893,143 @@ bedeutet. „Erinnerungen öffnen" ist auf ⇧⌘R gewandert.
 hochgehaltene Karte zurück; ein Klick auf die Flamme legte die Statistik vorher *über*
 den offenen Editor. Die Toolbar bleibt sichtbar und scharf — sie ist Chrome, kein Inhalt
 — konkurriert aber nicht mit dem, was gerade in der Hand ist.
+
+### Menüleiste: das Tablett (08.09.2026, Form neu gefasst 11.09.2026, erweitert 12.09.2026)
+
+Neben dem Board kann die App in der Menüleiste liegen. Ein Klick auf das Symbol öffnet
+das **Tablett**: ein Panel von 340 pt Breite im Stil der Systempanels, darin **vier
+Abschnitte untereinander, in Board-Reihenfolge** — „Backlog", „Als Nächstes", „In
+Bearbeitung", „Erledigt" —, jeder mit Kopf und Zahl, darunter Zeilen wie in einem Menü. Es
+hängt unter dem Symbol des Bildschirms, auf dem geklickt wurde, **so wie macOS das Menü
+eines Menüleistensymbols hängt:** linke Kante 4 pt links der linken Symbolkante, Oberkante
+1 pt unter der Menüleiste — gemessen am eigenen `NSMenu` desselben Symbols und gegengeprüft
+am Time-Machine-Menü (13.09.2026; die erste Messung vom Vortag lag 1 pt daneben). Innen
+ebenso: Zeilen-Hover 5 pt vom Glasrand, Text und Haarlinien 16 pt — wie ein Systemmenü.
+Zentriert unter dem Symbol, wie davor, sah es anders aus als jedes Menü daneben. Herleitung und die verworfenen Formen
+— darunter die erste gebaute Fassung mit drei Mulden nebeneinander — stehen in BACKLOG.md
+(„Fensterverhalten").
+
+**Leitsatz: ein Menüleisten-Panel, kein kleines Board.** Man öffnet es, um mal eben
+etwas zu erledigen. Es erinnert an das Board, ist aber abstrakter: eine Schicht Glas,
+keine Mulden, kein Papier, keine Sätze. Das Glas ist — anders als beim Fenster — das
+native Liquid Glass des Systems (`NSGlassEffectView`, Radius 12), und der Inhalt sitzt
+als dessen Kind *im* Material; warum das hier erlaubt ist und beim Board nicht, steht in
+CONCEPT.md („Immer-aktiv"). Der Zug läuft von oben nach unten — im Menü ist
+das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
+
+| Element | Board | Tablett |
+|---|---|---|
+| Spurkopf | Name und Zähl-Chip | **Symbol**, Name und Zahl als Text, 13 pt semibold sekundär — der Spaltenkopf des Boards, und die Größe, die Apples Panels ihren Köpfen geben (Bluetooth: 13 pt fett über 13-pt-Zeilen, gemessen 13.09.2026; mit 11 pt lasen sich die Köpfe als Fußnoten ihrer Zeilen); die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Zwischen zwei Abschnitten eine Haarlinie wie in den Systempanels (12.09.2026 zurückgenommen: Luft allein trug nicht, zwei kurze Abschnitte übereinander lasen sich als ein Block) |
+| Stufen-Symbol | keins — die Spur erklärt sich durch die Karten darin | vor jedem Kopf: Backlog `tray`, Als Nächstes `circle`, In Bearbeitung `circle.lefthalf.filled`, Erledigt `checkmark.circle`, am linken Rand |
+| Hierarchie | Papier in der Mulde | **ein Baum, keine Liste:** der Kopf steht am Rand, seine Zeilen rücken bis unter den Kopf*namen* ein (22 pt) — wie die Seitenleiste von Finder und Erinnerungen. Zwei Glyphenspalten, zwei Ebenen: links nur Stufen-Symbole, eingerückt nur Listenpunkte. Eine erste Fassung vom 12.09. setzte Kopfname und Titel auf eine Flucht; das las sich als sieben gleiche Zeilen |
+| Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeits-Badge **nur bei Heute und Überfällig** — graue Daten sind Planung, und die findet auf dem Board statt; Hover hebt die Zeile als hellere Glasschicht |
+| Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |
+| Verweildauer | ab 3 Tagen auf jeder Karte der Arbeitsspuren, mit Uhr-Glyph | nur in „In Bearbeitung", ab derselben Schwelle, als bloße Zahl rechts vor dem Badge. Auf den anderen Abschnitten wäre sie eine Zahl ohne Frage |
+| Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach" | „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
+| Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
+| Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | in Ruhe die letzten 3 (Bestätigung, keine Liste), die Falz-Zeile öffnet das 7-Tage-Fenster |
+| Backlog | eigene Spur mit Falz-Zeile | **ein Abschnitt wie die anderen, mit der Falz-Zeile des Boards** (12.09.2026): in Ruhe schneidet er wie `BacklogFold` — erst die noch nicht fälligen weg (dieselbe Einstellung „Noch nicht Fälliges einklappen"), dann der Deckel, hier 8 statt 15. Darunter die Zeile des Boards, Wort für Wort: „N noch nicht fällig", „N weitere anzeigen", „Weniger anzeigen". Aufgeklappt alle Karten; das Panel wächst nach unten mit, kein Abschnitt scrollt in sich — nur ein zu kurzer Bildschirm begrenzt das Panel, und dann scrollt es als Ganzes. Zustand pro Sitzung wie auf dem Board; das Panel öffnet in Ruhe. Zuvor am selben Tag verworfen: Kopf allein, Kopf mit „Auf dem Board", Falz am Kopf mit gemerktem Zustand (BACKLOG.md) |
+| Falz-Zeile | zentriert unter dem Stapel, Text medium sekundär, Chevron dreht, Hover hebt auf primär, kein Glas | dieselbe Zeile, **linksbündig in der Zeilenspalte, das Chevron vorn im Glyphenfeld** wie das Plus der Erfassung (zentriert und mit Chevron hinten wirkte sie im Menü deplatziert, 12.09.2026); ohne Punkt und ohne Glas-Hover, genau das unterscheidet sie von einem Ticket. Gilt **nur für Backlog und Erledigt**, wie auf dem Board: Als Nächstes und In Bearbeitung falten nie — ihr WIP-Limit hält sie kurz, und eine dorthin gezogene Karte muss dort zu sehen sein, wo sie gelandet ist (ein Tag lang galt hier ein eigener 6er-Deckel, und eine Karte verschwand dahinter). Erledigt ab 3 („N ältere anzeigen" öffnet das 7-Tage-Fenster des Boards; die 30 Tage bleiben dem Board) |
+| Zugziele | alle drei anderen Spuren | alle drei anderen Abschnitte, Backlog eingeschlossen — Zurücklegen ist ein Kanban-Zug, und die Karte landet in einer Zahl, die man sieht |
+| Ablegeziel | gestrichelter Umriss in Kartenform | der ganze Abschnitt hebt sich als akzentgetöntes Glas, wie eine Menüzeile unter dem Zeiger |
+| WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen; passt beides nicht in eine Zeile — auf Deutsch der Normalfall —, stehen die Knöpfe unter der Frage, statt dass Spaltenname und Zahlen abgeschnitten werden |
+| Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
+| ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |
+| Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Alert | **erlaubt** (12.09.2026). Er war gesperrt, weil der Hinweis dem Board gehörte und der Fehlschlag hier stumm verpufft wäre; das Panel sagt ihn jetzt selbst — `SaveFailure` trägt seine `MoveSource`, und die Absage steht als Zeile im Panel (siehe unten) |
+| Abgelehnter Schreibvorgang | Alert über dem Board | Zeile ganz oben im Panel, rot getönt, Titel und Grund in den Worten des Boards; ein Klick blendet sie aus. Kein Alert: er nähme den Fokus, und im Menüleisten-Modus gibt es kein Fenster, über dem er stehen könnte |
+| Erfassen | „+" legt an und öffnet den Editor | Zeile „Neue Aufgabe" unter dem Backlog-Kopf, nur der Titel (siehe unten) |
+| Tooltips, Streak, Statistik, Suche, Editor, Umbenennen, Löschen | ja | nichts davon; Chrome bleibt im Fenster |
+
+**Bewegen — dieselben drei Wege wie auf dem Board:** ziehen, Kontextmenü „Verschieben
+nach", VoiceOver-Aktion. Jede Zeile ist beweglich, Erledigt eingeschlossen. Jeder ruft `store.move(…, source: .tray)`, mit Klang und Haptik
+wie auf dem Board. Das Zugbild ist eigens gezeichnet (Punkt und Titel auf eigenem Grund):
+ein Schnappschuss der Zeile zeigte nur den Punkt, weil vibranter Text außerhalb des Glases
+unsichtbar rendert. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte — einen
+eigenen „Board öffnen"-Knopf gibt es nicht.
+Nur ohne Dock-Symbol steht unten „Glass Kanban beenden" als Menüzeile.
+
+**Die WIP-Frage steht im Tablett, nicht auf dem Board.** Ein Alert nimmt den Fokus, und
+das Panel schlösse unter der eigenen Frage weg. Deshalb trägt jeder Zug seine Herkunft
+(`MoveSource`), und jede Oberfläche zeigt nur ihre eigene Frage. **Solange die Frage
+steht, bewegt sich im Tablett nichts** — auf keinem der drei Wege; ein zweiter Zug würde
+die erste Frage unbeantwortet überschreiben, und das wäre stilles Zulassen. Wird das
+Tablett geschlossen, steht die Frage beim nächsten Öffnen wieder da: Sie wird weder still
+zugelassen noch still zurückgelegt. Der Zustand ist unterdessen sichtbar — die Zahl im
+Kopf trägt die teale Kapsel, im Tablett wie auf dem Board.
+
+**Schnellerfassung ins Backlog.** Als erste Zeile des Backlog-Abschnitts, direkt unter
+dem Kopf, steht „Neue Aufgabe" mit einem `plus` im Glyphenfeld — eine feste Stelle, egal
+wie lang der Stapel darunter ist. Ein Klick macht sie zum Textfeld,
+und getippt wird, ohne dass die App nach vorn kommt (gemessen 12.09.2026: ein Textfeld im
+nicht aktivierenden Panel bekommt den Fokus und die Tasten, während eine andere App aktiv
+bleibt). Return legt ein Ticket im Backlog an — dieselbe Liste wie das „+" wählt
+(`targetCalendarForNewTicket`), nur der Titel, kein Editor — leert das Feld und **behält
+den Fokus**: mehrere Gedanken hintereinander sind der Normalfall. Return im leeren Feld,
+Escape und Fokusverlust führen zurück zur Ruhezeile. **Kein Entwurf überlebt das
+Schließen** des Panels: Was im Kopf war, ist danach angelegt oder weg. Die Rückmeldung ist
+die Zahl im Kopf darüber, die um eins springt — kein Klang, keine Meldung. Scheitert der
+Schreibvorgang, steht der Grund als Zeile unter dem Feld und der Titel bleibt stehen;
+kein Alert, der den Fokus nähme. Kein ⌘Z: Zurückgenommen wird ein erfasstes Ticket, indem
+man es auf dem Board löscht.
+
+**Das Symbol ist stumm:** ein monochromes Template-Glyph, keine Zahl, kein Badge, keine
+Farbe. Zieht der Nutzer es mit ⌘ aus der Menüleiste, springt die Einstellung auf „Dock" —
+ohne beides wäre die App laufend und unerreichbar. **Die Einstellung ist dabei die
+Instanz:** Sagt sie „Menüleiste", steht beim nächsten Start ein Symbol da, auch wenn macOS
+sich das frühere Herausziehen gemerkt hat (12.09.2026 — sonst blieb es für immer weg und
+überschrieb die Wahl des Nutzers stillschweigend).
+
+**Rechtsklick auf das Symbol öffnet ein Menü** mit drei Einträgen: „Board öffnen",
+„Einstellungen …", Trennstrich, „Glass Kanban beenden". Keine Inhalte des Boards — dafür
+ist das Panel da. Jeder der drei ist ein Weg, den das Panel nicht immer anbieten kann: Es
+braucht Zugriff auf Erinnerungen, um überhaupt etwas zu zeichnen, und im Menüleisten-Modus
+gibt es weder Dock-Symbol noch App-Menü — ohne dieses Menü lief eine App ohne Zugriff
+also ohne Ausweg (12.09.2026). „Board öffnen" erzeugt das Fenster auch dann, wenn dieser
+Start noch keines hatte. „Einstellungen …" öffnet nur die Einstellungen, nicht das Board mit
+(13.09.2026 — der alte Weg über `showSettingsWindow:` wird vom System angenommen und dann
+ignoriert; der Eintrag tat nichts, bis er über `openSettings` lief).
+
+**Auslassungspunkte folgen der Apple-Regel:** Sie stehen nur hinter einem Befehl, der vor
+seinem Abschluss noch eine Eingabe oder Wahl verlangt — „Einstellungen …", „Finden …" —,
+nicht hinter einem, der sofort geschieht („Board öffnen", „Glass Kanban beenden"), auch
+wenn er ein Fenster zeigt. Deutsch mit Leerzeichen davor, Englisch ohne („Settings…"),
+wie Apples eigene Menüs es schreiben (gegengeprüft am Time-Machine-Menü: „Backups
+durchsuchen" ohne, „Time Machine-Einstellungen öffnen …" mit).
+
+### Anzeigen in: Dock, Menüleiste, beides (08.09.2026)
+
+In „Allgemein" wählt der Nutzer, wo die App erscheint. Vorgabe ist **Dock** — das
+Verhalten, das jede bestehende Installation schon hat. Die Wahl gehört dem Rechner, nicht
+dem Nutzer (BACKLOG.md, „Was wohin gehört"), und wirkt sofort.
+
+| Wert | Dock-Symbol | Menüleisten-Symbol | Board beim Start | Board schließen |
+|---|---|---|---|---|
+| Dock | ja | nein | öffnet | beendet die App |
+| Menüleiste | nein | ja | bleibt zu | App läuft weiter |
+| Dock und Menüleiste | ja | ja | öffnet | App läuft weiter |
+
+Solange ein Menüleisten-Symbol da ist, beendet das Schließen des Boards die App **nicht** —
+sonst verschwände das Symbol mit dem Fenster, das es ersetzen soll. Ein Klick auf das
+Dock-Symbol holt das geschlossene Board zurück.
+
+**Kurzbefehl (12.09.2026).** Unter „Anzeigen in" steht ein Feld, in dem der Nutzer eine
+globale Tastenkombination aufnimmt; sie öffnet und schließt das Panel aus jeder App und
+tut genau das, was ein Klick auf das Symbol tut. Vorgabe ist **keiner**. Nötig ist
+mindestens ⌃, ⌥ oder ⌘ — ⇧K wäre ein großes K und würde diesen Buchstaben überall
+schlucken. Escape bricht die Aufnahme ab, Rückschritt löscht. Die Kombination gehört dem
+Rechner (BACKLOG.md, „Was wohin gehört") und gilt nur, solange ein Menüleisten-Symbol da
+ist — ohne Symbol kein Panel, also kein Kürzel. **Grenze, gemessen am 12.09.2026:** Das
+System meldet nur eine Kollision mit einem Kürzel dieser App selbst; eine Kombination, die
+das System oder eine andere App schon hält (⌘Leertaste, ⌘Tab), lässt sich anstandslos
+aufnehmen und feuert dann nie. Deshalb steht „Von einer anderen App belegt" nur im
+gemeldeten Fall, und die Fußzeile sagt, dass ein anderweitig belegtes Kürzel bei der
+anderen App bleibt.
+
+Im Modus „Menüleiste" springt beim Start kein Board auf — auch keins, das beim letzten
+Beenden offen war. Die Einstellungen sind dort über das Board erreichbar (Klick auf die
+Backlog-Kopfzeile oder eine Zeile): mit dem Fenster kommt die Menüleiste der App. Ein
+eigener „Einstellungen …"-Knopf im Tablett wäre ein Knopf für einen Weg, den das Panel
+schon öffnet.
 
 ## Karten-Anzeige
 

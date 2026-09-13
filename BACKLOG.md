@@ -17,13 +17,14 @@ die Messungen dazu stehen dort.
    `GlassKanban/AppIcon.icon` (Icon-Composer-Dokument; die Tinted-Variante fehlt ohnehin,
    siehe „Spätere Apple-/Mac-Ausbaustufen"). Vor dem Store-Listing wichtig, das Icon prägt
    die erste Kaufentscheidung mit.
-2. **Glass Kanban in der Menüleiste („Das Tablett")** — entschieden 05.09.2026, Bauplan
-   liegt in `plans/menubar-tablett.md`; Konzept unten unter „Fensterverhalten".
-3. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
+2. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
    Aufwand steckt in `DesignSystem.swift`, nicht im Bedienelement.
-4. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Screenshots, Listing-Texte
+3. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Screenshots, Listing-Texte
    (der Demo-Datensatz ist seit 05.09.2026 da). Alles außer dem Hochladen.
-5. Die Punkte der Klasse *Nutzungsalltag*.
+4. Die Punkte der Klasse *Nutzungsalltag*.
+
+Die Menüleiste („Das Tablett") ist seit 08.09.2026 gebaut — SPEC.md, „Menüleiste: das
+Tablett".
 
 Alles Begonnene liegt in `main`. Warum das so bleiben soll, steht als Arbeitsregel in
 CLAUDE.md.
@@ -63,7 +64,7 @@ das, was Apple aus Massentauglichkeit nie bauen wird: Meinungsstärke.
 | Idee | Philosophie | Wirkung | Umkehrbarkeit | Aufwand |
 |---|---|---|---|---|
 | ~~Bildschirmzuordnung~~ | erfüllt | Produktversprechen | umkehrbar | **umgesetzt 14.08.2026** |
-| Menüleiste „Das Tablett" (s. Fensterverhalten) | erfüllt | Kaufentscheidung | umkehrbar | M — **entschieden 05.09.2026**, Plan liegt |
+| ~~Menüleiste „Das Tablett"~~ | erfüllt | Kaufentscheidung | umkehrbar | **umgesetzt 08.09.2026** |
 | Darstellungsgröße (unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
 | Ablegen aus anderen Apps (neu, unten) | erfüllt | Kaufentscheidung | gebunden | S–M |
 | Widget „eine Karte" (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Kaufentscheidung | gebunden | L |
@@ -282,9 +283,11 @@ einen Rückbau schützen.
 
 - **Always-on-Top** — nicht vorgesehen, das Board ist ein normales Fenster (CONCEPT.md,
   „Architektur").
-- **Glass Kanban in der Menüleiste — aber die Bedienung fühlt sich an wie Karten
-  verschieben (Idee 23.08.2026, entschieden 05.09.2026, Bauplan
-  `plans/menubar-tablett.md`)** — Der Reiz liegt ausdrücklich
+- ~~**Glass Kanban in der Menüleiste — aber die Bedienung fühlt sich an wie Karten
+  verschieben**~~ — Idee 23.08.2026, entschieden 05.09.2026, **umgesetzt 08.09.2026**;
+  das gebaute Verhalten steht in SPEC.md („Menüleiste: das Tablett" und „Anzeigen in").
+  Die Konzeptabsätze bleiben stehen, weil sie die verworfenen Richtungen tragen. Der Reiz
+  lag ausdrücklich
   **nicht** im Zugriffsweg, sondern in der Bedienung: Was aus der Menüleiste kommt, soll
   die Geste des Boards tragen — ziehen, ablegen, einrasten — statt eine Textliste mit
   „Verschieben nach"-Untermenüs zu sein. Ein solches Untermenü wäre die Rückfallebene, und
@@ -335,9 +338,7 @@ einen Rückbau schützen.
     Drag & Drop und Kontextmenü im Board — eine Regel, ein Weg, keine dritte Wahrheit.
 
   **Entschieden am 05.09.2026: Richtung A, „Das Tablett".** Begründung des Nutzers:
-  näher an Kanban. **Bauplan: `plans/menubar-tablett.md`** — Messweiche, Schritte,
-  Abnahme; für eine eigene Session geschrieben. Das Tablett ist ein Popover unter dem
-  Symbol, 660 pt breit. Darin **drei Spuren in einer Reihe, in Board-Reihenfolge**:
+  näher an Kanban. In dieser ersten Fassung: ein Tablett von 660 pt Breite unter dem Symbol. Darin **drei Spuren in einer Reihe, in Board-Reihenfolge**:
   „Als Nächstes" · „In Bearbeitung" · „Erledigt" — gleich breit, gleich hoch, der Zug
   läuft von links nach rechts wie auf dem Board. Backlog bleibt dem Board; die Fußzeile
   nennt nur die Zahl und den Weg zurück („Backlog · 12", „Board öffnen"). Das Element
@@ -350,12 +351,14 @@ einen Rückbau schützen.
   dem Backlog wählt, tut das im Fenster; das ist Planung, und Planung gehört nicht in
   die Hand.
 
-  **Erster Schritt vor jeder Zeile Code (Projektregel: erst messen):**
-  `MenuBarExtra` mit `.menuBarExtraStyle(.window)` ist das Einzige, was ein Popover mit
-  echten SwiftUI-Views trägt. Ob ein Drag darin lebt, ist **ungemessen** — das Popover
-  schließt bei Fokusverlust, und ein begonnener Zug darf es nicht zuklappen. Rückfall,
-  falls nicht: dieselbe Fläche als eigenes nicht aktivierendes `NSPanel` unter dem
-  Symbol positioniert (die Technik der verworfenen Richtung B, in der Größe von A).
+  **Gemessen am 08.09.2026, und die Weiche fiel:** In einem `MenuBarExtra`-Popover
+  (`.menuBarExtraStyle(.window)`) *lebt* ein Zug — die Vorschau folgt dem Zeiger, das
+  Popover bleibt dabei offen —, aber der Drop kommt nie an: weder `isTargeted` noch die
+  Drop-Closure feuern. Derselbe synthetische Zug auf dem Board verschiebt eine Karte, die
+  Messung ist also gültig. Dasselbe Popover blieb außerdem offen stehen, nachdem es das
+  Board geöffnet hatte; eine API, es zu schließen, gibt es nicht. Gebaut ist deshalb der
+  Rückfall: ein eigenes, nicht aktivierendes `NSPanel` unter einem `NSStatusItem` (die
+  Technik der verworfenen Richtung B, in der Größe von A). Darin kommt der Drop an.
 
   **Verworfen: Richtung B, „Das Regal"** (Artboard `RegalB`, Seite „Verworfen"). Ein
   Brett über die volle Bildschirmbreite unter der Menüleiste, alle vier Spuren in
@@ -371,10 +374,87 @@ einen Rückbau schützen.
   **Was bewusst nicht drin ist:** Streak-Pille, Statistik, Suche, „+", Filter, ⌘Z, Löschen,
   Editor (Chrome bleibt im Fenster). Ein Menü-Modus mit Untermenüs. Eine Zahl am Symbol.
   Volle Karten mit Notizen (das wäre ein kleineres Board — das Widget-Missverständnis).
-  **Leitsatz (Nutzer, 05.09.2026): Tablett und Board so nah beieinander wie möglich, wo es
-  sinnvoll und vergleichbar ist.** Jede Abweichung aus Platz oder Technik ist im Bauplan
-  benannt (Abweichungstabelle dort); die Befunde aus Review und Doku-Abgleich stehen
-  ebenfalls dort, nicht hier.
+  **Neu gefasst am 11.09.2026 (Nutzer), nach dem ersten Lauf der gebauten Fassung:**
+  Der Leitsatz vom 05.09. — „Tablett und Board so nah beieinander wie möglich" — hatte
+  drei Mulden nebeneinander ergeben, mit Papier, Schatten, Listenstreifen und den
+  Einladungssätzen des Boards. Am Bildschirm war das das ganze Board, verkleinert: zu
+  schwer für den Moment, in dem man ein Menüleisten-Symbol anklickt, nämlich um *mal eben
+  etwas zu erledigen*. „Fertigwerden beginnt hier" in einer 200-pt-Mulde war der
+  deutlichste Fall. Neuer Leitsatz: **ein Menüleisten-Panel, das an das Board erinnert,
+  aber abstrakter ist** — im Stil der Systempanels, minimalistischer als das Board, weil
+  es in der Menüleiste steht. Damit fiel auch die Anordnung: **drei Abschnitte
+  untereinander** in einem 340-pt-Panel statt drei Spuren nebeneinander. Das ist die
+  Umkehr der Korrektur vom 05.09. oben („der Zug läuft nach rechts, nicht nach unten"),
+  und sie ist bewusst: Jenes Argument galt für ein Tablett, das das Board nachbildet. In
+  einem Menü ist von oben nach unten die Leserichtung, Titel bleiben lesbar statt
+  abgeschnitten, und unten ist, wo Fertiges hinsinkt. **Nachtrag vom selben Tag:** Die
+  Backlog-Zahl stand zuerst in der Fußzeile — am Ende eines Flusses, der dort beginnt,
+  und als einzige Zahl, mit der man nichts tun konnte. Sie steht jetzt als Kopfzeile ganz
+  oben; ein Klick darauf öffnet das Board. Verworfen wurden dabei zwei Alternativen: das
+  Backlog aufklappbar zu machen (der Pull-Weg wäre im Panel vollständig, aber das Panel
+  fängt an zu planen) und es ganz wegzulassen (das Panel schwiege darüber, woher „Als
+  Nächstes" gespeist wird). Das gebaute Verhalten steht in SPEC.md („Menüleiste: das
+  Tablett").
+
+  **Ergänzungen, entschieden und umgesetzt am 12.09.2026 (Nutzer)** — das gebaute
+  Verhalten steht in SPEC.md („Menüleiste: das Tablett" und „Anzeigen in"), hier bleibt
+  nur die Entscheidung: Das Panel hat sich als Hand bewährt (Zug und
+  Überblick); fünf Ergänzungen kommen dazu, alle nach dem Maßstab „was man tut, weil man
+  gerade in einer anderen App steckt":
+  1. **Symbole vor den Köpfen**, die die Stufe zeigen, nicht dekorieren — `tray`,
+     `circle`, `circle.lefthalf.filled`, `checkmark.circle`: der Eingang, dann drei
+     Kreise, die sich füllen. Systemvokabular, monochrom, sekundär. Das Board behält seine
+     Köpfe ohne Symbole: Dort erklärt die Spalte sich über die Karten darin; das Panel
+     ist abstrakt und braucht deshalb das Zeichen. Damit ist die Zeile „keine Icons an
+     Köpfen" vom 11.09. für das Panel zurückgenommen — für das Board gilt sie weiter.
+  2. **Verweildauer in „In Bearbeitung"** ab derselben Schwelle wie auf dem Board
+     (`agingThresholdDays`): das eine Signal, das beim Fertigwerden hilft.
+  3. **„In Erinnerungen öffnen"** im Kontextmenü, auch für Erledigt-Zeilen (die sonst
+     keins haben).
+  4. **Schnellerfassung ins Backlog** — eine Zeile unter dem Backlog-Kopf, Return legt an.
+     **Spannung, benannt:** Am 05.09. stand „kein Anlegen im Element". Das galt dem
+     Tablett als Board-Kopie, in dem Anlegen ein zweiter „+"-Knopf gewesen wäre. Für ein
+     Menüleisten-Panel ist Erfassen die natürlichste Handlung — der Gedanke kommt, während
+     man woanders arbeitet, und das Backlog ist genau der Ort dafür („Get it out of your
+     head"). Entschieden für die Erfassung; der Editor bleibt dem Board.
+  5. **Globaler Kurzbefehl** zum Öffnen, in den Einstellungen setzbar, Vorgabe leer.
+  **Nachtrag, 12.09.2026 (Nutzer, nach kritischer Durchsicht):** Der Backlog-Kopf ohne
+  Zeilen las sich als leerer Abschnitt mit „+"; eine Zeile „Auf dem Board" darunter war
+  ein Flicken, der auf das Fehlende zeigte — dreifach dieselbe Tür (Chevron, Klick,
+  Zeile), und die Pull-Kette blieb unvollständig. Abgewogen: Abschnitt mit Deckel 3;
+  reiner Kopf; Kopf als Ablegeziel; Falz am Kopf. Zunächst gebaut: Falz am Kopf,
+  Vorgabe zu, gemerkt. **Noch am selben Tag ersetzt (Nutzer: Konsistenz zwischen Menü und
+  App wiegt schwerer als eine eigene Falz):** Alle vier Abschnitte stehen offen und falten
+  wie die Spalten des Boards — dieselbe Schnittregel (`BacklogFold`), dieselben Wörter,
+  dieselbe zentrierte Zeile unter dem Stapel, Zustand pro Sitzung. Das Board hat die Zeile
+  schon; ein zweites Ausklapp-Muster im Panel wäre ein zweites Vokabular. Aufgeklappt
+  zeigt ein Abschnitt alles, und das Panel wächst nach unten mit; nur ein zu kurzer
+  Bildschirm begrenzt es, dann scrollt das Panel als Ganzes (kein Abschnitt in sich). Die gemerkte Einstellung
+  `trayBacklogExpanded` lebte einen Tag und ist wieder entfernt. Zurücklegen ins Backlog
+  ist erlaubt.
+  **Nachtrag am selben Abend, nach der Review (Nutzer):** Rechtsklick auf das Symbol öffnet
+  ein Menü (Board, Einstellungen, Beenden) — nötig, weil das Panel ohne Erinnerungs-Zugriff
+  nichts zeichnet und im Menüleisten-Modus sonst kein Ausweg bliebe. Der Zug aus Erledigt
+  heraus ist erlaubt, weil das Panel die eine Absage, die dabei kommen kann, jetzt selbst
+  sagt. Und die **Trennstriche sind zurück**: Am Nachmittag war gegen Linien und für Luft
+  entschieden worden; im direkten Bildvergleich trug Luft allein nicht — zwei kurze
+  Abschnitte übereinander lasen sich als ein Block, und die Systempanels ziehen die Linie.
+  Die Gruppenluft wurde halbiert, das Panel bleibt gleich hoch.
+  **Nach der zweiten Review (13.09.2026, Nutzer):** Das Panel hängt linksbündig wie ein
+  Systemmenü statt zentriert. Als Nächstes und In Bearbeitung falten nicht mehr — der
+  Nutzer hatte die Falz nur für Backlog und Erledigt verlangt, und der eigene 6er-Deckel
+  ließ eine gezogene Karte verschwinden. Von 47 nachgeprüften Funden hielten 9, 9 waren
+  schon behoben, 29 hielten nicht.
+  **Was die drei Messungen ergaben (12.09.2026, Protokoll im Bauplan):** Ein Textfeld im
+  nicht aktivierenden Panel nimmt Fokus und Tastatur an, während eine andere App aktiv
+  bleibt — die Erfassung brauchte keine Aktivierungs-Weiche. `RegisterEventHotKey` feuert
+  in dieser Sandbox in beiden Aktivierungs-Policies. **Aber es meldet keine fremde
+  Belegung:** ⌘Leertaste und ⌘Tab lassen sich fehlerfrei registrieren und feuern nie —
+  die Konfliktmeldung kann also nur den gemeldeten Fall nennen, und die Fußzeile sagt den
+  Rest. Hover- und Ablegeglas wurden nachgeholt und tragen (weiche Glasschicht, kein
+  zweites Rechteck).
+  Weiterhin nicht: Statistik, Streak, Suche, Filter, Tastaturnavigation über Zeilen, ein
+  Zustand am Symbol, eine Rückgängig-Zeile.
 
   **Spannung, bewusst offen (Minimalismus):** Menüleiste, Widget und Fenster wären drei
   Orte für dieselbe Sache. Nicht alle drei bauen — vor dem Widget entscheiden, ob die
@@ -595,7 +675,8 @@ Abweichung gilt der Code.
 | `excludedCalendarIDs` | UserDefaults | offen, hängt an M4 |
 | `appAppearance` | UserDefaults | lokal — Bildschirm im Büro ≠ zu Hause |
 | `completionSoundEnabled` | UserDefaults | lokal — Kopfhörer am Laptop |
-| `appPresence` (Dock/Menüleiste/beides, geplant 05.09.2026) | UserDefaults | lokal — wo die App sichtbar ist, gehört dem Rechner |
+| `appPresence` (Dock/Menüleiste/beides, umgesetzt 08.09.2026) | UserDefaults | lokal — wo die App sichtbar ist, gehört dem Rechner |
+| `trayShortcut` (Kurzbefehl fürs Panel, umgesetzt 12.09.2026) | UserDefaults | lokal — die Tastatur gehört dem Schreibtisch, und ein Kürzel, das auf dem anderen Mac mit einer dortigen App kollidiert, wäre ein Sync-Schaden |
 | `correctionLedger` | UserDefaults | **strikt lokal** |
 | `tagReleaseMemory` | UserDefaults | strikt lokal |
 | `pendingTagCleanup` | columns.json | lokal — Arbeitsliste dieses Prozesses |

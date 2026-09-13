@@ -61,11 +61,14 @@ und einen Eintrag in der Liste in README.md („Ordner").
 
 ## Code-Landkarte
 
-Zwei Targets (App + Tests), `GlassKanban/` mit rund 10.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
+Zwei Targets (App + Tests), `GlassKanban/` mit rund 12.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
-  Korrektur-Antworten an fremde Schreiber. Mit Abstand die größte Datei und die einzige
+  Korrektur-Antworten an fremde Schreiber; `createTicket(title:)` ist der Schreibpfad der
+  Schnellerfassung im Panel — dieselbe Listenwahl wie das „+", nur ohne Editor; `PendingOverflow` trägt seit 08.09.2026
+  ein `MoveSource` mit, damit Board und Tablett je nur ihre eigene WIP-Frage
+  stellen. Mit Abstand die größte Datei und die einzige
   Stelle mit Seiteneffekten. (Die frühere *Tag-Hygiene* ist mit dem Formwechsel vom
   13.08.2026 entfallen — es gibt keine Tags mehr zu pflegen.)
 - **ColumnState.swift** — **die Spalte**: welche Karte in welcher Arbeitsspur liegt und
@@ -90,6 +93,31 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Nutzer je etwas getan hatte (behoben 26.07.2026, siehe `StatusTaggerTests`). Die Datei
   entfällt mit der Aufräumung, frühestens eine Version nach 1.0.
 - **Models.swift** — `KanbanStatus`, `KanbanCard`, Filter- und Sortierlogik.
+- **GlobalHotkey.swift** — der globale Kurzbefehl fürs Panel: `RegisterEventHotKey`
+  (Carbon) und `TrayShortcutController`, der ihn speichert und anwendet. Carbon, weil das
+  der einzige Weg ohne Bedienungshilfen-Berechtigung ist; **gemessen 12.09.2026**, dass er
+  in dieser Sandbox in beiden Aktivierungs-Policies feuert — und dass er eine Kollision
+  mit einem systemeigenen Kürzel *nicht* meldet. `ShortcutRecorder.swift` ist das Feld in
+  den Einstellungen, das eine Tastenkombination fängt, ohne sie auszuführen.
+- **MenuBarTrayController.swift** — das Menüleisten-Symbol samt seinem Rechtsklick-Menü
+  und sein Panel, die einzige
+  Stelle neben `WindowPlacementController`, die `NSWindow`/`NSStatusItem` anfasst.
+  **Bewusst AppKit statt `MenuBarExtra`:** In einem `MenuBarExtra`-Popover lebt ein Zug
+  zwar, aber der Drop kommt nie an (gemessen 08.09.2026, Gegenprobe auf dem Board
+  positiv). Ein Tablett, dessen Karten nicht ziehbar sind, ist nicht dieses Tablett.
+- **MenuBarTrayView.swift** — das Tablett selbst: vier Abschnitte untereinander im
+  Menü-Stil (`TraySection`, `TrayRow`, `TrayFoldLine` — die Falz-Zeile des Boards in
+  Menügröße —, `TrayActionRow`, `TraySymbol`, `TrayDragPreview`,
+  `TrayNoticeRow` — die abgelehnte Schreiboperation inline statt als Alert —, die
+  WIP-Zeile) und `BacklogCaptureRow`, die einzige
+  Stelle im Panel, an der geschrieben statt bewegt wird.
+  Zieht seine Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`. **Kein kleines Board** —
+  die erste Fassung war eines und wurde am 11.09.2026 verworfen (BACKLOG.md,
+  „Fensterverhalten").
+- **CardParts.swift** — die Bausteine einer Karte (Prioritätsmarken, Titel,
+  Datums-Badge, Wiederholungs-Icon, Listenstreifen, Durchstrich), geteilt von `CardView`
+  und `TrayRow`. Angelegt beim Bau des Tabletts, damit die Anatomie einer Karte
+  nicht zweimal existiert.
 - **Views** — `BoardView` (Board + Dialoge), `ColumnView` (Spalte, Falz, Drop-Ziele),
   `CardView` (Karte, Settle-Animationen, Durchstrich), `TicketEditSheet` (Karten-Editor),
   `StatsPopover`, `FindPopover`, `SettingsView`, `EmptyBoardNotice`, `BoardTooltip`
@@ -106,7 +134,16 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   ↔ Serie über das Anlegedatum), `RecurringTagRelease` (stille Freigabe eines
   verbrauchten Pulls), `ColumnState` (die Spalte, siehe oben),
   `TicketURL` (was das URL-Feld speichern kann), `WindowPlacement` (auf welchem Bildschirm
-  das Board steht und wohin es zurückgehört), `StoredSetting` (jeder
+  das Board steht und wohin es zurückgehört), `AppPresence` (Dock, Menüleiste oder
+  beides — samt der Regel, dass das Schließen des Boards die App nur ohne
+  Menüleisten-Symbol beendet), `MenuBarTray` (was das Tablett zeigt: was je Abschnitt in Ruhe steht —
+  das Backlog nach der Falz-Regel des Boards —, wann ein Zug erlaubt ist, wann eine Zeile
+  ihre Verweildauer nennt),
+  `TrayShortcut` (eine Tastenkombination als Wert: was gültig ist, wie sie geschrieben und
+  gelesen wird — der mitgeführte Buchstabe ist Absicht, weil ein Key-Code eine Position
+  und kein Zeichen ist), `MoveSource` (auf welcher
+  Oberfläche ein Zug gemacht wurde — ohne das stellte das Board die WIP-Frage auch
+  für einen Zug im Tablett), `StoredSetting` (jeder
   `UserDefaults`-Wert und ob er dem Nutzer oder dem Rechner gehört — die Einordnung
   steht in einem `switch`, den der Compiler nicht unvollständig lässt; ein neuer Fall
   ohne Entscheidung baut nicht). **Muster für neue Logik:** Entscheidung
@@ -142,7 +179,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `GlassKanban/Tests/`, 22 Dateien mit rund 340 Tests, benannt nach der Regel
+- **Tests** — `GlassKanban/Tests/`, 24 Dateien mit rund 360 Tests, benannt nach der Regel
   statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`). Der
   Ordner liegt in den Quellen, wird aber per `excludes` in `project.yml` nur ins
   Testbundle kompiliert (Target heißt weiterhin `GlassKanbanTests`).

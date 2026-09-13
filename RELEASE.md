@@ -76,7 +76,17 @@ Umbruch; Standardmenüs folgen der Sprache; Datums- und Zahlenformate folgen der
 Systemregion (Plattformverhalten, kein Fehler).
 
 **Noch offen:** VoiceOver-Stichprobe in beiden Sprachen an einer Karte und einem
-Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels).
+Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels). Dazu
+seit 08.09.2026 die Längenprüfung der Menüleisten-Texte, mit dem Stand vom 12.09.2026:
+„Glass Kanban beenden" und „Neue Aufgabe" im Panel, „Board öffnen" und
+„Einstellungen …" im Menü des Symbols, die vier Spurköpfe mit ihrer Zahl,
+und in den Einstellungen die drei Werte von „Anzeigen in", „Kurzbefehl" mit „Kein
+Kurzbefehl"/„Aufnahme …" im 150 pt breiten Feld sowie „Von einer anderen App belegt"
+darunter. Das Panel ist mit 340 pt fest und seine Zeilen einzeilig — was dort nicht
+passt, bricht nicht um, es wird abgeschnitten. Die Fußzeile der Sektion „Menüleiste" ist
+seit dem Kurzbefehl-Satz der längste Text der Einstellungen; ihre Höhe steckt in
+`SettingsMetrics.generalHeight` (706, gemessen 12.09.2026) und muss mit jeder
+Textänderung neu gemessen werden.
 
 ## Phase 2 — Signing & Distribution (nach Phase 0, parallel zu 1 vorbereitbar)
 
@@ -87,6 +97,11 @@ Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels)
       Reminders-Berechtigung einmal neu ab (einmalig; warum bisher selbstsigniert,
       erklärt der Kommentar an `CODE_SIGN_IDENTITY` in project.yml)
 - [ ] Archive/Upload über Xcode Organizer (`*.xcarchive` steht bereits in `.gitignore`)
+- [ ] **Kein zusätzliches Entitlement für den Kurzbefehl.** `RegisterEventHotKey`
+      (Carbon) läuft in der Sandbox ohne eines — gemessen 12.09.2026, in beiden
+      Aktivierungs-Policies. Nur festhalten, falls die Review nach der globalen
+      Tastenkombination fragt: Es wird kein Tastatur-Mitschnitt und keine
+      Bedienungshilfen-Berechtigung verwendet.
 - [ ] Hardened Runtime **nicht** anfassen — für den MAS zählt die Sandbox (✓),
       Hardened Runtime gehört zu Notarisierung/Direktvertrieb
 - [ ] **Deep-Link entfernen:** undokumentiertes Schema
@@ -114,7 +129,7 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
 - [x] Demo-Datensatz als eigene Reminders-Liste bauen — 05.09.2026, siehe `social/linkedin/konzept.md` 2.1 und `seed-demo-reminders.swift` v2 (glaubwürdige, freundliche
       Beispiel-Tickets für Screenshots und Review)
 - [ ] Screenshots EN + DE, je 4–6, 2880×1800 PNG: Board, Karten-Editor,
-      Statistik-Fenster, Dunkelmodus
+      Statistik-Fenster, Menüleiste (Tablett), Dunkelmodus
 - [ ] Listing-Texte EN + DE: Kurzbeschreibung, Feature-Liste, Keywords (kanban,
       reminders, board, tasks, personal kanban, wip limit …); Nutrition-Label
       „Data Not Collected"

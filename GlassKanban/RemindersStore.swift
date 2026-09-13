@@ -79,6 +79,11 @@ final class RemindersStore: ObservableObject {
         let cardID: String
         let origin: KanbanStatus
         let status: KanbanStatus
+        /// Where the move was made, so only that surface asks. The board and
+        /// the menu bar tray watch this same value: without it the board put
+        /// its alert up for a card moved in the tray — and an alert takes the
+        /// focus, which would close the tray out from under its own question.
+        let source: MoveSource
         var id: String { cardID }
     }
 
@@ -233,6 +238,12 @@ final class RemindersStore: ObservableObject {
         /// the alert has to say which one it was.
         let title: String
         let message: String
+        /// Which surface the write came from, so the failure is reported
+        /// where the user is (the same reason `PendingOverflow` carries one).
+        /// An alert over the board is the wrong answer to a move made in the
+        /// panel — in the menu bar mode there may be no board at all, and the
+        /// news would wait behind a window the user never opens.
+        var source: MoveSource = .board
         var id: String { cardID }
     }
 
@@ -417,6 +428,25 @@ final class RemindersStore: ObservableObject {
     /// header keeps showing the filtered figure, since that is what is on
     /// screen; when the two disagree, the rule follows the board, not the
     /// view (decision 10.08.2026, see SPEC.md).
+    /// The lane and the numbers the limit question is about — "In
+    /// Bearbeitung: 4 von 3".
+    ///
+    /// On the store rather than in `BoardView` because the tray asks the same
+    /// question in its own well, and a sentence that states a rule must not
+    /// exist in two places with two chances to drift.
+    ///
+    /// The number the *rule* used, not the one the filtered view happens to
+    /// show: asking "over your limit?" above the line "2 of 3" left the
+    /// question unanswerable — the lane really held four, two of them hidden
+    /// by a filter.
+    func overflowTitle(for overflow: PendingOverflow) -> String {
+        guard let limit = wipLimit(for: overflow.status) else {
+            return overflow.status.displayName
+        }
+        return "\(overflow.status.displayName): "
+            + String(localized: "\(totalCount(for: overflow.status)) of \(limit)")
+    }
+
     func isOverWIPLimit(_ status: KanbanStatus) -> Bool {
         guard let limit = wipLimit(for: status) else { return false }
         return totalCount(for: status) > limit
@@ -1079,7 +1109,8 @@ final class RemindersStore: ObservableObject {
         to status: KanbanStatus,
         undoManager: UndoManager? = nil,
         feedback: Bool = true,
-        restoredCompletion: Date? = nil
+        restoredCompletion: Date? = nil,
+        source: MoveSource = .board
     ) -> KanbanStatus? {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return nil }
         let origin = currentStatus(of: reminder)
@@ -1098,7 +1129,8 @@ final class RemindersStore: ObservableObject {
             pendingSaveFailure = SaveFailure(
                 cardID: cardID,
                 title: String(localized: "Not Restored"),
-                message: String(localized: "“\(name)” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice."))
+                message: String(localized: "“\(name)” repeats, and the series has already moved on. Restoring the finished occurrence would put it on the board twice."),
+                source: source)
             return nil
         }
         // Read before the save: afterwards this record is the rolled-on series
@@ -1141,7 +1173,8 @@ final class RemindersStore: ObservableObject {
                 // like a drop that missed — so the user tries again instead of
                 // learning that this list is read-only.
                 pendingSaveFailure = SaveFailure(
-                    cardID: cardID, title: String(localized: "Not Moved"), message: error.localizedDescription)
+                    cardID: cardID, title: String(localized: "Not Moved"),
+                    message: error.localizedDescription, source: source)
                 scheduleRefreshAfterWrite()
                 return nil
             }
@@ -1244,7 +1277,8 @@ final class RemindersStore: ObservableObject {
         // undo entry of its own, so ⌘Z bounced the card between two lanes,
         // asking every time.
         if feedback, status.asksBeforeExceedingLimit, isOverWIPLimit(status) {
-            pendingOverflow = PendingOverflow(cardID: cardID, origin: origin, status: status)
+            pendingOverflow = PendingOverflow(
+                cardID: cardID, origin: origin, status: status, source: source)
         }
         scheduleRefreshAfterWrite()
         return origin
@@ -1297,6 +1331,68 @@ final class RemindersStore: ObservableObject {
         }
         scheduleRefreshAfterWrite()
         return cardID
+    }
+
+    /// What came of a capture from the menu bar panel. The panel has no
+    /// alert to put a failure in — it would take the focus and close the
+    /// panel out from under the very title that was just typed — so the
+    /// reason travels back to the row, which says it inline and keeps the
+    /// text in the field.
+    enum CaptureOutcome {
+        case created(String)
+        /// Nothing was typed. Not a failure and not worth a word — the
+        /// caller simply closes the field.
+        case empty
+        case failed(String)
+    }
+
+    /// Creates a Backlog ticket from a title alone — the menu bar panel's
+    /// capture.
+    ///
+    /// The same list as the "+" picks (`targetCalendarForNewTicket`), and
+    /// nothing else: notes, date and priority stay with the board, one click
+    /// away on the finished card. Deliberately not `createTicketForEditing`
+    /// with an editor behind it — the panel exists for the thought that
+    /// would otherwise be lost on the way to opening the app, and an editor
+    /// is the way to the app.
+    ///
+    /// No undo entry, on purpose. The panel has no ⌘Z (SPEC.md), so the entry
+    /// would only be reachable from the board, where undoing something that
+    /// happened in another window is a surprise. A captured ticket is taken
+    /// back by deleting it — where it is, on the board.
+    ///
+    /// `newlyCreatedCardID` stays untouched: that is the fence around an
+    /// *empty* new ticket in the editor (see `finalizeNewTicket`), and a
+    /// title is never empty.
+    @discardableResult
+    func createTicket(title: String) -> CaptureOutcome {
+        // Trimmed, and that is the whole clean-up. `TicketRename` is not
+        // reused here: it exists to stop an edit from wiping a stored title,
+        // and there is no stored title yet.
+        let cleaned = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return .empty }
+        guard let calendar = targetCalendarForNewTicket() else {
+            // Every list is either read-only or hidden from the board. The
+            // "+" answers this by doing nothing at all; the panel says it.
+            return .failed(String(localized: "No list can take a new task"))
+        }
+        let reminder = EKReminder(eventStore: eventStore)
+        reminder.calendar = calendar
+        reminder.title = cleaned
+        do {
+            try eventStore.save(reminder, commit: true)
+        } catch {
+            scheduleRefreshAfterWrite()
+            return .failed(error.localizedDescription)
+        }
+        // Optimistic, like the "+" and like `move`: the count in the panel's
+        // Backlog head is the only receipt the capture gives, and it cannot
+        // wait out the debounced refresh.
+        if let card = card(from: reminder) {
+            cards.append(card)
+        }
+        scheduleRefreshAfterWrite()
+        return .created(reminder.calendarItemIdentifier)
     }
 
     /// Called by the editor as it closes. A brand-new ticket that is still
@@ -2023,13 +2119,17 @@ final class RemindersStore: ObservableObject {
 
     // MARK: - Board queries
 
-    func cards(for status: KanbanStatus) -> [KanbanCard] {
+    /// `applyingFilters` is false for exactly one caller: the menu bar tray.
+    /// The board wears its filter — the find control tints, the badge counts,
+    /// the empty notice explains — and the tray has none of that chrome. A
+    /// card missing from a lane there would simply look lost.
+    func cards(for status: KanbanStatus, applyingFilters: Bool = true) -> [KanbanCard] {
         let filtered = cards.filter {
-            $0.status == status
-                && priorityFilter.matches($0.priority)
-                && dueFilter.matches($0.dueDate)
-                && listFilter.matches($0.listID)
-                && $0.matches(search: searchTerm)
+            $0.status == status && (!applyingFilters || (
+                priorityFilter.matches($0.priority)
+                    && dueFilter.matches($0.dueDate)
+                    && listFilter.matches($0.listID)
+                    && $0.matches(search: searchTerm)))
         }
         if status == .done {
             // Finished work reads newest first; priority no longer matters.
