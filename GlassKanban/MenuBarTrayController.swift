@@ -221,19 +221,12 @@ final class MenuBarTrayController: NSObject {
     }
 
     @objc private func openSettingsFromMenu() {
-        // The board first, and active: the Settings scene opens against the
-        // app's own menu bar, which in the menu bar mode exists only while a
-        // window of ours is frontmost. Without this the pane opened behind
-        // everything, or not at all.
-        openBoard()
-        NSApp.activate()
-        // The action AppKit installs for a SwiftUI `Settings` scene. Sent by
-        // name because it is not a declared selector; if a future system
-        // renames it, the menu item simply does nothing rather than crashing,
-        // and the board is up by then either way.
-        DispatchQueue.main.async {
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        }
+        // Only Settings, not the board with it: the user asked for one
+        // window. Active first, or the window opens behind whatever is in
+        // front — this app does not own the menu bar while it is clicked.
+        loadPanelIfNeeded()
+        NSApp.activate(ignoringOtherApps: true)
+        NotificationCenter.default.post(name: .glassKanbanOpenSettings, object: nil)
     }
 
     @objc func toggle() {

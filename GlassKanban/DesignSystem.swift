@@ -63,25 +63,30 @@ enum Board {
     /// The tray's minimum clearance from a screen's side edge.
     static let trayEdgeClearance: CGFloat = 8
     /// How the panel hangs from its status item — the system's own numbers,
-    /// measured against this app's own `NSMenu` opened from the same item
-    /// (12.09.2026): the menu's left edge stands 3 pt left of the item's left
-    /// edge, and its top 1 pt below the menu bar. Centred under the item, as
-    /// the panel was before, it looked unlike every other menu up there.
-    static let trayMenuEdgeInset: CGFloat = 3
+    /// measured against this app's own `NSMenu` opened from the same item and
+    /// checked against Time Machine's (13.09.2026): the menu's left edge
+    /// stands 4 pt left of the item's left edge, and its top 1 pt below the
+    /// menu bar. A first measurement the day before read 3 and left the panel
+    /// one point off its neighbours. Centred under the item, as the panel was
+    /// before, it looked unlike every other menu up there.
+    static let trayMenuEdgeInset: CGFloat = 4
     static let trayMenuTopGap: CGFloat = 1
-    /// The panel's inner margin, like a menu's — rows and their hover
-    /// highlight sit this far in from the glass edge.
-    static let trayPadding: CGFloat = 8
+    /// The panel's inner margin, a menu's own: a menu's highlight stands 5 pt
+    /// in from its edge (measured 13.09.2026), and so do the rows' here.
+    static let trayPadding: CGFloat = 5
     /// Above the first head: what the system's panels give, so the first
     /// line does not cling to the rim.
-    static let trayTopPadding: CGFloat = 12
+    static let trayTopPadding: CGFloat = 9
     /// The air on each side of the hairline between two groups. Half what it
     /// was while air alone did the separating: the line carries the division
     /// now, so the space around it only has to keep it from touching the
     /// text (12.09.2026, retaken — see `MenuBarTrayView.separator`).
     static let trayGroupSpacing: CGFloat = 6
-    /// A row's own text margin, inside the highlight.
-    static let trayRowInset: CGFloat = 10
+    /// A row's own text margin, inside the highlight. With `trayPadding` it
+    /// puts the first letter 16 pt from the glass edge — where a menu's text
+    /// and its separators begin (measured 13.09.2026), so a head in here and
+    /// an item in the menu beside it start on one line.
+    static let trayRowInset: CGFloat = 11
     /// One menu row. The system's own menu rows are 22–24pt; two more for
     /// a target that is dragged onto, not just clicked.
     static let trayRowHeight: CGFloat = 26
@@ -110,12 +115,13 @@ enum Board {
     /// module — Liquid Glass reads rounder than the same material with a tight
     /// corner. The row highlight sits one step under it, per the nesting rule.
     static let trayRadius: CGFloat = 12
-    static let trayShape = RoundedRectangle(cornerRadius: trayRadius, style: .continuous)
     static let trayRowShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
-    /// A row under the pointer, and a section a row is about to land in.
-    /// Both faint: a menu highlights, it does not announce.
-    static let trayHoverTint: Double = 0.07
+    /// A section a row is about to land in. Faint: a menu highlights, it
+    /// does not announce.
     static let trayDropTint: Double = 0.12
+    /// Around the panel's waiting and refused-access states, which are a
+    /// sentence and a button rather than rows.
+    static let trayNoticePadding: CGFloat = 16
 
     /// A card only reports its dwell time once it has lingered this long —
     /// below it, sitting in a column is simply normal. The number itself

@@ -18,6 +18,7 @@ struct MenuBarTrayView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
     /// Observed, not just read: the tray's own footer changes with it (see
     /// `MenuBarTray.offersQuit`), and the panel's hosting view is built once
     /// and then lives on — a plain read of the shared value showed the
@@ -70,6 +71,14 @@ struct MenuBarTrayView: View {
             .onReceive(NotificationCenter.default.publisher(for: .glassKanbanOpenBoard)) { _ in
                 openBoard(nil)
             }
+            // And for Settings, for the same reason: `openSettings` is the
+            // one way into a SwiftUI `Settings` scene that still works. The
+            // selector AppKit used to install for it (`showSettingsWindow:`)
+            // is accepted and then ignored — the menu item did nothing, twice,
+            // on 13.09.2026.
+            .onReceive(NotificationCenter.default.publisher(for: .glassKanbanOpenSettings)) { _ in
+                openSettings()
+            }
     }
 
     @ViewBuilder
@@ -81,7 +90,7 @@ struct MenuBarTrayView: View {
             deniedNotice
         case .unknown, .requesting:
             ProgressView("Accessing Reminders…")
-                .padding(Board.trayPadding * 2)
+                .padding(Board.trayNoticePadding)
                 .frame(maxWidth: .infinity)
         }
     }
@@ -176,7 +185,7 @@ struct MenuBarTrayView: View {
                 }
             }
         }
-        .padding(Board.trayPadding * 2)
+        .padding(Board.trayNoticePadding)
         .frame(maxWidth: .infinity)
     }
 

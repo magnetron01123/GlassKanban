@@ -133,6 +133,9 @@ extension Notification.Name {
     /// and no window exists yet — only SwiftUI can make one, and only from
     /// inside a view (see `MenuBarTrayController.openBoard`).
     static let glassKanbanOpenBoard = Notification.Name("GlassKanbanOpenBoard")
+    /// The item's menu asking for the Settings window — answered by the
+    /// tray view, which holds `openSettings` (see `MenuBarTrayView`).
+    static let glassKanbanOpenSettings = Notification.Name("GlassKanbanOpenSettings")
 
     /// Raised when the menu bar panel closes and again as it opens, so
     /// everything in it goes back to rest: the capture row drops its draft,
@@ -141,7 +144,7 @@ extension Notification.Name {
     /// reappeared days later would be noise, not a draft.
     static let glassKanbanTrayResets = Notification.Name("GlassKanbanTrayResets")
 
-    /// Raised by the "Find …" menu item so the board can open its popover.
+    /// Raised by the "Find…" menu item so the board can open its popover.
     /// The popover's presentation lives in `BoardView`'s own state; a menu
     /// command has no route into that except through the app's own bus.
     static let glassKanbanShowFind = Notification.Name("GlassKanbanShowFind")
@@ -182,7 +185,7 @@ struct GlassKanbanApp: App {
                 // Mac user looks for by name was findable only by hovering.
                 // The button keeps its own `.keyboardShortcut`; this entry is
                 // where the convention says to look for it.
-                Button("Find …") {
+                Button("Find…") {
                     NotificationCenter.default.post(name: .glassKanbanShowFind, object: nil)
                 }
                 .keyboardShortcut("f")

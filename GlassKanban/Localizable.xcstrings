@@ -546,7 +546,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zugriff auf Erinnerungen…"
+            "value": "Zugriff auf Erinnerungen …"
           }
         },
         "en": {
@@ -1084,7 +1084,7 @@
         }
       }
     },
-    "Find …": {
+    "Find…": {
       "extractionState": "manual",
       "localizations": {
         "de": {
@@ -1096,7 +1096,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Find …"
+            "value": "Find…"
           }
         }
       }

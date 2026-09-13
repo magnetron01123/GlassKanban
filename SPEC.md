@@ -901,8 +901,10 @@ das **Tablett**: ein Panel von 340 pt Breite im Stil der Systempanels, darin **v
 Abschnitte untereinander, in Board-Reihenfolge** — „Backlog", „Als Nächstes", „In
 Bearbeitung", „Erledigt" —, jeder mit Kopf und Zahl, darunter Zeilen wie in einem Menü. Es
 hängt unter dem Symbol des Bildschirms, auf dem geklickt wurde, **so wie macOS das Menü
-eines Menüleistensymbols hängt:** linke Kante 3 pt links der linken Symbolkante, Oberkante
-1 pt unter der Menüleiste — gemessen am eigenen `NSMenu` desselben Symbols (12.09.2026).
+eines Menüleistensymbols hängt:** linke Kante 4 pt links der linken Symbolkante, Oberkante
+1 pt unter der Menüleiste — gemessen am eigenen `NSMenu` desselben Symbols und gegengeprüft
+am Time-Machine-Menü (13.09.2026; die erste Messung vom Vortag lag 1 pt daneben). Innen
+ebenso: Zeilen-Hover 5 pt vom Glasrand, Text und Haarlinien 16 pt — wie ein Systemmenü.
 Zentriert unter dem Symbol, wie davor, sah es anders aus als jedes Menü daneben. Herleitung und die verworfenen Formen
 — darunter die erste gebaute Fassung mit drei Mulden nebeneinander — stehen in BACKLOG.md
 („Fensterverhalten").
@@ -983,7 +985,16 @@ ist das Panel da. Jeder der drei ist ein Weg, den das Panel nicht immer anbieten
 braucht Zugriff auf Erinnerungen, um überhaupt etwas zu zeichnen, und im Menüleisten-Modus
 gibt es weder Dock-Symbol noch App-Menü — ohne dieses Menü lief eine App ohne Zugriff
 also ohne Ausweg (12.09.2026). „Board öffnen" erzeugt das Fenster auch dann, wenn dieser
-Start noch keines hatte.
+Start noch keines hatte. „Einstellungen …" öffnet nur die Einstellungen, nicht das Board mit
+(13.09.2026 — der alte Weg über `showSettingsWindow:` wird vom System angenommen und dann
+ignoriert; der Eintrag tat nichts, bis er über `openSettings` lief).
+
+**Auslassungspunkte folgen der Apple-Regel:** Sie stehen nur hinter einem Befehl, der vor
+seinem Abschluss noch eine Eingabe oder Wahl verlangt — „Einstellungen …", „Finden …" —,
+nicht hinter einem, der sofort geschieht („Board öffnen", „Glass Kanban beenden"), auch
+wenn er ein Fenster zeigt. Deutsch mit Leerzeichen davor, Englisch ohne („Settings…"),
+wie Apples eigene Menüs es schreiben (gegengeprüft am Time-Machine-Menü: „Backups
+durchsuchen" ohne, „Time Machine-Einstellungen öffnen …" mit).
 
 ### Anzeigen in: Dock, Menüleiste, beides (08.09.2026)
 
