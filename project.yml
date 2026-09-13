@@ -101,6 +101,7 @@ targets:
       - path: GlassKanban/MenuBarTray.swift
       - path: GlassKanban/MoveSource.swift
       - path: GlassKanban/TrayShortcut.swift
+      - path: GlassKanban/WordTruncation.swift
       - path: GlassKanban/Models.swift
       - path: GlassKanban/StatusTagger.swift
       - path: GlassKanban/TextSanitizer.swift

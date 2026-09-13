@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import AppKit
 
 /// The menu bar tray: four sections, one under the other — "Backlog", "Als
 /// Nächstes", "In Bearbeitung", "Erledigt" — in the shape a menu bar panel has.
@@ -688,6 +689,25 @@ private struct TrayRow: View {
     let reservesDueColumn: Bool
 
     @State private var isHovered = false
+    /// The width the title's line actually has — everything left after dot,
+    /// dwell time and date column. Set from layout, read for the cut.
+    @State private var titleWidth: CGFloat = 0
+
+    private var fittedTitle: String {
+        guard titleWidth > 0 else { return CardParts.displayTitle(of: card) }
+        var room = titleWidth
+        if let marks = card.priorityMarks, card.status != .done {
+            room -= Self.width(of: marks + " ", bold: true)
+        }
+        return WordTruncation.fit(CardParts.displayTitle(of: card), in: room) { Self.width(of: $0) }
+    }
+
+    /// Measured with the same system font `BoardText.trayRow` resolves to
+    /// (13 pt; compared against a rendered row on 13.09.2026).
+    private static func width(of text: String, bold: Bool = false) -> CGFloat {
+        let font = bold ? NSFont.boldSystemFont(ofSize: 13) : NSFont.systemFont(ofSize: 13)
+        return (text as NSString).size(withAttributes: [.font: font]).width
+    }
 
     var body: some View {
         HStack(spacing: Board.traySymbolGap) {
@@ -700,10 +720,18 @@ private struct TrayRow: View {
             // The strike as a text attribute, not the board's drawn line:
             // the drawn one exists so that completing can animate it, and
             // that reward plays on the board, where the finishing happened.
-            CardParts.titleText(for: card)
+            // Shortened to whole words by this row itself, not by the
+            // system: "Hausratversicherung abschli…" is a word torn in half,
+            // "Hausratversicherung…" is a title that lost a word (13.09.2026,
+            // user). The row measures the room it has and cuts before the
+            // text is laid out; the `lineLimit` stays as the last resort for
+            // a single word wider than the line.
+            CardParts.titleText(for: card, title: fittedTitle)
                 .strikethrough(card.status == .done, color: .secondary)
                 .font(BoardText.trayRow)
                 .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { titleWidth = $0 }
             Spacer(minLength: 8)
             // How long this one has been open, and only where that is a
             // question (see `MenuBarTray.showsDwellTime`). No clock glyph:
