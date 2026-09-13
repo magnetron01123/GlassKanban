@@ -26,10 +26,8 @@ enum CardParts {
     /// completing it can animate (see `CardStrikeLine`). Full-strength colour
     /// even when done — the strike already marks completion, and dimming the
     /// text on top of it was a second signal for the same fact.
-    /// `title` replaces the card's own where a row has already shortened it
-    /// to whole words (`TrayRow`); the marks in front stay as they are.
-    static func titleText(for card: KanbanCard, title: String? = nil) -> Text {
-        let base = Text(title ?? displayTitle(of: card)).foregroundStyle(.primary)
+    static func titleText(for card: KanbanCard) -> Text {
+        let base = Text(displayTitle(of: card)).foregroundStyle(.primary)
         guard let marks = card.priorityMarks, card.status != .done else { return base }
         // Interpolation rather than `+`: concatenating Text is deprecated as
         // of macOS 26 and each run keeps its own styling this way.
