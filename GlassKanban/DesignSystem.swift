@@ -107,6 +107,9 @@ enum Board {
     /// do it. A first cut (12.09.2026, morning) put head and title on one x
     /// and the panel read as seven equal lines with a glyph in front.
     static let trayRowIndent: CGFloat = traySymbolSlot + traySymbolGap
+    /// An app icon in a menu row — the size a menu draws them (the Finder's
+    /// "Open With", Spotlight), in the heads' symbol field.
+    static let trayAppIconSize: CGFloat = 16
     /// The field for a row's own glyph — the list's dot, the capture's plus.
     /// Narrower than the head's, because it holds smaller things and
     /// because a second 16-pt column would push the titles too far in.
