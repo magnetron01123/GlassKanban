@@ -317,6 +317,16 @@ final class MenuBarTrayController: NSObject {
         let target = clamped((naturalHeight ?? panel.frame.height) + travel)
         guard abs(panel.frame.height - target) > 0.5 else { return }
         stopTravel()
+        // Reduce Motion: the rows do not animate on the board either, and
+        // an edge that travelled alone would be the one motion left.
+        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+            var frame = panel.frame
+            frame.origin.y = frame.maxY - target
+            frame.size.height = target
+            panel.setFrame(frame, display: true)
+            panel.invalidateShadow()
+            return
+        }
         travelStart = CACurrentMediaTime()
         travelFrom = panel.frame.height
         travelTo = target
