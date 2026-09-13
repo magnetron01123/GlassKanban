@@ -65,10 +65,17 @@ final class GlobalHotkey {
     func set(enabled: Bool) {
         guard enabled != isEnabled else { return }
         isEnabled = enabled
-        // A shortcut the system refuses on the way back is not worth an
-        // error here: the user is not in the settings pane, and the pane
-        // reports it the next time they are.
-        try? set(current)
+        let wanted = current
+        do {
+            try set(wanted)
+        } catch {
+            // Refused on the way back — another app took the combination
+            // while the item was off. The wish is kept, so the next launch
+            // tries again, and the settings pane says what happened instead
+            // of showing a shortcut that does nothing (review, 13.09.2026).
+            current = wanted
+            TrayShortcutController.shared.noteRefusedOnReturn()
+        }
     }
 
     private func unregister() {
@@ -135,6 +142,12 @@ final class TrayShortcutController: ObservableObject {
     /// Records a new combination. Returns false when the system refused it —
     /// then nothing is stored and the previous shortcut stays gone, because
     /// the user has already replaced it in their head.
+    /// The stored combination could not be registered again when the menu
+    /// bar item came back. It stays stored; the pane shows it as taken.
+    func noteRefusedOnReturn() {
+        isTaken = true
+    }
+
     @discardableResult
     func record(_ new: TrayShortcut?) -> Bool {
         do {

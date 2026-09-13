@@ -334,6 +334,11 @@ final class RemindersStore: ObservableObject {
     private var midnightTimer: Timer?
     private var hasLoadedOnce = false
     private var hasStarted = false
+    /// Whether the change and day-boundary observers are in place. Access
+    /// can be taken away and given back while the app runs, and each grant
+    /// went through `evaluateAccess` again — registering another set every
+    /// time (review, 13.09.2026).
+    private var observesStore = false
     private var observers: [NSObjectProtocol] = []
     /// Guards against two refreshes interleaving at their `await` points: each
     /// run takes a number, and only the newest one is allowed to publish. Two
@@ -476,8 +481,11 @@ final class RemindersStore: ObservableObject {
             accessState = .denied
         }
         guard accessState == .granted else { return }
-        observeChanges()
-        observeDayBoundary()
+        if !observesStore {
+            observeChanges()
+            observeDayBoundary()
+            observesStore = true
+        }
         await refresh()
     }
 

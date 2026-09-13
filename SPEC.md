@@ -1031,7 +1031,10 @@ tut genau das, was ein Klick auf das Symbol tut. Vorgabe ist **keiner**. Nötig 
 mindestens ⌃, ⌥ oder ⌘ — ⇧K wäre ein großes K und würde diesen Buchstaben überall
 schlucken. Escape bricht die Aufnahme ab, Rückschritt löscht. Die Kombination gehört dem
 Rechner (BACKLOG.md, „Was wohin gehört") und gilt nur, solange ein Menüleisten-Symbol da
-ist — ohne Symbol kein Panel, also kein Kürzel. **Grenze, gemessen am 12.09.2026:** Das
+ist — ohne Symbol kein Panel, also kein Kürzel. Lässt sich die Kombination beim
+Wiedereinblenden des Symbols nicht mehr registrieren, weil eine andere App sie inzwischen
+belegt, bleibt sie gespeichert und das Feld zeigt „Von einer anderen App belegt“, statt
+ein Kürzel anzuzeigen, das nichts tut (13.09.2026). **Grenze, gemessen am 12.09.2026:** Das
 System meldet nur eine Kollision mit einem Kürzel dieser App selbst; eine Kombination, die
 das System oder eine andere App schon hält (⌘Leertaste, ⌘Tab), lässt sich anstandslos
 aufnehmen und feuert dann nie. Deshalb steht „Von einer anderen App belegt" nur im
