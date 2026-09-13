@@ -438,6 +438,12 @@ private struct TraySection: View {
         MenuBarTray.restingRows(cards, in: status, foldsNotYetDue: store.foldNotYetDue)
     }
     private var shownCards: [KanbanCard] { expanded ? cards : restingCards }
+
+    /// One row with a date gives every row in the section the date column
+    /// (`Board.trayDueColumn`), so all their titles end on one line.
+    private var showsDueColumn: Bool {
+        shownCards.contains { CardParts.compactBadge(for: $0)?.tint != nil }
+    }
     private var foldedCards: [KanbanCard] { Array(cards.dropFirst(restingCards.count)) }
     private var foldedCount: Int { foldedCards.count }
 
@@ -555,7 +561,7 @@ private struct TraySection: View {
     @ViewBuilder
     private func row(for card: KanbanCard) -> some View {
         let movable = MenuBarTray.allowsMoving(from: card.status) && allowsMoves
-        TrayRow(card: card)
+        TrayRow(card: card, reservesDueColumn: showsDueColumn)
             .contentShape(.dragPreview, Board.trayRowShape)
             .onTapGesture { openBoard(card.id) }
             .modifier(TrayDraggable(
@@ -677,6 +683,9 @@ private struct TraySection: View {
 /// glance uses; the date is the one fact that decides what to finish first.
 private struct TrayRow: View {
     let card: KanbanCard
+    /// Whether the section keeps the date column open on this row even if
+    /// it has no date of its own (see `TraySection.showsDueColumn`).
+    let reservesDueColumn: Bool
 
     @State private var isHovered = false
 
@@ -725,7 +734,9 @@ private struct TrayRow: View {
                     .monospacedDigit()
                     .foregroundStyle(badge.isEmphasized ? AnyShapeStyle(Board.overdueFill) : AnyShapeStyle(.secondary))
                     .lineLimit(1)
-                    .fixedSize()
+                    .frame(width: Board.trayDueColumn, alignment: .trailing)
+            } else if reservesDueColumn {
+                Color.clear.frame(width: Board.trayDueColumn, height: 1)
             }
         }
         .padding(.leading, Board.trayRowIndent)

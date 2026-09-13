@@ -116,6 +116,14 @@ enum Board {
     /// corner. The row highlight sits one step under it, per the nesting rule.
     static let trayRadius: CGFloat = 12
     static let trayRowShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+    /// The column a row's due date stands in — reserved by every row of a
+    /// section as soon as one of them has a date, the way an `NSMenu` gives
+    /// every item the key-equivalent column once one item has a shortcut.
+    /// Without it, titles beside a date ended a word earlier than titles
+    /// without one, and the ragged edge read as disorder (13.09.2026,
+    /// user). Wide enough for the widest label, "Überfällig" (51 pt at
+    /// 11 pt, measured).
+    static let trayDueColumn: CGFloat = 52
     /// A section a row is about to land in. Faint: a menu highlights, it
     /// does not announce.
     static let trayDropTint: Double = 0.12
