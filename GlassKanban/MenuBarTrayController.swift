@@ -282,8 +282,29 @@ final class MenuBarTrayController: NSObject {
         guard let panel, panel.isVisible else { return }
         let target = clamped(height)
         guard abs(panel.contentView!.frame.height - target) > 0.5 else { return }
-        panel.setContentSize(NSSize(width: Board.trayWidth, height: target))
+        var frame = panel.frame
+        // The top edge stays under the menu bar; the bottom edge is what
+        // moves (`position(_:)` holds the same rule on every resize).
+        frame.origin.y = frame.maxY - target
+        frame.size.height = target
+        guard !isClosing else {
+            panel.setFrame(frame, display: true)
+            return
+        }
+        // The one motion a fold or a move makes in the panel: its edge
+        // travels, briefly, the way a Control Centre module grows. The
+        // contents inside have already changed (see `TraySection.foldLine`).
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Board.trayResizeDuration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().setFrame(frame, display: true)
+        }
     }
+
+    /// Set while `close()` puts the panel to rest, so the shrink back to the
+    /// resting height is applied in one step and not seen — the panel is
+    /// ordered out in the same turn.
+    private var isClosing = false
 
     /// The height the content asked for last — the panel opens at it next
     /// time without a first frame at the wrong size.
@@ -308,7 +329,9 @@ final class MenuBarTrayController: NSObject {
         // resting height now; the receivers apply it without animation, and
         // the panel is ordered out in the same turn, so nothing is seen to
         // shrink.
+        isClosing = true
         NotificationCenter.default.post(name: .glassKanbanTrayResets, object: nil)
+        isClosing = false
         panel?.orderOut(nil)
         anchor = nil
     }

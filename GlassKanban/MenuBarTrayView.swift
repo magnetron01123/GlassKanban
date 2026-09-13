@@ -490,10 +490,9 @@ private struct TraySection: View {
             // Nothing else under a head without rows: an empty section is its
             // head, and the head is the drop target then.
         }
-        .animation(reduceMotion ? nil : Board.foldAnimation, value: expanded)
         .onReceive(NotificationCenter.default.publisher(for: .glassKanbanTrayResets)) { _ in
-            // Shut without the fold's own animation — see the capture row's
-            // receiver for why a reset must not be seen to move.
+            // Shut without animation — see the capture row's receiver for
+            // why a reset must not be seen to move.
             var quiet = Transaction()
             quiet.disablesAnimations = true
             withTransaction(quiet) {
@@ -561,7 +560,15 @@ private struct TraySection: View {
     /// no dot in the glyph field, no glass under the pointer.
     private var foldLine: some View {
         TrayFoldLine(label: foldLabel, expanded: expanded) {
-            expanded.toggle()
+            // The rows appear, they do not arrive: a menu does not animate
+            // its own contents, and the board's half-second fold ran here
+            // against a window that had already jumped to its new height —
+            // rows fading in under a head that had long moved (13.09.2026,
+            // user: "heftig, viel zu lang"). What moves is the panel's edge,
+            // once and briefly (`MenuBarTrayController.contentHeightChanged`).
+            var quiet = Transaction()
+            quiet.disablesAnimations = true
+            withTransaction(quiet) { expanded.toggle() }
         }
     }
 
