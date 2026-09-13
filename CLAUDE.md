@@ -100,7 +100,8 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   mit einem systemeigenen Kürzel *nicht* meldet. `ShortcutRecorder.swift` ist das Feld in
   den Einstellungen, das eine Tastenkombination fängt, ohne sie auszuführen.
 - **MenuBarTrayController.swift** — das Menüleisten-Symbol samt seinem Rechtsklick-Menü
-  und sein Panel, die einzige
+  und sein Panel — Lage, Größe und die vier Schließer (Klick daneben, Klick aufs Symbol,
+  Escape, Verlust des Key-Status) —, die einzige
   Stelle neben `WindowPlacementController`, die `NSWindow`/`NSStatusItem` anfasst.
   **Bewusst AppKit statt `MenuBarExtra`:** In einem `MenuBarExtra`-Popover lebt ein Zug
   zwar, aber der Drop kommt nie an (gemessen 08.09.2026, Gegenprobe auf dem Board
@@ -138,7 +139,8 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   beides — samt der Regel, dass das Schließen des Boards die App nur ohne
   Menüleisten-Symbol beendet), `MenuBarTray` (was das Tablett zeigt: was je Abschnitt in Ruhe steht —
   das Backlog nach der Falz-Regel des Boards —, wann ein Zug erlaubt ist, wann eine Zeile
-  ihre Verweildauer nennt),
+  ihre Verweildauer nennt, wann ihr Datum — dieselbe Funktion für den Abschnitt, der die
+  Spalte reserviert, und die Zeile, die sie füllt),
   `TrayShortcut` (eine Tastenkombination als Wert: was gültig ist, wie sie geschrieben und
   gelesen wird — der mitgeführte Buchstabe ist Absicht, weil ein Key-Code eine Position
   und kein Zeichen ist), `MoveSource` (auf welcher
