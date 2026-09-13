@@ -139,8 +139,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Menüleisten-Symbol beendet), `MenuBarTray` (was das Tablett zeigt: was je Abschnitt in Ruhe steht —
   das Backlog nach der Falz-Regel des Boards —, wann ein Zug erlaubt ist, wann eine Zeile
   ihre Verweildauer nennt),
-  `WordTruncation` (ein zu langer Titel im Panel verliert ganze Wörter, nie ein halbes — die
-  Messung liefert die View, der Schnitt ist rein), `TrayShortcut` (eine Tastenkombination als Wert: was gültig ist, wie sie geschrieben und
+  `TrayShortcut` (eine Tastenkombination als Wert: was gültig ist, wie sie geschrieben und
   gelesen wird — der mitgeführte Buchstabe ist Absicht, weil ein Key-Code eine Position
   und kein Zeichen ist), `MoveSource` (auf welcher
   Oberfläche ein Zug gemacht wurde — ohne das stellte das Board die WIP-Frage auch
