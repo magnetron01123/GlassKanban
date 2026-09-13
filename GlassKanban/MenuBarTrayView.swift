@@ -569,6 +569,10 @@ private struct TraySection: View {
                 // subtasks, attachments) lives over there. The board's own
                 // menu puts it first too.
                 Button("Open in Reminders") { openInReminders(card) }
+                // What a tap on the row does, named — the board's menu has
+                // it, and a menu that says less than the one on the board
+                // makes the row look like it can do less (13.09.2026).
+                Button("Edit") { openBoard(card.id) }
                 if movable {
                     Divider()
                     Menu("Move to") {
@@ -580,6 +584,7 @@ private struct TraySection: View {
             }
             .accessibilityActions {
                 Button("Open in Reminders") { openInReminders(card) }
+                Button("Edit") { openBoard(card.id) }
                 if movable {
                     ForEach(moveTargets(for: card)) { target in
                         Button("Move to \(target.displayName)") { move(card, to: target) }

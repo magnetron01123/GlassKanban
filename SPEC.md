@@ -905,7 +905,7 @@ eines Menüleistensymbols hängt:** linke Kante 4 pt links der linken Symbolkant
 1 pt unter der Menüleiste — gemessen am eigenen `NSMenu` desselben Symbols und gegengeprüft
 am Time-Machine-Menü (13.09.2026; die erste Messung vom Vortag lag 1 pt daneben). Innen
 ebenso: Zeilen-Hover 5 pt vom Glasrand, Text und Haarlinien 16 pt — wie ein Systemmenü.
-Zentriert unter dem Symbol, wie davor, sah es anders aus als jedes Menü daneben. Herleitung und die verworfenen Formen
+Zentriert unter dem Symbol, wie davor, sah es anders aus als jedes Menü daneben. **Escape schließt das Panel** wie jedes Menü (13.09.2026); steht der Cursor in der Erfassung, verwirft das erste Escape den Entwurf, das zweite schließt — Spotlights zwei Schritte. Herleitung und die verworfenen Formen
 — darunter die erste gebaute Fassung mit drei Mulden nebeneinander — stehen in BACKLOG.md
 („Fensterverhalten").
 
@@ -925,7 +925,7 @@ das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
 | Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeits-Badge **nur bei Heute und Überfällig** — graue Daten sind Planung, und die findet auf dem Board statt; Hover hebt die Zeile als hellere Glasschicht |
 | Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |
 | Verweildauer | ab 3 Tagen auf jeder Karte der Arbeitsspuren, mit Uhr-Glyph | nur in „In Bearbeitung", ab derselben Schwelle, als bloße Zahl rechts vor dem Badge. Auf den anderen Abschnitten wäre sie eine Zahl ohne Frage |
-| Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach" | „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
+| Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach" | „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; „Bearbeiten" (öffnet das Board mit dem Editor der Karte — dasselbe wie ein Klick auf die Zeile; seit 13.09.2026, damit das Menü nicht weniger sagt als das des Boards); darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
 | Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
 | Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | in Ruhe die letzten 3 (Bestätigung, keine Liste), die Falz-Zeile öffnet das 7-Tage-Fenster |
 | Backlog | eigene Spur mit Falz-Zeile | **ein Abschnitt wie die anderen, mit der Falz-Zeile des Boards** (12.09.2026): in Ruhe schneidet er wie `BacklogFold` — erst die noch nicht fälligen weg (dieselbe Einstellung „Noch nicht Fälliges einklappen"), dann der Deckel, hier 8 statt 15. Darunter die Zeile des Boards, Wort für Wort: „N noch nicht fällig", „N weitere anzeigen", „Weniger anzeigen". Aufgeklappt alle Karten; das Panel wächst nach unten mit, kein Abschnitt scrollt in sich — nur ein zu kurzer Bildschirm begrenzt das Panel, und dann scrollt es als Ganzes. Zustand pro Sitzung wie auf dem Board; das Panel öffnet in Ruhe. Zuvor am selben Tag verworfen: Kopf allein, Kopf mit „Auf dem Board", Falz am Kopf mit gemerktem Zustand (BACKLOG.md) |

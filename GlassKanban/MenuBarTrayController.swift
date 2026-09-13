@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Combine
+import Carbon.HIToolbox
 
 /// The menu bar item and the panel it opens.
 ///
@@ -26,6 +27,7 @@ final class MenuBarTrayController: NSObject {
     private var panel: NSPanel?
     private var outsideClickMonitor: Any?
     private var localClickMonitor: Any?
+    private var escapeMonitor: Any?
     private var cancellables: Set<AnyCancellable> = []
     private var visibilityObservation: NSKeyValueObservation?
     /// True while this controller is setting `isVisible` itself, so the
@@ -396,6 +398,17 @@ final class MenuBarTrayController: NSObject {
             }
             return event
         }
+        // Escape closes the panel, as it closes every menu. The panel is key
+        // while open (`makeKey()` in `open()`), so the key arrives here. Not
+        // while the capture field holds a draft: there Escape gives up the
+        // draft first (`BacklogCaptureRow.onExitCommand`), and the next one
+        // closes — Spotlight's own two steps.
+        escapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, event.window === panel, event.keyCode == kVK_Escape,
+                  !(panel?.firstResponder is NSTextView) else { return event }
+            Task { @MainActor in self.close() }
+            return nil
+        }
     }
 
     /// The status bar's own windows — the item's button lives in one per
@@ -408,8 +421,10 @@ final class MenuBarTrayController: NSObject {
     private func stopWatchingForClicksOutside() {
         if let outsideClickMonitor { NSEvent.removeMonitor(outsideClickMonitor) }
         if let localClickMonitor { NSEvent.removeMonitor(localClickMonitor) }
+        if let escapeMonitor { NSEvent.removeMonitor(escapeMonitor) }
         outsideClickMonitor = nil
         localClickMonitor = nil
+        escapeMonitor = nil
     }
 }
 
