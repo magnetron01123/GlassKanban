@@ -81,6 +81,17 @@ enum MenuBarTray {
         return days >= KanbanCard.agingThresholdDays
     }
 
+    /// From which side a row arrives in its new section after a move: from
+    /// above when the move went down the panel, from below when it went up.
+    /// The panel's sections run top to bottom in the board's lane order, so
+    /// a card moved forward sinks; the transition says so for the one
+    /// moment the move takes (SPEC.md, "Menüleiste: das Tablett").
+    static func arrivesFromAbove(from source: KanbanStatus, to target: KanbanStatus) -> Bool {
+        let lanes = KanbanStatus.allCases
+        guard let a = lanes.firstIndex(of: source), let b = lanes.firstIndex(of: target) else { return true }
+        return b > a
+    }
+
     /// Which rows name their date: only the dates that decide what to
     /// finish *now* — today and overdue — and never on a finished card. A
     /// grey "12. Sep" is planning, and planning happens on the board. The

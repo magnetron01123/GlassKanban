@@ -27,6 +27,9 @@ struct MenuBarTrayView: View {
     /// store: `store.draggingCardID` also drives the board's 40 % ghost, and a
     /// drag in the panel must not ghost the card in the window behind it.
     @State private var liftedFrom: KanbanStatus?
+    /// The row a move has just sent to another section, and from which side
+    /// it arrives there (see `TraySection.transition(for:)`).
+    @State private var arrival: TrayArrival?
 
     /// The four sections, top to bottom, in board order. The Backlog is one
     /// of them since 12.09.2026 (user): it folds shut by default and shows
@@ -149,7 +152,7 @@ struct MenuBarTrayView: View {
             }
             ForEach(Array(Self.lanes.enumerated()), id: \.element) { index, status in
                 if index > 0 { separator }
-                TraySection(status: status, openBoard: openBoard, liftedFrom: $liftedFrom)
+                TraySection(status: status, openBoard: openBoard, liftedFrom: $liftedFrom, arrival: $arrival)
             }
             // The foot, the way the system's panels end: a hairline, then the
             // ways out. First the board itself: a row opens it *with* a card,
@@ -452,6 +455,13 @@ private struct TraySymbol: View {
 
 // MARK: - One section
 
+/// A row that a move has just sent into another section, and from which
+/// side it arrives there.
+struct TrayArrival: Equatable {
+    let id: String
+    let fromAbove: Bool
+}
+
 /// One section of the tray: a head with the count, then rows. Also the drop
 /// target for a row on its way here.
 private struct TraySection: View {
@@ -460,6 +470,9 @@ private struct TraySection: View {
     let openBoard: (String?) -> Void
     /// Which section the row in flight came from (see `MenuBarTrayView`).
     @Binding var liftedFrom: KanbanStatus?
+    /// The row on its way into a section, shared by all of them: the section
+    /// that sends a row is never the one that receives it.
+    @Binding var arrival: TrayArrival?
 
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -554,6 +567,7 @@ private struct TraySection: View {
             },
             exited: { isTargeted = false },
             perform: { id in
+                if let source = liftedFrom { noteArrival(of: id, from: source) }
                 liftedFrom = nil
                 // No undo manager: the tray has no ⌘Z and no text focus, so a
                 // registered entry would only be reachable from the board,
@@ -628,9 +642,7 @@ private struct TraySection: View {
     private func row(for card: KanbanCard, reservesDwellColumn: Bool, reservesDueColumn: Bool) -> some View {
         let movable = MenuBarTray.allowsMoving(from: card.status) && allowsMoves
         TrayRow(card: card, reservesDwellColumn: reservesDwellColumn, reservesDueColumn: reservesDueColumn)
-            // The board's own transition for a card the fold reveals or
-            // hides (`ColumnView`, `isFolding`): a fade, no scale.
-            .transition(.opacity)
+            .transition(transition(for: card))
             .contentShape(.dragPreview, Board.trayRowShape)
             .onTapGesture { openBoard(card.id) }
             .modifier(TrayDraggable(
@@ -674,7 +686,34 @@ private struct TraySection: View {
     }
 
     private func move(_ card: KanbanCard, to target: KanbanStatus) {
+        noteArrival(of: card.id, from: card.status, to: target)
         store.move(cardID: card.id, to: target, undoManager: nil, source: .tray)
+    }
+
+    /// Remembers, for the length of one move animation, which row is about
+    /// to appear in another section and from which side. Set before the
+    /// move so the row's first render already carries the right transition;
+    /// cleared afterwards so a later fold shows the row the board's way.
+    private func noteArrival(of id: String, from source: KanbanStatus, to target: KanbanStatus? = nil) {
+        let arrival = TrayArrival(
+            id: id, fromAbove: MenuBarTray.arrivesFromAbove(from: source, to: target ?? status))
+        self.arrival = arrival
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if self.arrival == arrival { self.arrival = nil }
+        }
+    }
+
+    /// The board's own transition for a card the fold reveals or hides
+    /// (`ColumnView`, `isFolding`): a fade, no scale. A row that has just
+    /// been *moved* here also fades, and travels the few points that say
+    /// which way it came — down the panel for a move forward (14.09.2026,
+    /// user: the panel's flow runs top to bottom, and should say so quietly,
+    /// in the moment of the move rather than in a standing mark). Under
+    /// Reduce Motion the root's animation is off, so the row simply appears.
+    private func transition(for card: KanbanCard) -> AnyTransition {
+        guard let arrival, arrival.id == card.id else { return .opacity }
+        let travel = arrival.fromAbove ? -Board.trayFlowOffset : Board.trayFlowOffset
+        return .opacity.combined(with: .offset(y: travel))
     }
 
     /// The panel closes first, then Reminders comes forward — the same order

@@ -81,7 +81,16 @@ final class MenuBarTrayTests: XCTestCase {
         XCTAssertEqual(KanbanStatus.backlog.traySymbolName, "tray")
         XCTAssertEqual(KanbanStatus.next.traySymbolName, "circle")
         XCTAssertEqual(KanbanStatus.inProgress.traySymbolName, "circle.lefthalf.filled")
-        XCTAssertEqual(KanbanStatus.done.traySymbolName, "checkmark.circle")
+        XCTAssertEqual(KanbanStatus.done.traySymbolName, "checkmark.circle.fill")
+    }
+
+    /// A move forward runs down the panel, so the row arrives from above;
+    /// a move back runs up, and it arrives from below.
+    func testAMovedRowArrivesFromTheSideItCameFrom() {
+        XCTAssertTrue(MenuBarTray.arrivesFromAbove(from: .next, to: .inProgress))
+        XCTAssertTrue(MenuBarTray.arrivesFromAbove(from: .backlog, to: .done))
+        XCTAssertFalse(MenuBarTray.arrivesFromAbove(from: .done, to: .inProgress))
+        XCTAssertFalse(MenuBarTray.arrivesFromAbove(from: .inProgress, to: .backlog))
     }
 
     /// Four stages, four different glyphs — two lanes sharing one would make

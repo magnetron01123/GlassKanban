@@ -90,6 +90,9 @@ enum Board {
     /// One menu row. The system's own menu rows are 22–24pt; two more for
     /// a target that is dragged onto, not just clicked.
     static let trayRowHeight: CGFloat = 26
+    /// How far a moved row travels while it fades into its new section —
+    /// a nudge, not a slide (14.09.2026).
+    static let trayFlowOffset: CGFloat = 4
     /// The list's colour as a dot in front of the title — the one piece of
     /// context a glance uses, in the smallest form that still reads.
     static let trayDotSize: CGFloat = 7
