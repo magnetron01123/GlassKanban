@@ -920,12 +920,20 @@ keine Mulden, kein Papier, keine Sätze. Das Glas ist — anders als beim Fenste
 native Liquid Glass des Systems (`NSGlassEffectView`, Radius 12), und der Inhalt sitzt
 als dessen Kind *im* Material; warum das hier erlaubt ist und beim Board nicht, steht in
 CONCEPT.md („Immer-aktiv"). Der Zug läuft von oben nach unten — im Menü ist
-das die Leserichtung, und unten ist, wo Fertiges hinsinkt.
+das die Leserichtung, und unten ist, wo Fertiges hinsinkt. **Das Panel sagt das leise,
+an zwei Stellen (14.09.2026):** Die Stufen-Symbole vor den Köpfen bilden von oben nach
+unten einen Füllstand (Ablage, leerer Kreis, halber Kreis, voller Kreis mit Haken), und
+eine **verschobene** Zeile kommt in ihrem neuen Abschnitt von der Seite, von der sie
+kam — beim Zug nach vorn von oben, beim Zug zurück von unten (4 pt, `Board.trayFlowOffset`,
+mit dem Einblenden, auf der Zug-Kurve des Boards; `MenuBarTray.arrivesFromAbove`). Die alte
+Zeile blendet an Ort und Stelle aus; die Falz enthüllt und verbirgt weiter ohne Versatz,
+wie auf dem Board. Kein stehendes Zeichen — kein Pfeil, keine Schiene, kein Verlauf
+(CONCEPT.md, „Das Menüleisten-Panel: Messungen").
 
 | Element | Board | Tablett |
 |---|---|---|
 | Spurkopf | Name und Zähl-Chip | **Symbol**, Name und Zahl als Text, 13 pt semibold sekundär — der Spaltenkopf des Boards, und die Größe, die Apples Panels ihren Köpfen geben; die teale Kapsel nur, solange der Abschnitt über seinem Limit liegt. Zwischen zwei Abschnitten eine Haarlinie wie in den Systempanels |
-| Stufen-Symbol | keins — die Spur erklärt sich durch die Karten darin | vor jedem Kopf: Backlog `tray`, Als Nächstes `circle`, In Bearbeitung `circle.lefthalf.filled`, Erledigt `checkmark.circle`, am linken Rand |
+| Stufen-Symbol | keins — die Spur erklärt sich durch die Karten darin | vor jedem Kopf: Backlog `tray`, Als Nächstes `circle`, In Bearbeitung `circle.lefthalf.filled`, Erledigt `checkmark.circle.fill` — leer, halb, voll —, am linken Rand |
 | Hierarchie | Papier in der Mulde | **ein Baum, keine Liste:** der Kopf steht am Rand, seine Zeilen rücken bis unter den Kopf*namen* ein (22 pt) — wie die Seitenleiste von Finder und Erinnerungen. Zwei Glyphenspalten, zwei Ebenen: links nur Stufen-Symbole, eingerückt nur Listenpunkte |
 | Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeit **nur bei Heute und Überfällig** (`MenuBarTray.showsDueDate`), als schlichter Text rechts, 11 pt — Überfällig in Systemrot, wie Erinnerungen es schreibt, Heute in der Textfarbe, die Verweildauer daneben sekundär: die drei Gewichte des Board-Badges als drei Textfarben, keine Kapsel (warum: CONCEPT.md, „Das Menüleisten-Panel: Messungen"). Graue Daten sind Planung, und die findet auf dem Board statt. **Zeigt eine Zeile des Abschnitts eine Fälligkeit oder eine Verweildauer, halten alle seine Zeilen die Spalte dafür frei**, damit die Titel auf einer Flucht enden — wie ein Menü allen Einträgen die Kürzel-Spalte gibt, sobald einer eins hat; Mindestbreiten, ein längeres Wort schiebt den Titel, statt selbst gekürzt zu werden. Zu lange Titel kürzt das System zeichenweise (BACKLOG.md, „Explizit abgelehnt"). Hover hebt die Zeile als hellere Glasschicht |
 | Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |

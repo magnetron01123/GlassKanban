@@ -405,7 +405,7 @@ einen Rückbau schützen.
   Überblick); fünf Ergänzungen kommen dazu, alle nach dem Maßstab „was man tut, weil man
   gerade in einer anderen App steckt":
   1. **Symbole vor den Köpfen**, die die Stufe zeigen, nicht dekorieren — `tray`,
-     `circle`, `circle.lefthalf.filled`, `checkmark.circle`: der Eingang, dann drei
+     `circle`, `circle.lefthalf.filled`, `checkmark.circle` (seit 14.09.2026 `.fill`, SPEC.md): der Eingang, dann drei
      Kreise, die sich füllen. Systemvokabular, monochrom, sekundär. Das Board behält seine
      Köpfe ohne Symbole: Dort erklärt die Spalte sich über die Karten darin; das Panel
      ist abstrakt und braucht deshalb das Zeichen. Damit ist die Zeile „keine Icons an

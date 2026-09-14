@@ -842,6 +842,23 @@ leitete: Beim Textfeld blieb Finder nachweislich aktiv, das Ereignis nahm also d
 Weiche des Fenster-Servers wie ein echter Druck; beim Kurzbefehl lief derselbe synthetische
 Druck einmal ins Leere (⌘Leertaste, Spotlight gewinnt) und einmal in unseren Handler.
 
+**Die Richtung des Flusses, leise (14.09.2026).** Auf dem Board läuft Kanban nach rechts,
+im Panel nach unten; der Nutzer wollte das verdeutlicht haben, „aber ganz subtil".
+Verworfen als Dauerzeichen (Prinzip 1: Rauschen, und es erklärt etwas, das nach dem
+ersten Zug bekannt ist): Pfeile oder Chevrons zwischen den Abschnitten, eine Schiene am
+linken Rand, ein Farbverlauf von oben nach unten, gestaffelte Einrückung. Gebaut sind
+zwei Dinge, die nichts hinzufügen: Die Symbolreihe schließt jetzt — der Erledigt-Kreis
+war als einziger wieder leer (`checkmark.circle`), mit `checkmark.circle.fill` liest
+sich die Spalte als leer → halb → voll; und die Bewegung gehört dem Ereignis (Prinzip 2):
+eine verschobene Zeile kommt in ihrem neuen Abschnitt von der Seite, von der sie kam
+(4 pt Versatz zum Einblenden, auf `Board.cardMoveAnimation`), die Falz bleibt der reine
+Fade des Boards. Nur die *ankommende* Zeile trägt den Versatz: Das Verschwinden im
+alten Abschnitt und das Erscheinen im neuen liegen in einem Render, die alte Zeile
+nimmt also die Transition mit, die sie schon hatte — den Fade. Gemessen per Bildfolge
+über das Kontextmenü: Zug nach unten, ankommende Zeile 4 px über ihrem Endplatz; Zug
+nach oben, 2 px darunter (der Rest der Strecke lag zwischen zwei Frames); die alte Zeile
+blendet an Ort und Stelle aus.
+
 ## Was hier bewusst *nicht* steht
 
 Listen ohne Herleitung — Ausbaustufen, Abgelehntes, Plattformgrenzen — gehören nach

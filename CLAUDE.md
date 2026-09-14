@@ -143,7 +143,8 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Menüleisten-Symbol beendet), `MenuBarTray` (was das Tablett zeigt: was je Abschnitt in Ruhe steht —
   das Backlog nach der Falz-Regel des Boards —, wann ein Zug erlaubt ist, wann eine Zeile
   ihre Verweildauer nennt, wann ihr Datum — dieselbe Funktion für den Abschnitt, der die
-  Spalte reserviert, und die Zeile, die sie füllt),
+  Spalte reserviert, und die Zeile, die sie füllt —, und von welcher Seite eine verschobene
+  Zeile in ihrem neuen Abschnitt ankommt),
   `TrayShortcut` (eine Tastenkombination als Wert: was gültig ist, wie sie geschrieben und
   gelesen wird — der mitgeführte Buchstabe ist Absicht, weil ein Key-Code eine Position
   und kein Zeichen ist), `MoveSource` (auf welcher
