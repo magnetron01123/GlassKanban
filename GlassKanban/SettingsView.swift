@@ -65,6 +65,14 @@ struct SettingsView: View {
                 .tabItem { Label("General", systemImage: "gearshape") }
         }
         .frame(width: SettingsMetrics.width)
+        // Its own colour, not the desktop's. SwiftUI tints a settings window
+        // from whatever lies behind it, and the window changes height with
+        // the pane — so switching tabs changed the colour of the whole window
+        // (measured 13.09.2026: toolbar 39/38/32 on one pane, 47/36/34 on
+        // the other). `containerBackground(_:for: .window)` did not reach it.
+        // The same rule as the board's applies — no surface changes without
+        // an event of the user's (CONCEPT.md, "Immer-aktiv").
+        .background(OpaqueSettingsWindow())
     }
 }
 
@@ -332,5 +340,48 @@ struct GeneralSettingsView: View {
     private func limitLabel(for status: KanbanStatus) -> String {
         let limit = store.wipLimits[status.rawValue] ?? 0
         return limit > 0 ? "\(limit)" : String(localized: "No Limit")
+    }
+}
+
+/// Keeps the settings window's colour its own instead of the desktop's (see
+/// `SettingsView`).
+///
+/// Measured 14.09.2026 by dumping the window's view and layer trees: the
+/// tint does not come from an `NSVisualEffectView` — the window's are all
+/// within-window, and hiding them changed nothing — but from the
+/// `CAChameleonLayer`s SwiftUI lays under its hosting view on macOS 26,
+/// which sample whatever lies behind the window. Hidden here by class name,
+/// so a system without them simply keeps its look. What remains is the
+/// system's `windowBackgroundColor` (white in the light appearance on this
+/// macOS, 30/30/30 in the dark one). Every pane brings its own chameleons,
+/// so this runs on every layout pass.
+private struct OpaqueSettingsWindow: NSViewRepresentable {
+    func makeNSView(context: Context) -> Probe { Probe() }
+    func updateNSView(_ view: Probe, context: Context) { view.hideChameleons() }
+
+    final class Probe: NSView {
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            hideChameleons()
+        }
+
+        override func layout() {
+            super.layout()
+            hideChameleons()
+            // The pane being switched to lays out after this view does.
+            DispatchQueue.main.async { [weak self] in self?.hideChameleons() }
+        }
+
+        func hideChameleons() {
+            guard let root = window?.contentView?.superview?.layer else { return }
+            hide(in: root)
+        }
+
+        private func hide(in layer: CALayer) {
+            if String(describing: type(of: layer)) == "CAChameleonLayer" {
+                layer.isHidden = true
+            }
+            for child in layer.sublayers ?? [] { hide(in: child) }
+        }
     }
 }
