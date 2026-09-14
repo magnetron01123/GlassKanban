@@ -1108,6 +1108,21 @@ Gebaut wurde stattdessen eine Meldung, die den Systemzustand benennt (SPEC.md).
   tut es genauso; eine eigene Kürzung wäre eine Abweichung, die nur im Vergleich mit dem
   System auffällt. Nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst öffnet.
 
+- **„Board öffnen" und „Erinnerungen öffnen" an den Kopf des Panels** — gefragt und
+  entschieden am 14.09.2026 (Nutzer: „was ist intuitiver?"): **sie bleiben im Fuß.** Drei
+  Gründe. Apples eigene Menüleisten-Panels (WLAN, Bluetooth, Batterie, Fokus) stellen den
+  Absprung („…-Einstellungen …") immer ganz unten hinter einer Haarlinie, Menüleisten-Apps
+  ebenso — Inhalt zuerst, Wege hinaus zuletzt, das Auge sucht sie unten. Der Fluss des
+  Panels beginnt oben: dort stehen der Backlog-Kopf und „Neue Aufgabe", der Eingang; zwei
+  App-Zeilen darüber wären das Erste im Blick, obwohl niemand das Panel öffnet, um es
+  sofort zu verlassen (derselbe Grund, aus dem die Backlog-Zahl am 11.09. vom Fuß nach oben
+  wanderte). Und man kommt von oben ins Panel — oben gehört das Häufigste hin, die nächste
+  Aufgabe und die Erfassung; Board und Erinnerungen braucht man seltener. Das eine Argument
+  für oben — der Fuß wandert beim Aufklappen einer Falz mit, der Kopf steht still — ist die
+  gebaute Bewegung selbst („nur die Unterkante reist"); in Apples Panels wandert der
+  Einstellungen-Link beim Aufklappen einer Liste genauso. Nicht wieder vorschlagen, ohne
+  dass der Nutzer das Thema selbst öffnet.
+
 ## Kleiner Rest aus dem Nutzer-Review (10.08.2026)
 
 Verworfen beim Schließen der fünf verbliebenen Befunde:
