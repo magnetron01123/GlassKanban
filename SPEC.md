@@ -44,7 +44,10 @@ Betroffen sind heute zwei Stellen:
   (`SettingsMetrics.listsHeight(rowCount:)`); die feste Höhe davor scrollte ab der siebten
   Liste und stand bei zweien halb leer. „Allgemein" ist fester Inhalt mit einer gemessenen
   Zahl. Beide gehen durch `SettingsMetrics.onScreen(_:)`, das auf die Bildschirmhöhe
-  begrenzt — nur dort scrollt die Seite dann in sich.
+  begrenzt — nur dort scrollt die Seite dann in sich. Das Fenster hat dabei **seine eigene
+  Farbe** (`windowBackgroundColor`), nicht die des Schreibtischs dahinter: Ein Tab-Wechsel
+  ändert die Höhe, aber keinen Farbton (seit 14.09.2026; Herleitung in CONCEPT.md,
+  „Immer-aktiv").
 - **Das Menüleisten-Panel.** Es wächst mit einem aufgeklappten Abschnitt und wird nur von
   einem zu kurzen Bildschirm begrenzt (siehe „Menüleiste: das Tablett").
 

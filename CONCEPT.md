@@ -650,6 +650,24 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   einer anderen App im Vordergrund: Refraktion und Lichtsaum bleiben. Das klassische
   Vibrancy-Material dort war eine graue Scheibe; die Regel hätte das Panel um genau das
   gebracht, wofür die App benannt ist.
+  **Die Einstellungen haben ihre eigene Farbe (14.09.2026).** Das Einstellungsfenster
+  ist eine Dauerfläche im Sinn der Regel, und es wechselte seine Farbe beim Tab-Wechsel:
+  SwiftUI tönt ein Einstellungsfenster auf macOS 26 nach dem, was hinter ihm liegt, und
+  das Fenster ändert mit dem Tab seine Höhe — also sah es hinter jedem Tab etwas anderes.
+  Gemessen: Toolbar 39/38/32 auf „Allgemein", 47/36/34 auf „Listen", ein dritter Wert
+  ohne Fenster dahinter. Der Verursacher war nicht das erwartete Vibrancy-Material — die
+  `NSVisualEffectView`s des Fensters sind alle „within window", und sie auszublenden
+  änderte keinen Pixel —, sondern `CAChameleonLayer`s, die SwiftUI unter seine
+  Hosting-View legt und die ihre Farbe von hinter dem Fenster abgreifen. Sie werden
+  ausgeblendet (nach Klassennamen, pro Layout-Durchlauf, weil jeder Tab eigene
+  mitbringt); übrig bleibt das systemeigene `windowBackgroundColor`. Verworfen:
+  `containerBackground(_:for: .window)` (erreicht die Layer nicht, gemessen ohne
+  Wirkung), die Effektansichten umzufärben (kein Verursacher) und eine feste
+  Fensterhöhe für beide Tabs (hätte die Tönung nur eingefroren, nicht die Ursache
+  beseitigt, und „Listen" stünde halb leer — gegen „Fenster wachsen mit ihrem Inhalt").
+  Nebenbefund derselben Messung: `windowBackgroundColor` ist auf macOS 26 im hellen
+  Erscheinungsbild reines Weiß, im dunklen 30/30/30 — das Weiß ist Systemfarbe, kein
+  Fehler.
 - Sauberes Typografie- und Abstandssystem nach Apple HIG (SF Pro, klare Hierarchie)
 - Dezente Bewegung: sanfte Animationen beim Spaltenwechsel (Drag & Drop), beim
   Live-Update aus Reminders (z. B. Karte erscheint/verschwindet mit Fade/Slide)
