@@ -76,7 +76,6 @@ das, was Apple aus Massentauglichkeit nie bauen wird: Meinungsstärke.
 | Fokus-Filter (s. Fokus-Modi-Integration) | erfüllt | Nutzungsalltag | umkehrbar | M |
 | Tagesrückblick (neu, unten) | erfüllt | Nutzungsalltag | umkehrbar | S |
 | Trennung im Backlog (s. Board-Struktur) | erfüllt | Nutzungsalltag | umkehrbar | S |
-| Vordergrund-Option (s. Fensterverhalten) | erfüllt | Nutzungsalltag | umkehrbar | S |
 | App Intents (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Nutzungsalltag | gebunden | M |
 
 ### Die ruhige Fläche im Schreibtisch-Setup (09.08.2026)
@@ -100,8 +99,8 @@ hierher gehört.
 ### Erfassung und Eingang (09.08.2026)
 
 - **Ablegen aus anderen Apps** — eine Mail, ein Safari-Link oder eine Datei wird per
-  Drag & Drop auf eine Spalte zur Karte. `ColumnView.dropDestination` nimmt heute nur
-  `String` (Karten-IDs) an und müsste zusätzlich `URL` und Text annehmen; das URL-Feld des
+  Drag & Drop auf eine Spalte zur Karte. Der `LaneDropDelegate` in `ColumnView` nimmt heute
+  nur Text (Karten-IDs) an und müsste zusätzlich `URL` und freien Text unterscheiden; das URL-Feld des
   Karten-Editors existiert samt Schreibpfad, der Link landet also in genau dem Feld, das
   Reminders ohnehin an jeder Aufgabe zeigt. Drag & Drop ist bereits die Kerngeste des
   Boards — es entsteht kein neues Chrome. Wohin die Karte fällt, entscheidet die Geste;
@@ -690,7 +689,7 @@ Abweichung gilt der Code.
 | `importedLists` | columns.json | geräteweit — die Migration ist Eigenschaft der *Daten* |
 | `wipLimits` | UserDefaults | geräteweit |
 | `foldNotYetDue` | UserDefaults | geräteweit |
-| `excludedCalendarIDs` | UserDefaults | offen, hängt an M4 |
+| `excludedCalendarIDs` | UserDefaults | lokal — vorläufig, bis M4 misst, ob die IDs geräteübergreifend gleich sind |
 | `appAppearance` | UserDefaults | lokal — Bildschirm im Büro ≠ zu Hause |
 | `completionSoundEnabled` | UserDefaults | lokal — Kopfhörer am Laptop |
 | `appPresence` (Dock/Menüleiste/beides, umgesetzt 08.09.2026) | UserDefaults | lokal — wo die App sichtbar ist, gehört dem Rechner |
@@ -698,8 +697,10 @@ Abweichung gilt der Code.
 | `correctionLedger` | UserDefaults | **strikt lokal** |
 | `tagReleaseMemory` | UserDefaults | strikt lokal |
 | `pendingTagCleanup` | columns.json | lokal — Arbeitsliste dieses Prozesses |
+| `windowPlacement` (Bildschirmzuordnung, umgesetzt 14.08.2026) | UserDefaults | lokal — Bildschirme gehören dem Rechner |
+| `columnStorageLocation`, `columnStorageLastFailure` | UserDefaults | lokal — Diagnose, keine Einstellung |
 | Fenstergeometrie | AppKit | lokal |
-| künftige Ansichts-Einstellungen (Bildschirmzuordnung, Darstellungsgröße, Fokus-Filter, Tageszeit-Palette) | — | lokal |
+| künftige Ansichts-Einstellungen (Darstellungsgröße, Fokus-Filter, Tageszeit-Palette) | — | lokal |
 
 **Warum der `CorrectionLedger` niemals synchronisiert werden darf.** Er merkt sich, welche
 Werte *dieses* Board verdrängt hat. Synchronisiert schriebe Mac A einen Wert zurück, den
@@ -888,10 +889,10 @@ verschwindet. Ohne diesen Abschnitt zeigen zwei Code-Kommentare ins Leere
 |---|---|---|
 | `columns.json` (alt) | `…/Containers/com.davidtrogemann.GlassKanban/Data/Library/Application Support/GlassKanban/` | Phase A, sobald der Group-Container aktiv ist |
 | `columns.json` (erste Group-Form) | `~/Library/Group Containers/group.com.…/` | nur falls der Store ein `<TeamID>.group.…`-Präfix erzwingt |
-
-**Stand 08.09.2026:** Im Group-Container liegt bisher **nichts** — er wurde ohne Entitlement nie beschreibbar und darum nie angelegt (CONCEPT.md, „Ein Pfad ist keine Schreiberlaubnis"). Aufzuräumen ist hier also erst etwas, wenn Phase 0 das Entitlement bringt.
 | Lesepfad-Einträge für tote Orte | `ColumnState.knownFileURLs` | jede Ortsänderung |
 | `copyColumnsToCurrentLocationIfNeeded` | `RemindersStore` | Phase A |
+
+**Stand 08.09.2026:** Im Group-Container liegt bisher **nichts** — er wurde ohne Entitlement nie beschreibbar und darum nie angelegt (CONCEPT.md, „Ein Pfad ist keine Schreiberlaubnis"). Aufzuräumen ist hier also erst etwas, wenn Phase 0 das Entitlement bringt.
 
 **Bedingung, unter der gelöscht werden darf** — alle drei müssen erfüllt sein:
 

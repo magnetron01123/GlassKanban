@@ -107,7 +107,7 @@ enum MenuBarTray {
     /// It was barred until then, for a real reason: a move out of Erledigt is
     /// the one move that can be refused outright — a repeating series that has
     /// already rolled on cannot take its finished occurrence back — and the
-    /// answer to that, "Nicht wiederhergestellt", was a board alert the panel
+    /// answer to that, "Nicht zurückgeholt", was a board alert the panel
     /// could not raise. So the failure would have been silent, which is the
     /// one thing this project never does. The bar is lifted now that the panel
     /// says it itself: `SaveFailure` carries its `MoveSource` and the panel

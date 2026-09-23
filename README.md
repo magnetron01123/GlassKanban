@@ -20,13 +20,16 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
   direkt auf dem Board (Titel, Notizen, URL, Liste, Dringlichkeit, Fälligkeit)
 - **Tickets anlegen** über das „+" im Backlog — Titel tippen, Return, fertig
 - **Alles widerrufbar:** Verschieben, Bearbeiten, Umbenennen, Anlegen und Löschen lassen
-  sich mit ⌘Z rückgängig machen; Löschen fragt zusätzlich nach, weil EventKit
+  sich auf dem Board mit ⌘Z rückgängig machen (im Menüleisten-Panel nicht); Löschen fragt zusätzlich nach, weil EventKit
   Unteraufgaben und Anhänge nicht wiederherstellen kann
 - **Bidirektionaler Live-Sync**: Änderungen in der Erinnerungen-App (auch auf
   iPhone/iPad via iCloud) erscheinen sofort im Board — Titel, Notizen, Fälligkeit und
   Erledigt-Status. Die Spalte selbst wird am Mac gezogen, an dem das Board läuft
-- **Finden** (⌘F): Suche, Dringlichkeit, Fälligkeit und wiederkehrende Aufgaben in einem
-  Bedienelement; **Listen-Auswahl** und **WIP-Limits** in den Einstellungen
+- **Finden** (⌘F): Suche sowie Filter nach Dringlichkeit, Fälligkeit und Liste in einem
+  Bedienelement
+- **Einstellungen:** welche Listen aufs Board kommen, **WIP-Limits**, Erscheinungsbild
+  (System/Hell/Dunkel), Start beim Anmelden, Ton beim Erledigen, noch nicht Fälliges
+  einklappen
 - **Motivation, dezent:** Streak-Flamme (🔥) mit Statistik-Fenster („Jetzt" und
   „Rückblick" — Auslastung, Durchlaufzeit-Schätzung, bester Tag, häufigste Liste)
 - **In der Menüleiste:** ein Klick auf das Symbol — oder eine frei wählbare
@@ -55,6 +58,9 @@ App heute tut — [SPEC.md](SPEC.md). Was bewusst **nicht** drin ist —
 ## Build
 
 Voraussetzungen: macOS 26 (Tahoe)+, Xcode 26+, [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+und ein selbstsigniertes Zertifikat „Glass Kanban Development" im Anmelde-Schlüsselbund
+(`project.yml` signiert manuell damit, damit macOS die Erinnerungs-Freigabe über Builds
+hinweg behält — ohne das Zertifikat bricht der Build ab)
 
 ```sh
 xcodegen generate

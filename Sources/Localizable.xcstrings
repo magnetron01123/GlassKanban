@@ -2281,19 +2281,19 @@
         }
       }
     },
-    "Open Apple Reminders to create or edit tasks (⌘N)": {
+    "Open Apple Reminders to create or edit tasks (⇧⌘R)": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⌘N)"
+            "value": "Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⇧⌘R)"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Apple Reminders to create or edit tasks (⌘N)"
+            "value": "Open Apple Reminders to create or edit tasks (⇧⌘R)"
           }
         }
       }

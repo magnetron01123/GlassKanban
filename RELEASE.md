@@ -77,9 +77,9 @@ Systemregion (Plattformverhalten, kein Fehler).
 
 **Noch offen:** VoiceOver-Stichprobe in beiden Sprachen an einer Karte und einem
 Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels). Dazu
-seit 08.09.2026 die Längenprüfung der Menüleisten-Texte, mit dem Stand vom 12.09.2026:
-„Erinnerungen öffnen", „Glass Kanban beenden" und „Neue Aufgabe" im Panel, „Board
-öffnen" und „Einstellungen …" im Menü des Symbols, die vier Spurköpfe mit ihrer Zahl,
+seit 08.09.2026 die Längenprüfung der Menüleisten-Texte, mit dem Stand vom 23.09.2026:
+„Neue Aufgabe", „Board öffnen" und „Erinnerungen öffnen" im Panel, „Board öffnen",
+„Einstellungen …" und „Glass Kanban beenden" im Menü des Symbols, die vier Spurköpfe mit ihrer Zahl,
 „Überfällig"/„Heute" in der 52-pt-Datumsspalte (Mindestbreite — ein längeres Wort
 schiebt den Titel),
 und in den Einstellungen die drei Werte von „Anzeigen in", „Kurzbefehl" mit „Kein
@@ -110,8 +110,8 @@ Textänderung neu gemessen werden.
       `x-apple-reminderkit://REMCDReminder/…` (ReminderDeepLink.swift, geöffnet in
       RemindersStore) → für 1.0 raus, der In-App-Editor deckt Bearbeiten ab, Fallback
       `openRemindersApp()` bleibt. Review-Risiko damit null statt „vermutlich okay".
-      Das Systemeinstellungs-Schema in ContentView bleibt (verbreitet, geringes
-      Risiko). README-Abschnitt „Hinweise" dazu anpassen.
+      Das Systemeinstellungs-Schema (ContentView, MenuBarTrayView, SettingsView für
+      die Anmeldeobjekte) bleibt (verbreitet, geringes Risiko). README-Abschnitt „Hinweise" dazu anpassen.
       **Es ist genau eine Stelle** — seit dem 14.08.2026. Bis dahin gab es eine zweite,
       die hier nicht verzeichnet war: `EmptyBoardNotice` öffnete die Erinnerungen-App
       über dasselbe Schema und hätte es nach dieser Aufräumung weiter mit ausgeliefert.
@@ -128,7 +128,7 @@ wird neu erteilt, alle Kernflüsse laufen sandboxed.
       („verarbeitet ausschließlich lokal, keine Datenerhebung" — deckungsgleich mit
       dem Privacy-Manifest), Support-Kontakt. Privacy-Policy- und Support-URL sind
       Pflichtfelder in App Store Connect
-- [x] Demo-Datensatz als eigene Reminders-Liste bauen — 05.09.2026, siehe `social/linkedin/konzept.md` 2.1 und `seed-demo-reminders.swift` v2 (glaubwürdige, freundliche
+- [x] Demo-Datensatz als eigene Reminders-Liste bauen — 05.09.2026, siehe `social/linkedin/konzept.md` 2.1 und `social/linkedin/seed-demo-reminders.swift` v2 (glaubwürdige, freundliche
       Beispiel-Tickets für Screenshots und Review)
 - [ ] Screenshots EN + DE, je 4–6, 2880×1800 PNG: Board, Karten-Editor,
       Statistik-Fenster, Menüleiste (Tablett), Dunkelmodus

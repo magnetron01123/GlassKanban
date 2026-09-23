@@ -70,7 +70,7 @@ darin nicht zu finden.
 
 ## Code-Landkarte
 
-Zwei Targets (App + Tests), `Sources/` mit rund 12.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
+Zwei Targets (App + Tests), `Sources/` mit rund 14.500 Zeilen SwiftUI; Projektdatei wird von XcodeGen
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
@@ -136,11 +136,14 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   `StatsPopover`, `FindPopover`, `SettingsView`, `EmptyBoardNotice`, `BoardTooltip`
   (eigenes Glas-Tooltip statt `.help()`), `MoveFeedback` (Klang und Haptik beim Zug),
   `HUDGlassMaterial` (Fenstermaterial), `WindowPlacementController` (hält das Board auf
-  seinem Bildschirm — die einzige Stelle, die `NSWindow` anfasst), dazu `ContentView` und
+  seinem Bildschirm), dazu `ContentView` und
   `GlassKanbanApp`.
 - **DesignSystem.swift** — alle Tokens (Farben, Maße, Animationskurven). Neue Werte
   gehören hierher, nicht in die Views.
-- **Reine, testbare Regeln ohne UI/EventKit** — `TicketRename`, `EditorKeyCommand`,
+- **Reine, testbare Regeln ohne UI/EventKit** — `AppAppearance` (System/Hell/Dunkel,
+  über `NSApp.appearance`, damit auch Einstellungen, Menüs und Popover folgen),
+  `ReminderWriteFailure` (erkennt ReminderKit-Fehler −3002 — das System verweigert den
+  Listenwechsel — an Domain und Code, nie am Meldungstext), `TicketRename`, `EditorKeyCommand`,
   `TextSanitizer`, `BacklogTicketTargeting`, `StreakCalculator`, `WrappedStats`,
   `ReminderDeepLink`, `CorrectionLedger` (Koexistenz mit fremden Schreibern),
   `RecurringHandoff` (Undo-Zaun bei Wiederholungen), `RecurringSeriesMatch` (Durchgang
@@ -174,7 +177,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   interpolierte Satz gehört in die View-Ebene** des App-Ziels, wo der Katalog
   tatsächlich lädt.
   **Nach jeder Katalog-Änderung `scripts/check-localization.py` laufen lassen, nie
-  per Augenmaß.** Es prüft dreierlei, jedes davon aus einem tatsächlich passierten
+  per Augenmaß.** Es prüft viererlei, jedes davon aus einem tatsächlich passierten
   Fehler entstanden:
   1. **Vollständigkeit** — jede `String(localized:)`/`LocalizedStringKey`-Stelle hat
      einen Schlüssel. Ein fehlender fällt sonst nicht auf: er zeigt still den
@@ -188,13 +191,15 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
      fünf Pluralregeln verloren, „1 Aufgaben" war zurück — ein Fehlerbild, das im Juli
      2026 schon einmal in genau dieser Form behoben worden war. Vollständigkeit allein
      sagt nichts über Korrektheit.
+  4. **Kein deutscher Text im Code** — deutsche Wörter in Swift-String-Literalen fallen
+     auf; Deutsch gehört in den Katalog, der Code trägt die englische Quelle.
 
   **Grenze des Skripts:** Die Ausnahmeliste ist eine *Zusicherung*, keine Messung. Wer
   einen Schlüssel dort einträgt, behauptet „diese Zahl wird nie 1" oder „liest sich bei
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `Tests/`, 24 Dateien mit rund 360 Tests, benannt nach der Regel
+- **Tests** — `Tests/`, 26 Dateien mit rund 390 Tests, benannt nach der Regel
   statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
   Target heißt `GlassKanbanTests`.
 

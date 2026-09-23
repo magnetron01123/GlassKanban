@@ -6,7 +6,7 @@ import Carbon.HIToolbox
 /// The menu bar item and the panel it opens.
 ///
 /// **Why this is AppKit and not a `MenuBarExtra` scene.** Measured 08.09.2026
-/// (plans/menubar-tablett.md, M1): in a `MenuBarExtra` popover with style
+/// (the plan's measurement M1, see CONCEPT.md): in a `MenuBarExtra` popover with style
 /// `.window` a drag *lifts* — the preview follows the cursor and the popover
 /// stays open — but the drop never arrives: neither `isTargeted` nor the
 /// drop closure fires. The same synthetic drag on the board moves a card
@@ -317,8 +317,8 @@ final class MenuBarTrayController: NSObject {
     }
 
     /// A section has just begun to fold on `Board.foldAnimation`, by
-    /// `travel` points. The edge goes with it — same curve, same half
-    /// second, started in the same turn — driven by hand, one whole-point
+    /// `travel` points. The edge goes with it — same curve, same
+    /// duration, started in the same turn — driven by hand, one whole-point
     /// frame per display refresh. Not `animator()`: AppKit's own window
     /// animation raced the content's report to a 131 pt jump and a creep
     /// (13.09.2026). One writer of the frame for the duration; the
@@ -375,7 +375,7 @@ final class MenuBarTrayController: NSObject {
     /// The curve SwiftUI's `.easeInOut` is — the cubic Bézier (0.42, 0,
     /// 0.58, 1) — so the edge and the rows are on one curve, not two that
     /// merely share a name. Solved for x by bisection; it runs sixty times
-    /// a second for half a second.
+    /// a second for the length of a fold.
     private static func easeInOut(_ x: Double) -> Double {
         func bezier(_ t: Double, _ p1: Double, _ p2: Double) -> Double {
             let u = 1 - t

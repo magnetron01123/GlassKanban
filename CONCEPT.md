@@ -23,7 +23,7 @@ Passwort oder sonstige Zugangsdaten** — das ist bei EventKit technisch gar nic
 Der einzige Berechtigungsschritt ist der macOS-Standarddialog "Zugriff auf Erinnerungen
 erlauben?" beim ersten Start. Ob im Hintergrund iCloud, Exchange oder nur lokale Listen
 verwendet werden, regelt ausschließlich macOS selbst (Systemeinstellungen) — die App bekommt
-nach der Erlaubnis nur Lesezugriff auf die vorhandenen Daten, niemals Zugangsdaten. Optionale
+nach der Erlaubnis Lese- und Schreibzugriff auf die vorhandenen Erinnerungen, niemals Zugangsdaten. Optionale
 Funktionen, die von sich aus iCloud voraussetzen würden (z. B. mit anderen Personen geteilte
 Listen), werden nur dann aktiv, wenn *du* dich aktiv dafür entscheidest — sie sind nie
 Voraussetzung für die Kernfunktion der App.
@@ -48,16 +48,15 @@ der nativen Reminders-App.
 - **Sync:** bidirektional über `EKEventStoreChangedNotification` — kein Polling. Änderungen,
   die direkt in der nativen Reminders-App gemacht werden (z. B. Erinnerung abhaken), tauchen
   live im Kanban-Board auf.
-- **Programmstart:** Login-Item (App startet automatisch beim Anmelden), merkt sich
+- **Programmstart:** optionaler Start beim Anmelden (in den Einstellungen, aus als Vorgabe), merkt sich
   Fensterposition und -größe zwischen den Starts — passend zum Anspruch, dauerhaft geöffnet zu
   bleiben.
 - **Keine eigene Cloud-Komponente:** kein Server, kein Backend, kein Konto, keine Analyse,
   keine Netzwerkaufrufe der App selbst — reiner lokaler EventKit-Client. Funktioniert auch mit
-  rein lokalen ("Auf meinem Mac"-)Listen ohne iCloud. Einzige Ausnahme: Der
-  Verantwortliche-Person-Filter benötigt zwingend eine über iCloud geteilte Liste, weil das
+  rein lokalen ("Auf meinem Mac"-)Listen ohne iCloud. Ein Verantwortliche-Person-Filter
+  (nicht gebaut, BACKLOG.md) bräuchte zwingend eine über iCloud geteilte Liste, weil das
   Teilen von Listen bei Apple grundsätzlich an iCloud gekoppelt ist (keine Design-Entscheidung
-  dieser App, sondern eine Systemgrenze von Reminders). Ohne geteilte Listen bleibt dieser
-  Filter einfach leer/ausgeblendet, alles andere funktioniert unverändert.
+  dieser App, sondern eine Systemgrenze von Reminders).
 
 ## Datenmodell
 
@@ -532,7 +531,7 @@ technisch günstige Zusätze — ausdrücklich **keine** Punkte/Levels/Bestenlis
 Abzeichen-Regal, das würde für ein Einzelnutzer-Ambient-Board zu viel Komplexität ohne echten
 Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weiter unten):
 
-- **Streak-Zähler:** z. B. „🔥 5 Tage in Folge" im Fensterrahmen. Wird rein lesend aus dem
+- **Streak-Zähler:** z. B. „🔥 5 Tage in Folge" in der Symbolleiste. Wird rein lesend aus dem
   bereits vorhandenen `completionDate` aller erledigten Erinnerungen berechnet (an wie vielen
   aufeinanderfolgenden Tagen wurde mindestens eine Karte erledigt) — keine neuen Felder, keine
   neuen Schreibzugriffe.
@@ -588,7 +587,7 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
   Selbstverpflichtungs-Psychologie — **Reibung statt Verbot**. Das Board blockt eine
   Überschreitung nie (das wäre Bestrafung und würde dem „belohnen, nie bestrafen"-Grundsatz
   widersprechen), sondern lässt die Karte landen und stellt *danach* genau eine Frage
-  („Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?"), deren bequemste Antworten
+  („Weniger gleichzeitig, mehr fertig", Knöpfe „Erst abschließen" / „Passt schon"), deren bequemste Antworten
   — Return und Escape — das Limit respektieren. Überschreiten bleibt ein bewusster Klick,
   kein Kampf. Das Limit läuft sichtbar im Spaltenzähler mit („make policies explicit"),
   und nur „In Bearbeitung" fragt nach: Kanban begrenzt begonnene Arbeit, nicht Planung.
@@ -700,12 +699,13 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   abgelehnt"). Dieselbe Entscheidung gilt für Tastaturfokus auf Karten.
 
 **Warum das zur bestehenden Philosophie passt, nicht nur zusätzlich dazu:** Ein
-`.help(...)`-Tooltip ist ein Standard-SwiftUI-Mechanismus, kein Custom-UI — bleibt
-unsichtbar bis zum Hover (Minimalismus: kein Dauertext, kein neues Element, keine
+Tooltip — auf dem Board das eigene Glas-Tooltip (`BoardTooltip`), an der Symbolleiste das
+native `.help(...)` — bleibt unsichtbar bis zum Hover (Minimalismus: kein Dauertext, kein neues Element, keine
 Onboarding-Fläche), ist rein statischer, in der App gebündelter Text
 (lokal/offline: keine Server-Anfrage, keine Analyse,
 welche Tipps gelesen werden), und fügt sich als natives Systemverhalten unauffällig
-in bestehende Mac-Konventionen ein (native Apple-App statt Custom-Tooling). Konkret
+in bestehende Mac-Konventionen ein (Verhalten wie ein System-Tooltip; warum das Board
+trotzdem ein eigenes zeichnet, steht in `BoardTooltip.swift`). Konkret
 angewendet z. B. am Spaltenkopf, dessen Tooltip das WIP-Limit erklärt.
 
 ### Ton der Texte
