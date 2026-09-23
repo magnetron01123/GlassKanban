@@ -59,7 +59,7 @@ changed_files() {
 }
 
 FILES="$(changed_files | sort -u)"
-CODE="$(printf '%s\n' "$FILES" | grep '^GlassKanban/.*\.swift$')"
+CODE="$(printf '%s\n' "$FILES" | grep -E '^(Sources|Tests)/.*\.swift$')"
 DOCS="$(printf '%s\n' "$FILES" | grep '^[^/]*\.md$')"
 
 # Nothing to say: either no app code moved, or the docs moved with it.

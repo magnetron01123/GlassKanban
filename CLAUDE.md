@@ -51,17 +51,21 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
 
 ## Ordner-Landkarte
 
-Der Projektordner folgt „so wenig wie nötig": `GlassKanban/` (Quellen, darin `Tests/`),
+Der Projektordner folgt „so wenig wie nötig": `Sources/` (Quellen), `Tests/`,
 `plans/`, `scripts/`, `social/` (Beitragsmaterial, z. B. LinkedIn-Clip samt Skripten),
 `project.yml`, die sechs Markdown-Dateien im Stamm und `Glass Kanban.app`. Das
 `.xcodeproj` wird von XcodeGen erzeugt und ist seit 05.09.2026 **nicht mehr in Git** —
 `scripts/build-app.sh` regeneriert es, wenn `project.yml` neuer ist; in einem frischen
 Klon einmal `xcodegen generate`. Neue Ordner oder Dateien im Stamm brauchen einen Grund
-und einen Eintrag in der Liste in README.md („Ordner").
+und einen Eintrag in der Liste in README.md („Ordner"). Seit 23.09.2026 heißt der
+Quellordner `Sources/` statt `GlassKanban/` und `Tests/` liegt daneben statt darin: Im
+Finder stand der Ordner `GlassKanban` direkt neben der App „Glass Kanban" (Endung
+ausgeblendet) und `GlassKanban.xcodeproj` — dreimal fast derselbe Name, die App war
+darin nicht zu finden.
 
 ## Code-Landkarte
 
-Zwei Targets (App + Tests), `GlassKanban/` mit rund 12.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
+Zwei Targets (App + Tests), `Sources/` mit rund 12.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
@@ -185,10 +189,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `GlassKanban/Tests/`, 24 Dateien mit rund 360 Tests, benannt nach der Regel
-  statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`). Der
-  Ordner liegt in den Quellen, wird aber per `excludes` in `project.yml` nur ins
-  Testbundle kompiliert (Target heißt weiterhin `GlassKanbanTests`).
+- **Tests** — `Tests/`, 24 Dateien mit rund 360 Tests, benannt nach der Regel
+  statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
+  Target heißt `GlassKanbanTests`.
 
 ## Arbeitsweise
 

@@ -77,7 +77,8 @@ App im Finder zu öffnen. Details siehe [CLAUDE.md](CLAUDE.md).
 So wenig wie möglich, so viel wie nötig — jeder Eintrag im Stamm hat genau eine Aufgabe:
 
 ```
-GlassKanban/            Quellen, flach; darin Tests/ (Unit-Tests) und AppIcon.icon/
+Sources/                Quellen der App, flach; darin AppIcon.icon/
+Tests/                  Unit-Tests
 GlassKanban.xcodeproj/  von XcodeGen erzeugt, nicht in Git
 plans/                  Baupläne für entschiedene, noch nicht gebaute Vorhaben
 scripts/                Build, Doku-Wächter, Lokalisierungsprüfung

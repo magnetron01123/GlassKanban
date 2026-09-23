@@ -14,7 +14,7 @@ die Messungen dazu stehen dort.
 
 1. **App-Icon überarbeiten (16.08.2026, Reihenfolge bestätigt 05.09.2026)** — das
    aktuelle Icon wirkt zu blass und ist im Dock schwer erkennbar. Betrifft
-   `GlassKanban/AppIcon.icon` (Icon-Composer-Dokument; die Tinted-Variante fehlt ohnehin,
+   `Sources/AppIcon.icon` (Icon-Composer-Dokument; die Tinted-Variante fehlt ohnehin,
    siehe „Spätere Apple-/Mac-Ausbaustufen"). Vor dem Store-Listing wichtig, das Icon prägt
    die erste Kaufentscheidung mit.
 2. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
@@ -589,7 +589,7 @@ nicht möglich)
 - **Fokus-Modi-Integration (Focus Filters)** — Board passt Filter automatisch an aktiven
   macOS-Fokus an (z. B. Arbeit vs. Privat).
 - **App-Icon: Tinted-Variante ergänzen** — Light und Dark sind umgesetzt
-  (`GlassKanban/AppIcon.icon`, Icon-Composer-Dokument); die Tinted-Darstellung für
+  (`Sources/AppIcon.icon`, Icon-Composer-Dokument); die Tinted-Darstellung für
   eingefärbte Docks fehlt noch als dritte Appearance.
 
 ## Statistiken / Jahresrückblick
