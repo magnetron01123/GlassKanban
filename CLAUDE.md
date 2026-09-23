@@ -41,8 +41,12 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
   eine eigene Session geschrieben (auch mit einem kleineren Modell), mit Messweiche,
   Schrittfolge, Befehlen und Abnahme. Entsteht nach der Entscheidung in BACKLOG.md,
   wird beim Bauen abgehakt und mit dem Merge gelöscht — das Verhalten steht dann in
-  SPEC.md. Muster und Lebensdauer in `plans/README.md`. **Steht ein Plan, wird die
-  Entscheidung dort nicht neu geführt.**
+  SPEC.md. **Steht ein Plan, wird die Entscheidung dort nicht neu geführt.** Der Ordner
+  existiert nur, solange ein Plan existiert (leerer Ordner samt Muster-README am
+  23.09.2026 entfernt). Aufbau eines Plans: Zuerst lesen · Ziel/Nicht-Ziel · Schritt 0:
+  Messen mit Entscheidungsweiche · Schritte 1…n mit Kästchen · Doku-Pflichten · Abnahme ·
+  Messprotokoll (während des Bauens gefüllt). Der Doku-Wächter zählt nur `.md`-Dateien
+  im Stamm — ein Plan ist kein Verhaltensnachweis, SPEC.md ist es.
 - **README.md** — die Außensicht: was die App ist und kann, für jemanden, der das
   Repository zum ersten Mal sieht. Ein neues nutzersichtbares Feature gehört auch hierhin,
   nicht nur in SPEC.md.
@@ -52,8 +56,9 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
 ## Ordner-Landkarte
 
 Der Projektordner folgt „so wenig wie nötig": `Sources/` (Quellen), `Tests/`,
-`plans/`, `scripts/`, `social/` (Beitragsmaterial, z. B. LinkedIn-Clip samt Skripten),
-`project.yml`, die sechs Markdown-Dateien im Stamm und `Glass Kanban.app`. Das
+`scripts/`, `social/` (Beitragsmaterial, z. B. LinkedIn-Clip samt Skripten),
+`project.yml`, die sechs Markdown-Dateien im Stamm und `Glass Kanban.app`; `plans/` nur, solange ein
+Plan existiert. Das
 `.xcodeproj` wird von XcodeGen erzeugt und ist seit 05.09.2026 **nicht mehr in Git** —
 `scripts/build-app.sh` regeneriert es, wenn `project.yml` neuer ist; in einem frischen
 Klon einmal `xcodegen generate`. Neue Ordner oder Dateien im Stamm brauchen einen Grund

@@ -8,7 +8,7 @@ Understatement.
 Dieses Dokument ist das Warum und die Texte. **Wie der Clip entsteht, steht in `README.md`
 in diesem Ordner** — Schritt für Schritt mit Nachweisen. Die fertigen Dateien liegen daneben
 (`glass-kanban-one-move-1x1.mp4`, `.gif`, `glass-kanban-thumbnail-1x1.png`). Es ist kein
-Bauplan im Sinne von `plans/README.md` (kein App-Verhalten), sondern die Produktionsgrundlage
+Bauplan im Sinne von `plans/` (CLAUDE.md) (kein App-Verhalten), sondern die Produktionsgrundlage
 für diesen und den nächsten Beitrag; der Demo-Datensatz bedient zugleich RELEASE.md Phase 3.
 
 ---

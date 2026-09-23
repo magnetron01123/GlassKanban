@@ -80,7 +80,6 @@ So wenig wie möglich, so viel wie nötig — jeder Eintrag im Stamm hat genau e
 Sources/                Quellen der App, flach; darin AppIcon.icon/
 Tests/                  Unit-Tests
 GlassKanban.xcodeproj/  von XcodeGen erzeugt, nicht in Git
-plans/                  Baupläne für entschiedene, noch nicht gebaute Vorhaben
 scripts/                Build, Doku-Wächter, Lokalisierungsprüfung
 social/                 Material für Beiträge (LinkedIn: Ablauf-README, Konzept, Skripte, fertiges Video)
 project.yml             Projektbeschreibung für XcodeGen — die Quelle des .xcodeproj

@@ -810,7 +810,7 @@ nativen Mac-App statt eines austauschbaren Tools?
 
 Die Bauform des Panels (SPEC.md, „Menüleiste: das Tablett") ist nicht gewählt, sondern
 gemessen. Die Pläne, in denen die Messungen standen, sind mit dem Merge gelöscht
-(`plans/README.md`); die Befunde, an denen Code hängt, bleiben hier. Die Geschichte der
+(CLAUDE.md, „plans/“); die Befunde, an denen Code hängt, bleiben hier. Die Geschichte der
 *Form* — Mulden, Falz, Trennstriche, was der Nutzer wann verwarf — steht in BACKLOG.md
 („Fensterverhalten"), nicht doppelt hier.
 
