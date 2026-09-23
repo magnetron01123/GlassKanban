@@ -16,7 +16,7 @@ import os
 final class WindowPlacementController: NSObject {
     static let shared = WindowPlacementController()
 
-    private static let storageKey = "windowPlacement"
+    private static let storageKey = StoredSetting.windowPlacement.key
 
     private weak var window: NSWindow?
 

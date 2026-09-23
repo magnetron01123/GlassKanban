@@ -573,7 +573,8 @@ Klick aufs Board zählt als Return (die Notiz wird zurück an die Wand gehängt,
 draufsteht). Geschrieben wird erst beim Schließen und nur, wenn sich wirklich etwas geändert
 hat — eine Karte nur anzuschauen ist ein Lesevorgang, kein Schreibvorgang, sonst würde jeder
 Blick die Verweildauer zurücksetzen. Escape wirft die Änderungen dieser Sitzung weg; das ist
-gefahrlos, weil bis dahin nichts geschrieben wurde. Im mehrzeiligen Notizfeld gehört Return
+gefahrlos, weil bis dahin nichts geschrieben wurde — deshalb keine Rückfrage „Änderungen
+verwerfen?", die der einzige modale Dialog des Boards wäre. Im mehrzeiligen Notizfeld gehört Return
 dem Feld (Notizen sind öfter Listen als Sätze) — von dort schließt **⌘Return**.
 
 **Karten tragen keinen Tastaturfokus und keine Hover-Tooltips** — beides war kurz
@@ -914,7 +915,7 @@ Klick auf das Symbol, Escape — steht der Cursor in der Erfassung, verwirft das
 den Entwurf, das zweite schließt (Spotlights zwei Schritte) — und der Verlust des
 Tastaturfokus ohne Klick (⌘-Tab), denn sonst stünde es da, ohne dass Escape es noch
 erreichte. Die verworfenen Formen — darunter die erste gebaute Fassung mit drei Mulden
-nebeneinander — stehen in BACKLOG.md („Fensterverhalten").
+nebeneinander — stehen in CONCEPT.md („Das Menüleisten-Panel: die Geschichte der Form").
 
 **Leitsatz: ein Menüleisten-Panel, kein kleines Board.** Man öffnet es, um mal eben
 etwas zu erledigen. Es erinnert an das Board, ist aber abstrakter: eine Schicht Glas,

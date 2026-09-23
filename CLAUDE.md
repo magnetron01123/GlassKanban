@@ -125,8 +125,8 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   WIP-Zeile) und `BacklogCaptureRow`, die einzige
   Stelle im Panel, an der geschrieben statt bewegt wird.
   Zieht seine Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`. **Kein kleines Board** —
-  die erste Fassung war eines und wurde am 11.09.2026 verworfen (BACKLOG.md,
-  „Fensterverhalten").
+  die erste Fassung war eines und wurde am 11.09.2026 verworfen (CONCEPT.md, „Das
+  Menüleisten-Panel: die Geschichte der Form").
 - **CardParts.swift** — die Bausteine einer Karte (Prioritätsmarken, Titel,
   Datums-Badge, Wiederholungs-Icon, Listenstreifen, Durchstrich), geteilt von `CardView`
   und `TrayRow`. Angelegt beim Bau des Tabletts, damit die Anatomie einer Karte
