@@ -41,8 +41,12 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
   eine eigene Session geschrieben (auch mit einem kleineren Modell), mit Messweiche,
   Schrittfolge, Befehlen und Abnahme. Entsteht nach der Entscheidung in BACKLOG.md,
   wird beim Bauen abgehakt und mit dem Merge gelöscht — das Verhalten steht dann in
-  SPEC.md. Muster und Lebensdauer in `plans/README.md`. **Steht ein Plan, wird die
-  Entscheidung dort nicht neu geführt.**
+  SPEC.md. **Steht ein Plan, wird die Entscheidung dort nicht neu geführt.** Der Ordner
+  existiert nur, solange ein Plan existiert (leerer Ordner samt Muster-README am
+  23.09.2026 entfernt). Aufbau eines Plans: Zuerst lesen · Ziel/Nicht-Ziel · Schritt 0:
+  Messen mit Entscheidungsweiche · Schritte 1…n mit Kästchen · Doku-Pflichten · Abnahme ·
+  Messprotokoll (während des Bauens gefüllt). Der Doku-Wächter zählt nur `.md`-Dateien
+  im Stamm — ein Plan ist kein Verhaltensnachweis, SPEC.md ist es.
 - **README.md** — die Außensicht: was die App ist und kann, für jemanden, der das
   Repository zum ersten Mal sieht. Ein neues nutzersichtbares Feature gehört auch hierhin,
   nicht nur in SPEC.md.
@@ -51,17 +55,22 @@ BACKLOG.md oder CONCEPT.md dokumentieren, nicht still entscheiden.
 
 ## Ordner-Landkarte
 
-Der Projektordner folgt „so wenig wie nötig": `GlassKanban/` (Quellen, darin `Tests/`),
-`plans/`, `scripts/`, `social/` (Beitragsmaterial, z. B. LinkedIn-Clip samt Skripten),
-`project.yml`, die sechs Markdown-Dateien im Stamm und `Glass Kanban.app`. Das
+Der Projektordner folgt „so wenig wie nötig": `Sources/` (Quellen), `Tests/`,
+`scripts/`, `social/` (Beitragsmaterial, z. B. LinkedIn-Clip samt Skripten),
+`project.yml`, die sechs Markdown-Dateien im Stamm und `Glass Kanban.app`; `plans/` nur, solange ein
+Plan existiert. Das
 `.xcodeproj` wird von XcodeGen erzeugt und ist seit 05.09.2026 **nicht mehr in Git** —
 `scripts/build-app.sh` regeneriert es, wenn `project.yml` neuer ist; in einem frischen
 Klon einmal `xcodegen generate`. Neue Ordner oder Dateien im Stamm brauchen einen Grund
-und einen Eintrag in der Liste in README.md („Ordner").
+und einen Eintrag in der Liste in README.md („Ordner"). Seit 23.09.2026 heißt der
+Quellordner `Sources/` statt `GlassKanban/` und `Tests/` liegt daneben statt darin: Im
+Finder stand der Ordner `GlassKanban` direkt neben der App „Glass Kanban" (Endung
+ausgeblendet) und `GlassKanban.xcodeproj` — dreimal fast derselbe Name, die App war
+darin nicht zu finden.
 
 ## Code-Landkarte
 
-Zwei Targets (App + Tests), `GlassKanban/` mit rund 12.000 Zeilen SwiftUI; Projektdatei wird von XcodeGen
+Zwei Targets (App + Tests), `Sources/` mit rund 14.500 Zeilen SwiftUI; Projektdatei wird von XcodeGen
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
@@ -116,8 +125,8 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   WIP-Zeile) und `BacklogCaptureRow`, die einzige
   Stelle im Panel, an der geschrieben statt bewegt wird.
   Zieht seine Bausteine aus `CardParts`, seine Regeln aus `MenuBarTray`. **Kein kleines Board** —
-  die erste Fassung war eines und wurde am 11.09.2026 verworfen (BACKLOG.md,
-  „Fensterverhalten").
+  die erste Fassung war eines und wurde am 11.09.2026 verworfen (CONCEPT.md, „Das
+  Menüleisten-Panel: die Geschichte der Form").
 - **CardParts.swift** — die Bausteine einer Karte (Prioritätsmarken, Titel,
   Datums-Badge, Wiederholungs-Icon, Listenstreifen, Durchstrich), geteilt von `CardView`
   und `TrayRow`. Angelegt beim Bau des Tabletts, damit die Anatomie einer Karte
@@ -127,11 +136,14 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   `StatsPopover`, `FindPopover`, `SettingsView`, `EmptyBoardNotice`, `BoardTooltip`
   (eigenes Glas-Tooltip statt `.help()`), `MoveFeedback` (Klang und Haptik beim Zug),
   `HUDGlassMaterial` (Fenstermaterial), `WindowPlacementController` (hält das Board auf
-  seinem Bildschirm — die einzige Stelle, die `NSWindow` anfasst), dazu `ContentView` und
+  seinem Bildschirm), dazu `ContentView` und
   `GlassKanbanApp`.
 - **DesignSystem.swift** — alle Tokens (Farben, Maße, Animationskurven). Neue Werte
   gehören hierher, nicht in die Views.
-- **Reine, testbare Regeln ohne UI/EventKit** — `TicketRename`, `EditorKeyCommand`,
+- **Reine, testbare Regeln ohne UI/EventKit** — `AppAppearance` (System/Hell/Dunkel,
+  über `NSApp.appearance`, damit auch Einstellungen, Menüs und Popover folgen),
+  `ReminderWriteFailure` (erkennt ReminderKit-Fehler −3002 — das System verweigert den
+  Listenwechsel — an Domain und Code, nie am Meldungstext), `TicketRename`, `EditorKeyCommand`,
   `TextSanitizer`, `BacklogTicketTargeting`, `StreakCalculator`, `WrappedStats`,
   `ReminderDeepLink`, `CorrectionLedger` (Koexistenz mit fremden Schreibern),
   `RecurringHandoff` (Undo-Zaun bei Wiederholungen), `RecurringSeriesMatch` (Durchgang
@@ -165,7 +177,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   interpolierte Satz gehört in die View-Ebene** des App-Ziels, wo der Katalog
   tatsächlich lädt.
   **Nach jeder Katalog-Änderung `scripts/check-localization.py` laufen lassen, nie
-  per Augenmaß.** Es prüft dreierlei, jedes davon aus einem tatsächlich passierten
+  per Augenmaß.** Es prüft viererlei, jedes davon aus einem tatsächlich passierten
   Fehler entstanden:
   1. **Vollständigkeit** — jede `String(localized:)`/`LocalizedStringKey`-Stelle hat
      einen Schlüssel. Ein fehlender fällt sonst nicht auf: er zeigt still den
@@ -179,16 +191,17 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
      fünf Pluralregeln verloren, „1 Aufgaben" war zurück — ein Fehlerbild, das im Juli
      2026 schon einmal in genau dieser Form behoben worden war. Vollständigkeit allein
      sagt nichts über Korrektheit.
+  4. **Kein deutscher Text im Code** — deutsche Wörter in Swift-String-Literalen fallen
+     auf; Deutsch gehört in den Katalog, der Code trägt die englische Quelle.
 
   **Grenze des Skripts:** Die Ausnahmeliste ist eine *Zusicherung*, keine Messung. Wer
   einen Schlüssel dort einträgt, behauptet „diese Zahl wird nie 1" oder „liest sich bei
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `GlassKanban/Tests/`, 24 Dateien mit rund 360 Tests, benannt nach der Regel
-  statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`). Der
-  Ordner liegt in den Quellen, wird aber per `excludes` in `project.yml` nur ins
-  Testbundle kompiliert (Target heißt weiterhin `GlassKanbanTests`).
+- **Tests** — `Tests/`, 26 Dateien mit rund 390 Tests, benannt nach der Regel
+  statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
+  Target heißt `GlassKanbanTests`.
 
 ## Arbeitsweise
 

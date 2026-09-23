@@ -414,7 +414,7 @@ struct BoardView: View {
             }
         }
         .tint(.accentColor)
-        .help("Open Apple Reminders to create or edit tasks (⌘N)")
+        .help("Open Apple Reminders to create or edit tasks (⇧⌘R)")
     }
 
     /// The real Reminders icon, read from the installed app once.

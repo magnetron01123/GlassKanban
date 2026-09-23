@@ -21,13 +21,9 @@ targets:
     type: application
     platform: macOS
     sources:
-      # Tests/ lives inside the source folder (one folder for everything the
-      # app is made of) but is compiled only into the test bundle below.
-      - path: GlassKanban
-        excludes:
-          - Tests
+      - path: Sources
     info:
-      path: GlassKanban/Info.plist
+      path: Sources/Info.plist
       properties:
         # Must describe write access too: the board renames, moves, edits,
         # creates and deletes reminders. Understating this is a standard
@@ -58,7 +54,7 @@ targets:
           - en
           - de
     entitlements:
-      path: GlassKanban/GlassKanban.entitlements
+      path: Sources/GlassKanban.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.personal-information.calendars: true
@@ -95,30 +91,30 @@ targets:
     # Standalone logic tests: the pure-logic sources are compiled directly
     # into the test bundle, so no app host is needed to run them.
     sources:
-      - path: GlassKanban/Tests
-      - path: GlassKanban/AppAppearance.swift
-      - path: GlassKanban/AppPresence.swift
-      - path: GlassKanban/MenuBarTray.swift
-      - path: GlassKanban/MoveSource.swift
-      - path: GlassKanban/TrayShortcut.swift
-      - path: GlassKanban/Models.swift
-      - path: GlassKanban/StatusTagger.swift
-      - path: GlassKanban/TextSanitizer.swift
-      - path: GlassKanban/StreakCalculator.swift
-      - path: GlassKanban/BacklogTicketTargeting.swift
-      - path: GlassKanban/TicketRename.swift
-      - path: GlassKanban/TicketURL.swift
-      - path: GlassKanban/EditorKeyCommand.swift
-      - path: GlassKanban/WrappedStats.swift
-      - path: GlassKanban/ReminderDeepLink.swift
-      - path: GlassKanban/RecurringHandoff.swift
-      - path: GlassKanban/RecurringTagRelease.swift
-      - path: GlassKanban/RecurringSeriesMatch.swift
-      - path: GlassKanban/CorrectionLedger.swift
-      - path: GlassKanban/ReminderWriteFailure.swift
-      - path: GlassKanban/ColumnState.swift
-      - path: GlassKanban/StoredSetting.swift
-      - path: GlassKanban/WindowPlacement.swift
+      - path: Tests
+      - path: Sources/AppAppearance.swift
+      - path: Sources/AppPresence.swift
+      - path: Sources/MenuBarTray.swift
+      - path: Sources/MoveSource.swift
+      - path: Sources/TrayShortcut.swift
+      - path: Sources/Models.swift
+      - path: Sources/StatusTagger.swift
+      - path: Sources/TextSanitizer.swift
+      - path: Sources/StreakCalculator.swift
+      - path: Sources/BacklogTicketTargeting.swift
+      - path: Sources/TicketRename.swift
+      - path: Sources/TicketURL.swift
+      - path: Sources/EditorKeyCommand.swift
+      - path: Sources/WrappedStats.swift
+      - path: Sources/ReminderDeepLink.swift
+      - path: Sources/RecurringHandoff.swift
+      - path: Sources/RecurringTagRelease.swift
+      - path: Sources/RecurringSeriesMatch.swift
+      - path: Sources/CorrectionLedger.swift
+      - path: Sources/ReminderWriteFailure.swift
+      - path: Sources/ColumnState.swift
+      - path: Sources/StoredSetting.swift
+      - path: Sources/WindowPlacement.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.davidtrogemann.GlassKanbanTests

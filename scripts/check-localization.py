@@ -36,8 +36,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = ROOT / "GlassKanban" / "Localizable.xcstrings"
-SOURCES = sorted((ROOT / "GlassKanban").glob("*.swift"))
+CATALOG = ROOT / "Sources" / "Localizable.xcstrings"
+SOURCES = sorted((ROOT / "Sources").glob("*.swift"))
 LANGUAGES = ("en", "de")
 
 # Keys that interpolate a count but need no plural rule. Each needs a reason —

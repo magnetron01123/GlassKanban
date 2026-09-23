@@ -133,7 +133,7 @@ struct MenuBarTrayView: View {
     private var tray: some View {
         // Groups are told apart by air, not by lines (see
         // `Board.trayGroupSpacing`). The one hairline left is the one before
-        // Quit, which is not a group but a way out.
+        // the footer, which is not a group but a way out.
         VStack(alignment: .leading, spacing: Board.trayGroupSpacing) {
             // The limit question stands above everything, across the whole
             // tray — it *is* a question about the whole tray: while it
@@ -947,7 +947,7 @@ private struct TrayFoldLine: View {
 }
 
 /// A row that does something rather than showing something — "Board öffnen",
-/// "Glass Kanban beenden", "5 weitere". Same height and hover as a card row,
+/// "Erinnerungen öffnen". Same height and hover as a card row,
 /// so the tray reads as one list.
 private struct TrayActionRow: View {
     let title: String

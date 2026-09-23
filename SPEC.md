@@ -455,9 +455,10 @@ zurück.
 - **Verschwindet die offene Karte, schließt der Editor.** Wird sie auf einem anderen Gerät
   gelöscht oder ihre Liste abgewählt, blieb das Board unscharf und die Symbolleiste tot,
   ohne erkennbaren Ausweg.
-- **Menübefehle sind gesperrt, wo die Symbolleiste es ist.** ⌘F, ⇧⌘F, ⌘N und ⌘R greifen
-  nicht mehr an einer hochgehaltenen Karte oder ohne Erinnerungs-Zugriff vorbei — eine
-  Regel, die nur für die Maus galt, ist keine Regel.
+- **Menübefehle sind gesperrt, wo die Symbolleiste es ist.** ⌘F und ⌘N greifen nicht
+  an einer hochgehaltenen Karte oder ohne Erinnerungs-Zugriff vorbei, ⇧⌘F nicht an einer
+  hochgehaltenen Karte oder ohne aktiven Filter, ⌘R nicht ohne Zugriff — eine Regel, die
+  nur für die Maus galt, ist keine Regel.
 - **Der Falz weicht dem Filter.** Ein Suchtreffer hinter dem Falz wurde nie gezeichnet:
   Die Spalte zeigte weder die Karte noch „Keine Treffer", weil gefunden ja etwas wurde.
   Bei aktiver Einschränkung ruht der Schnitt.
@@ -572,7 +573,8 @@ Klick aufs Board zählt als Return (die Notiz wird zurück an die Wand gehängt,
 draufsteht). Geschrieben wird erst beim Schließen und nur, wenn sich wirklich etwas geändert
 hat — eine Karte nur anzuschauen ist ein Lesevorgang, kein Schreibvorgang, sonst würde jeder
 Blick die Verweildauer zurücksetzen. Escape wirft die Änderungen dieser Sitzung weg; das ist
-gefahrlos, weil bis dahin nichts geschrieben wurde. Im mehrzeiligen Notizfeld gehört Return
+gefahrlos, weil bis dahin nichts geschrieben wurde — deshalb keine Rückfrage „Änderungen
+verwerfen?", die der einzige modale Dialog des Boards wäre. Im mehrzeiligen Notizfeld gehört Return
 dem Feld (Notizen sind öfter Listen als Sätze) — von dort schließt **⌘Return**.
 
 **Karten tragen keinen Tastaturfokus und keine Hover-Tooltips** — beides war kurz
@@ -624,7 +626,7 @@ Kartenwechsel, und jede aufgedeckte Karte spielte zusätzlich ihre Ankunfts-Anim
 (Scale-in). Fünfzehn Tickets, die in einer Fünftelsekunde gleichzeitig aufpoppen, lesen
 sich als aufgerissene Spalte — viel Lärm für „hier ist, was ohnehin schon da war".
 
-Jetzt: eine Feder ohne jeden Nachschwung über 0,36 s (`Board.foldAnimation`), und die
+Jetzt: Ease-in-out über 0,35 s (`Board.foldAnimation`), und die
 aufgedeckten Karten blenden nur ein, statt anzukommen. Je größer die Änderung, desto mehr
 Zeit braucht das Auge — und es ist nichts *passiert*, also darf nichts schnappen. Bewegung
 gibt die App für Ereignisse aus (siehe „Zwei Uhren"); eine Falte ist kein Ereignis, sondern
@@ -682,7 +684,8 @@ Netz ein Loch hat: Beim Wiederherstellen legt die App eine **neue** Erinnerung m
 demselben Inhalt an (Titel, Notizen, URL, Ort, Priorität, Datum, Wiederholung,
 Erinnerungen, Erledigt-Status samt ursprünglichem Erledigt-Datum) — EventKit kennt kein
 echtes Wiederherstellen. Was EventKit nicht herausgibt, kommt damit **nicht** zurück:
-**Unteraufgaben, Anhänge, Reminders-Tags und -Flags**. Genau das sagt die Rückfrage.
+**Unteraufgaben, Anhänge, Reminders-Tags und -Flags**. Die Rückfrage nennt davon die
+beiden, die man verlieren würde, ohne es zu merken: Unteraufgaben und Anhänge.
 
 Jede Schreib-Aktion der App — Verschieben, Umbenennen, Anlegen, Löschen — registriert ihr
 Gegenteil beim Undo-Manager des Fensters und ist mit **⌘Z** widerrufbar, ⇧⌘Z stellt sie
@@ -878,7 +881,7 @@ Notizen verändert; die Absicherung ist Hygiene, nicht Fehlerbehebung.)
 | ⌘N | Neues Ticket im Backlog (derselbe Weg wie das „+") |
 | ⌘F | Finden-Popover (Suche + Filter) |
 | ⇧⌘F | Filter zurücksetzen |
-| ⇧⌘R | Erinnerungen-App öffnen |
+| ⇧⌘R | In Erinnerungen öffnen |
 | ⌘R | Board aktualisieren |
 | ⌘Z / ⇧⌘Z | letzte Board-Änderung rückgängig / wiederherstellen |
 | ⌘, | Einstellungen |
@@ -912,7 +915,7 @@ Klick auf das Symbol, Escape — steht der Cursor in der Erfassung, verwirft das
 den Entwurf, das zweite schließt (Spotlights zwei Schritte) — und der Verlust des
 Tastaturfokus ohne Klick (⌘-Tab), denn sonst stünde es da, ohne dass Escape es noch
 erreichte. Die verworfenen Formen — darunter die erste gebaute Fassung mit drei Mulden
-nebeneinander — stehen in BACKLOG.md („Fensterverhalten").
+nebeneinander — stehen in CONCEPT.md („Das Menüleisten-Panel: die Geschichte der Form").
 
 **Leitsatz: ein Menüleisten-Panel, kein kleines Board.** Man öffnet es, um mal eben
 etwas zu erledigen. Es erinnert an das Board, ist aber abstrakter: eine Schicht Glas,
@@ -948,7 +951,7 @@ wie auf dem Board. Kein stehendes Zeichen — kein Pfeil, keine Schiene, kein Ve
 | WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen; passt beides nicht in eine Zeile — auf Deutsch der Normalfall —, stehen die Knöpfe unter der Frage, statt dass Spaltenname und Zahlen abgeschnitten werden |
 | Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
 | ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |
-| Zug aus Erledigt heraus | erlaubt, mit „Nicht wiederhergestellt"-Alert | erlaubt; die Absage steht als Zeile im Panel (siehe unten), weil `SaveFailure` seine `MoveSource` trägt |
+| Zug aus Erledigt heraus | erlaubt, mit „Nicht zurückgeholt"-Alert | erlaubt; die Absage steht als Zeile im Panel (siehe unten), weil `SaveFailure` seine `MoveSource` trägt |
 | Abgelehnter Schreibvorgang | Alert über dem Board | Zeile ganz oben im Panel, rot getönt, Titel und Grund in den Worten des Boards; ein Klick blendet sie aus. Kein Alert: er nähme den Fokus, und im Menüleisten-Modus gibt es kein Fenster, über dem er stehen könnte |
 | Erfassen | „+" legt an und öffnet den Editor | Zeile „Neue Aufgabe" unter dem Backlog-Kopf, nur der Titel (siehe unten) |
 | Tooltips, Streak, Statistik, Suche, Editor, Umbenennen, Löschen | ja | nichts davon; Chrome bleibt im Fenster |
@@ -1058,10 +1061,10 @@ gemeldeten Fall, und die Fußzeile sagt, dass ein anderweitig belegtes Kürzel b
 anderen App bleibt.
 
 Im Modus „Menüleiste" springt beim Start kein Board auf — auch keins, das beim letzten
-Beenden offen war. Die Einstellungen sind dort über das Board erreichbar (Klick auf die
-Backlog-Kopfzeile oder eine Zeile): mit dem Fenster kommt die Menüleiste der App. Ein
-eigener „Einstellungen …"-Knopf im Tablett wäre ein Knopf für einen Weg, den das Panel
-schon öffnet.
+Beenden offen war. Die Einstellungen erreicht man dort über das Rechtsklick-Menü des
+Symbols („Einstellungen …") oder über das Board („Board öffnen" am Fuß des Panels oder
+Klick auf eine Zeile) — mit dem Fenster kommt die Menüleiste der App. Im Panel selbst steht
+kein Einstellungen-Knopf.
 
 ## Karten-Anzeige
 
@@ -1135,7 +1138,7 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   EventKit wird nichts zurückgeschrieben, auch nicht beim Umbenennen, und der Editor zeigt
   Notizen und URL-Feld ungefiltert
 - **Hashtags in Notizen** werden angezeigt wie jedes andere Wort (seit 13.08.2026; vorher filterte die App ihr eigenes Steuerzeichen heraus)
-- **Backlog klappt ab 15 Karten ein** („N weitere anzeigen")
+- **Backlog klappt über 15 Karten ein** — die 16. und alle weiteren stehen hinter „N weitere anzeigen"
 - **Keine Tooltips auf Karten** (siehe Interaktion) — Tooltips gibt es nur am Chrome:
   Spaltenkopf (Zähler/Regeln) und „+"-Button
 
@@ -1196,7 +1199,8 @@ Werte.
 
 **Der Listen-Filter startet vollständig angehakt und wird abgewählt**, nicht aufgebaut — der
 Normalzustand des Boards ist „alle", und ein Filter soll zeigen, was gilt, statt ausgefüllt
-werden zu wollen (gespeichert wird deshalb nur, was *aus* ist; siehe `ListFilter`). Zur
+werden zu wollen (festgehalten wird deshalb nur, was *aus* ist, und nur für die laufende
+Sitzung; siehe `ListFilter`). Zur
 Auswahl stehen genau die Listen, die die Einstellungen aufs Board lassen: **die
 Einstellungen entscheiden dauerhaft, was dazugehört, diese Zeile kurzfristig, was man gerade
 ansieht.** Wird eine Liste in den Einstellungen abgeschaltet oder verschwindet sie aus
@@ -1216,8 +1220,9 @@ Alle drei Filterzeilen tragen denselben Menü-Knopf — eine Zeile als `Picker` 
 Sie werden **nicht gefiltert** — es gibt dafür bewusst keine Filterzeile.
 
 **Leeres Board:** Zeigt das Board gar nichts, sagt es warum — „Nichts zu tun" (nichts da),
-„Keine Treffer" (Filter, mit Zurücksetzen-Link) oder „Keine Liste ausgewählt" (keine Quelle,
-mit Link in die Einstellungen).
+„Keine Treffer" (Filter, mit Zurücksetzen-Link), „Keine Liste ausgewählt" (keine Quelle,
+mit Link in die Einstellungen) oder „Keine Erinnerungslisten" (es gibt gar keine, mit
+„Erinnerungen öffnen").
 
 ### Leere Spalte: der angedeutete Platz
 
@@ -1340,7 +1345,8 @@ Nicht-Sehen.
 - Das Limit läuft im Spaltenzähler mit (`1 / 3`), die Kapsel färbt sich beim Überschreiten
   teal
 - **Nur „In Bearbeitung" fragt nach:** Wird das Limit dort überschritten, erscheint *nach*
-  dem Ablegen ein Dialog („Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?").
+  dem Ablegen ein Dialog („In Bearbeitung: N von M" — „Weniger gleichzeitig, mehr fertig",
+  Knöpfe „Erst abschließen" / „Passt schon").
   Das Board blockt nichts — es lässt die Karte landen und bietet an, sie zurückzulegen. Die
   Frage stellt sich bei jeder Route (Drag & Drop, Kontextmenü, VoiceOver)
 - Herleitung (Selbstverpflichtungs-Psychologie, „Reibung statt Verbot"): siehe CONCEPT.md,

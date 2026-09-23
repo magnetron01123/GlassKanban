@@ -60,7 +60,7 @@ mkdir -p "$STATE_DIR" 2>/dev/null || exit 0
 # it constantly and it never reaches the bundle.
 fingerprint() {
     {
-        find GlassKanban -name '.DS_Store' -prune -o -type f -print0 |
+        find Sources Tests -name '.DS_Store' -prune -o -type f -print0 |
             sort -z | xargs -0 shasum 2>/dev/null
         shasum project.yml 2>/dev/null
         printf '%s\n' "$CONFIG"

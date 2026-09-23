@@ -23,7 +23,7 @@ Passwort oder sonstige Zugangsdaten** — das ist bei EventKit technisch gar nic
 Der einzige Berechtigungsschritt ist der macOS-Standarddialog "Zugriff auf Erinnerungen
 erlauben?" beim ersten Start. Ob im Hintergrund iCloud, Exchange oder nur lokale Listen
 verwendet werden, regelt ausschließlich macOS selbst (Systemeinstellungen) — die App bekommt
-nach der Erlaubnis nur Lesezugriff auf die vorhandenen Daten, niemals Zugangsdaten. Optionale
+nach der Erlaubnis Lese- und Schreibzugriff auf die vorhandenen Erinnerungen, niemals Zugangsdaten. Optionale
 Funktionen, die von sich aus iCloud voraussetzen würden (z. B. mit anderen Personen geteilte
 Listen), werden nur dann aktiv, wenn *du* dich aktiv dafür entscheidest — sie sind nie
 Voraussetzung für die Kernfunktion der App.
@@ -48,16 +48,15 @@ der nativen Reminders-App.
 - **Sync:** bidirektional über `EKEventStoreChangedNotification` — kein Polling. Änderungen,
   die direkt in der nativen Reminders-App gemacht werden (z. B. Erinnerung abhaken), tauchen
   live im Kanban-Board auf.
-- **Programmstart:** Login-Item (App startet automatisch beim Anmelden), merkt sich
+- **Programmstart:** optionaler Start beim Anmelden (in den Einstellungen, aus als Vorgabe), merkt sich
   Fensterposition und -größe zwischen den Starts — passend zum Anspruch, dauerhaft geöffnet zu
   bleiben.
 - **Keine eigene Cloud-Komponente:** kein Server, kein Backend, kein Konto, keine Analyse,
   keine Netzwerkaufrufe der App selbst — reiner lokaler EventKit-Client. Funktioniert auch mit
-  rein lokalen ("Auf meinem Mac"-)Listen ohne iCloud. Einzige Ausnahme: Der
-  Verantwortliche-Person-Filter benötigt zwingend eine über iCloud geteilte Liste, weil das
+  rein lokalen ("Auf meinem Mac"-)Listen ohne iCloud. Ein Verantwortliche-Person-Filter
+  (nicht gebaut, BACKLOG.md) bräuchte zwingend eine über iCloud geteilte Liste, weil das
   Teilen von Listen bei Apple grundsätzlich an iCloud gekoppelt ist (keine Design-Entscheidung
-  dieser App, sondern eine Systemgrenze von Reminders). Ohne geteilte Listen bleibt dieser
-  Filter einfach leer/ausgeblendet, alles andere funktioniert unverändert.
+  dieser App, sondern eine Systemgrenze von Reminders).
 
 ## Datenmodell
 
@@ -532,7 +531,7 @@ technisch günstige Zusätze — ausdrücklich **keine** Punkte/Levels/Bestenlis
 Abzeichen-Regal, das würde für ein Einzelnutzer-Ambient-Board zu viel Komplexität ohne echten
 Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weiter unten):
 
-- **Streak-Zähler:** z. B. „🔥 5 Tage in Folge" im Fensterrahmen. Wird rein lesend aus dem
+- **Streak-Zähler:** z. B. „🔥 5 Tage in Folge" in der Symbolleiste. Wird rein lesend aus dem
   bereits vorhandenen `completionDate` aller erledigten Erinnerungen berechnet (an wie vielen
   aufeinanderfolgenden Tagen wurde mindestens eine Karte erledigt) — keine neuen Felder, keine
   neuen Schreibzugriffe.
@@ -588,8 +587,10 @@ Mehrwert bedeuten (zur einen bewussten Ausnahme siehe „Statistik-Fenster" weit
   Selbstverpflichtungs-Psychologie — **Reibung statt Verbot**. Das Board blockt eine
   Überschreitung nie (das wäre Bestrafung und würde dem „belohnen, nie bestrafen"-Grundsatz
   widersprechen), sondern lässt die Karte landen und stellt *danach* genau eine Frage
-  („Weniger gleichzeitig, mehr fertig. Erst etwas abschließen?"), deren bequemste Antworten
-  — Return und Escape — das Limit respektieren. Überschreiten bleibt ein bewusster Klick,
+  („Weniger gleichzeitig, mehr fertig", Knöpfe „Erst abschließen" / „Passt schon"), deren bequemste Antworten
+  — Return und Escape — das Limit respektieren. Die Farbe des Limits ist Teal, nicht das
+  ursprünglich gedachte Amber: Amber liegt zu nah an der Dringlichkeitsfarbe, und ein
+  volles Limit ist kein Alarm. Überschreiten bleibt ein bewusster Klick,
   kein Kampf. Das Limit läuft sichtbar im Spaltenzähler mit („make policies explicit"),
   und nur „In Bearbeitung" fragt nach: Kanban begrenzt begonnene Arbeit, nicht Planung.
 
@@ -700,12 +701,13 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   abgelehnt"). Dieselbe Entscheidung gilt für Tastaturfokus auf Karten.
 
 **Warum das zur bestehenden Philosophie passt, nicht nur zusätzlich dazu:** Ein
-`.help(...)`-Tooltip ist ein Standard-SwiftUI-Mechanismus, kein Custom-UI — bleibt
-unsichtbar bis zum Hover (Minimalismus: kein Dauertext, kein neues Element, keine
+Tooltip — auf dem Board das eigene Glas-Tooltip (`BoardTooltip`), an der Symbolleiste das
+native `.help(...)` — bleibt unsichtbar bis zum Hover (Minimalismus: kein Dauertext, kein neues Element, keine
 Onboarding-Fläche), ist rein statischer, in der App gebündelter Text
 (lokal/offline: keine Server-Anfrage, keine Analyse,
 welche Tipps gelesen werden), und fügt sich als natives Systemverhalten unauffällig
-in bestehende Mac-Konventionen ein (native Apple-App statt Custom-Tooling). Konkret
+in bestehende Mac-Konventionen ein (Verhalten wie ein System-Tooltip; warum das Board
+trotzdem ein eigenes zeichnet, steht in `BoardTooltip.swift`). Konkret
 angewendet z. B. am Spaltenkopf, dessen Tooltip das WIP-Limit erklärt.
 
 ### Ton der Texte
@@ -806,13 +808,197 @@ nativen Mac-App statt eines austauschbaren Tools?
   in der nativen Reminders-App hat) als kleiner Akzent/Punkt auf der Karte — verbindet das Board
   visuell mit der bestehenden, vertrauten Reminders-Farbcodierung, ganz ohne neue Konzepte.
 
+### Das Menüleisten-Panel: die Geschichte der Form (23.08.–13.09.2026)
+
+Idee 23.08.2026, entschieden 05.09.2026, gebaut ab 08.09.2026; das gebaute Verhalten steht
+in SPEC.md („Menüleiste: das Tablett" und „Anzeigen in"). Hier stehen die Richtungen, die
+verworfen wurden, und warum. Der Reiz lag ausdrücklich
+**nicht** im Zugriffsweg, sondern in der Bedienung: Was aus der Menüleiste kommt, soll
+die Geste des Boards tragen — ziehen, ablegen, einrasten — statt eine Textliste mit
+„Verschieben nach"-Untermenüs zu sein. Ein solches Untermenü wäre die Rückfallebene, und
+sie hat genau den Reiz nicht, um den es geht.
+
+**Warum der Punkt Gewicht hat:** Die Menüleiste ist der einzige Ort außerhalb des
+Fensters, an dem die App ohne Apple Developer Program präsent sein kann — das Widget,
+das diese Rolle bisher trägt („Spätere Apple-/Mac-Ausbaustufen", Gewicht gestiegen
+09.08.2026), hängt an Phase 0 aus RELEASE.md. Zur Positionierung „ruhige Fläche im
+Schreibtisch-Setup" passt sie ebenfalls: ein Board, das da ist, ohne Fläche zu belegen.
+
+**Konzept (05.09.2026) — Mockups zur Entscheidung.**
+
+Zwei Richtungen als Canvas, beide aus den echten Tokens gebaut (Mulde 14 pt, Papier
+11 pt, Kompaktzeile 38 pt, Titel 15 pt medium, Kopf 13 pt semibold sekundär):
+<https://claude.ai/code/artifact/a3b2efd4-9603-418f-9227-0b14031fc8e4>
+
+**Was für beide gilt — die Regeln, die nicht zur Wahl stehen:**
+- *Glas ist Chrome, nie Inhalt.* Das Menüleisten-Element ist eine Glasplatte
+  (`HUDGlassMaterial`, `state = .active` — dieselbe Immer-aktiv-Regel wie das Fenster),
+  darin liegen Mulden, darauf Papier. Kein Element des Boards wird neu erfunden; die
+  Karte ist die **Kompaktzeile** des Boards (38 pt — die Backlog-Zeile in den
+  Arbeitsspuren, die Erledigt-Zeile in Erledigt) — Titel, nicht Inhalt. Wer den Inhalt braucht, hat das Board. Das hält das Element
+  klein und macht es zur Ansicht *derselben* Karte, nicht zu einer zweiten Karte.
+- *Pull-Prinzip bleibt.* Ist „In Bearbeitung" leer und liegt stromaufwärts Arbeit,
+  zeigt die Mulde denselben gestrichelten Umriss („Fertigwerden beginnt hier") wie das
+  Board — dieselbe eine Einladung, nur an einem zweiten Ort; keine Karte wird
+  hervorgehoben. Ist das Fenster geschlossen (reiner Menüleisten-Betrieb), ist das
+  sogar die *einzige* Einladung — die Regel „höchstens eine" bleibt wörtlich erfüllt.
+- *WIP als Reibung.* Ein Zug über das Limit stellt dieselbe Rückfrage wie auf dem Board
+  (`Über deinem Limit` mit den beiden Knöpfen). Offen ist nur die Form im kleinen
+  Element — kein Sheet über einem Popover; eher eine Zeile in der Mulde, die den Zug
+  hält, bis geantwortet ist. Nie stilles Zulassen, nie stilles Verbot.
+- *Das Symbol in der Menüleiste ist stumm.* Ein monochromes Template-Glyph — das
+  Board, vier Spuren in einem Rahmen (gebaut mit dreien aus SF Symbols, am
+  13.09.2026 auf vier nachgezeichnet) — ohne Zahl, ohne Badge, ohne Farbe. Eine Zahl in der
+  Menüleiste ist ein Dauer-Badge, und ein Dauer-Badge ist das, was Reminders'
+  rote Zahl aus einer Aufgabenliste in eine Anklage macht. Verworfen wurde auch, das
+  Glyph bei freiem „In Bearbeitung"-Platz hohl zu zeichnen: ein Zustand, der den
+  ganzen Tag steht, bekommt keine Aufmerksamkeit (CLAUDE.md, Prinzip 2).
+- *Nur Bewegen und Öffnen.* Bewegen auf denselben drei Wegen wie eine Board-Karte
+  (Ziehen, „Verschieben nach", VoiceOver-Aktion); ein
+  Klick auf eine Karte öffnet das Board mit dieser Karte, mehr nicht. Kein
+  Bearbeiten, kein Anlegen, kein Suchen im Element. Alles, was Chrome bräuchte
+  (Suche, „+", Filter), bleibt im Fenster; das Element ist eine Hand, kein zweites
+  Werkzeug.
+- *Klang und Haptik laufen mit* (`MoveFeedback`): derselbe Zug, dieselbe Antwort.
+- *Kein neuer Schreibpfad.* Das Element ruft dieselbe `move()`-Funktion wie
+  Drag & Drop und Kontextmenü im Board — eine Regel, ein Weg, keine dritte Wahrheit.
+
+**Entschieden am 05.09.2026: Richtung A, „Das Tablett".** Begründung des Nutzers:
+näher an Kanban. In dieser ersten Fassung: ein Tablett von 660 pt Breite unter dem Symbol. Darin **drei Spuren in einer Reihe, in Board-Reihenfolge**:
+„Als Nächstes" · „In Bearbeitung" · „Erledigt" — gleich breit, gleich hoch, der Zug
+läuft von links nach rechts wie auf dem Board. Backlog bleibt dem Board; die Fußzeile
+nennt nur die Zahl und den Weg zurück („Backlog · 12", „Board öffnen"). Das Element
+zeigt genau die Strecke, auf der Kanban stattfindet — Zusage → Arbeit → fertig —, und
+sonst nichts. **Korrektur vom selben Tag:** Die erste Fassung (und das erste Mockup)
+legte Erledigt als flache Ablage *unter* die beiden Arbeitsspuren. Der Nutzer hat das
+verworfen: Damit lief der letzte Zug nach unten statt nach rechts — und die Richtung
+ist nicht Dekoration, sie *ist* die Kanban-Logik. Eine schmalere Erledigt-Spalte
+kam nicht infrage („Schmalere Ablage-Spalten", BACKLOG.md „Explizit abgelehnt"). Wer morgens aus
+dem Backlog wählt, tut das im Fenster; das ist Planung, und Planung gehört nicht in
+die Hand.
+
+**Gemessen am 08.09.2026, und die Weiche fiel:** In einem `MenuBarExtra`-Popover
+(`.menuBarExtraStyle(.window)`) *lebt* ein Zug — die Vorschau folgt dem Zeiger, das
+Popover bleibt dabei offen —, aber der Drop kommt nie an: weder `isTargeted` noch die
+Drop-Closure feuern. Derselbe synthetische Zug auf dem Board verschiebt eine Karte, die
+Messung ist also gültig. Dasselbe Popover blieb außerdem offen stehen, nachdem es das
+Board geöffnet hatte; eine API, es zu schließen, gibt es nicht. Gebaut ist deshalb der
+Rückfall: ein eigenes, nicht aktivierendes `NSPanel` unter einem `NSStatusItem` (die
+Technik der verworfenen Richtung B, in der Größe von A). Darin kommt der Drop an.
+
+**Verworfen: Richtung B, „Das Regal"** (Artboard `RegalB`, Seite „Verworfen"). Ein
+Brett über die volle Bildschirmbreite unter der Menüleiste, alle vier Spuren in
+Board-Geometrie, technisch ein eigenes `NSPanel`. Es hatte den sichereren Drag und
+die vollständige Geste — aber es ist ein zweites Board, nur flacher. Bleibt als
+Technik-Referenz für den Rückfall oben stehen, nicht als Gestaltung.
+
+**Was bewusst nicht drin ist:** Streak-Pille, Statistik, Suche, „+", Filter, ⌘Z, Löschen,
+Editor (Chrome bleibt im Fenster). Ein Menü-Modus mit Untermenüs. Eine Zahl am Symbol.
+Volle Karten mit Notizen (das wäre ein kleineres Board — das Widget-Missverständnis).
+**Neu gefasst am 11.09.2026 (Nutzer), nach dem ersten Lauf der gebauten Fassung:**
+Der Leitsatz vom 05.09. — „Tablett und Board so nah beieinander wie möglich" — hatte
+drei Mulden nebeneinander ergeben, mit Papier, Schatten, Listenstreifen und den
+Einladungssätzen des Boards. Am Bildschirm war das das ganze Board, verkleinert: zu
+schwer für den Moment, in dem man ein Menüleisten-Symbol anklickt, nämlich um *mal eben
+etwas zu erledigen*. „Fertigwerden beginnt hier" in einer 200-pt-Mulde war der
+deutlichste Fall. Neuer Leitsatz: **ein Menüleisten-Panel, das an das Board erinnert,
+aber abstrakter ist** — im Stil der Systempanels, minimalistischer als das Board, weil
+es in der Menüleiste steht. Damit fiel auch die Anordnung: **drei Abschnitte
+untereinander** in einem 340-pt-Panel statt drei Spuren nebeneinander. Das ist die
+Umkehr der Korrektur vom 05.09. oben („der Zug läuft nach rechts, nicht nach unten"),
+und sie ist bewusst: Jenes Argument galt für ein Tablett, das das Board nachbildet. In
+einem Menü ist von oben nach unten die Leserichtung, Titel bleiben lesbar statt
+abgeschnitten, und unten ist, wo Fertiges hinsinkt. **Nachtrag vom selben Tag:** Die
+Backlog-Zahl stand zuerst in der Fußzeile — am Ende eines Flusses, der dort beginnt,
+und als einzige Zahl, mit der man nichts tun konnte. Sie steht jetzt als Kopfzeile ganz
+oben; ein Klick darauf öffnet das Board. Verworfen wurden dabei zwei Alternativen: das
+Backlog aufklappbar zu machen (der Pull-Weg wäre im Panel vollständig, aber das Panel
+fängt an zu planen) und es ganz wegzulassen (das Panel schwiege darüber, woher „Als
+Nächstes" gespeist wird). Das gebaute Verhalten steht in SPEC.md („Menüleiste: das
+Tablett").
+
+**Ergänzungen, entschieden und umgesetzt am 12.09.2026 (Nutzer)** — das gebaute
+Verhalten steht in SPEC.md („Menüleiste: das Tablett" und „Anzeigen in"), hier bleibt
+nur die Entscheidung: Das Panel hat sich als Hand bewährt (Zug und
+Überblick); fünf Ergänzungen kommen dazu, alle nach dem Maßstab „was man tut, weil man
+gerade in einer anderen App steckt":
+1. **Symbole vor den Köpfen**, die die Stufe zeigen, nicht dekorieren — `tray`,
+   `circle`, `circle.lefthalf.filled`, `checkmark.circle` (seit 14.09.2026 `.fill`, SPEC.md): der Eingang, dann drei
+   Kreise, die sich füllen. Systemvokabular, monochrom, sekundär. Das Board behält seine
+   Köpfe ohne Symbole: Dort erklärt die Spalte sich über die Karten darin; das Panel
+   ist abstrakt und braucht deshalb das Zeichen. Damit ist die Zeile „keine Icons an
+   Köpfen" vom 11.09. für das Panel zurückgenommen — für das Board gilt sie weiter.
+2. **Verweildauer in „In Bearbeitung"** ab derselben Schwelle wie auf dem Board
+   (`agingThresholdDays`): das eine Signal, das beim Fertigwerden hilft.
+3. **„In Erinnerungen öffnen"** im Kontextmenü, auch für Erledigt-Zeilen (die sonst
+   keins haben).
+4. **Schnellerfassung ins Backlog** — eine Zeile unter dem Backlog-Kopf, Return legt an.
+   **Spannung, benannt:** Am 05.09. stand „kein Anlegen im Element". Das galt dem
+   Tablett als Board-Kopie, in dem Anlegen ein zweiter „+"-Knopf gewesen wäre. Für ein
+   Menüleisten-Panel ist Erfassen die natürlichste Handlung — der Gedanke kommt, während
+   man woanders arbeitet, und das Backlog ist genau der Ort dafür („Get it out of your
+   head"). Entschieden für die Erfassung; der Editor bleibt dem Board.
+5. **Globaler Kurzbefehl** zum Öffnen, in den Einstellungen setzbar, Vorgabe leer.
+**Nachtrag, 12.09.2026 (Nutzer, nach kritischer Durchsicht):** Der Backlog-Kopf ohne
+Zeilen las sich als leerer Abschnitt mit „+"; eine Zeile „Auf dem Board" darunter war
+ein Flicken, der auf das Fehlende zeigte — dreifach dieselbe Tür (Chevron, Klick,
+Zeile), und die Pull-Kette blieb unvollständig. Abgewogen: Abschnitt mit Deckel 3;
+reiner Kopf; Kopf als Ablegeziel; Falz am Kopf. Zunächst gebaut: Falz am Kopf,
+Vorgabe zu, gemerkt. **Noch am selben Tag ersetzt (Nutzer: Konsistenz zwischen Menü und
+App wiegt schwerer als eine eigene Falz):** Alle vier Abschnitte stehen offen und falten
+wie die Spalten des Boards — dieselbe Schnittregel (`BacklogFold`), dieselben Wörter,
+dieselbe zentrierte Zeile unter dem Stapel, Zustand pro Sitzung. Das Board hat die Zeile
+schon; ein zweites Ausklapp-Muster im Panel wäre ein zweites Vokabular. Aufgeklappt
+zeigt ein Abschnitt alles, und das Panel wächst nach unten mit; nur ein zu kurzer
+Bildschirm begrenzt es, dann scrollt das Panel als Ganzes (kein Abschnitt in sich). Die gemerkte Einstellung
+`trayBacklogExpanded` lebte einen Tag und ist wieder entfernt. Zurücklegen ins Backlog
+ist erlaubt.
+**Nachtrag am selben Abend, nach der Review (Nutzer):** Rechtsklick auf das Symbol öffnet
+ein Menü (Board, Einstellungen, Beenden) — nötig, weil das Panel ohne Erinnerungs-Zugriff
+nichts zeichnet und im Menüleisten-Modus sonst kein Ausweg bliebe. Der Zug aus Erledigt
+heraus ist erlaubt, weil das Panel die eine Absage, die dabei kommen kann, jetzt selbst
+sagt. Und die **Trennstriche sind zurück**: Am Nachmittag war gegen Linien und für Luft
+entschieden worden; im direkten Bildvergleich trug Luft allein nicht — zwei kurze
+Abschnitte übereinander lasen sich als ein Block, und die Systempanels ziehen die Linie.
+Die Gruppenluft wurde halbiert, das Panel bleibt gleich hoch.
+**Nach der zweiten Review (13.09.2026, Nutzer):** Das Panel hängt linksbündig wie ein
+Systemmenü statt zentriert. Als Nächstes und In Bearbeitung falten nicht mehr — der
+Nutzer hatte die Falz nur für Backlog und Erledigt verlangt, und der eigene 6er-Deckel
+ließ eine gezogene Karte verschwinden. Von 47 nachgeprüften Funden hielten 9, 9 waren
+schon behoben, 29 hielten nicht.
+**Die Messungen** (Textfeld im nicht aktivierenden Panel, Carbon-Kurzbefehl in der
+Sandbox, Hover- und Ablegeglas, Geometrie und Schrift gegen die Systemmenüs) stehen
+in CONCEPT.md („Das Menüleisten-Panel: Messungen und Herleitungen").
+**Anlage an die Systemmenüs (13.09.2026, Nutzer):** Das Panel hängt, misst und
+schreibt wie ein Systemmenü — linke Kante, Innenabstände, Zeilenschrift; die Köpfe in
+der Größe, die Apples Panels ihren Köpfen geben (13 pt, nicht die 11 pt eines
+Menü-Untertitels). Die Fälligkeit wurde von der Kapsel zum Text, mit reservierter
+Spalte pro Abschnitt, damit die Titel auf einer Flucht enden. Escape und Fokusverlust
+schließen, „Bearbeiten" steht im Kontextmenü, „Einstellungen …" im Rechtsklick-Menü
+tut, was es sagt. Verworfen im selben Zug: Titel an Wortgrenzen kürzen (BACKLOG.md, „Explizit
+abgelehnt"). Die Transparenz wurde gegen Apples Panel gemessen und blieb.
+**Fußzeile „Board öffnen" (13.09.2026, Nutzer):** Die Entscheidung vom 12.09., keinen
+eigenen Board-Knopf zu bauen, weil jede Zeile das Board öffnet, ist zurückgenommen: Im
+Menüleisten-Modus gibt es kein Fenster und kein Dock-Symbol, und wer das Board ohne
+Karte will, stand vor einem Panel ohne Weg hinein. Als erste Fußzeile über
+„Erinnerungen öffnen", mit dem App-Symbol — die eigene App vor der fremden.
+**Fußzeile „Erinnerungen öffnen" (13.09.2026, Nutzer unsicher, entschieden dafür):**
+Spannung mit Prinzip 1 — eine Zeile Dauer-Chrome mehr. Abgewogen gegen den Rechtsklick
+auf das Symbol (der Notausgang, nicht der Ort, an dem man gerade schaut) und gegen
+Weglassen (pro Zeile gibt es den Absprung, für die Liste als Ganzes gab es keinen ohne
+Umweg über das Board). Entscheidend: Jedes Systempanel endet mit genau dieser Zeile,
+und das Board trägt denselben Knopf permanent in der Toolbar — Systemvokabular, kein
+Rauschen. Am Fuß, nicht im Kopf: Wege stehen in Apples Panels unten.
+Weiterhin nicht: Statistik, Streak, Suche, Filter, Tastaturnavigation über Zeilen, ein
+Zustand am Symbol, eine Rückgängig-Zeile.
+
+
 ### Das Menüleisten-Panel: Messungen und Herleitungen (08.–13.09.2026)
 
 Die Bauform des Panels (SPEC.md, „Menüleiste: das Tablett") ist nicht gewählt, sondern
 gemessen. Die Pläne, in denen die Messungen standen, sind mit dem Merge gelöscht
-(`plans/README.md`); die Befunde, an denen Code hängt, bleiben hier. Die Geschichte der
-*Form* — Mulden, Falz, Trennstriche, was der Nutzer wann verwarf — steht in BACKLOG.md
-(„Fensterverhalten"), nicht doppelt hier.
+(CLAUDE.md, „plans/“); die Befunde, an denen Code hängt, bleiben hier. Die Geschichte der
+*Form* — Mulden, Falz, Trennstriche, was der Nutzer wann verwarf — steht im Abschnitt davor.
 
 | Datum | Messung | Ergebnis | Folge |
 |---|---|---|---|

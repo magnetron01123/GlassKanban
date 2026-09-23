@@ -15,7 +15,7 @@ ffprobe() { command ffprobe -hide_banner "$@"; }
 TAKE=${1:?take.mov}; OUT=${2:?outdir}; mkdir -p "$OUT"
 # Overridable: a pull into In Bearbeitung completes nothing, so a clip of that
 # move takes a silent file here (CHIME=/tmp/silence.wav), measured 07.09.2026.
-CHIME="${CHIME:-$(dirname "$0")/../../GlassKanban/CompletionChime.wav}"
+CHIME="${CHIME:-$(dirname "$0")/../../Sources/CompletionChime.wav}"
 FRAME=${FRAME:-native}; LOOP_XFADE=${LOOP_XFADE:-0}; CUT_A=${CUT_A:-0}
 
 # ---- MARKS (seconds in the take, decimals allowed) ---------------------------
