@@ -201,7 +201,7 @@ struct TicketEditSheet: View {
         }
         save()
         if opensRemindersOnClose {
-            store.openInReminders(cardID: card.id)
+            store.openRemindersApp()
         }
         // A ticket the "+" just made, closed without any input, is an
         // abandoned creation — the store removes it again so no untitled

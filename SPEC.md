@@ -1510,8 +1510,9 @@ Nicht-Sehen.
   eigener Speicher der App"): Sie gehört diesem Board, nicht der Aufgabe. Vorher stand
   sie als Hashtag in den Notizen und war dort immerhin lesbar — der Preis dafür war, dass
   jedes andere Programm sie ändern konnte
-- Der Deep-Link zum Bearbeiten-Popover nutzt ein undokumentiertes URL-Schema; fällt es weg,
-  öffnet sich ersatzweise die Reminders-App selbst
+- „In Erinnerungen öffnen" öffnet die Reminders-App, nicht die einzelne Aufgabe: Es gibt
+  kein dokumentiertes URL-Schema dafür (der undokumentierte Deep-Link wurde am 24.09.2026
+  für die Store-Einreichung entfernt, RELEASE.md Phase 2)
 - Ausgeschlossene Listen werden über `calendarIdentifier` gemerkt. Wird ein Konto entfernt
   und neu hinzugefügt, kann eine Liste mit neuer ID zurückkommen und wieder auf dem Board
   auftauchen — Gegenmittel ist ein Schalter in den Einstellungen
