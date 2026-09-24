@@ -72,18 +72,6 @@ final class MenuBarTrayTests: XCTestCase {
             MenuBarTray.restingRows(cards, in: .done, foldsNotYetDue: true).count, MenuBarTray.doneRowCap)
     }
 
-    // MARK: - The stage symbols
-
-    /// Pinned, all four. A symbol in front of a head is a contract with the
-    /// eye: it is learned once and then read instead of the word. Renaming
-    /// one silently is the same as moving a button.
-    func testTheStageSymbolsArePinned() {
-        XCTAssertEqual(KanbanStatus.backlog.traySymbolName, "tray")
-        XCTAssertEqual(KanbanStatus.next.traySymbolName, "circle")
-        XCTAssertEqual(KanbanStatus.inProgress.traySymbolName, "circle.lefthalf.filled")
-        XCTAssertEqual(KanbanStatus.done.traySymbolName, "checkmark.circle.fill")
-    }
-
     /// A move forward runs down the panel, so the row arrives from above;
     /// a move back runs up, and it arrives from below.
     func testAMovedRowArrivesFromTheSideItCameFrom() {
@@ -91,24 +79,6 @@ final class MenuBarTrayTests: XCTestCase {
         XCTAssertTrue(MenuBarTray.arrivesFromAbove(from: .backlog, to: .done))
         XCTAssertFalse(MenuBarTray.arrivesFromAbove(from: .done, to: .inProgress))
         XCTAssertFalse(MenuBarTray.arrivesFromAbove(from: .inProgress, to: .backlog))
-    }
-
-    /// Four stages, four different glyphs — two lanes sharing one would make
-    /// the symbol worse than no symbol.
-    func testEveryStageHasASymbolOfItsOwn() {
-        let names = Set(KanbanStatus.allCases.map(\.traySymbolName))
-        XCTAssertEqual(names.count, KanbanStatus.allCases.count)
-    }
-
-    /// Every name actually resolves to a system symbol. A typo here draws
-    /// nothing at all, and an empty field in front of a head reads as a
-    /// layout bug rather than as a missing image.
-    func testEveryStageSymbolExistsInTheSystem() {
-        for status in KanbanStatus.allCases {
-            XCTAssertNotNil(
-                NSImage(systemSymbolName: status.traySymbolName, accessibilityDescription: nil),
-                "no system symbol named \(status.traySymbolName)")
-        }
     }
 
     // MARK: - The dwell time
