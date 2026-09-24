@@ -61,7 +61,7 @@ final class TicketURLTests: XCTestCase {
     func testRejectionAndParsingAgreeOnEveryInput() {
         let inputs = [
             "example.com", "https://example.com", "Notiz mit Leerzeichen", "",
-            "   ", "münchen.de", "mailto:a@b.de", "x-apple-reminderkit://x",
+            "   ", "münchen.de", "mailto:a@b.de", "x-custom-scheme://x",
         ]
         for input in inputs {
             let stored = TicketURL.parsed(input) != nil

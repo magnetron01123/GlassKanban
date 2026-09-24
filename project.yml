@@ -106,7 +106,6 @@ targets:
       - path: Sources/TicketURL.swift
       - path: Sources/EditorKeyCommand.swift
       - path: Sources/WrappedStats.swift
-      - path: Sources/ReminderDeepLink.swift
       - path: Sources/RecurringHandoff.swift
       - path: Sources/RecurringTagRelease.swift
       - path: Sources/RecurringSeriesMatch.swift

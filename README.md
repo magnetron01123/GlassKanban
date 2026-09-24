@@ -105,11 +105,10 @@ Glass Kanban.app        der jeweils aktuelle Build, nicht in Git
 
 ## Hinweise
 
-- „In Erinnerungen öffnen" (Kontextmenü und ↗ im Karten-Editor) springt über ein
-  undokumentiertes URL-Schema der Erinnerungen-App direkt zur Aufgabe
-  (`x-apple-reminderkit://…/details`); lässt es sich nicht auflösen — etwa bei rein
-  lokalen Listen —, öffnet sich ersatzweise die Erinnerungen-App selbst. Für die
-  1.0-Einreichung wird der Deep-Link entfernt (siehe [RELEASE.md](RELEASE.md), Phase 2)
+- „In Erinnerungen öffnen" (Kontextmenü und ↗ im Karten-Editor) öffnet die
+  Erinnerungen-App, nicht die einzelne Aufgabe: Dafür gibt es kein dokumentiertes
+  URL-Schema, und der Karten-Editor deckt das Bearbeiten ab (bis 24.09.2026 sprang ein
+  undokumentierter Deep-Link direkt zur Aufgabe, siehe [RELEASE.md](RELEASE.md), Phase 2)
 - Reminders-Tags, Flags und Unteraufgaben sind über die öffentliche EventKit-API nicht
   zugänglich
 - Die Spalte ist in Reminders nicht sichtbar und gilt je Mac — der Preis dafür, dass kein

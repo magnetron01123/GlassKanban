@@ -145,7 +145,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   `ReminderWriteFailure` (erkennt ReminderKit-Fehler −3002 — das System verweigert den
   Listenwechsel — an Domain und Code, nie am Meldungstext), `TicketRename`, `EditorKeyCommand`,
   `TextSanitizer`, `BacklogTicketTargeting`, `StreakCalculator`, `WrappedStats`,
-  `ReminderDeepLink`, `CorrectionLedger` (Koexistenz mit fremden Schreibern),
+  `CorrectionLedger` (Koexistenz mit fremden Schreibern),
   `RecurringHandoff` (Undo-Zaun bei Wiederholungen), `RecurringSeriesMatch` (Durchgang
   ↔ Serie über das Anlegedatum), `RecurringTagRelease` (stille Freigabe eines
   verbrauchten Pulls), `ColumnState` (die Spalte, siehe oben),
@@ -199,7 +199,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `Tests/`, 26 Dateien mit rund 390 Tests, benannt nach der Regel
+- **Tests** — `Tests/`, 25 Dateien mit rund 380 Tests, benannt nach der Regel
   statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
   Target heißt `GlassKanbanTests`.
 
