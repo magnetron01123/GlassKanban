@@ -607,6 +607,15 @@ unsichtbar: Bis dahin versprach das Knopf-Merkmal einen Druck, der nichts tat. S
 „Neue Aufgabe" im Tablett editiert wird, ist die Zeile kein Knopf mehr, sondern gibt das
 Textfeld frei — wie die Karte beim Umbenennen.
 
+**VoiceOver liest in Sätzen und sagt nur, was die Karte zeigt** (28.09.2026). Karte,
+Tablett-Zeile und Spaltenkopf setzen ihre Beschriftung aus Bausteinen zusammen, getrennt
+durch einen Punkt statt eines Kommas oder Zeilenumbruchs — ein Umbruch ist für VoiceOver
+stumm, die Zeilen liefen ineinander. Die Fälligkeit heißt „Überfällig", „Heute fällig",
+„Morgen fällig" oder „Fällig 29. Sep." (vorher „Fällig Überfällig"). Eine erledigte Karte
+nennt kein Datum, und die Verweildauer wird nur auf Karten vorgelesen, die sie auch zeigen
+(Als Nächstes, In Bearbeitung) — sonst stünde bei jeder Backlog-Karte eine Zahl, die das
+Auge nie sieht.
+
 **Das URL-Feld benennt, was es nicht behalten kann** (10.08.2026). Steht dort etwas, das
 keine Adresse sein kann — eine Adresse enthält kein Leerzeichen, Prosa immer eines —,
 erscheint unter dem Feld „Wird nicht gesichert — eine Adresse hat keine Leerzeichen".

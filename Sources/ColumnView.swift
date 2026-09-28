@@ -379,7 +379,7 @@ struct ColumnView: View {
         // Without this a card announces its title and nothing about where it
         // is — on a board, the lane is half the meaning.
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(status.displayName), \(countHelp)")
+        .accessibilityLabel(spokenHeader)
     }
 
     // MARK: - Header
@@ -426,7 +426,7 @@ struct ColumnView: View {
                 }
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 // The over-limit signal is otherwise colour alone.
-                .accessibilityValue(countHelp)
+                .accessibilityValue(spokenCount)
         }
         .padding(EdgeInsets(top: 12, leading: Board.laneMargin, bottom: 10, trailing: Board.laneMargin))
         // The whole header band, not just the count capsule. On the capsule
@@ -468,6 +468,17 @@ struct ColumnView: View {
     /// line rather than trailing the first behind a separator.
     private var countHelp: String {
         ([countSummary] + countDetails).joined(separator: "\n")
+    }
+
+    /// The same lines for VoiceOver. A line break is silent there, so the
+    /// tooltip's lines ran together into one breathless phrase; a full stop
+    /// gives each its own pause.
+    private var spokenCount: String {
+        ([countSummary] + countDetails).joined(separator: ". ")
+    }
+
+    private var spokenHeader: String {
+        ([status.displayName, countSummary] + countDetails).joined(separator: ". ")
     }
 
     /// Every lane opens the same way, so the four read as one family.
