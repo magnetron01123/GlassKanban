@@ -12,11 +12,7 @@ die Messungen dazu stehen dort.
 
 **Ohne Account möglich**, nach dem Bewertungsraster unten absteigend:
 
-1. **App-Icon überarbeiten (16.08.2026, Reihenfolge bestätigt 05.09.2026)** — das
-   aktuelle Icon wirkt zu blass und ist im Dock schwer erkennbar. Betrifft
-   `Sources/AppIcon.icon` (Icon-Composer-Dokument; die Tinted-Variante fehlt ohnehin,
-   siehe „Spätere Apple-/Mac-Ausbaustufen"). Vor dem Store-Listing wichtig, das Icon prägt
-   die erste Kaufentscheidung mit.
+1. ~~**App-Icon überarbeiten**~~ — umgesetzt 28.09.2026, siehe SPEC.md („Design").
 2. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
    Aufwand steckt in `DesignSystem.swift`, nicht im Bedienelement.
 3. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Screenshots, Listing-Texte
@@ -385,9 +381,8 @@ nicht möglich)
   Kennzahlen abfragen.
 - **Fokus-Modi-Integration (Focus Filters)** — Board passt Filter automatisch an aktiven
   macOS-Fokus an (z. B. Arbeit vs. Privat).
-- **App-Icon: Tinted-Variante ergänzen** — Light und Dark sind umgesetzt
-  (`Sources/AppIcon.icon`, Icon-Composer-Dokument); die Tinted-Darstellung für
-  eingefärbte Docks fehlt noch als dritte Appearance.
+- ~~**App-Icon: Tinted-Variante ergänzen**~~ — umgesetzt 28.09.2026 mit dem neuen Icon,
+  siehe SPEC.md („Design").
 
 ## Statistiken / Jahresrückblick
 

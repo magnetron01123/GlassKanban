@@ -242,6 +242,14 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Textvorschlag ohne Vorher-Nachher-Gegenüberstellung ist keiner.
 - UI-Änderungen selbst per Screenshot prüfen und eigenständig nachbessern; vorher alte
   App-Instanzen aus früheren Sessions beenden.
+- **Icon-Änderungen mit `ictool` messen, und ein altes Icon im Dock ist kein Build-Fehler.**
+  `ictool` (in `Icon Composer.app/Contents/Executables/`) rendert `AppIcon.icon` so, wie
+  macOS es tut, in allen sechs Erscheinungen — ohne Build. Zeigt das Dock nach einem Build
+  weiter das alte Icon: Am 28.09.2026 kannte LaunchServices 44 Kopien der App unter
+  derselben Kennung (alte DerivedData- und Scratchpad-Builds), 40 davon gab es nicht mehr.
+  Geholfen hat, alle außer den zwei aktuellen mit `lsregister -u` abzumelden, die aktuellen
+  mit `lsregister -f` neu anzumelden, dann App beenden, `killall Dock`, App öffnen.
+  `killall Dock` allein reichte nicht.
 - **Drag & Drop lässt sich nur auf HID-Ebene synthetisch auslösen** (14.08.2026 gemessen, 05.09.2026 präzisiert: `computer_batch` mit `left_mouse_down`, mehreren `mouse_move` und `left_mouse_up` im Vordergrund läuft durch — der Hintergrund-`app_drag` hebt die Karte nur an und lässt nie los, sie bleibt bis zum App-Neustart im Schwebezustand). Die alte Beobachtung im Wortlaut: Ein per
   computer-use erzeugter Press-Move-Release wird von SwiftUIs Drag-System nicht als Zug
   angenommen — die Karte bleibt liegen, und weil das Board-Fenster sich am Hintergrund

@@ -710,6 +710,130 @@ in bestehende Mac-Konventionen ein (Verhalten wie ein System-Tooltip; warum das 
 trotzdem ein eigenes zeichnet, steht in `BoardTooltip.swift`). Konkret
 angewendet z. B. am Spaltenkopf, dessen Tooltip das WIP-Limit erklärt.
 
+### Das App-Icon: das Zeichen der Menüleiste, groß (28.09.2026)
+
+Das Icon zeigt dasselbe Zeichen wie die Menüleiste: einen Rahmen mit vier Spuren. Der
+Rahmen ist deckend, die Spuren sind durchscheinendes Glas. Anlass war das Vorgänger-Icon
+vom Juli 2026 — vier überlappende, gemalte Glasscheiben in Hellgrau auf Weiß. Es war im
+Dock zu blass, bei 32 px ein grauer Fleck, und es hatte mit dem Zeichen der Menüleiste
+nichts gemein.
+
+**Warum dieses Zeichen.** Ein Icon wird erkannt, nicht entschlüsselt. Die App hat mit dem
+Menüleisten-Symbol bereits ein Zeichen; ein zweites daneben wäre Rauschen. Dock und
+Menüleiste zeigen jetzt dasselbe.
+
+**Das Icon gegen die drei Prinzipien.**
+
+| Prinzip | Was das Icon dafür tut |
+|---|---|
+| Minimalismus | Ein Zeichen, zwei Ebenen, keine Farbe, keine Schrift. Glas ist Chrome: Die Platte ist das Fenster, ihr Glasrand kommt vom System. Der Rahmen bleibt deckend |
+| Psychologische Wirksamkeit | Das Icon trägt keinen Zustand — keine Zahl, kein Badge, keine Karte, die an Offenes erinnert. Es sieht an einem vollen Tag aus wie an einem leeren |
+| Kanban | Vier gleiche Spuren, keine ist hervorgehoben. Das Board ist leer: Der freie Platz ruft, keine Karte wird zum Favoriten |
+
+**Die Spuren sind Mulden — im Hellen.** Auf dem Board ist das Fenster helles Glas, und
+die Spalten dunkeln es ab (`Board.columnFill` ist ein schwarzer Wash). Das helle Icon
+zeigt dasselbe Verhältnis: helle Platte, ein schwarzer Wash in den Spuren.
+
+**Im Dunklen weicht das Icon vom Board ab, mit Absicht.** Das Board dunkelt seine Spalten
+auch im dunklen Erscheinungsbild ab. Das Icon hellt sie dort auf. Hier stehen zwei
+Prinzipien gegeneinander: die Entsprechung zum Board gegen das Glas, das der Name
+verspricht. Gemessen mit abdunkelnden Spuren (Schwarz 30 % und 45 %): Das Icon bleibt
+lesbar, aber die Spuren werden zu flachen dunklen Feldern, und vom Glas ist nichts mehr zu
+sehen. Aufgehellt zeigen sie den Verlauf der Scheibe. Entschieden für das Glas
+(28.09.2026); die abdunkelnde Fassung ist die Alternative, falls die Entsprechung einmal
+schwerer wiegt.
+
+**Glas auf dem Rahmen nur, wo es wie Apples Glas aussieht (28.09.2026).** Apple legt
+Glas, Lichtkanten und Schatten über die Vordergrund-Ebenen eines Icons; ein flacher
+Vordergrund ist erlaubt, aber nicht die Regel. Im dunklen Erscheinungsbild, in Tinted und
+in Clear ist der Rahmen hell, und dort gibt ihm das Glas die feine Lichtkante, die Apples
+eigene Icons tragen. Im hellen bleibt er flach (siehe „Verworfen"). Icon Composer schaltet
+das je Erscheinung (`glass-specializations`); die helle Fassung ist gemessen pixelgleich
+zur flachen.
+
+**Glas braucht etwas dahinter.** Der erste Entwurf war ganz flach auf reinweißer Platte.
+Er war klar, aber hart abgegrenzt, und vom Glas im Namen blieb nichts (Nutzer,
+28.09.2026). Auf Reinweiß gibt es nichts, durch das Glas scheinen könnte; deshalb trägt
+die Platte jetzt einen leichten Verlauf. Das Glas sitzt in einer eigenen Ebene unter dem
+Rahmen, so bleibt das Zeichen scharf.
+
+**Gemessen, nicht geschätzt.** `ictool` (in Icon Composer enthalten) rendert ein
+`.icon`-Dokument so, wie macOS es tut, in allen sechs Erscheinungen. Im Juli fehlte diese
+Messung; deshalb wurde das System-Rendering damals verworfen und das Icon als fertiges
+Bild gemalt. Ein gemaltes Bild kann das System aber nicht einfärben, darum fehlte die
+Tinted-Variante. Zwei Befunde aus der Messung:
+
+- Mit dem dunklen Rahmen der hellen Erscheinung war das Icon in Tinted und Clear fast
+  unsichtbar. Beide Ebenen tragen deshalb für `tinted` eigene Werte — dieselben wie im
+  dunklen Erscheinungsbild. Reines Weiß und eine kräftigere Scheibe standen dort zuerst
+  und strahlten neben der dunklen Fassung (Nutzer, 28.09.2026): Rahmen 255 statt 244,
+  Spuren 93 statt 76. Mit den Werten von Dunkel messen beide Fassungen fast gleich.
+- Im dunklen Erscheinungsbild verschwand der weiße Rahmen auf einer deckend weißen
+  Scheibe. Die Scheibe trägt ihre Deckkraft deshalb je Erscheinung in der Farbe.
+
+**Hell und Dunkel sind die Fassungen, Tinted und Clear folgen ihnen.** Welche Erscheinung
+im Dock steht, wählt der Nutzer systemweit; ausschalten lassen sich Tinted und Clear nicht.
+Gestaltet und am Board gemessen werden deshalb Hell und Dunkel. Tinted und Clear übernehmen
+die Werte von Dunkel und müssen nur lesbar und ruhig sein — ihre Platte färbt das System,
+sie tragen den Charakter des Boards nicht (28.09.2026).
+
+**Geometrie: ein Zeichen für Glyph und Icon.** 19 × 13 pt, Rahmen 2, Trenner 1, vier Spuren
+zu je 3, Außenecke 3, Innenecke 1. Das Glyph der Menüleiste zeichnet es so, das Icon
+mal 41 — 779 × 533 auf der 1024er-Fläche. Nur ganze Punkte: Jede Kante liegt bei 1× und
+bei 2× auf einem Pixel, ohne Sonderfassung je Bildschirm.
+
+**Der Rahmen trägt das Gewicht, die Trenner bleiben dünn.** Eine einheitliche Linie
+funktionierte in der Menüleiste nicht, gemessen auf den Monitoren des Nutzers (2560 × 1440
+bei 27", also 1×; alles am 28.09.2026):
+
+- 1 pt überall (17 × 12): eine Haarlinie, dünner als die Symbole daneben (Nutzer).
+- 1,5 pt überall: bei 1× jede Linie doppelt, ein scharfes Pixel neben einem grauen.
+- 2 pt überall, bei 1× als gerundete Fassung eines 1,5-pt-Masters: zu fett, die Spuren
+  waren mit bloßem Auge nicht mehr zu sehen, man erkannte keine Spalten (Nutzer).
+- Rahmen 2, Trenner 1, Spuren 3: Das Zeichen hat Gewicht, und die Spuren bleiben offen.
+  So hält es auch die Wirklichkeit — der Rahmen einer Tafel ist fester als die Linien,
+  die sie teilen. Im Icon werden die Spuren dadurch breiter, das Board liest sich klarer.
+
+**Die Größe auf der Platte folgt Apple.** In Icon Composer ist die 1024er-Fläche die
+Platte selbst, nicht die Fläche samt Rand. Gemessen an 24 Icons des Systems füllt deren
+Motiv meist 70–80 % der Plattenbreite (Erinnerungen 73 %, Notizen 75 %, Mail 74 %). Das
+Zeichen stand zuerst bei 64 % Breite und 46 % Höhe; oben und unten blieben breite leere
+Streifen (Nutzer). Jetzt: 76 % Breite, 52 % Höhe.
+
+Die Ecken des Icons sind stetig (Squircle) wie `Board.columnShape`; das Glyph zeichnet
+Kreisbögen, und bei 1× und 2× ergeben beide gemessen dieselben Pixel. Die beiden
+SVG-Dateien sind die Quelle; ein Generator liegt nicht im Projekt. Ändert sich das
+Glyph, ändert sich das Icon mit.
+
+Verworfen:
+
+- **Eine gefüllte Spur („In Bearbeitung").** Inhaltlich die klügere Idee — sie steht für
+  das WIP-Limit —, aber sie braucht eine Erklärung (Nutzer, 28.09.2026). Dazu wäre das
+  Icon vom Menüleisten-Glyph abgewichen, und eine hervorgehobene Spur reibt sich am
+  Pull-Prinzip.
+- **Vier massive Spuren ohne Rahmen.** Kräftigste Silhouette, liest sich aber als Balken
+  oder Heizkörper statt als Board.
+- **Eine einzelne Karte in einer Spur.** Las sich als Balkendiagramm.
+- **Höheres Format (7:6 oder 4:3).** Füllt die Platte besser, liest sich bei 7:6 aber als
+  Gitter und bei 4:3 als ein anderes Zeichen als das Glyph.
+- **Unterschiedlich lange Spalten** (vom Nutzer am 28.09.2026 ins Spiel gebracht), frei
+  hängend oder als Karten in einem Rahmen. Frei hängend liest es sich als Balkendiagramm,
+  im Rahmen als kleines, gefülltes Board — beides zeigt einen Zustand, und das Symbol ist
+  stumm (unten, „Das Menüleisten-Panel: die Geschichte der Form"). Dazu liegt es nah am
+  Zeichen von Trello.
+- **Rahmen dünn, Spuren gefüllt.** Liest sich als Batterie oder Gitter.
+- **Glas auf dem dunklen Rahmen der hellen Erscheinung**, auch in Dunkelgrau. Er bekam
+  einen hellen Saum und einen dunklen Hof um die Spuren und las sich als Gummipuffer oder
+  Metallgitter; in Grau verlor er den Kontrast. Apple selbst setzt kaum dunkles Glas auf
+  helle Platten. Auch ein Schatten unter dem Rahmen entfällt: Er änderte im Dunklen nur
+  319 von 262.144 Pixeln und hätte die helle Fassung verändert.
+- **Rahmen aus Rauchglas, Spuren als zweite Glaslage, Weißglas auf grauer Platte.** Alle
+  drei verloren im hellen Erscheinungsbild den Kontrast — der Fehler des Vorgängers.
+- **Helles Glas in den Spuren.** Leuchtender, braucht aber eine grauere Platte und kehrt
+  das Verhältnis des Boards um (dort dunkeln die Spalten ab).
+- **Das Vorgänger-Icon** samt seiner Varianten (drei Scheiben, betonte Mitte, graue
+  Platte, Akzentfarben): nachzulesen in der Git-Historie von `design/app-icon-concept.md`.
+
 ### Ton der Texte
 
 Das Board spricht wie ein Werkzeug, nicht wie ein Begleiter: knapp und sachlich. Es coacht
@@ -1019,7 +1143,7 @@ gemessen. Die Pläne, in denen die Messungen standen, sind mit dem Merge gelösc
 | 13.09.2026 | Die Fälligkeit als Kapsel im Menü | Die rote Kapsel des Boards war dreimal gestapelt das Lauteste im Panel und las sich als stehende Anklage (Prinzip 2: Aufmerksamkeit gehört Ereignissen, nicht Dauerzuständen). Menüs setzen Zusatzinfos als Text rechts (Time Machine: „Heute, 08:36"), Erinnerungen schreibt Überfälliges als roten Text. Erste Fassung nahm `overdueFill` als Textfarbe — ~2:1 auf dunklem Glas (Review); „Heute" verlor die Tönung und glich der Verweildauer. | Text statt Kapsel: Überfällig in Systemrot (`Board.overdueText`), Heute in der Textfarbe, Verweildauer sekundär. Titel neben einem Datum endeten ein Wort früher als Titel ohne — deshalb die Spalte pro Abschnitt, nach dem Vorbild der Kürzel-Spalte im `NSMenu`, für Datum *und* Verweildauer. |
 | 13.09.2026 | „Einstellungen …" im Rechtsklick-Menü | `NSApp.sendAction(Selector(("showSettingsWindow:")))` wird angenommen und ignoriert — der Eintrag tat zweimal nichts. | `openSettings` aus der SwiftUI-Umgebung des Tabletts, per Notification angestoßen. |
 | 13.09.2026 | Escape und Fokusverlust | Das Panel ist Key-Fenster, der Tastendruck kam an, nichts antwortete (Kontrolle: alter Build offen, neuer zu). Nach ⌘-Tab wäre es nicht mehr Key und Escape ginge an die andere App — ein Menü schließt dann. | Lokaler Monitor für Escape (nicht im Textfeld: dort verwirft das erste Escape den Entwurf), `didResignKey` schließt. Kontextmenü und Zug nehmen den Key-Status nicht — gemessen, beide bleiben offen. |
-| 13.09.2026 | Das Symbol in der Menüleiste: `rectangle.split.3x1` bei 4× gemessen | 19 × 14 pt Fläche, Rahmen 15 × 12 pt, 1 pt Strich, 1,5 pt Ecken, Trenner in gleichen Dritteln. Drei Spuren für ein Board mit vier Spalten lasen sich als andere App (Nutzer); ein 4x1 gibt es in SF Symbols nicht. Erster Nachbau mit Linien auf ganzen Punkten: auf dem 1×-Display zwei Pixel breite graue Schmierer. | Eigenes Template-Glyph in derselben Geometrie, ein Punkt breiter, jede Linie auf einem halben Punkt (`MenuBarTrayController.boardGlyph`). |
+| 13.09.2026 | Das Symbol in der Menüleiste: `rectangle.split.3x1` bei 4× gemessen | 19 × 14 pt Fläche, Rahmen 15 × 12 pt, 1 pt Strich, 1,5 pt Ecken, Trenner in gleichen Dritteln. Drei Spuren für ein Board mit vier Spalten lasen sich als andere App (Nutzer); ein 4x1 gibt es in SF Symbols nicht. Erster Nachbau mit Linien auf ganzen Punkten: auf dem 1×-Display zwei Pixel breite graue Schmierer. | Eigenes Template-Glyph in derselben Geometrie, ein Punkt breiter, jede Linie auf einem halben Punkt (`MenuBarTrayController.boardGlyph`). Am 28.09.2026 abgelöst: 19 × 13 pt, Rahmen 2 pt, Trenner 1 pt (oben, „Das App-Icon"). |
 | 13.09.2026 | Die Falz im Panel: Fensterhöhe und Textlage pro Frame aufgezeichnet | **Erste Form:** Zeilen auf der Board-Kurve, Fenster sofort auf die neue Höhe — Zeilen blendeten unter einem längst gesprungenen Kopf ein („heftig, viel zu lang", Nutzer). **Zweite Form:** Zeilen sofort, nur die Kante animiert (0,18 s) — „viel zu schnell", und das ganze Fenster wackelte: zwei Schreiber am Fenster (`preferredContentSize` sprang 538 → 669, die Animation kroch nach; Zuklappen 0,43 s verzögert). **Dritte Form, in Schritten gemessen:** `onGeometryChange` meldet nicht pro Frame, sondern einmal am Ende; AppKits `animator()` zeichnete den Inhalt für die Dauer 8 pt links; die ScrollView legte den Inhalt sofort in Endhöhe aus, zeigte den 16-pt-Rollbalken und rückte alles 8 pt nach links; `NSGlassEffectView` legt seine `contentView` nie aus (Inhalt hing unten, oder war unsichtbar); die Standard-Sizing-Optionen des Hosting-Views banden die Fensterhöhe per Constraint (25 Frames gesetzt, keiner angenommen); `sizeThatFits` legt die Hierarchie aus und lässt sie so (Container 10 Mrd. pt hoch); NSHostingView zentriert eine kleinere Wurzel (Kopf 7 pt tiefer mitten in der Falz). | Ein Schreiber, eine Uhr, eine Verankerung: Die Zeilen laufen auf `Board.foldAnimation`; die Kante fährt per Display-Link in ganzzahligen Frames dieselbe Bézier-Kurve (0,42/0/0,58/1), das Ziel kennt sie aus der Zeilenhöhe × gefaltete Zeilen; der Hosting-View liegt als Geschwister über dem Glas und wird vom Container bemessen; ScrollView nur bei zu kurzem Bildschirm; die SwiftUI-Wurzel bekommt die Panelhöhe ausdrücklich mit und heftet den Inhalt oben an; die Ausgangshöhe misst ein Vorschlag von Höhe 0 (ein füllender Wurzel-View antwortet auf „unendlich" mit „unendlich"). Gemessen: Kopf und Zeilen in jedem Frame an derselben Stelle, nur die Unterkante reist. |
 | 13.09.2026 | Projekt-Review, im Lauf nachgeprüft: gibt EventKit dieselbe `EKReminder`-Instanz zweimal aus? | **Nein.** `calendarItem(withIdentifier:)` zweimal hintereinander: zwei Instanzen; eine ungesicherte Titeländerung an der ersten ist weder über die zweite noch über `fetchReminders` sichtbar (Probe ohne Speichern). Drei Review-Befunde, die auf geteilten Instanzen aufbauten (Undo-Grundlage in `updateTicket`, ungesicherte Felder nach gescheitertem Speichern, Erledigt-Datum nach gescheitertem Zug), sind damit widerlegt. | Kein Code geändert. Die Kommentare in `move` und `applyCorrections`, die zwischengespeicherte Instanzen annehmen, beschreiben ein Verhalten, das so nicht gemessen wurde — die Rücksetzungen dort schaden nicht. |
 | 13.09.2026 | Aufklappen im Panel auf einem kurzen Bildschirm (Grenze auf 600 pt simuliert) | Zwei Zweige — `ScrollView` bei zu kurzem Bildschirm, bloßer Inhalt sonst — waren zwei Identitäten: Das Aufklappen kippte die Begrenzung, der Abschnitt wurde neu aufgebaut und war wieder zu, die Höhe fiel zurück, die Begrenzung kippte zurück; das Panel blieb bei 538 pt, Erledigt und Fußzeile abgeschnitten, Scrollen half nicht. | Eine Struktur immer: `ScrollView` mit `.scrollIndicators(.never)` und `.basedOnSize`. Nachgeprüft mit derselben simulierten Grenze: Das Aufklappen bleibt offen, das Panel steht bei 600 pt, Scrollen zeigt Erledigt und die Fußzeile; auf dem normalen Bildschirm Kopf und Zeilen in jedem Frame an derselben Stelle, kein Rollbalken. Nebenbefund beim Umbau: Ein Scroll-Container beantwortet die Erstmessung (Vorschlag Höhe 0) mit 0 — das Panel öffnete 10 pt hoch; die Meldung des Inhalts aus derselben Messung zählt jetzt, und nach dem Anzeigen wird einmal abgeglichen. |

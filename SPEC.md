@@ -1008,9 +1008,12 @@ kein Alert, der den Fokus nähme. Kein ⌘Z: Zurückgenommen wird ein erfasstes 
 man es auf dem Board löscht.
 
 **Das Symbol ist stumm:** ein monochromes Template-Glyph — das Board, **vier Spuren in
-einem Rahmen**, eigens gezeichnet in der Geometrie von `rectangle.split.3x1`, weil SF
-Symbols bei drei Spuren endet und drei Spuren für ein Board mit vier Spalten wie eine
-andere App lasen (13.09.2026) —, keine Zahl, kein Badge, keine Farbe. Zieht der Nutzer es mit ⌘ aus der Menüleiste, springt die Einstellung auf „Dock" —
+einem Rahmen**, eigens gezeichnet, weil SF Symbols bei drei Spuren endet und drei Spuren
+für ein Board mit vier Spalten wie eine andere App lasen (13.09.2026) —, keine Zahl, kein
+Badge, keine Farbe. Maße (28.09.2026): 19 × 13 pt, Rahmen 2 pt, Trenner 1 pt, vier Spuren
+zu je 3 pt — nur ganze Punkte, damit jede Kante bei 1× und 2× auf einem Pixel liegt. Das
+App-Icon trägt dasselbe Zeichen („Design"). Zieht der Nutzer es mit ⌘ aus der Menüleiste,
+springt die Einstellung auf „Dock" —
 ohne beides wäre die App laufend und unerreichbar. **Die Einstellung ist dabei die
 Instanz:** Sagt sie „Menüleiste", steht beim nächsten Start ein Symbol da, auch wenn macOS
 sich das frühere Herausziehen gemerkt hat (12.09.2026 — sonst blieb es für immer weg und
@@ -1508,6 +1511,23 @@ Nicht-Sehen.
   Chrome (Spaltenkopf, „+"-Button), nie auf Karten
 - **Vibe-Referenz:** „Minimal Desk Setup" — die App als ruhiges, fast gegenständliches
   Objekt auf dem Screen statt auffällige Software
+- **App-Icon (28.09.2026):** das Zeichen der Menüleiste, groß — ein Rahmen mit vier
+  gleichen, leeren Spuren, **geometrisch das Glyph mal 41** (19 × 13 pt → 779 × 533 auf
+  der 1024er-Fläche, die in Icon Composer die Platte selbst ist: 76 % ihrer Breite).
+  Gestaltet sind Hell und Dunkel; Tinted und Clear folgen Dunkel. Zwei Ebenen: oben der
+  **Rahmen**, deckend; darunter die **Scheibe**, durchscheinendes Glas in der Außenform des
+  Boards, das in den Spuren sichtbar wird. Keine Farbe, keine Karte, keine Schrift, kein
+  Zustand.
+
+  | Erscheinung | Platte | Rahmen | Spuren |
+  |---|---|---|---|
+  | Hell | fast weiß, leichter Verlauf | fast schwarz, flach | dunkeln die Platte ab (Schwarz 12 %) |
+  | Dunkel | fast schwarz, leichter Verlauf | fast weiß, Glas | hellen die Platte auf (Weiß 16 %) |
+  | Tinted, Clear | vom System | wie Dunkel; im dunklen Tinted in der Tönung des Systems | wie Dunkel |
+
+  Glasrand der Platte, Lichtkanten und den Schatten der Scheibe rechnet macOS. Quelle ist
+  `Sources/AppIcon.icon`: `Assets/frame.svg`, `Assets/pane.svg` und `icon.json` mit den
+  Farben je Erscheinung. Warum so: CONCEPT.md, „Das App-Icon"
 
 ## Bekannte Einschränkungen (Apple-Plattform-Grenzen, kein Designfehler)
 
