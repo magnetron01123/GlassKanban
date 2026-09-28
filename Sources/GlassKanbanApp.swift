@@ -75,9 +75,14 @@ final class AppearanceDelegate: NSObject, NSApplicationDelegate {
     /// answered a click with nothing at all. The window itself survives its
     /// close — measured 08.09.2026, it stays in `NSApp.windows` carrying
     /// `identifier == "board"` — so ordering it front is the whole of it.
+    ///
+    /// In the menu bar mode a launch makes no board at all, so there may be
+    /// nothing to order front. Opening the app a second time — Finder,
+    /// Spotlight, Launchpad — then answered with nothing (measured
+    /// 24.09.2026); the tray's controller can create the window.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         guard !flag else { return true }
-        Self.showBoardWindow()
+        MenuBarTrayController.shared.openBoard()
         return true
     }
 

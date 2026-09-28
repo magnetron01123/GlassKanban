@@ -583,6 +583,14 @@ BACKLOG.md, Abschnitt „Explizit abgelehnt"). Karten werden mit der Maus bewegt
 Fokusrahmen betont Karten ohne Not, ein Hover-Text ist Dauerrauschen. VoiceOver ist davon
 unberührt: Karten behalten Labels, Hints und alle Aktionen.
 
+**Was ein Klick tut, tut auch der Druck der Bedienhilfen** (28.09.2026). Jedes Element, das
+auf einen Klick reagiert und sich als Knopf ausgibt — Karte, Zeile im Tablett, „Neue
+Aufgabe", Falz-Zeile, Fußzeilen, Hinweiszeile —, trägt dieselbe Handlung als
+Standard-Aktion. Eine Tipp-Geste allein ist für VoiceOver und die Schaltersteuerung
+unsichtbar: Bis dahin versprach das Knopf-Merkmal einen Druck, der nichts tat. Solange
+„Neue Aufgabe" im Tablett editiert wird, ist die Zeile kein Knopf mehr, sondern gibt das
+Textfeld frei — wie die Karte beim Umbenennen.
+
 **Das URL-Feld benennt, was es nicht behalten kann** (10.08.2026). Steht dort etwas, das
 keine Adresse sein kann — eine Adresse enthält kein Leerzeichen, Prosa immer eines —,
 erscheint unter dem Feld „Wird nicht gesichert — eine Adresse hat keine Leerzeichen".
@@ -1039,7 +1047,9 @@ dem Nutzer (BACKLOG.md, „Was wohin gehört"), und wirkt sofort.
 
 Solange ein Menüleisten-Symbol da ist, beendet das Schließen des Boards die App **nicht** —
 sonst verschwände das Symbol mit dem Fenster, das es ersetzen soll. Ein Klick auf das
-Dock-Symbol holt das geschlossene Board zurück.
+Dock-Symbol holt das geschlossene Board zurück. Wer die laufende App erneut öffnet (Finder,
+Spotlight, Launchpad), bekommt das Board in jedem Modus — im Menüleisten-Modus legt es
+dabei erst an, weil der Start dort keins erzeugt (28.09.2026; vorher geschah nichts).
 
 **Kurzbefehl (12.09.2026).** Unter „Anzeigen in" steht ein Feld, in dem der Nutzer eine
 globale Tastenkombination aufnimmt; sie öffnet und schließt das Panel aus jeder App und
