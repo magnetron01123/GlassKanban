@@ -13,8 +13,7 @@ die Messungen dazu stehen dort.
 **Ohne Account möglich**, nach dem Bewertungsraster unten absteigend:
 
 1. ~~**App-Icon überarbeiten**~~ — umgesetzt 28.09.2026, siehe SPEC.md („Design").
-2. **Darstellungsgröße** — der letzte offene Punkt der Klasse *Produktversprechen*. Der
-   Aufwand steckt in `DesignSystem.swift`, nicht im Bedienelement.
+2. ~~**Darstellungsgröße**~~ — umgesetzt 28.09.2026, siehe SPEC.md („Design").
 3. **Phase 3 aus RELEASE.md** — Website, Datenschutzerklärung, Screenshots, Listing-Texte
    (der Demo-Datensatz ist seit 05.09.2026 da). Alles außer dem Hochladen.
 4. Die Punkte der Klasse *Nutzungsalltag*.
@@ -61,7 +60,7 @@ das, was Apple aus Massentauglichkeit nie bauen wird: Meinungsstärke.
 |---|---|---|---|---|
 | ~~Bildschirmzuordnung~~ | erfüllt | Produktversprechen | umkehrbar | **umgesetzt 14.08.2026** |
 | ~~Menüleiste „Das Tablett"~~ | erfüllt | Kaufentscheidung | umkehrbar | **umgesetzt 08.09.2026** |
-| Darstellungsgröße (unten) | erfüllt | Produktversprechen | umkehrbar | S–M |
+| ~~Darstellungsgröße~~ | erfüllt | Produktversprechen | umkehrbar | **umgesetzt 28.09.2026** |
 | Ablegen aus anderen Apps (neu, unten) | erfüllt | Kaufentscheidung | gebunden | S–M |
 | Widget „eine Karte" (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Kaufentscheidung | gebunden | L |
 | Natürlichsprachige Erfassung (neu, unten) | erfüllt | Kaufentscheidung | gebunden | M |
@@ -86,11 +85,8 @@ hierher gehört.
 
 - ~~**Bildschirmzuordnung**~~ — umgesetzt 14.08.2026, SPEC.md („Das Board bleibt auf
   seinem Bildschirm").
-- **Darstellungsgröße** — Skalierung des ganzen Boards für Leseabstände bis etwa zwei
-  Meter. Der Aufwand steckt nicht im Bedienelement, sondern darin, die Tokens in
-  `DesignSystem.swift` skalierbar zu machen; wer daran vorbei baut, zerlegt das
-  Abstandssystem. Heute löst das ein einziger fester Wert (Kartentitel 15pt statt 14,
-  siehe SPEC.md, „Design") — eine Entscheidung, die eigentlich der Nutzer treffen sollte.
+- ~~**Darstellungsgröße**~~ — umgesetzt 28.09.2026, SPEC.md („Design"); Herleitung in
+  CONCEPT.md („Die Darstellungsgröße").
 
 ### Erfassung und Eingang (09.08.2026)
 
@@ -489,7 +485,8 @@ Abweichung gilt der Code.
 | `windowPlacement` (Bildschirmzuordnung, umgesetzt 14.08.2026) | UserDefaults | lokal — Bildschirme gehören dem Rechner |
 | `columnStorageLocation`, `columnStorageLastFailure` | UserDefaults | lokal — Diagnose, keine Einstellung |
 | Fenstergeometrie | AppKit | lokal |
-| künftige Ansichts-Einstellungen (Darstellungsgröße, Fokus-Filter, Tageszeit-Palette) | — | lokal |
+| `boardScale` (Darstellungsgröße, umgesetzt 28.09.2026) | UserDefaults | lokal — der Leseabstand gehört dem Schreibtisch |
+| künftige Ansichts-Einstellungen (Fokus-Filter, Tageszeit-Palette) | — | lokal |
 
 **Warum der `CorrectionLedger` niemals synchronisiert werden darf.** Er merkt sich, welche
 Werte *dieses* Board verdrängt hat. Synchronisiert schriebe Mac A einen Wert zurück, den

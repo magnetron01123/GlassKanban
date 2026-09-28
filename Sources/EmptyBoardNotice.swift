@@ -37,11 +37,14 @@ struct EmptyBoardNotice: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
+    /// The sentence grows with the board it stands for; the glass plate
+    /// keeps the tooltip's corner, because it is chrome.
+    @Environment(\.boardScale) private var scale
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 8 * scale) {
             Text(line)
-                .font(BoardText.title)
+                .font(BoardText.title(scale))
                 // A step down from title's semibold: card-title size so the
                 // sentence carries the same weight of announcement, but
                 // lighter so it never reads as a ticket competing for
@@ -57,11 +60,11 @@ struct EmptyBoardNotice: View {
             if let action {
                 Button(action.label, action: action.perform)
                     .buttonStyle(.link)
-                    .font(BoardText.body)
+                    .font(BoardText.body(scale))
             }
         }
-        .padding(.horizontal, 26)
-        .padding(.vertical, 20)
+        .padding(.horizontal, 26 * scale)
+        .padding(.vertical, 20 * scale)
         .background { surface }
         .overlay { edge }
         .overlay { topHighlight }

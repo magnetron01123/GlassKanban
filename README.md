@@ -29,7 +29,8 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
   Bedienelement
 - **Einstellungen** in drei Reitern: *Allgemein* (Erscheinungsbild System/Hell/Dunkel,
   Start beim Anmelden, Ton beim Erledigen, Menüleiste), *Listen* (welche Listen aufs
-  Board kommen) und *Board* (**WIP-Limits**, noch nicht Fälliges einklappen)
+  Board kommen) und *Board* (**Darstellungsgröße** in drei Stufen für Leseabstände bis
+  etwa zwei Meter, **WIP-Limits**, noch nicht Fälliges einklappen)
 - **Motivation, dezent:** Streak-Flamme (🔥) mit Statistik-Fenster („Jetzt" und
   „Rückblick" — Auslastung, Durchlaufzeit-Schätzung, bester Tag, häufigste Liste)
 - **In der Menüleiste:** ein Klick auf das Symbol — oder eine frei wählbare

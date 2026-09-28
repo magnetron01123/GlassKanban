@@ -19,6 +19,7 @@ struct CardView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.boardScale) private var scale
 
     @State private var isHovered = false
     @State private var settleScale: CGFloat = 1
@@ -68,7 +69,7 @@ struct CardView: View {
         // it says the original has been lifted.
         .opacity(store.draggingCardID == card.id ? 0.4 : 1)
         .animation(reduceMotion ? nil : Board.hoverAnimation, value: store.draggingCardID)
-        .contentShape(Board.cardShape)
+        .contentShape(Board.cardShape(scale))
         // Deliberately NOT `.focusable()`. Cards must not take keyboard focus
         // — settled user decision, recorded in BACKLOG.md ("Explizit
         // abgelehnt"): cards are dragged around all day, and a board that
@@ -184,15 +185,15 @@ struct CardView: View {
     /// opposite corners so they can never be confused.
     private var fullBody: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                titleOrField(font: BoardText.title)
+            HStack(alignment: .firstTextBaseline, spacing: 8 * scale) {
+                titleOrField(font: BoardText.title(scale))
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 agingLabel
             }
-            .padding(EdgeInsets(top: 11, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
+            .padding(cardInsets(top: 11, bottom: 9))
 
             zoneDivider
 
@@ -200,14 +201,14 @@ struct CardView: View {
 
             zoneDivider
 
-            HStack(spacing: 6) {
+            HStack(spacing: 6 * scale) {
                 if let badge = fullBadge {
                     badgeView(badge)
                 }
                 if card.isRecurring {
                     repeatIcon
                 }
-                Spacer(minLength: 8)
+                Spacer(minLength: 8 * scale)
                 // Secondary — a supporting fact, like everything else in
                 // this row. It was briefly primary, to set it apart from the
                 // pale "Keine Notizen" one zone above; that separated the
@@ -221,11 +222,11 @@ struct CardView: View {
                 // this size it washes out on paper, and the list name is
                 // something you actually read.
                 Text(card.listName)
-                    .font(BoardText.meta)
+                    .font(BoardText.meta(scale))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
-            .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
+            .padding(cardInsets(top: 8, bottom: 9))
         }
         // Fixed, not a minimum: every card in a working lane is the same
         // height, whether it carries three lines of note or none. The notes
@@ -233,8 +234,8 @@ struct CardView: View {
         // footer stays pinned to the bottom edge either way.
         .frame(
             maxWidth: .infinity,
-            minHeight: Board.fullCardHeight,
-            maxHeight: Board.fullCardHeight,
+            minHeight: Board.fullCardHeight * scale,
+            maxHeight: Board.fullCardHeight * scale,
             alignment: .topLeading)
     }
 
@@ -271,11 +272,11 @@ struct CardView: View {
                     .foregroundStyle(.primary)
             }
         }
-        .font(BoardText.body)
+        .font(BoardText.body(scale))
         .lineLimit(3)
         .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
-        .padding(EdgeInsets(top: 8, leading: Board.cardInsetLeading, bottom: 8, trailing: Board.cardInsetTrailing))
+        .padding(cardInsets(top: 8, bottom: 8))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
@@ -285,8 +286,8 @@ struct CardView: View {
         Rectangle()
             .fill(Board.cardBorder(contrast))
             .frame(height: 1)
-            .padding(.leading, Board.cardInsetLeading)
-            .padding(.trailing, Board.cardInsetTrailing)
+            .padding(.leading, Board.cardInsetLeading * scale)
+            .padding(.trailing, Board.cardInsetTrailing * scale)
     }
 
     /// Dwell time, top right in the header: process state, deliberately far
@@ -294,11 +295,11 @@ struct CardView: View {
     @ViewBuilder
     private var agingLabel: some View {
         if let days = card.daysInColumn(), days >= Board.agingThresholdDays {
-            HStack(spacing: 3) {
+            HStack(spacing: 3 * scale) {
                 Image(systemName: "clock")
-                    .font(BoardText.glyph)
+                    .font(BoardText.glyph(scale))
                 Text("\(days) days")
-                    .font(BoardText.meta)
+                    .font(BoardText.meta(scale))
                     .monospacedDigit()
             }
             .foregroundStyle(.secondary)
@@ -313,8 +314,8 @@ struct CardView: View {
     /// into a working lane, which reads as the card being rearranged rather
     /// than relocated.
     private var compactBody: some View {
-        HStack(spacing: 8) {
-            titleOrField(font: BoardText.titleCompact)
+        HStack(spacing: 8 * scale) {
+            titleOrField(font: BoardText.titleCompact(scale))
                 .lineLimit(1)
             Spacer(minLength: 0)
             if let badge = compactBadge {
@@ -324,31 +325,31 @@ struct CardView: View {
                 repeatIcon
             }
         }
-        .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
+        .padding(cardInsets(top: 9, bottom: 9))
         // One height for every row in a storage lane. Intrinsic, a row with
         // a date badge came out a point taller than one without, so Backlog
         // and Erledigt never quite lined up with each other.
         .frame(
             maxWidth: .infinity,
-            minHeight: Board.compactCardHeight,
-            maxHeight: Board.compactCardHeight,
+            minHeight: Board.compactCardHeight * scale,
+            maxHeight: Board.compactCardHeight * scale,
             alignment: .leading)
     }
 
     /// Erledigt: the work is done — the name is the only thing left to say.
     private var minimalBody: some View {
-        titleOrField(font: BoardText.titleCompact)
+        titleOrField(font: BoardText.titleCompact(scale))
             .lineLimit(1)
             // The overlay sits on the text itself, before the padding and
             // the width expansion, so the line spans exactly the words —
             // a strike across the whole row would cross empty paper.
             .overlay(alignment: .leading) { strikeLine }
-            .padding(EdgeInsets(top: 9, leading: Board.cardInsetLeading, bottom: 9, trailing: Board.cardInsetTrailing))
+            .padding(cardInsets(top: 9, bottom: 9))
             // Same row height as Backlog — see `compactBody`.
             .frame(
             maxWidth: .infinity,
-            minHeight: Board.compactCardHeight,
-            maxHeight: Board.compactCardHeight,
+            minHeight: Board.compactCardHeight * scale,
+            maxHeight: Board.compactCardHeight * scale,
             alignment: .leading)
     }
 
@@ -428,13 +429,24 @@ struct CardView: View {
 
     private var displayTitle: String { CardParts.displayTitle(of: card) }
 
+    /// A card zone's text margins at the board's display size. The vertical
+    /// values are the card grid's (see `Board.compactCardHeight`) and grow
+    /// with it, so a scaled row keeps its proportions rather than its points.
+    private func cardInsets(top: CGFloat, bottom: CGFloat) -> EdgeInsets {
+        EdgeInsets(
+            top: top * scale,
+            leading: Board.cardInsetLeading * scale,
+            bottom: bottom * scale,
+            trailing: Board.cardInsetTrailing * scale)
+    }
+
     /// Shared with the menu bar tray — see `CardParts.accessibilityLabel`.
     private var accessibilityLabel: String { CardParts.accessibilityLabel(for: card) }
 
     // MARK: - Surface (sticky note)
 
     private var surface: some View {
-        Board.cardShape.fill(cardFill)
+        Board.cardShape(scale).fill(cardFill)
     }
 
     private var listStripe: some View {
@@ -455,7 +467,7 @@ struct CardView: View {
     }
 
     private var contour: some View {
-        Board.cardShape.strokeBorder(Board.cardBorder(contrast))
+        Board.cardShape(scale).strokeBorder(Board.cardBorder(contrast))
     }
 
     /// Light catching the top edge. Only in dark mode: on white paper a white
@@ -463,7 +475,7 @@ struct CardView: View {
     @ViewBuilder
     private var topHighlight: some View {
         if colorScheme == .dark {
-            Board.cardShape
+            Board.cardShape(scale)
                 .strokeBorder(
                     LinearGradient(colors: [Board.cardTopHighlight, .clear], startPoint: .top, endPoint: .center),
                     lineWidth: 1)

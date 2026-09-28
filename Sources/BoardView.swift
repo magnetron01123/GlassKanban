@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import UniformTypeIdentifiers
 
 struct BoardView: View {
@@ -11,6 +12,12 @@ struct BoardView: View {
     @State private var showStreak = false
     @State private var showFind = false
     @State private var boardSize: CGSize = .zero
+    @ObservedObject private var boardScale = BoardScaleController.shared
+    /// The visible width of the screen the window stands on — the ceiling
+    /// for the board's minimum width (see `BoardScale.fittedMinWidth`).
+    @State private var screenWidth: CGFloat?
+
+    private var scale: CGFloat { boardScale.selection.factor }
 
     var body: some View {
         // Wraps the lanes, not the window: the tooltip has to escape the
@@ -20,10 +27,15 @@ struct BoardView: View {
             board
         }
         .environment(\.boardTooltipsSuppressed, store.draggingCardID != nil)
+        // Set for the whole board, opened card included. What must keep its
+        // size — toolbar, tooltips, popovers — simply never reads it (see
+        // `BoardScale`).
+        .environment(\.boardScale, scale)
+        .background { ScreenWidthReader(width: $screenWidth) }
     }
 
     private var board: some View {
-        HStack(alignment: .top, spacing: Board.columnSpacing) {
+        HStack(alignment: .top, spacing: Board.columnSpacing * scale) {
             ForEach(KanbanStatus.allCases) { status in
                 ColumnView(status: status)
             }
@@ -62,8 +74,11 @@ struct BoardView: View {
         // Lanes flex between ticket-friendly bounds; the whole block sits
         // centered in the window like a board mounted on a wall.
         .frame(maxWidth: .infinity)
-        .padding(Board.boardPadding)
-        .frame(minWidth: Board.boardMinWidth, minHeight: 560)
+        .padding(Board.boardPadding * scale)
+        .frame(
+            minWidth: BoardScale.fittedMinWidth(
+                natural: Board.boardMinWidth(scale), available: screenWidth),
+            minHeight: Board.boardMinHeight)
         // The lanes go out of focus while a card is held up in front of them.
         // Applied to the board and not the window, so the toolbar — which is
         // chrome, not content — stays sharp and reachable.
@@ -445,5 +460,50 @@ private struct BoardBackstopDelegate: DropDelegate {
         // ghosting has to end.
         dragEnded()
         return false
+    }
+}
+
+/// Reports the visible width of the screen the window stands on, and again
+/// whenever the window moves to another screen or the displays change.
+///
+/// SwiftUI knows the window's size but not its screen, and the board's
+/// minimum width has to fit the screen: a window forced wider than its
+/// display hangs off the edge with its toolbar out of reach.
+private struct ScreenWidthReader: NSViewRepresentable {
+    @Binding var width: CGFloat?
+
+    func makeNSView(context: Context) -> ReaderView {
+        let view = ReaderView()
+        view.report = { width = $0 }
+        return view
+    }
+
+    func updateNSView(_ view: ReaderView, context: Context) {
+        view.report = { width = $0 }
+    }
+
+    final class ReaderView: NSView {
+        var report: ((CGFloat?) -> Void)?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            let center = NotificationCenter.default
+            center.removeObserver(self)
+            guard let window else { return }
+            center.addObserver(
+                self, selector: #selector(screenChanged),
+                name: NSWindow.didChangeScreenNotification, object: window)
+            center.addObserver(
+                self, selector: #selector(screenChanged),
+                name: NSApplication.didChangeScreenParametersNotification, object: nil)
+            screenChanged()
+        }
+
+        /// Deferred a turn: the notification can arrive in the middle of a
+        /// layout pass, and SwiftUI does not take state changes from there.
+        @objc private func screenChanged() {
+            let width = window?.screen?.visibleFrame.width
+            DispatchQueue.main.async { [weak self] in self?.report?(width) }
+        }
     }
 }
