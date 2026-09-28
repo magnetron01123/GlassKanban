@@ -19,28 +19,6 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
         }
     }
 
-    /// The stage as a glyph, for the menu bar panel's section heads
-    /// (SPEC.md, "Menüleiste"). The system's own task vocabulary: the tray
-    /// you put things into, then a circle that fills up as the work does —
-    /// empty, half, full. The last one is filled on purpose (14.09.2026):
-    /// with an empty ring at the end the sequence broke where it should
-    /// close, and the sequence is the one quiet hint the panel gives that
-    /// its flow runs downward.
-    ///
-    /// Only in the panel. On the board a lane explains itself through the
-    /// cards in it and through the space beside them; in a menu-sized row
-    /// there is no space to explain, so the glyph does it. Pinned by a test:
-    /// a symbol is a contract with the eye, not a value to be tidied up
-    /// later.
-    var traySymbolName: String {
-        switch self {
-        case .backlog: "tray"
-        case .next: "circle"
-        case .inProgress: "circle.lefthalf.filled"
-        case .done: "checkmark.circle.fill"
-        }
-    }
-
     /// How much a card in this lane reveals. The information gradient is the
     /// board's focus mechanism: the working lanes carry everything, the
     /// backlog carries what you need to decide, and finished work carries

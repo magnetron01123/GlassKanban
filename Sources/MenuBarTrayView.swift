@@ -434,25 +434,6 @@ private struct BacklogCaptureRow: View {
     }
 }
 
-/// The stage as a glyph, in front of a head's name.
-///
-/// Secondary like the name it belongs to, and hidden from VoiceOver: the
-/// name stands right beside it and says the same thing. The panel was
-/// legible without these and still too abstract — four rows of grey text
-/// with numbers, telling nothing apart at a glance (12.09.2026, user).
-private struct TraySymbol: View {
-    let status: KanbanStatus
-
-    var body: some View {
-        Image(systemName: status.traySymbolName)
-            // The head's own size and weight: the glyph is a word in that
-            // line, not a decoration beside it.
-            .font(BoardText.header)
-            .frame(width: Board.traySymbolSlot)
-            .accessibilityHidden(true)
-    }
-}
-
 // MARK: - One section
 
 /// A row that a move has just sent into another section, and from which
@@ -732,7 +713,6 @@ private struct TraySection: View {
     /// its limit — at rest it is plain text, which is all a head needs.
     private var header: some View {
         HStack(spacing: Board.traySymbolGap) {
-            TraySymbol(status: status)
             Text(status.displayName)
                 .lineLimit(1)
             Spacer(minLength: 0)
@@ -750,11 +730,10 @@ private struct TraySection: View {
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 .accessibilityValue(countHelp)
         }
-        // The board's own lane-head type, and the size the system's panels
-        // give their heads: Bluetooth's and Screen Mirroring's titles are 13
-        // pt bold over 13 pt rows (measured 13.09.2026). At 11 pt — an
-        // `NSMenu` section header's size — the heads read as footnotes to
-        // their rows (user, same day).
+        // A system panel's section head, measured against Wi-Fi on
+        // 23.09.2026: 13 pt semibold, secondary, no glyph in front, the
+        // detail on the right as grey as the name. Only a panel's one title
+        // ("Wi-Fi", "Bluetooth") is primary and bold; the tray has none.
         .font(BoardText.header)
         .foregroundStyle(.secondary)
         .padding(.horizontal, Board.trayRowInset)
@@ -815,8 +794,8 @@ private struct TrayRow: View {
 
     var body: some View {
         HStack(spacing: Board.traySymbolGap) {
-            // Under the head's name, not under its symbol: the row is the
-            // head's child, and the indent is what says so.
+            // Indented under the head: the row is the head's child, and the
+            // indent is what says so.
             Circle()
                 .fill(CardParts.stripeColor(of: card).opacity(card.status == .done ? 0.45 : 0.9))
                 .frame(width: Board.trayDotSize, height: Board.trayDotSize)
@@ -964,8 +943,8 @@ private struct TrayActionRow: View {
     var body: some View {
         // The heads' geometry, not the rows': the foot is a way out of the
         // panel, a line of its own rank, and Apple's panels start their
-        // footer at the text margin. The icon takes the field the stage
-        // symbols keep, so the panel has two glyph columns and no third.
+        // footer at the text margin. The icon stands at that margin, where
+        // the heads begin, so the panel has two glyph columns and no third.
         HStack(spacing: Board.traySymbolGap) {
             Group {
                 if let icon {

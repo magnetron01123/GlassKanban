@@ -96,22 +96,22 @@ enum Board {
     /// The list's colour as a dot in front of the title — the one piece of
     /// context a glance uses, in the smallest form that still reads.
     static let trayDotSize: CGFloat = 7
-    /// The field in front of a head's name, holding the stage symbol. Only
-    /// heads use it; the rows' glyphs live in their own, indented field
+    /// The field at the margin that holds an app icon in the footer rows.
+    /// Heads have no glyph (23.09.2026): the system's section heads are bare
+    /// text; the rows' glyphs live in their own, indented field
     /// (`trayRowGlyphSlot`).
     static let traySymbolSlot: CGFloat = 16
-    /// From that field to the text. Tighter than the gap between the other
-    /// parts of a row: the symbol belongs to the word beside it.
+    /// From a glyph's field to its text. Tighter than the gap between the
+    /// other parts of a row: the glyph belongs to the word beside it.
     static let traySymbolGap: CGFloat = 6
-    /// How far a row steps in under its head: exactly to where the head's
-    /// *name* begins, so the rows hang under the word, not under the symbol.
-    /// This is what makes the panel a tree rather than a list — head at the
-    /// margin, entries beneath it, the way the Finder and Reminders sidebars
-    /// do it. A first cut (12.09.2026, morning) put head and title on one x
-    /// and the panel read as seven equal lines with a glyph in front.
+    /// How far a row steps in under its head. This is what makes the panel a
+    /// tree rather than a list — head at the margin, entries beneath it, the
+    /// way the Finder and Reminders sidebars do it. A first cut (12.09.2026,
+    /// morning) put head and title on one x and the panel read as seven
+    /// equal lines with a glyph in front.
     static let trayRowIndent: CGFloat = traySymbolSlot + traySymbolGap
     /// An app icon in a menu row — the size a menu draws them (the Finder's
-    /// "Open With", Spotlight), in the heads' symbol field.
+    /// "Open With", Spotlight), in the footer's glyph field.
     static let trayAppIconSize: CGFloat = 16
     /// The field for a row's own glyph — the list's dot, the capture's plus.
     /// Narrower than the head's, because it holds smaller things and
