@@ -703,7 +703,7 @@ private struct TraySection: View {
     /// next click somewhere else.
     private func openInReminders(_ card: KanbanCard) {
         MenuBarTrayController.shared.close()
-        store.openInReminders(cardID: card.id)
+        store.openRemindersApp()
     }
 
     // MARK: - Head

@@ -582,7 +582,7 @@ struct CardView: View {
     /// deliberately leaves out. The sheet offers the same route, so both go
     /// through one implementation.
     private func openInReminders() {
-        store.openInReminders(cardID: card.id)
+        store.openRemindersApp()
     }
 
     /// Starts from the title as *stored in Reminders*, not the one on the

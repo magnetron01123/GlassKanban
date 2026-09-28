@@ -425,7 +425,7 @@ Swift-CLI gegen die echten Listen dieses Macs, 2509 Erinnerungen in 4 Listen, al
 |---|---|
 | Hat jede Erinnerung einen `calendarItemExternalIdentifier`? | **ja, 2509 von 2509** |
 | Ist er eindeutig? | **ja** — 2509 verschiedene Werte, keine Kollision, auch nicht bei den 9 wiederkehrenden |
-| Welche Form? | **nackte UUID** — nicht die von `ReminderDeepLink` als typisch beschriebene Form `x-apple-reminder://<UUID>`. Der Code deckt beide ab, die Beschreibung dort ist also unvollständig, nicht falsch |
+| Welche Form? | **nackte UUID** — nicht die Form `x-apple-reminder://<UUID>`, die der frühere Deep-Link-Resolver (`ReminderDeepLink`, entfernt 24.09.2026) als typisch beschrieb. Er deckte beide ab, die Beschreibung war also unvollständig, nicht falsch |
 | `calendarItemIdentifier` vs. `calendarItemExternalIdentifier` | **bei allen 2509 zeichengleich** |
 
 **Die letzte Zeile ist der Befund, der den Plan verkleinert:** Die Schlüssel in

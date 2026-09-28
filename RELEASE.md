@@ -106,10 +106,11 @@ Textänderung neu gemessen werden.
       Bedienungshilfen-Berechtigung verwendet.
 - [ ] Hardened Runtime **nicht** anfassen — für den MAS zählt die Sandbox (✓),
       Hardened Runtime gehört zu Notarisierung/Direktvertrieb
-- [ ] **Deep-Link entfernen:** undokumentiertes Schema
-      `x-apple-reminderkit://REMCDReminder/…` (ReminderDeepLink.swift, geöffnet in
-      RemindersStore) → für 1.0 raus, der In-App-Editor deckt Bearbeiten ab, Fallback
-      `openRemindersApp()` bleibt. Review-Risiko damit null statt „vermutlich okay".
+- [x] **Deep-Link entfernen** — erledigt 24.09.2026: `ReminderDeepLink.swift` samt Test
+      gelöscht, „In Erinnerungen öffnen" ruft überall `openRemindersApp()`; `grep -rn
+      "x-apple-reminderkit" Sources/` ist leer. Vorher: undokumentiertes Schema
+      `x-apple-reminderkit://REMCDReminder/…`, für 1.0 raus, der In-App-Editor deckt
+      Bearbeiten ab. Review-Risiko damit null statt „vermutlich okay".
       Das Systemeinstellungs-Schema (ContentView, MenuBarTrayView, SettingsView für
       die Anmeldeobjekte) bleibt (verbreitet, geringes Risiko). README-Abschnitt „Hinweise" dazu anpassen.
       **Es ist genau eine Stelle** — seit dem 14.08.2026. Bis dahin gab es eine zweite,

@@ -2112,20 +2112,14 @@ final class RemindersStore: ObservableObject {
         }
     }
 
-    /// Opens one reminder in the Reminders app, for everything the board's
-    /// own editor deliberately leaves out — recurrence, subtasks,
-    /// attachments, location alerts. Deep-links straight to it where that
-    /// resolves; local lists have no public identifier to link to (see
-    /// `ReminderDeepLink`), so those simply bring the app forward.
-    func openInReminders(cardID: String) {
-        if let url = deepLinkURL(forCardID: cardID), NSWorkspace.shared.open(url) { return }
-        openRemindersApp()
-    }
-
-    /// Opens the Reminders app — the fallback when a deep link can't resolve
-    /// a specific reminder (e.g. local, non-synced lists), and still the
-    /// place list/calendar assignment is managed since the board doesn't
-    /// offer that.
+    /// Opens the Reminders app, for everything the board's own editor
+    /// deliberately leaves out — recurrence, subtasks, attachments, location
+    /// alerts — and for list assignment, which the board doesn't offer.
+    ///
+    /// The app, not the one reminder: until 24.09.2026 this deep-linked to
+    /// the card through an undocumented Reminders URL scheme, which
+    /// resolved only for synced lists and was a review risk (RELEASE.md,
+    /// Phase 2). The in-app editor covers editing, so the link went.
     func openRemindersApp() {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.reminders") else { return }
         NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
@@ -2203,12 +2197,5 @@ final class RemindersStore: ObservableObject {
                 && !reminderCalendars.allSatisfy { excludedCalendarIDs.contains($0.calendarIdentifier) },
             hasAnyList: !reminderCalendars.isEmpty,
             hasLoaded: hasLoadedOnce)
-    }
-
-    /// URL that opens this card's reminder directly in the Reminders app,
-    /// or nil if no deep link could be resolved.
-    func deepLinkURL(forCardID id: String) -> URL? {
-        guard let reminder = eventStore.calendarItem(withIdentifier: id) as? EKReminder else { return nil }
-        return ReminderDeepLink.url(for: reminder)
     }
 }

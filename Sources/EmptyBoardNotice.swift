@@ -150,12 +150,12 @@ struct EmptyBoardNotice: View {
         // The way out is the Reminders app, where a list can actually be
         // made — not this app's settings, which would have nothing to list.
         //
-        // Through the store, not through `x-apple-reminderkit://`, which is
-        // what stood here until 14.08.2026: that is the undocumented scheme
-        // RELEASE.md removes for 1.0 (guideline 2.5.1), and this second use of
-        // it was not on that list — it would have shipped after the documented
-        // one was gone. `openRemindersApp()` does the same thing through
-        // `urlForApplication(withBundleIdentifier:)` and needs no force-unwrap.
+        // Through the store, not through the Reminders deep-link scheme,
+        // which is what stood here until 14.08.2026: that undocumented scheme
+        // was a review risk (guideline 2.5.1) and left the app on 24.09.2026;
+        // this second use of it was not on RELEASE.md's list and would have
+        // shipped after the documented one was gone. `openRemindersApp()` does
+        // the same thing through `urlForApplication(withBundleIdentifier:)`.
         case .noListsAtAll: (String(localized: "Open Reminders"), onOpenReminders)
         case .loading: nil
         }
