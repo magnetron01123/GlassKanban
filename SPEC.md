@@ -40,21 +40,37 @@ ein Fenster, das seine eigene Größe nicht kennt.
 
 Betroffen sind heute zwei Stellen:
 
-- **Die Einstellungen.** „Listen" ist so hoch, wie die Listen des Nutzers es verlangen
-  (`SettingsMetrics.listsHeight(rowCount:)`); die feste Höhe davor scrollte ab der siebten
-  Liste und stand bei zweien halb leer. „Allgemein" ist fester Inhalt mit einer gemessenen
-  Zahl. Beide gehen durch `SettingsMetrics.onScreen(_:)`, das auf die Bildschirmhöhe
-  begrenzt — nur dort scrollt die Seite dann in sich. Das Fenster hat dabei **seine eigene
-  Farbe** (`windowBackgroundColor`), nicht die des Schreibtischs dahinter: Ein Tab-Wechsel
-  ändert die Höhe, aber keinen Farbton (seit 14.09.2026; Herleitung in CONCEPT.md,
-  „Immer-aktiv").
+- **Die Einstellungen.** Jeder Reiter ist so hoch, wie sein Formular es selbst angibt
+  (`ScreenBoundedPane`); **kein Reiter trägt eine eigene Höhenzahl** (seit 28.09.2026 —
+  jede gemessene Zahl lag früher oder später daneben, zuletzt um ein bis zwei Punkte, und
+  das reichte für einen Rollbalken auf allen drei Reitern). Begrenzt wird nur durch die
+  Bildschirmhöhe (`SettingsMetrics.maxPaneHeight`) — nur dort scrollt ein Reiter in sich.
+  Das Fenster hat dabei **seine eigene Farbe** (`windowBackgroundColor`), nicht die des
+  Schreibtischs dahinter: Ein Tab-Wechsel ändert die Höhe, aber keinen Farbton (seit
+  14.09.2026; Herleitung in CONCEPT.md, „Immer-aktiv").
 - **Das Menüleisten-Panel.** Es wächst mit einem aufgeklappten Abschnitt und wird nur von
   einem zu kurzen Bildschirm begrenzt (siehe „Menüleiste: das Tablett").
 
-Die Höhen sind **gerechnet, nicht zur Laufzeit gemessen**. Messen war einmal ein
-sichtbarer Fehler: Das Fenster ging in einer Standardgröße auf und korrigierte sich erst
-danach, was als Ruckeln mit neu gezeichneter Tab-Leiste zu sehen war. Eine Höhe, die vor
-dem Erscheinen feststeht, hat nichts zu korrigieren.
+Die Höhen entstehen **im Layout, nicht nachträglich gemessen**. Nachträgliches Messen war
+einmal ein sichtbarer Fehler: Das Fenster ging in einer Standardgröße auf und korrigierte
+sich erst danach, was als Ruckeln mit neu gezeichneter Tab-Leiste zu sehen war. Eine Höhe,
+die im selben Layout-Durchgang feststeht, hat nichts zu korrigieren.
+
+### Die Einstellungen: drei Reiter (28.09.2026)
+
+**Allgemein · Listen · Board**, in dieser Reihenfolge — zuerst die App, wie in jeder
+Mac-App, dann was aufs Board kommt, dann wie Arbeit darauf fließt:
+
+| Reiter | Symbol | Inhalt |
+|---|---|---|
+| Allgemein | `gearshape` | Erscheinungsbild, Beim Anmelden starten, Ton beim Erledigen; Menüleiste (Anzeigen in, Kurzbefehl) |
+| Listen | `list.bullet` | welche Erinnerungslisten aufs Board kommen |
+| Board | `rectangle.split.3x1` | Backlog (Noch nicht Fälliges einklappen), Work-in-Progress-Limits |
+
+Das Fenster öffnet auf dem zuletzt gewählten Reiter dieses Programmlaufs, beim ersten Mal
+auf „Allgemein". **„Listen auswählen" auf dem leeren Board öffnet gezielt „Listen"**
+(`SettingsNavigation`) — früher landete der Knopf dort nur, weil „Listen" vorne stand.
+Warum so: CONCEPT.md, „Die Einstellungen: drei Reiter".
 
 ### Das Board bleibt auf seinem Bildschirm (14.08.2026)
 
@@ -1308,7 +1324,7 @@ Details:
 
 ### Schalter „Noch nicht Fälliges einklappen"
 
-In den Einstellungen unter **Backlog**; Standard **an**.
+In den Einstellungen unter **Board → Backlog**; Standard **an**.
 
 | Stellung | Der Falz klappt ein … |
 |---|---|
@@ -1344,11 +1360,12 @@ Nicht-Sehen.
 
 ## WIP-Limits
 
-- Konfigurierbar in den Einstellungen für „Als Nächstes" (Standard 5) und „In Bearbeitung"
-  (Standard 3); 0 = kein Limit
+- Konfigurierbar in den Einstellungen unter **Board** für „Als Nächstes" (Standard 5) und
+  „In Bearbeitung" (Standard 3); 0 = kein Limit
 - **Die Regel steht sichtbar unter den Steppern**, nicht mehr in einem Hover-Tipp am
   Abschnittstitel (10.08.2026): „Ist eine Spalte voll, fragt das Board vor der nächsten
-  Karte nach. 0 heißt: kein Limit." Eine Regel, die nur beim Überfahren erscheint, ist
+  Karte nach." und darunter in eigener Zeile „0 heißt: kein Limit." (28.09.2026 — im
+  Fließtext stand die „0" allein am Zeilenende). Eine Regel, die nur beim Überfahren erscheint, ist
   keine explizite Regel — und „make policies explicit" ist die eine Kanban-Zusage, die
   dieses Board in Worten einlösen muss. Die Einstellungen sind der Ort, an dem das nichts
   kostet; das Board selbst bleibt wortlos. Der ersetzte Tipp („Finish before you stack")

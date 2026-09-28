@@ -3,44 +3,9 @@ import AppKit
 import EventKit
 import ServiceManagement
 
-/// How tall a settings pane is.
-///
-/// **The rule, and it is the app's general one (12.09.2026, user):** a pane is
-/// as tall as its content — the window grows downward rather than scrolling
-/// inside itself — and it scrolls only when the screen is too short to show
-/// the whole of it. The menu bar panel follows the same rule
-/// (`MenuBarTrayController.contentHeightChanged`).
-///
-/// The heights are *computed*, not measured at runtime. Measuring was a
-/// visible bug once: the window opened at a default size and only then
-/// resized to fit, and the correction showed as a stutter with the tab bar
-/// redrawing mid-flight. A height that is known before the window appears has
-/// nothing to correct — the window opens right the first time, and switching
-/// tabs is one deterministic resize rather than a measure-then-adjust. So
-/// "Listen" derives its height from the number of rows it will draw, and
-/// "Allgemein" is fixed content with a number measured against it.
+/// Sizes of the settings window.
 enum SettingsMetrics {
     static let width: CGFloat = 420
-
-    /// One list row in a grouped form: the toggle, its colour dot and its
-    /// title. Measured, not guessed — see the note above.
-    static let listRowHeight: CGFloat = 37
-    /// Everything in the Listen pane that is not a row: the form's own
-    /// insets, the section header, the box's padding.
-    static let listsChrome: CGFloat = 64
-
-    /// The Listen pane grows with the number of lists the user actually has.
-    /// A fixed 260 pt scrolled from the seventh list on and stood half empty
-    /// with two.
-    static func listsHeight(rowCount: Int) -> CGFloat {
-        onScreen(listsChrome + CGFloat(max(rowCount, 1)) * listRowHeight)
-    }
-
-    /// Measured against the content, not guessed: the pane is a fixed height,
-    /// so a footer that grows silently loses its last line. 455 cut the WIP
-    /// rule off mid-sentence the day it stopped being a hover tip; 640 cut the
-    /// whole WIP footer off the day the shortcut row arrived.
-    static let generalHeight: CGFloat = 706
 
     /// The recorder's width, so the row keeps its shape whether it says
     /// "Kein Kurzbefehl", "Aufnahme …" or "⌥⌘K".
@@ -48,21 +13,75 @@ enum SettingsMetrics {
 
     /// Title bar and tab bar, which sit above the pane inside the same window.
     private static let windowChrome: CGFloat = 92
-    /// Never taller than the screen the window is on. Past that the pane
-    /// keeps its own scrolling — the only case in which it scrolls at all.
-    static func onScreen(_ height: CGFloat) -> CGFloat {
-        let available = (NSScreen.main?.visibleFrame.height ?? 900) - windowChrome
-        return min(height, max(240, available))
+    /// The tallest a pane may be: what the screen the window is on leaves.
+    static var maxPaneHeight: CGFloat {
+        max(240, (NSScreen.main?.visibleFrame.height ?? 900) - windowChrome)
     }
 }
 
+/// How tall a settings pane is: exactly as tall as its form says it is.
+///
+/// **The rule, and it is the app's general one (12.09.2026, user):** a pane is
+/// as tall as its content — the window grows downward rather than scrolling
+/// inside itself — and it scrolls only when the screen is too short to show
+/// the whole of it. The menu bar panel follows the same rule
+/// (`MenuBarTrayController.contentHeightChanged`).
+///
+/// **No pane carries a height of its own (28.09.2026).** Until then every pane
+/// had a number measured against its content, and every number went wrong
+/// sooner or later: 455 cut the WIP rule off mid-sentence, 640 the whole WIP
+/// footer, and on 28.09.2026 all three panes stood one or two points short of
+/// the form's own bottom inset — enough to put a scroll bar on every one of
+/// them (user: "mega nervig"). A longer footer or a translation moves the
+/// number again. So the form is asked for its ideal height, in the same
+/// layout pass — not measured after it appears, which was the stutter of
+/// July 2026 — and the screen is the only thing that may cut it shorter.
+struct ScreenBoundedPane: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let pane = subviews.first else { return .zero }
+        let ideal = pane.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil))
+        return CGSize(width: proposal.width ?? ideal.width, height: min(ideal.height, SettingsMetrics.maxPaneHeight))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        // Offered exactly the bounds: the whole form where it fits, and a
+        // shorter frame — in which the form scrolls — only where it does not.
+        subviews.first?.place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
+    }
+}
+
+/// The settings window's panes, in the order a Mac app lists them: the app
+/// first, then what feeds the board, then how work flows on it (28.09.2026).
+enum SettingsPane: Hashable {
+    case general, lists, board
+}
+
+/// Which pane the settings window shows. Shared, so a way in from elsewhere
+/// can open the pane it is about: the empty board's "Choose Lists" landed on
+/// the lists only because they used to be the first tab.
+@MainActor
+final class SettingsNavigation: ObservableObject {
+    static let shared = SettingsNavigation()
+    @Published var pane: SettingsPane = .general
+}
+
 struct SettingsView: View {
+    @ObservedObject private var navigation = SettingsNavigation.shared
+
     var body: some View {
-        TabView {
-            ListsSettingsView()
-                .tabItem { Label("Lists", systemImage: "list.bullet") }
-            GeneralSettingsView()
+        TabView(selection: $navigation.pane) {
+            ScreenBoundedPane { GeneralSettingsView() }
                 .tabItem { Label("General", systemImage: "gearshape") }
+                .tag(SettingsPane.general)
+            ScreenBoundedPane { ListsSettingsView() }
+                .tabItem { Label("Lists", systemImage: "list.bullet") }
+                .tag(SettingsPane.lists)
+            ScreenBoundedPane { BoardSettingsView() }
+                // A system symbol like its two neighbours, not the menu bar
+                // glyph: drawn for 1× pixels, that one stood heavier than the
+                // gear and the list beside it (28.09.2026, user).
+                .tabItem { Label("Board", systemImage: "rectangle.split.3x1") }
+                .tag(SettingsPane.board)
         }
         .frame(width: SettingsMetrics.width)
         // Its own colour, not the desktop's. SwiftUI tints a settings window
@@ -114,14 +133,6 @@ struct ListsSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(height: SettingsMetrics.listsHeight(rowCount: visibleRowCount))
-    }
-
-    /// What the pane will actually draw: one row per list, or the single line
-    /// that stands in for them when there is no access and nothing to show.
-    private var visibleRowCount: Int {
-        if store.accessState == .denied || store.reminderCalendars.isEmpty { return 2 }
-        return store.reminderCalendars.count
     }
 
     private func inclusionBinding(for calendar: EKCalendar) -> Binding<Bool> {
@@ -155,8 +166,6 @@ struct GeneralSettingsView: View {
     /// Distinguishes the user flipping the switch from us loading its state,
     /// so syncing never re-registers the login item as a side effect.
     @State private var isSyncingLaunchAtLogin = false
-
-    private static let maxWIPLimit = 20
 
     var body: some View {
         Form {
@@ -267,7 +276,33 @@ struct GeneralSettingsView: View {
                 // with that app (measured 12.09.2026).
                 Text("The menu bar shows Backlog, Next Up, In Progress and Done. Without a Dock icon the app keeps running while the board is closed. The shortcut opens and closes the panel from any app; one that another app already uses stays with that app.")
             }
+        }
+        .formStyle(.grouped)
+        .onReceive(NotificationCenter.default.publisher(
+            for: NSApplication.didBecomeActiveNotification)) { _ in
+            syncLaunchAtLogin()
+        }
+    }
 
+    /// Pulls the real login-item state into the toggle without that write
+    /// being mistaken for a user action (see `isSyncingLaunchAtLogin`).
+    private func syncLaunchAtLogin() {
+        isSyncingLaunchAtLogin = true
+        launchAtLogin = SMAppService.mainApp.status == .enabled
+        isSyncingLaunchAtLogin = false
+    }
+}
+
+/// The board's own rules: what rests behind the Backlog's fold, and how much
+/// work may be started at once. Apart from the app's settings so the one
+/// rule Kanban asks to make explicit is found where the board is.
+struct BoardSettingsView: View {
+    @EnvironmentObject private var store: RemindersStore
+
+    private static let maxWIPLimit = 20
+
+    var body: some View {
+        Form {
             // Where workflows differ most. Backlog is the pool of options the
             // board could pull *now*, which is why this ships on — but "now"
             // is a judgement some people would rather make themselves, with
@@ -312,23 +347,17 @@ struct GeneralSettingsView: View {
                 // Says what happens and what 0 means, and stops there. The
                 // tip it replaces ("Finish before you stack") was a maxim;
                 // this board's chrome names things, it does not coach.
-                Text("When a lane is full, the board asks before another card goes in. 0 means no limit.")
+                //
+                // Two lines, not one sentence after the other: run on, the
+                // wrap left the "0" alone at the end of a line and its meaning
+                // on the next (28.09.2026, user).
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("When a lane is full, the board asks before another card goes in.")
+                    Text("0 means no limit.")
+                }
             }
         }
         .formStyle(.grouped)
-        .frame(height: SettingsMetrics.onScreen(SettingsMetrics.generalHeight))
-        .onReceive(NotificationCenter.default.publisher(
-            for: NSApplication.didBecomeActiveNotification)) { _ in
-            syncLaunchAtLogin()
-        }
-    }
-
-    /// Pulls the real login-item state into the toggle without that write
-    /// being mistaken for a user action (see `isSyncingLaunchAtLogin`).
-    private func syncLaunchAtLogin() {
-        isSyncingLaunchAtLogin = true
-        launchAtLogin = SMAppService.mainApp.status == .enabled
-        isSyncingLaunchAtLogin = false
     }
 
     private func limitBinding(for status: KanbanStatus) -> Binding<Int> {

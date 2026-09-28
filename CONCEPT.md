@@ -841,6 +841,45 @@ Verworfen:
 - **Das Vorgänger-Icon** samt seiner Varianten (drei Scheiben, betonte Mitte, graue
   Platte, Akzentfarben): nachzulesen in der Git-Historie von `design/app-icon-concept.md`.
 
+### Die Einstellungen: drei Reiter (28.09.2026)
+
+Bis zum 28.09.2026 hatte das Fenster zwei Reiter, „Listen" vor „Allgemein". Der Nutzer
+fand die Folge nur teilweise logisch: Erst schließt man aus, dann wird konfiguriert —
+aber in jeder Mac-App steht „Allgemein" vorn. Dazu lagen in „Allgemein" zwei Arten von
+Einstellung gemischt: solche für die App (Erscheinungsbild, Anmelden, Ton, Menüleiste)
+und die Regeln des Boards (Backlog-Falz, WIP-Limits).
+
+Jetzt **Allgemein · Listen · Board**:
+
+- **Minimalismus:** Drei Reiter sind nicht kleinteilig — Kalender hat vier, Mail acht —,
+  und jeder hat eine Frage: Wie verhält sich die App? Was kommt aufs Board? Wie fließt
+  Arbeit darauf? Wer eine Einstellung sucht, muss nur wissen, zu welcher Frage sie gehört.
+- **Kanban:** Die WIP-Limits sind die Regel, die das Board ausdrücklich machen muss („make
+  policies explicit"). Unter „Board" steht sie dort, wo man sie sucht, statt zwischen Ton
+  und Anmeldeobjekten. Die Reihenfolge Listen → Board ist die des Flusses: erst was
+  hineinkommt, dann wie es läuft.
+- **Symbole:** drei Symbole aus SF Symbols. Das Glyph der Menüleiste stand im Reiter
+  zuerst, war aber für 1×-Pixel gezeichnet und stand schwerer als Zahnrad und Liste
+  daneben (Nutzer). `rectangle.split.3x1` hat deren Strich und zeigt Spalten.
+- **Name:** „Board", nicht „Kanban" — der Reiter heißt nach dem Gegenstand, den er
+  einstellt, wie „Listen", und die App sagt überall „Board". Kanban ist die Methode.
+
+Verworfen:
+
+- **„Listen" mit den Board-Regeln in einem Reiter.** „Listen" wächst mit der Zahl der
+  Listen des Nutzers und hätte die WIP-Limits nach unten geschoben.
+- **Nur die Reihenfolge tauschen.** Hätte die Mischung in „Allgemein" gelassen.
+
+**Kein Reiter trägt eine eigene Höhe.** Jede gemessene Höhenzahl lag früher oder später
+daneben: 455 schnitt die WIP-Regel ab, 640 den ganzen Fuß, und am 28.09.2026 standen alle
+drei Reiter ein bis zwei Punkte unter dem unteren Innenabstand des Formulars — genug für
+einen Rollbalken auf jedem (Nutzer: „mega nervig und überflüssig"). Jeder längere
+Fußtext und jede Übersetzung hätte die Zahl wieder verschoben. Die Regel ist deshalb eine
+Konstruktion, keine Zahl: `ScreenBoundedPane` fragt das Formular im selben
+Layout-Durchgang nach seiner Wunschhöhe und begrenzt sie nur durch den Bildschirm.
+Gemessen danach: 454, 375 und 435 pt Fensterhöhe, kein Rollbalken. Nachträglich zu messen
+(nach dem Erscheinen) bleibt ausgeschlossen — das war das Ruckeln vom Juli 2026.
+
 ### Ton der Texte
 
 Das Board spricht wie ein Werkzeug, nicht wie ein Begleiter: knapp und sachlich. Es coacht
@@ -855,7 +894,7 @@ aus den drei bestehenden ab:
 - **Kanban** → Regeln werden beim Namen genannt. Ein überschrittenes Limit zu benennen ist
   keine Rüge, sondern „make policies explicit".
 
-**Sieben Fragen an jeden neuen oder geänderten Satz:**
+**Acht Fragen an jeden neuen oder geänderten Satz:**
 
 1. Benennt er den Zustand — oder kommentiert er ihn?
 2. Ist er kürzer als das, was er ersetzt? Wenn nicht: Was trägt die Mehrlänge?
@@ -887,6 +926,13 @@ aus den drei bestehenden ab:
    gehört das Trennzeichen in die Zusammensetzung, nicht in den Baustein — `joined` mit
    `". "` statt eines Punktes im Text. Sonst hängt die Lesbarkeit der einen Stelle am
    Satzzeichen der anderen, und der letzte Baustein trägt am Ende doch wieder einen Punkt.
+8. **Wie bricht er um?** Geprüft wird der Satz in seiner echten Breite, auf dem Bildschirm,
+   in beiden Sprachen — nicht im Katalog. Kein Umbruch trennt eine Zahl, ein Zeichen oder
+   ein einzelnes Wort von dem, was es bedeutet. Am 28.09.2026 stand unter den WIP-Limits
+   „… vor der nächsten Karte nach. 0" am Zeilenende und „heißt: kein Limit." darunter
+   (Nutzer). Zwei eigenständige Aussagen stehen deshalb in zwei Zeilen, statt dass die
+   zweite hinter der ersten anläuft. Ein Umbruch lässt sich nicht erzwingen, wohl aber,
+   wo eine Zeile beginnt.
 
 **Gültige Muster, alle aus der App:**
 
