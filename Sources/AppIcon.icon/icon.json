@@ -1,36 +1,104 @@
 {
-  "fill" : {
-    "solid" : "display-p3:1.00000,1.00000,1.00000,1.00000"
-  },
+  "fill-specializations" : [
+    {
+      "value" : {
+        "automatic-gradient" : "display-p3:0.94000,0.94000,0.94000,1.00000"
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "automatic-gradient" : "display-p3:0.16000,0.16000,0.16000,1.00000"
+      }
+    }
+  ],
   "groups" : [
     {
       "layers" : [
         {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:0.11000,0.11000,0.11000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.96000,0.96000,0.96000,1.00000"
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "solid" : "display-p3:0.96000,0.96000,0.96000,1.00000"
+              }
+            }
+          ],
           "glass-specializations" : [
             {
               "value" : false
-            }
-          ],
-          "image-name" : "icon-light.png",
-          "image-name-specializations" : [
+            },
             {
               "appearance" : "dark",
-              "value" : "icon-dark.png"
+              "value" : true
+            },
+            {
+              "appearance" : "tinted",
+              "value" : true
             }
           ],
-          "name" : "Icon"
+          "image-name" : "frame.svg",
+          "name" : "frame"
         }
       ],
-      "lighting" : "individual",
-      "name" : "Icon",
+      "name" : "Frame",
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.0
       },
-      "specular" : false,
+      "specular" : true,
       "translucency" : {
         "enabled" : false,
         "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:0.00000,0.00000,0.00000,0.12000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.16000"
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "solid" : "display-p3:1.00000,1.00000,1.00000,0.16000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "pane.svg",
+          "name" : "pane"
+        }
+      ],
+      "name" : "Pane",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.3
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.6
       }
     }
   ],

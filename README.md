@@ -27,9 +27,9 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
   Erledigt-Status. Die Spalte selbst wird am Mac gezogen, an dem das Board läuft
 - **Finden** (⌘F): Suche sowie Filter nach Dringlichkeit, Fälligkeit und Liste in einem
   Bedienelement
-- **Einstellungen:** welche Listen aufs Board kommen, **WIP-Limits**, Erscheinungsbild
-  (System/Hell/Dunkel), Start beim Anmelden, Ton beim Erledigen, noch nicht Fälliges
-  einklappen
+- **Einstellungen** in drei Reitern: *Allgemein* (Erscheinungsbild System/Hell/Dunkel,
+  Start beim Anmelden, Ton beim Erledigen, Menüleiste), *Listen* (welche Listen aufs
+  Board kommen) und *Board* (**WIP-Limits**, noch nicht Fälliges einklappen)
 - **Motivation, dezent:** Streak-Flamme (🔥) mit Statistik-Fenster („Jetzt" und
   „Rückblick" — Auslastung, Durchlaufzeit-Schätzung, bester Tag, häufigste Liste)
 - **In der Menüleiste:** ein Klick auf das Symbol — oder eine frei wählbare

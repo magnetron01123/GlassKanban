@@ -38,12 +38,12 @@ struct MenuBarTrayView: View {
     /// section that happened to offer a "+".
     static let lanes: [KanbanStatus] = KanbanStatus.allCases
 
-    /// Reminders' own icon, as installed — read once; the app does not change
-    /// while the panel is open. `nil` only where Reminders is missing, and
-    /// then the row still reads.
     /// This app's own icon, for the row that leads to its board.
     static let boardIcon: NSImage? = NSApp.applicationIconImage
 
+    /// Reminders' own icon, as installed — read once; the app does not change
+    /// while the panel is open. `nil` only where Reminders is missing, and
+    /// then the row still reads.
     static let remindersIcon: NSImage? = {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.reminders")
         else { return nil }

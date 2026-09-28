@@ -552,24 +552,29 @@ final class MenuBarTrayController: NSObject {
     /// The item's glyph: the board — four lanes in one frame. Drawn here
     /// because SF Symbols stops at `rectangle.split.3x1`, and three lanes
     /// for a four-column board read as a different app (13.09.2026, user).
-    /// The geometry is the symbol's own, measured at 4× (13.09.2026): a
-    /// 19 × 14 pt canvas, a 1 pt stroke, 1.5 pt corners, dividers at equal
-    /// parts. One point wider than the symbol's 15 × 12 frame so that four
-    /// lanes keep whole-point widths and every line sits on a half-point —
-    /// on a 1× display that is the difference between a crisp line and a
-    /// grey smear two pixels wide (seen on the first draw).
+    ///
+    /// 19 × 13 pt: a 2 pt frame, 1 pt dividers, four 3 pt lanes (28.09.2026).
+    /// The frame carries the weight so the dividers can stay thin and the
+    /// lanes open — one weight for both was either a hairline (1 pt) or a
+    /// block with no visible lanes (2 pt). Whole points only, so every edge
+    /// sits on a pixel at 1× and at 2×. The fill is even-odd: frame, dividers
+    /// and lanes come out of one outline. The app icon is this glyph at 41×
+    /// (`AppIcon.icon/Assets`, CONCEPT.md, "Das App-Icon"): change one,
+    /// change the other.
     static let boardGlyph: NSImage = {
-        let image = NSImage(size: NSSize(width: 19, height: 14), flipped: false) { _ in
-            let frame = NSRect(x: 1.5, y: 1.5, width: 16, height: 11)
-            let path = NSBezierPath(roundedRect: frame, xRadius: 1.5, yRadius: 1.5)
-            for lane in 1...3 {
-                let x = frame.minX + frame.width * CGFloat(lane) / 4
-                path.move(to: NSPoint(x: x, y: frame.minY))
-                path.line(to: NSPoint(x: x, y: frame.maxY))
+        let image = NSImage(size: NSSize(width: 21, height: 15), flipped: false) { _ in
+            let (frame, divider, lane, corner): (CGFloat, CGFloat, CGFloat, CGFloat) = (2, 1, 3, 3)
+            let outer = NSRect(x: 1, y: 1, width: 2 * frame + 3 * divider + 4 * lane, height: 13)
+            let inner = outer.insetBy(dx: frame, dy: frame)
+            let path = NSBezierPath(roundedRect: outer, xRadius: corner, yRadius: corner)
+            path.append(NSBezierPath(roundedRect: inner, xRadius: corner - frame, yRadius: corner - frame))
+            for index in 1...3 {
+                let x = inner.minX + CGFloat(index) * lane + CGFloat(index - 1) * divider
+                path.append(NSBezierPath(rect: NSRect(x: x, y: inner.minY, width: divider, height: inner.height)))
             }
-            path.lineWidth = 1
-            NSColor.black.setStroke()
-            path.stroke()
+            path.windingRule = .evenOdd
+            NSColor.black.setFill()
+            path.fill()
             return true
         }
         image.isTemplate = true

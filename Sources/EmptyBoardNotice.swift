@@ -146,7 +146,10 @@ struct EmptyBoardNotice: View {
         switch emptiness {
         case .nothingToDo: nil
         case .filteredAway: (String(localized: "Reset Filters"), onReset)
-        case .noListsSelected: (String(localized: "Choose Lists"), { openSettings() })
+        case .noListsSelected: (String(localized: "Choose Lists"), {
+            SettingsNavigation.shared.pane = .lists
+            openSettings()
+        })
         // The way out is the Reminders app, where a list can actually be
         // made — not this app's settings, which would have nothing to list.
         //

@@ -40,21 +40,37 @@ ein Fenster, das seine eigene Größe nicht kennt.
 
 Betroffen sind heute zwei Stellen:
 
-- **Die Einstellungen.** „Listen" ist so hoch, wie die Listen des Nutzers es verlangen
-  (`SettingsMetrics.listsHeight(rowCount:)`); die feste Höhe davor scrollte ab der siebten
-  Liste und stand bei zweien halb leer. „Allgemein" ist fester Inhalt mit einer gemessenen
-  Zahl. Beide gehen durch `SettingsMetrics.onScreen(_:)`, das auf die Bildschirmhöhe
-  begrenzt — nur dort scrollt die Seite dann in sich. Das Fenster hat dabei **seine eigene
-  Farbe** (`windowBackgroundColor`), nicht die des Schreibtischs dahinter: Ein Tab-Wechsel
-  ändert die Höhe, aber keinen Farbton (seit 14.09.2026; Herleitung in CONCEPT.md,
-  „Immer-aktiv").
+- **Die Einstellungen.** Jeder Reiter ist so hoch, wie sein Formular es selbst angibt
+  (`ScreenBoundedPane`); **kein Reiter trägt eine eigene Höhenzahl** (seit 28.09.2026 —
+  jede gemessene Zahl lag früher oder später daneben, zuletzt um ein bis zwei Punkte, und
+  das reichte für einen Rollbalken auf allen drei Reitern). Begrenzt wird nur durch die
+  Bildschirmhöhe (`SettingsMetrics.maxPaneHeight`) — nur dort scrollt ein Reiter in sich.
+  Das Fenster hat dabei **seine eigene Farbe** (`windowBackgroundColor`), nicht die des
+  Schreibtischs dahinter: Ein Tab-Wechsel ändert die Höhe, aber keinen Farbton (seit
+  14.09.2026; Herleitung in CONCEPT.md, „Immer-aktiv").
 - **Das Menüleisten-Panel.** Es wächst mit einem aufgeklappten Abschnitt und wird nur von
   einem zu kurzen Bildschirm begrenzt (siehe „Menüleiste: das Tablett").
 
-Die Höhen sind **gerechnet, nicht zur Laufzeit gemessen**. Messen war einmal ein
-sichtbarer Fehler: Das Fenster ging in einer Standardgröße auf und korrigierte sich erst
-danach, was als Ruckeln mit neu gezeichneter Tab-Leiste zu sehen war. Eine Höhe, die vor
-dem Erscheinen feststeht, hat nichts zu korrigieren.
+Die Höhen entstehen **im Layout, nicht nachträglich gemessen**. Nachträgliches Messen war
+einmal ein sichtbarer Fehler: Das Fenster ging in einer Standardgröße auf und korrigierte
+sich erst danach, was als Ruckeln mit neu gezeichneter Tab-Leiste zu sehen war. Eine Höhe,
+die im selben Layout-Durchgang feststeht, hat nichts zu korrigieren.
+
+### Die Einstellungen: drei Reiter (28.09.2026)
+
+**Allgemein · Listen · Board**, in dieser Reihenfolge — zuerst die App, wie in jeder
+Mac-App, dann was aufs Board kommt, dann wie Arbeit darauf fließt:
+
+| Reiter | Symbol | Inhalt |
+|---|---|---|
+| Allgemein | `gearshape` | Erscheinungsbild, Beim Anmelden starten, Ton beim Erledigen; Menüleiste (Anzeigen in, Kurzbefehl) |
+| Listen | `list.bullet` | welche Erinnerungslisten aufs Board kommen |
+| Board | `rectangle.split.3x1` | Backlog (Noch nicht Fälliges einklappen), Work-in-Progress-Limits |
+
+Das Fenster öffnet auf dem zuletzt gewählten Reiter dieses Programmlaufs, beim ersten Mal
+auf „Allgemein". **„Listen auswählen" auf dem leeren Board öffnet gezielt „Listen"**
+(`SettingsNavigation`) — früher landete der Knopf dort nur, weil „Listen" vorne stand.
+Warum so: CONCEPT.md, „Die Einstellungen: drei Reiter".
 
 ### Das Board bleibt auf seinem Bildschirm (14.08.2026)
 
@@ -968,7 +984,8 @@ ein Schnappschuss der Zeile zeigte nur den Punkt, weil vibranter Text außerhalb
 unsichtbar rendert. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte; „Board
 öffnen" im Fuß öffnet es ohne Karte (siehe unten).
 **Der Fuß des Panels, wie Apples Panels enden:** eine Haarlinie, darunter zuerst **„Board
-öffnen"** mit dem App-Symbol von Glass Kanban (13.09.2026, Nutzer: im Menüleisten-Modus ist
+öffnen"** mit dem App-Symbol von Glass Kanban — zur Laufzeit von der App selbst gelesen
+(`NSApp.applicationIconImage`), keine eigene Kopie, folgt also jedem neuen Icon (13.09.2026, Nutzer: im Menüleisten-Modus ist
 das Panel das Einzige auf dem Bildschirm, und wer das Board und keine Karte will, hatte
 keine Zeile dafür — der Weg zur eigenen App steht über dem zur fremden; damit ist die
 Regel „kein eigener Board-öffnen-Knopf" vom 12.09. zurückgenommen), dann „Erinnerungen
@@ -1008,9 +1025,12 @@ kein Alert, der den Fokus nähme. Kein ⌘Z: Zurückgenommen wird ein erfasstes 
 man es auf dem Board löscht.
 
 **Das Symbol ist stumm:** ein monochromes Template-Glyph — das Board, **vier Spuren in
-einem Rahmen**, eigens gezeichnet in der Geometrie von `rectangle.split.3x1`, weil SF
-Symbols bei drei Spuren endet und drei Spuren für ein Board mit vier Spalten wie eine
-andere App lasen (13.09.2026) —, keine Zahl, kein Badge, keine Farbe. Zieht der Nutzer es mit ⌘ aus der Menüleiste, springt die Einstellung auf „Dock" —
+einem Rahmen**, eigens gezeichnet, weil SF Symbols bei drei Spuren endet und drei Spuren
+für ein Board mit vier Spalten wie eine andere App lasen (13.09.2026) —, keine Zahl, kein
+Badge, keine Farbe. Maße (28.09.2026): 19 × 13 pt, Rahmen 2 pt, Trenner 1 pt, vier Spuren
+zu je 3 pt — nur ganze Punkte, damit jede Kante bei 1× und 2× auf einem Pixel liegt. Das
+App-Icon trägt dasselbe Zeichen („Design"). Zieht der Nutzer es mit ⌘ aus der Menüleiste,
+springt die Einstellung auf „Dock" —
 ohne beides wäre die App laufend und unerreichbar. **Die Einstellung ist dabei die
 Instanz:** Sagt sie „Menüleiste", steht beim nächsten Start ein Symbol da, auch wenn macOS
 sich das frühere Herausziehen gemerkt hat (12.09.2026 — sonst blieb es für immer weg und
@@ -1304,7 +1324,7 @@ Details:
 
 ### Schalter „Noch nicht Fälliges einklappen"
 
-In den Einstellungen unter **Backlog**; Standard **an**.
+In den Einstellungen unter **Board → Backlog**; Standard **an**.
 
 | Stellung | Der Falz klappt ein … |
 |---|---|
@@ -1340,11 +1360,12 @@ Nicht-Sehen.
 
 ## WIP-Limits
 
-- Konfigurierbar in den Einstellungen für „Als Nächstes" (Standard 5) und „In Bearbeitung"
-  (Standard 3); 0 = kein Limit
+- Konfigurierbar in den Einstellungen unter **Board** für „Als Nächstes" (Standard 5) und
+  „In Bearbeitung" (Standard 3); 0 = kein Limit
 - **Die Regel steht sichtbar unter den Steppern**, nicht mehr in einem Hover-Tipp am
   Abschnittstitel (10.08.2026): „Ist eine Spalte voll, fragt das Board vor der nächsten
-  Karte nach. 0 heißt: kein Limit." Eine Regel, die nur beim Überfahren erscheint, ist
+  Karte nach." und darunter in eigener Zeile „0 heißt: kein Limit." (28.09.2026 — im
+  Fließtext stand die „0" allein am Zeilenende). Eine Regel, die nur beim Überfahren erscheint, ist
   keine explizite Regel — und „make policies explicit" ist die eine Kanban-Zusage, die
   dieses Board in Worten einlösen muss. Die Einstellungen sind der Ort, an dem das nichts
   kostet; das Board selbst bleibt wortlos. Der ersetzte Tipp („Finish before you stack")
@@ -1508,6 +1529,23 @@ Nicht-Sehen.
   Chrome (Spaltenkopf, „+"-Button), nie auf Karten
 - **Vibe-Referenz:** „Minimal Desk Setup" — die App als ruhiges, fast gegenständliches
   Objekt auf dem Screen statt auffällige Software
+- **App-Icon (28.09.2026):** das Zeichen der Menüleiste, groß — ein Rahmen mit vier
+  gleichen, leeren Spuren, **geometrisch das Glyph mal 41** (19 × 13 pt → 779 × 533 auf
+  der 1024er-Fläche, die in Icon Composer die Platte selbst ist: 76 % ihrer Breite).
+  Gestaltet sind Hell und Dunkel; Tinted und Clear folgen Dunkel. Zwei Ebenen: oben der
+  **Rahmen**, deckend; darunter die **Scheibe**, durchscheinendes Glas in der Außenform des
+  Boards, das in den Spuren sichtbar wird. Keine Farbe, keine Karte, keine Schrift, kein
+  Zustand.
+
+  | Erscheinung | Platte | Rahmen | Spuren |
+  |---|---|---|---|
+  | Hell | fast weiß, leichter Verlauf | fast schwarz, flach | dunkeln die Platte ab (Schwarz 12 %) |
+  | Dunkel | fast schwarz, leichter Verlauf | fast weiß, Glas | hellen die Platte auf (Weiß 16 %) |
+  | Tinted, Clear | vom System | wie Dunkel; im dunklen Tinted in der Tönung des Systems | wie Dunkel |
+
+  Glasrand der Platte, Lichtkanten und den Schatten der Scheibe rechnet macOS. Quelle ist
+  `Sources/AppIcon.icon`: `Assets/frame.svg`, `Assets/pane.svg` und `icon.json` mit den
+  Farben je Erscheinung. Warum so: CONCEPT.md, „Das App-Icon"
 
 ## Bekannte Einschränkungen (Apple-Plattform-Grenzen, kein Designfehler)
 
