@@ -800,6 +800,13 @@ Motiv meist 70–80 % der Plattenbreite (Erinnerungen 73 %, Notizen 75 %, Mail 7
 Zeichen stand zuerst bei 64 % Breite und 46 % Höhe; oben und unten blieben breite leere
 Streifen (Nutzer). Jetzt: 76 % Breite, 52 % Höhe.
 
+**Bei 16 pt trägt der Rahmen, nicht die Trenner.** So klein steht das Icon im Fuß des
+Menüleisten-Panels („Board öffnen") und in Finders Listenansicht. Gemessen am 28.09.2026
+auf einem 1×-Bildschirm: Der Rahmen ist klar, die Trenner (41 von 1024) werden zu grauen
+Strichen unter einem Pixel. Das Zeichen bleibt als Board lesbar. Eine eigene Fassung für
+kleine Größen, wie sie das Glyph der Menüleiste ist, bietet das `.icon`-Format nach
+allem, was in Icon Composer zu finden war, nicht an.
+
 Die Ecken des Icons sind stetig (Squircle) wie `Board.columnShape`; das Glyph zeichnet
 Kreisbögen, und bei 1× und 2× ergeben beide gemessen dieselben Pixel. Die beiden
 SVG-Dateien sind die Quelle; ein Generator liegt nicht im Projekt. Ändert sich das

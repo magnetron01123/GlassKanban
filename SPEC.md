@@ -968,7 +968,8 @@ ein Schnappschuss der Zeile zeigte nur den Punkt, weil vibranter Text außerhalb
 unsichtbar rendert. Ein Klick auf eine Zeile öffnet das Board mit dieser Karte; „Board
 öffnen" im Fuß öffnet es ohne Karte (siehe unten).
 **Der Fuß des Panels, wie Apples Panels enden:** eine Haarlinie, darunter zuerst **„Board
-öffnen"** mit dem App-Symbol von Glass Kanban (13.09.2026, Nutzer: im Menüleisten-Modus ist
+öffnen"** mit dem App-Symbol von Glass Kanban — zur Laufzeit von der App selbst gelesen
+(`NSApp.applicationIconImage`), keine eigene Kopie, folgt also jedem neuen Icon (13.09.2026, Nutzer: im Menüleisten-Modus ist
 das Panel das Einzige auf dem Bildschirm, und wer das Board und keine Karte will, hatte
 keine Zeile dafür — der Weg zur eigenen App steht über dem zur fremden; damit ist die
 Regel „kein eigener Board-öffnen-Knopf" vom 12.09. zurückgenommen), dann „Erinnerungen
