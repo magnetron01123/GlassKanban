@@ -387,8 +387,17 @@ private struct BacklogCaptureRow: View {
         // itself. Left on unconditionally, the propagated trait made
         // VoiceOver announce the text field as a button — the same mistake
         // the card's rename field already paid for (see `CardView`).
+        // While editing, the row stops being one element so the field is
+        // reachable. With the label left on, the field stayed folded into a
+        // "New Task" button and no text field existed for VoiceOver
+        // (measured 28.09.2026) — the pattern `CardView` uses for renaming.
+        .accessibilityElement(children: isEditing ? .contain : .combine)
         .accessibilityAddTraits(isEditing ? [] : .isButton)
-        .accessibilityLabel(Text("New Task"))
+        .accessibilityLabel(isEditing ? Text(verbatim: "") : Text("New Task"))
+        // A tap gesture is invisible to accessibility: without this the
+        // button trait promised a press that did nothing (measured
+        // 24.09.2026 — AXPress on every tap-driven row was a no-op).
+        .accessibilityAction { if !isEditing { beginEditing() } }
     }
 
     private func beginEditing() {
@@ -645,6 +654,9 @@ private struct TraySection: View {
             .transition(transition(for: card))
             .contentShape(.dragPreview, Board.trayRowShape)
             .onTapGesture { openBoard(card.id) }
+            // The click, for VoiceOver and Switch Control: a tap gesture
+            // alone gives the row no press (see `BacklogCaptureRow`).
+            .accessibilityAction { openBoard(card.id) }
             .modifier(TrayDraggable(
                 card: card, enabled: movable,
                 lifted: { liftedFrom = status },
@@ -943,6 +955,7 @@ private struct TrayFoldLine: View {
         // each child, and VoiceOver read an unnamed button beside the label.
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
+        .accessibilityAction { action() }
     }
 }
 
@@ -996,6 +1009,7 @@ private struct TrayActionRow: View {
             .onHover { isHovered = $0 }
             .onTapGesture(perform: action)
             .accessibilityAddTraits(.isButton)
+            .accessibilityAction { action() }
     }
 }
 
@@ -1112,6 +1126,7 @@ private struct TrayNoticeRow: View {
         .onTapGesture(perform: dismiss)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
+        .accessibilityAction { dismiss() }
         // Both halves are already localized by the store; this only joins
         // them, so it must not be looked up as a key of its own.
         .accessibilityLabel(Text(verbatim: "\(title). \(message)"))

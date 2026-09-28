@@ -134,6 +134,10 @@ struct CardView: View {
         // Still spoken, though no longer drawn: VoiceOver has no other route
         // to a card's notes.
         .accessibilityHint(isRenaming ? "" : helpText)
+        // The click itself. "Edit" below names it, but a button with no
+        // default action ignores VoiceOver's press and Switch Control's
+        // select — the tap gesture above is invisible to both (24.09.2026).
+        .accessibilityAction { if !isRenaming { beginEdit() } }
         .accessibilityActions {
             if !isRenaming {
                 Button("Edit") { beginEdit() }

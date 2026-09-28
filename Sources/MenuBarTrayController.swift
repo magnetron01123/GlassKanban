@@ -207,7 +207,7 @@ final class MenuBarTrayController: NSObject {
     /// Only SwiftUI can make one, through `openWindow(id:)`, which lives in
     /// the panel's view; the panel is loaded first so that the view is alive
     /// to hear the request even if the user has never opened it.
-    private func openBoard() {
+    func openBoard() {
         if NSApp.windows.contains(where: { $0.identifier?.rawValue == "board" }) {
             AppearanceDelegate.showBoardWindow()
             NSApp.activate()
