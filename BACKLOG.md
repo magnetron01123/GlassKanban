@@ -806,6 +806,13 @@ und vollständige Begründung in CONCEPT.md, „Manche Listen geben nichts ab".
 Gebaut wurde stattdessen eine Meldung, die den Systemzustand benennt (SPEC.md).
 
 
+- **Zoom-Knöpfe auf dem Board** (29.09.2026, vom Nutzer erwogen) — auch nicht unten rechts
+  eingeblendet. Die Darstellungsgröße wählt man einmal je Schreibtisch; dauerhaft
+  sichtbare Knöpfe wären Chrome für einen seltenen Vorgang. Beim Überfahren eingeblendete
+  Knöpfe sind aus demselben Grund verworfen wie das eingeblendete Finden-Chrome (CONCEPT.md,
+  „Finden"): unruhig auf einem Board, über das Karten gezogen werden (unten rechts liegt
+  Erledigt), aus zwei Metern unsichtbar, schlecht auffindbar. Stattdessen ⌘+ / ⌘− / ⌘0 am
+  Board, SPEC.md („Design").
 - **Eigene Push-Benachrichtigungen der App** — Reminders hat bereits eigene
   Benachrichtigungen; eigene Notifications würden sich doppeln und widersprechen dem ruhigen
   Minimal-Desk-Setup-Vibe der App.

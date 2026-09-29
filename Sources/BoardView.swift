@@ -32,6 +32,37 @@ struct BoardView: View {
         // `BoardScale`).
         .environment(\.boardScale, scale)
         .background { ScreenWidthReader(width: $screenWidth) }
+        .background { scaleShortcuts }
+    }
+
+    /// ⌘+, ⌘− and ⌘0 step the display size — bound to the board window, and
+    /// deliberately not in the menu bar (29.09.2026, user): the picker in
+    /// Settings is where the setting is found, and its footer names these
+    /// keys. Invisible buttons because a keyboard shortcut needs a control
+    /// to live on. ⌘= is the unshifted key of ⌘+ on US layouts.
+    ///
+    /// Off while a card is open: the editor is typed into, and its size
+    /// does not change with the board's anyway (see `BoardScale`).
+    private var scaleShortcuts: some View {
+        Group {
+            Button("") { step(to: boardScale.selection.larger) }
+                .keyboardShortcut("+", modifiers: .command)
+            Button("") { step(to: boardScale.selection.larger) }
+                .keyboardShortcut("=", modifiers: .command)
+            Button("") { step(to: boardScale.selection.smaller) }
+                .keyboardShortcut("-", modifiers: .command)
+            Button("") { step(to: .standard) }
+                .keyboardShortcut("0", modifiers: .command)
+        }
+        .disabled(store.editingCardID != nil)
+        .opacity(0)
+        .frame(width: 0, height: 0)
+        .accessibilityHidden(true)
+    }
+
+    private func step(to target: BoardScale?) {
+        guard let target else { return }
+        boardScale.selection = target
     }
 
     private var board: some View {

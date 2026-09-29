@@ -36,6 +36,21 @@ enum BoardScale: String, CaseIterable, Identifiable {
         }
     }
 
+    /// One step up or down, for ⌘+ and ⌘−. `nil` at either end: the
+    /// shortcut then does nothing, which is what a Mac does at the edge of a
+    /// zoom range — no beep, no notice.
+    var larger: BoardScale? {
+        let all = Self.allCases
+        guard let index = all.firstIndex(of: self), index + 1 < all.count else { return nil }
+        return all[index + 1]
+    }
+
+    var smaller: BoardScale? {
+        let all = Self.allCases
+        guard let index = all.firstIndex(of: self), index > 0 else { return nil }
+        return all[index - 1]
+    }
+
     static let storageKey = StoredSetting.boardScale.key
 
     static var stored: BoardScale {

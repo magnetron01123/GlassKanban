@@ -913,6 +913,16 @@ SPEC.md („Darstellungsgröße"). Hier steht das Warum.
   den Bildschirm begrenzt, auf dem das Fenster steht. Dann werden die Spalten schmaler und
   Titel kürzen früher, die Schrift bleibt so groß wie gewählt.
 
+**Kurzbefehle ja, Menüeintrag und Knöpfe nein (29.09.2026).** Wer vor dem zweiten
+Bildschirm steht und die passende Größe sucht, will nicht jedes Mal in die Einstellungen.
+⌘+ / ⌘− / ⌘0 sind die Mac-Konvention dafür (Safari, Mail, Vorschau), das ist Wissen im
+Moment der Berührung, ganz ohne Chrome. Apple führt solche Kürzel sonst im Menü
+„Darstellung“. Der Nutzer fand das zu viel, und die Auffindbarkeit, die der Menüeintrag
+sichern soll, leistet hier schon das Auswahlfeld: Seine Fußzeile nennt die Tasten. Das
+unterscheidet den Fall von den Filtern, bei denen „nur Tastenkürzel“ verworfen wurde,
+weil es dort keinen anderen sichtbaren Weg gab. Zoom-Knöpfe auf dem Board sind in
+BACKLOG.md abgelehnt.
+
 Verworfen:
 
 - **Das Board als Ganzes per `scaleEffect` vergrößern.** Das hätte eine Zeile gekostet.

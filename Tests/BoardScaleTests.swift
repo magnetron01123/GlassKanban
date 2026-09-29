@@ -40,6 +40,16 @@ final class BoardScaleTests: XCTestCase {
         XCTAssertEqual(BoardScale.extraLarge.factor, 1.4)
     }
 
+    /// ⌘+ and ⌘− walk the steps in order and stop at the ends.
+    func testStepsWalkInOrderAndStopAtTheEnds() {
+        XCTAssertEqual(BoardScale.standard.larger, .large)
+        XCTAssertEqual(BoardScale.large.larger, .extraLarge)
+        XCTAssertNil(BoardScale.extraLarge.larger)
+        XCTAssertEqual(BoardScale.extraLarge.smaller, .large)
+        XCTAssertEqual(BoardScale.large.smaller, .standard)
+        XCTAssertNil(BoardScale.standard.smaller)
+    }
+
     func testSelectionPersists() {
         BoardScaleController.shared.selection = .extraLarge
         XCTAssertEqual(BoardScale.stored, .extraLarge)

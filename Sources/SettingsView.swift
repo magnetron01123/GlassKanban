@@ -321,6 +321,11 @@ struct BoardSettingsView: View {
                 .labelsHidden()
             } header: {
                 Text("Display Size")
+            } footer: {
+                // The only place the keys are named: they live on the board
+                // window, not in the menu bar (29.09.2026, user), so this is
+                // where someone looking for the size learns the shortcut.
+                Text("⌘+ and ⌘− change the size on the board as well, ⌘0 resets it.")
             }
 
             // Where workflows differ most. Backlog is the pool of options the

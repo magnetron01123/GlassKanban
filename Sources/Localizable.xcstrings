@@ -743,6 +743,23 @@
         }
       }
     },
+    "⌘+ and ⌘− change the size on the board as well, ⌘0 resets it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘+ und ⌘− ändern die Größe auch am Board, ⌘0 setzt sie zurück."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘+ and ⌘− change the size on the board as well, ⌘0 resets it."
+          }
+        }
+      }
+    },
     "Choose, don't collect": {
       "extractionState": "manual",
       "localizations": {

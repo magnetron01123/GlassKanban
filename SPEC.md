@@ -1525,7 +1525,11 @@ Nicht-Sehen.
   alles, was man aus der Nähe bedient: Symbolleiste, geöffnete Karte, Menüleisten-Tablett,
   Einstellungen, Popover, Tooltips. Übersteigt die Mindestbreite des Boards den
   Bildschirm, auf dem das Fenster steht, werden die Spalten schmaler, statt dass das
-  Fenster über den Rand hinausragt; die Schrift bleibt dabei groß
+  Fenster über den Rand hinausragt; die Schrift bleibt dabei groß.
+  **⌘+ / ⌘− / ⌘0** (29.09.2026) gehen am Board eine Stufe größer, eine kleiner oder zurück
+  auf Standard; am Ende der Skala geschieht nichts. Sie gelten nur im Board-Fenster und
+  nicht, solange eine Karte geöffnet ist. Sie stehen bewusst in keinem Menü: Auffindbar
+  sind sie über die Fußzeile unter dem Auswahlfeld in den Einstellungen
 - Typografie/Abstände nach Apple HIG (SF Pro), Tokens in `DesignSystem.swift`
 - Bewegung wird für Dinge ausgegeben, die *gerade passiert sind* (Karte rastet in „Erledigt"
   ein), nie für stehende Einladungen
