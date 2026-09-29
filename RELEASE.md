@@ -24,7 +24,7 @@ Phase) gelaufen ist — nicht, wenn der Code geschrieben ist.
 | # | Phase | Aufwand | Status |
 |---|---|---|---|
 | 0 | Apple Developer Program + App Store Connect | S (wartezeitgetrieben) | ☐ offen — **blockiert inzwischen weit mehr als den Store, siehe unten** |
-| 1 | Lokalisierung DE + EN (String Catalog) | **L — der Brocken** | ☑ erledigt 07.08.2026 (bis auf VoiceOver-Stichprobe) |
+| 1 | Lokalisierung DE + EN (String Catalog) | **L — der Brocken** | ☑ erledigt 07.08.2026; Beschriftungen und Längen gemessen 28.09.2026 — offen nur das Anhören mit VoiceOver |
 | 2 | Signing & Distribution | M | ☐ offen — braucht Phase 0 |
 | 3 | Store-Auftritt, Website, Screenshots | M | ☐ offen |
 | 4 | TestFlight-Beta & Härtung | M | ☐ offen — braucht 1+2 |
@@ -75,20 +75,28 @@ Verifiziert 07./08.08.2026: Suite grün; Katalog skriptgeprüft (Vollständigkei
 Umbruch; Standardmenüs folgen der Sprache; Datums- und Zahlenformate folgen der
 Systemregion (Plattformverhalten, kein Fehler).
 
-**Noch offen:** VoiceOver-Stichprobe in beiden Sprachen an einer Karte und einem
-Spaltenkopf (dort sitzen die aus Fragmenten zu ganzen Sätzen umgebauten Labels). Dazu
-seit 08.09.2026 die Längenprüfung der Menüleisten-Texte, mit dem Stand vom 23.09.2026:
-„Neue Aufgabe", „Board öffnen" und „Erinnerungen öffnen" im Panel, „Board öffnen",
-„Einstellungen …" und „Glass Kanban beenden" im Menü des Symbols, die vier Spurköpfe mit ihrer Zahl,
-„Überfällig"/„Heute" in der 52-pt-Datumsspalte (Mindestbreite — ein längeres Wort
-schiebt den Titel),
-und in den Einstellungen die drei Werte von „Anzeigen in", „Kurzbefehl" mit „Kein
-Kurzbefehl"/„Aufnahme …" im 150 pt breiten Feld sowie „Von einer anderen App belegt"
-darunter. Das Panel ist mit 340 pt fest und seine Zeilen einzeilig — was dort nicht
-passt, bricht nicht um, es wird abgeschnitten. Die Fußzeile der Sektion „Menüleiste" ist
-seit dem Kurzbefehl-Satz der längste Text der Einstellungen; ihre Höhe steckt in
-`SettingsMetrics.generalHeight` (706, gemessen 12.09.2026) und muss mit jeder
-Textänderung neu gemessen werden.
+**Beschriftungen gemessen 28.09.2026** — über die Accessibility-API der laufenden App,
+auf Deutsch und Englisch, an Karten, Spaltenköpfen und dem Tablett. Die Messung fand
+drei Fehler, die inzwischen behoben sind (Regel in SPEC.md, „VoiceOver liest in
+Sätzen"):
+- Die Bausteine waren mit Komma bzw. Zeilenumbruch verbunden, nicht mit Punkt.
+- Die Fälligkeit hieß „Fällig Überfällig" bzw. „Due Overdue".
+- Jede Backlog- und Erledigt-Karte nannte ihre Verweildauer, die sie gar nicht zeigt.
+
+**Längen geprüft 28.09.2026**, Deutsch als die längere Sprache:
+- Tablett: Screenshot mit „Erinnerungen öffnen", „In Bearbeitung 0 / 3" und „Überfällig", nichts abgeschnitten.
+- Einstellungen: alle drei Bereiche per Screenshot, ohne Rollbalken und Abschneiden; „Dock und Menüleiste" passt.
+- Nicht im Bild auslösbar und deshalb in der jeweiligen Schrift nachgemessen: „Kein Kurzbefehl" mit 95 pt im 150-pt-Feld, „Von einer anderen App belegt" mit 156 pt rechtsbündig im 420-pt-Formular.
+- Die Tablett-Spalten sind durch `fixedSize` gegen Abschneiden geschützt, ihre Maße stehen in `DesignSystem.swift`.
+- Das Menü des Symbols ist ein `NSMenu` und misst sich selbst.
+
+Die Einstellungen messen seit 28.09.2026 ihre Höhe selbst (`ScreenBoundedPane`). Eine
+Textänderung braucht dort keine Höhenmessung mehr, nur den Blick auf Rollbalken und
+Umbruch.
+
+**Noch offen:** das Anhören mit echtem VoiceOver (⌘F5) an einer Karte und einem
+Spaltenkopf, in beiden Sprachen. Die Accessibility-API zeigt, *was* vorgelesen wird,
+nicht, *wie* es klingt. Das kann nur der Nutzer prüfen.
 
 ## Phase 2 — Signing & Distribution (nach Phase 0, parallel zu 1 vorbereitbar)
 

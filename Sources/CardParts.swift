@@ -50,6 +50,9 @@ enum CardParts {
     /// semantics — and reduces the list colour, which is the only channel
     /// carrying the source list on compact rows, to nothing at all.
     /// The lane itself is announced by the column's accessibility container.
+    /// Joined as sentences, not a comma list: VoiceOver pauses at a full
+    /// stop, and the parts are built to stand alone (CONCEPT.md, "Ton der
+    /// Texte", rule 7).
     static func accessibilityLabel(for card: KanbanCard) -> String {
         var parts: [String] = []
         if card.status == .done {
@@ -59,17 +62,35 @@ enum CardParts {
             parts.append(priority)
         }
         parts.append(displayTitle(of: card))
-        if let due = card.dueDate {
-            parts.append(String(localized: "Due \(badge(for: due).label)"))
+        // A finished card is not overdue, whatever its date says; the badge
+        // leaves Done for the same reason (`compactBadge`).
+        if card.status != .done, let due = card.dueDate {
+            parts.append(spokenDue(due))
         }
         if card.isRecurring {
             parts.append(String(localized: "Repeats"))
         }
         parts.append(String(localized: "List \(card.listName)"))
-        if let days = card.daysInColumn(), days >= Board.agingThresholdDays {
+        // Only where the card itself shows it. Read out on every backlog and
+        // done card, "In this column for 66 days" was a standing charge the
+        // eye never sees (CONCEPT.md, "Belohnen, nie bestrafen").
+        if card.status.cardDensity == .full,
+           let days = card.daysInColumn(), days >= Board.agingThresholdDays {
             parts.append(String(localized: "In this column for \(days) days"))
         }
-        return parts.joined(separator: ", ")
+        return parts.joined(separator: ". ")
+    }
+
+    /// The badge's word read on its own is a fragment, and "Due" in front of
+    /// it made it wrong: VoiceOver said "Due Overdue" and "Fällig Überfällig"
+    /// (measured 28.09.2026). Overdue already says it; today and tomorrow
+    /// need their own word order in German ("Heute fällig").
+    private static func spokenDue(_ due: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(due) { return String(localized: "Due today") }
+        if due < calendar.startOfDay(for: .now) { return String(localized: "Overdue") }
+        if calendar.isDateInTomorrow(due) { return String(localized: "Due tomorrow") }
+        return String(localized: "Due \(badge(for: due).label)")
     }
 
     // MARK: - Badges
