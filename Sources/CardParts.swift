@@ -149,14 +149,15 @@ enum CardParts {
 /// (today), quiet grey (everything else).
 struct CardBadgeView: View {
     let info: CardParts.BadgeInfo
+    @Environment(\.boardScale) private var scale
 
     var body: some View {
         Text(info.label)
-            .font(BoardText.chip)
+            .font(BoardText.chip(scale))
             .monospacedDigit()
             .foregroundStyle(foreground)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
+            .padding(.horizontal, 7 * scale)
+            .padding(.vertical, 3 * scale)
             .background(background, in: Board.chipShape)
     }
 
@@ -177,9 +178,11 @@ struct CardBadgeView: View {
 }
 
 struct CardRepeatIcon: View {
+    @Environment(\.boardScale) private var scale
+
     var body: some View {
         Image(systemName: "repeat")
-            .font(BoardText.glyph)
+            .font(BoardText.glyph(scale))
             .foregroundStyle(.secondary)
     }
 }
@@ -189,13 +192,17 @@ struct CardRepeatIcon: View {
 struct CardListStripe: View {
     let card: KanbanCard
     let isSingleLine: Bool
+    @Environment(\.boardScale) private var scale
 
+    /// The width stays put at every display size: a colour code reads by
+    /// its hue, and a fatter bar would start to look like a border. Where it
+    /// sits grows with the card, so it keeps its place on the paper.
     var body: some View {
         Capsule()
             .fill(CardParts.stripeColor(of: card).opacity(card.status == .done ? 0.45 : 0.9))
             .frame(width: Board.cardStripeWidth)
-            .padding(.vertical, isSingleLine ? 7 : 9)
-            .padding(.leading, 5)
+            .padding(.vertical, (isSingleLine ? 7 : 9) * scale)
+            .padding(.leading, 5 * scale)
             .allowsHitTesting(false)
     }
 }

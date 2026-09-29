@@ -1521,10 +1521,24 @@ Nicht-Sehen.
 - **Spalten füllen immer die volle Fensterhöhe** — bewusste Entscheidung, siehe BACKLOG.md
   („Explizit abgelehnt": Spalten enden mit dem Inhalt). Weniger Leerfläche = Fenster kleiner
   ziehen
-- **Ein Titelmaß für alle Karten: 15pt** — Arbeitsspalten semibold, Backlog und Erledigt
-  medium. Beim Verschieben ändert sich die Titelgröße dadurch nie; was sich ändert, ist der
-  Detailgrad der Karte. Die 15 statt der früheren 14 für Lesbarkeit auf Distanz; der Rest
-  der Skala bleibt unverändert (Spaltenkopf 13pt, sichtbar kleiner als beide Titel)
+- **Ein Titelmaß für alle Karten: 15pt** (bei Standardgröße) — Arbeitsspalten semibold,
+  Backlog und Erledigt medium. Beim Verschieben ändert sich die Titelgröße dadurch nie; was
+  sich ändert, ist der Detailgrad der Karte. Die 15 statt der früheren 14 für Lesbarkeit
+  auf Distanz; der Rest der Skala bleibt unverändert (Spaltenkopf 13pt, sichtbar kleiner
+  als beide Titel)
+- **Darstellungsgröße** (28.09.2026) — Einstellungen → Board: Standard, Groß, Sehr groß
+  (100 / 120 / 140 %), gilt sofort, gespeichert je Rechner (`StoredSetting.boardScale`).
+  Es wächst das Board als Ganzes: Spalten samt Mindest- und Höchstbreite, Spaltenköpfe,
+  Karten mit ihrem 38er-Raster, Marken, Falz-Zeile, „+", der Hinweis bei leerem Board.
+  Gleich bleiben Haarlinien, Listenstreifen und Schatten, damit sie scharf bleiben, sowie
+  alles, was man aus der Nähe bedient: Symbolleiste, geöffnete Karte, Menüleisten-Tablett,
+  Einstellungen, Popover, Tooltips. Übersteigt die Mindestbreite des Boards den
+  Bildschirm, auf dem das Fenster steht, werden die Spalten schmaler, statt dass das
+  Fenster über den Rand hinausragt; die Schrift bleibt dabei groß.
+  **⌘+ / ⌘− / ⌘0** (29.09.2026) gehen am Board eine Stufe größer, eine kleiner oder zurück
+  auf Standard; am Ende der Skala geschieht nichts. Sie gelten nur im Board-Fenster und
+  nicht, solange eine Karte geöffnet ist. Sie stehen bewusst in keinem Menü: Auffindbar
+  sind sie über die Fußzeile unter dem Auswahlfeld in den Einstellungen
 - Typografie/Abstände nach Apple HIG (SF Pro), Tokens in `DesignSystem.swift`
 - Bewegung wird für Dinge ausgegeben, die *gerade passiert sind* (Karte rastet in „Erledigt"
   ein), nie für stehende Einladungen

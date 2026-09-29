@@ -94,6 +94,7 @@ targets:
       - path: Tests
       - path: Sources/AppAppearance.swift
       - path: Sources/AppPresence.swift
+      - path: Sources/BoardScale.swift
       - path: Sources/MenuBarTray.swift
       - path: Sources/MoveSource.swift
       - path: Sources/TrayShortcut.swift

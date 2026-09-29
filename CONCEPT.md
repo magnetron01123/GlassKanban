@@ -880,6 +880,59 @@ Layout-Durchgang nach seiner Wunschhöhe und begrenzt sie nur durch den Bildschi
 Gemessen danach: 454, 375 und 435 pt Fensterhöhe, kein Rollbalken. Nachträglich zu messen
 (nach dem Erscheinen) bleibt ausgeschlossen — das war das Ruckeln vom Juli 2026.
 
+### Die Darstellungsgröße: das Board wächst, das Werkzeug nicht (28.09.2026)
+
+Das Board steht oft auf einem zweiten Bildschirm und wird aus bis zu zwei Metern gelesen.
+Bis hierhin trug das ein einziger fester Wert, der Kartentitel mit 15 statt 14 pt. Das
+war eine Entscheidung, die eigentlich dem Nutzer gehört. Das gebaute Verhalten steht in
+SPEC.md („Darstellungsgröße"). Hier steht das Warum.
+
+- **Drei Stufen statt eines Schiebereglers.** Eine Stufe kann man wählen und
+  wiederfinden, und jede ist als ganzes Board auf dem Bildschirm geprüft worden. Ein
+  Regler verspräche jede Zwischengröße, ohne dass jemand sie je angesehen hätte. 140 % als
+  Obergrenze: Darüber passen vier Spalten auch auf einem 27-Zoll-Bildschirm kaum noch
+  nebeneinander.
+- **Der Maßstab ist ein Environment-Wert, keine skalierte Konstante.** Das Tablett in der
+  Menüleiste liest dieselben Schrift-Tokens wie das Board, ist aber am System gemessen
+  (340 pt, Zeilen wie ein Menü). Würden die Tokens selbst wachsen, wüchse das Tablett mit.
+  Deshalb gibt es zu jedem Token eine Funktion mit Maßstab (`BoardText.title(scale)`), die
+  Konstante ist ihr Wert bei 1. Das Board setzt den Faktor an seiner Wurzel, alles andere
+  liest den Vorgabewert 1.
+- **Was man aus der Nähe bedient, bleibt, wie es ist.** Das gilt für Symbolleiste,
+  Tablett, Einstellungen, Popover und Tooltips. **Anders als zunächst vorgesehen** gilt es auch für
+  die geöffnete Karte: Ihre Menüs und die Datumsauswahl sind native AppKit-Bedienelemente,
+  die nicht mitwachsen. Bei 140 % stünde ein 24-pt-Titel über 13-pt-Menüs. Und wer eine
+  Karte öffnet, sitzt davor.
+- **Haarlinien, Listenstreifen und Schatten wachsen nicht.** Eine 1,4-pt-Linie wird
+  unscharf, und ein breiterer Streifen sieht aus wie ein Rand. Innenabstände und das
+  38er-Raster der Karten wachsen dagegen mit, damit eine Karte ihre Proportionen behält
+  und nicht nur ihre Punkte.
+- **Die Spalten geben nach, nicht der Bildschirm.** Vier Spalten wollen bei 140 % rund
+  1700 pt, ein 13-Zoll-MacBook hat 1470. Ein Fenster, das breiter erzwungen wird als sein
+  Bildschirm, hängt samt Symbolleiste über den Rand. Die Mindestbreite ist deshalb durch
+  den Bildschirm begrenzt, auf dem das Fenster steht. Dann werden die Spalten schmaler und
+  Titel kürzen früher, die Schrift bleibt so groß wie gewählt.
+
+**Kurzbefehle ja, Menüeintrag und Knöpfe nein (29.09.2026).** Wer vor dem zweiten
+Bildschirm steht und die passende Größe sucht, will nicht jedes Mal in die Einstellungen.
+⌘+ / ⌘− / ⌘0 sind die Mac-Konvention dafür (Safari, Mail, Vorschau), das ist Wissen im
+Moment der Berührung, ganz ohne Chrome. Apple führt solche Kürzel sonst im Menü
+„Darstellung“. Der Nutzer fand das zu viel, und die Auffindbarkeit, die der Menüeintrag
+sichern soll, leistet hier schon das Auswahlfeld: Seine Fußzeile nennt die Tasten. Das
+unterscheidet den Fall von den Filtern, bei denen „nur Tastenkürzel“ verworfen wurde,
+weil es dort keinen anderen sichtbaren Weg gab. Zoom-Knöpfe auf dem Board sind in
+BACKLOG.md abgelehnt.
+
+Verworfen:
+
+- **Das Board als Ganzes per `scaleEffect` vergrößern.** Das hätte eine Zeile gekostet.
+  Aber die Geometrie bliebe die alte: Drop-Ziele, Kontextmenüs, Tooltips und die
+  Ausgangslage der geöffneten Karte rechneten in unskalierten Koordinaten, und die Größe
+  des Fensters wüsste nichts vom größeren Inhalt.
+- **Das Einstellungsfeld als beschriftete Zeile.** In beiden Sprachen rutschten die
+  Segmente unter die Beschriftung. Der Name steht deshalb als Sektionskopf, wie bei den
+  beiden anderen Sektionen im Reiter.
+
 ### Ton der Texte
 
 Das Board spricht wie ein Werkzeug, nicht wie ein Begleiter: knapp und sachlich. Es coacht

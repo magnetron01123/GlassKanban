@@ -20,6 +20,7 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.foldNotYetDue.key, "foldNotYetDue")
         XCTAssertEqual(StoredSetting.appearance.key, "appAppearance")
         XCTAssertEqual(StoredSetting.presence.key, "appPresence")
+        XCTAssertEqual(StoredSetting.boardScale.key, "boardScale")
         XCTAssertEqual(StoredSetting.trayShortcut.key, "trayShortcut")
         XCTAssertEqual(StoredSetting.windowPlacement.key, "windowPlacement")
         XCTAssertEqual(StoredSetting.correctionLedger.key, "correctionLedger")
@@ -59,6 +60,7 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.completionSound.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.excludedCalendars.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.presence.scope, .thisDevice)
+        XCTAssertEqual(StoredSetting.boardScale.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.trayShortcut.scope, .thisDevice)
         XCTAssertEqual(StoredSetting.windowPlacement.scope, .thisDevice)
     }

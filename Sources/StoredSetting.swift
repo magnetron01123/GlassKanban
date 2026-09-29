@@ -38,6 +38,8 @@ enum StoredSetting: String, CaseIterable {
     case appearance = "appAppearance"
     /// Dock, menu bar, or both.
     case presence = "appPresence"
+    /// How large the board is drawn.
+    case boardScale
     /// The global key combination that opens the menu bar panel.
     case trayShortcut
     /// Which display the board belongs on, and where on it.
@@ -95,6 +97,10 @@ enum StoredSetting: String, CaseIterable {
         // day wants the Dock icon, a laptop carried to meetings wants the
         // menu bar. Nothing about the work changes with it.
         case .presence: .thisDevice
+        // Reading distance is a property of the desk: the board on a wall
+        // screen two metres away wants large, the same board on a laptop
+        // at arm's length wants standard.
+        case .boardScale: .thisDevice
         // Headphones on the laptop, silence in the office.
         case .completionSound: .thisDevice
         // Open until measured (M4): `EKCalendar.calendarIdentifier` may differ

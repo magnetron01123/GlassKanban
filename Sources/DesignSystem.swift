@@ -18,7 +18,13 @@ enum Board {
     static let columnSpacing: CGFloat = 20
     static let columnMinWidth: CGFloat = 280
     static let columnMaxWidth: CGFloat = 400
-    static let boardMinWidth: CGFloat = columnMinWidth * 4 + columnSpacing * 3 + boardPadding * 2
+    /// Four lanes at their minimum, the air between them and the margin
+    /// around. Everything in it grows with the display size.
+    static func boardMinWidth(_ scale: CGFloat) -> CGFloat {
+        (columnMinWidth * 4 + columnSpacing * 3 + boardPadding * 2) * scale
+    }
+    /// Never scaled: a window this short is about the screen, not the type.
+    static let boardMinHeight: CGFloat = 560
     static let cardSpacing: CGFloat = 8
     /// The lane's inner margin — one value for the header, its hairline, the
     /// cards and the "more" button, so everything inside a lane shares a
@@ -161,12 +167,21 @@ enum Board {
     // continuous squircle. Mixing the two is the difference between "native"
     // and "nearly native" that a viewer notices but cannot name. Exported as
     // tokens so the style cannot be forgotten at an individual call site.
-    static let columnShape = RoundedRectangle(cornerRadius: columnRadius, style: .continuous)
-    static let cardShape = RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
+    static func columnShape(_ scale: CGFloat) -> RoundedRectangle {
+        RoundedRectangle(cornerRadius: columnRadius * scale, style: .continuous)
+    }
+    static let columnShape = columnShape(1)
+    static func cardShape(_ scale: CGFloat) -> RoundedRectangle {
+        RoundedRectangle(cornerRadius: cardRadius * scale, style: .continuous)
+    }
+    static let cardShape = cardShape(1)
     /// The opened card. Its corner grows with it — the same note brought
     /// closer, not a lane-sized corner stretched across twice the width,
     /// which is what makes an enlarged panel look flat.
-    static let openCardShape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+    static func openCardShape(_ scale: CGFloat) -> RoundedRectangle {
+        RoundedRectangle(cornerRadius: 16 * scale, style: .continuous)
+    }
+    static let openCardShape = openCardShape(1)
     /// Text margins in the opened card, wider than a lane card's for the same
     /// reason its type is larger: it is read, not scanned.
     static let openCardInset: CGFloat = 20
@@ -310,7 +325,10 @@ enum Board {
 
     /// Corner of that wash. One step under the card's own, per the nesting
     /// rule: what sits inside a shape never curves wider than it.
-    static let editableHoverShape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+    static func editableHoverShape(_ scale: CGFloat) -> RoundedRectangle {
+        RoundedRectangle(cornerRadius: 6 * scale, style: .continuous)
+    }
+    static let editableHoverShape = editableHoverShape(1)
 
     // Card shadows: tight contact shadow + soft ambient = physical elevation
     static let cardShadowResting = (color: Color.black.opacity(0.10), radius: CGFloat(1.5), y: CGFloat(1))
@@ -482,26 +500,33 @@ enum BoardText {
     // header sits further from both than it did from either before.
 
     /// Card title in the working lanes — the board's primary content.
-    static let title = Font.system(size: 15, weight: .semibold)
+    static func title(_ scale: CGFloat) -> Font { .system(size: 15 * scale, weight: .semibold) }
+    static let title = title(1)
     /// Card title in the single-line lanes, where a row is a list entry
     /// rather than a ticket. Same size, one weight lighter.
-    static let titleCompact = Font.system(size: 15, weight: .medium)
+    static func titleCompact(_ scale: CGFloat) -> Font { .system(size: 15 * scale, weight: .medium) }
+    static let titleCompact = titleCompact(1)
     /// Lane header. Always paired with the secondary foreground: a header
     /// labels content, it is not content.
-    static let header = Font.system(size: 13, weight: .semibold)
+    static func header(_ scale: CGFloat) -> Font { .system(size: 13 * scale, weight: .semibold) }
+    static let header = header(1)
     /// Running text — notes excerpt, popover copy.
-    static let body = Font.system(size: 12)
+    static func body(_ scale: CGFloat) -> Font { .system(size: 12 * scale) }
+    static let body = body(1)
     /// A row in the menu bar tray — the system's menu size, because the
     /// tray is a menu bar panel and not a small board.
     static let trayRow = Font.system(size: 13)
     /// Chips: date badges, lane counts, dwell time.
-    static let chip = Font.system(size: 11, weight: .semibold)
+    static func chip(_ scale: CGFloat) -> Font { .system(size: 11 * scale, weight: .semibold) }
+    static let chip = chip(1)
     /// Quiet metadata — list name, "Show N more", weekday letters.
-    static let meta = Font.system(size: 11)
+    static func meta(_ scale: CGFloat) -> Font { .system(size: 11 * scale) }
+    static let meta = meta(1)
     /// Inline symbols sitting beside `meta` or `chip` text. Deliberately
     /// smaller than its companion text: a glyph reads at a smaller size than
     /// a letterform does.
-    static let glyph = Font.system(size: 9, weight: .semibold)
+    static func glyph(_ scale: CGFloat) -> Font { .system(size: 9 * scale, weight: .semibold) }
+    static let glyph = glyph(1)
     /// A single emphasised number — the streak counter.
     static let value = Font.system(size: 12, weight: .semibold)
 
@@ -512,17 +537,21 @@ enum BoardText {
     // would only have set lane-sized text in a bigger field — which reads as
     // a card that was stretched rather than one brought closer.
     /// Title field in the opened card.
-    static let editorTitle = Font.system(size: 17, weight: .semibold)
+    static func editorTitle(_ scale: CGFloat) -> Font { .system(size: 17 * scale, weight: .semibold) }
+    static let editorTitle = editorTitle(1)
     /// Notes and every value in the opened card.
-    static let editorBody = Font.system(size: 13)
+    static func editorBody(_ scale: CGFloat) -> Font { .system(size: 13 * scale) }
+    static let editorBody = editorBody(1)
     /// Field captions in the opened card ("Title", "Due Date"). Semibold
     /// for the same reason `chip` is: small text that has to stay legible.
-    static let editorCaption = Font.system(size: 12, weight: .semibold)
+    static func editorCaption(_ scale: CGFloat) -> Font { .system(size: 12 * scale, weight: .semibold) }
+    static let editorCaption = editorCaption(1)
     /// The one inline symbol at editor scale — the "open in Reminders" corner
     /// mark beside the 17pt title. `glyph` (9pt) is sized for the 11–12pt
     /// text elsewhere on the board; scaled to match this larger companion
     /// the same way, an icon reads smaller than the letterform beside it.
-    static let editorGlyph = Font.system(size: 13, weight: .regular)
+    static func editorGlyph(_ scale: CGFloat) -> Font { .system(size: 13 * scale, weight: .regular) }
+    static let editorGlyph = editorGlyph(1)
 
     /// The streak row — flame, count and "days in a row" — set as one
     /// uniform line rather than a hero number with a caption trailing it.
