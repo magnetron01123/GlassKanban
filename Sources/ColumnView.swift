@@ -164,7 +164,7 @@ struct ColumnView: View {
             Rectangle()
                 .fill(Board.columnBorder(contrast))
                 .frame(height: 1)
-                .padding(.horizontal, Board.laneMargin)
+                .padding(.horizontal, Board.laneMargin(sized: store.usesSizes))
 
             ScrollView {
                 LazyVStack(spacing: singleLine ? 5 : Board.cardSpacing) {
@@ -176,9 +176,21 @@ struct ColumnView: View {
                         // itself crisply and adds its own depth; the
                         // drag-preview content shape rounds its corners so
                         // no rectangular snapshot edge shows behind them.
+                        //
+                        // The system snapshots the view's own frame, whatever
+                        // the content shape says: with the bare card as the
+                        // frame, the half of the size tab that stands out past
+                        // the edge was cut off the lifted card (measured
+                        // 01.10.2026). So the frame is widened by the tab's
+                        // overhang for the drag, and narrowed again below so
+                        // the lane's layout never sees it.
                         CardView(card: card)
-                            .contentShape(.dragPreview, Board.cardShape)
+                            .padding(.trailing, Board.sizeTabOverhang)
+                            .contentShape(.dragPreview, CardOutline(
+                                hasSizeTab: CardOutline.hasSizeTab(card),
+                                trailingInset: Board.sizeTabOverhang))
                             .draggable(card.id)
+                            .padding(.trailing, -Board.sizeTabOverhang)
                             // Runs alongside the system drag purely to note
                             // which card is moving. Deliberately additive:
                             // if it ever stops firing, dragging still works.
@@ -247,7 +259,7 @@ struct ColumnView: View {
                         addTicketButton
                     }
                 }
-                .padding(.horizontal, Board.laneMargin)
+                .padding(.horizontal, Board.laneMargin(sized: store.usesSizes))
                 .padding(.top, 10)
                 .padding(.bottom, 12)
             }
@@ -428,7 +440,7 @@ struct ColumnView: View {
                 // The over-limit signal is otherwise colour alone.
                 .accessibilityValue(countHelp)
         }
-        .padding(EdgeInsets(top: 12, leading: Board.laneMargin, bottom: 10, trailing: Board.laneMargin))
+        .padding(EdgeInsets(top: 12, leading: Board.laneMargin(sized: store.usesSizes), bottom: 10, trailing: Board.laneMargin(sized: store.usesSizes)))
         // The whole header band, not just the count capsule. On the capsule
         // alone the tooltip was a 20pt target nobody found — including the
         // person who asked for it — which makes "explicit" true only on

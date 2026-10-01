@@ -64,6 +64,9 @@ struct BoardView: View {
         .frame(maxWidth: .infinity)
         .padding(Board.boardPadding)
         .frame(minWidth: Board.boardMinWidth, minHeight: 560)
+        // The one layout change sizing causes: the lanes make room for the
+        // tabs when the first size is set, and give it back with the last.
+        .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: store.usesSizes)
         // The lanes go out of focus while a card is held up in front of them.
         // Applied to the board and not the window, so the toolbar — which is
         // chrome, not content — stays sharp and reachable.

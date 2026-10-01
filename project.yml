@@ -112,6 +112,8 @@ targets:
       - path: Sources/CorrectionLedger.swift
       - path: Sources/ReminderWriteFailure.swift
       - path: Sources/ColumnState.swift
+      - path: Sources/BoardStorage.swift
+      - path: Sources/SizeState.swift
       - path: Sources/StoredSetting.swift
       - path: Sources/WindowPlacement.swift
     settings:

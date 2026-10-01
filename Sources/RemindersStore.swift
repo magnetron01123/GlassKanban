@@ -163,7 +163,15 @@ final class RemindersStore: ObservableObject {
 
     private let columnsLocation = ColumnState.defaultStorageLocation()
 
-    private var columnsURL: URL? { columnsLocation?.fileURL }
+    private var columnsURL: URL? { columnsLocation?.fileURL(named: ColumnState.fileName) }
+
+    /// Each card's T-shirt size — the board's own record, in its own file
+    /// next to `columns.json` (see `SizeState`). Never written into the
+    /// reminder.
+    private var sizes = SizeState.loadFromDefaultLocation()
+    /// What was last written, so an unchanged state is not rewritten.
+    private var lastSavedSizes = SizeState.loadFromDefaultLocation()
+    private let sizesURL = SizeState.defaultFileURL()
 
     /// One line per failed write to the column file. There is deliberately no
     /// dialog: the pull the user just made is already live on screen, and this
@@ -227,6 +235,27 @@ final class RemindersStore: ObservableObject {
         } else {
             Self.storageLog.error("column state not written — retrying on the next change")
             noteStorage(failure: "column state not written to \(columnsURL?.path ?? "nowhere")")
+        }
+    }
+
+    /// Whether any card on the board carries a size — what switches the lanes
+    /// to the layout that makes room for the size tabs (see
+    /// `Board.laneMargin(sized:)`). Read from the loaded cards, not from the
+    /// size file: the question is whether a tab can be on screen, and a size
+    /// left behind by a reminder deleted elsewhere must not hold the wider
+    /// margins open for nothing. Done cards count although they show no tab,
+    /// so finishing the only sized card does not shift the board under the
+    /// completion it is rewarding.
+    var usesSizes: Bool { cards.contains { $0.size != nil } }
+
+    /// Writes the size state if it changed — the same terms as
+    /// `persistColumns`: logged on failure, never a dialog.
+    private func persistSizes() {
+        guard sizes != lastSavedSizes else { return }
+        if sizes.save(to: sizesURL) {
+            lastSavedSizes = sizes
+        } else {
+            Self.storageLog.error("size state not written — retrying on the next change")
         }
     }
 
@@ -1102,7 +1131,8 @@ final class RemindersStore: ObservableObject {
             isRecurring: reminder.hasRecurrenceRules,
             lastModifiedDate: reminder.lastModifiedDate,
             pulledAt: columns.pulledAt(reminder.calendarItemIdentifier),
-            creationDate: reminder.creationDate)
+            creationDate: reminder.creationDate,
+            size: sizes.size(of: reminder.calendarItemIdentifier))
     }
 
     // MARK: - Writing
@@ -1482,6 +1512,10 @@ final class RemindersStore: ObservableObject {
         guard let reminder = eventStore.calendarItem(withIdentifier: cardID) as? EKReminder else { return }
         try? eventStore.remove(reminder, commit: true)
         cards.removeAll { $0.id == cardID }
+        // A size set in the editor of a ticket that is being taken back goes
+        // with it — nothing may point at a reminder that never was.
+        sizes.set(nil, for: cardID, at: .now)
+        persistSizes()
         // Nothing to withdraw: the creation was never booked (see
         // `createTicketForEditing`). Removing the reminder is not a change to
         // undo, it is the change never having happened — and every earlier
@@ -1533,6 +1567,9 @@ final class RemindersStore: ObservableObject {
         /// in the notes, it rode along in `notes` and nobody had to think
         /// about it.
         let lane: ColumnState.Lane?
+        /// The card's T-shirt size — carried for the same reason as `lane`:
+        /// the restored reminder has a new identifier.
+        let size: TicketSize?
     }
 
     /// A ticket the user asked to delete, waiting for the answer.
@@ -1585,7 +1622,8 @@ final class RemindersStore: ObservableObject {
             completionDate: reminder.completionDate,
             recurrenceRules: reminder.recurrenceRules,
             alarms: reminder.alarms,
-            lane: columns.lane(of: cardID))
+            lane: columns.lane(of: cardID),
+            size: sizes.size(of: cardID))
         do {
             try eventStore.remove(reminder, commit: true)
         } catch {
@@ -1598,6 +1636,8 @@ final class RemindersStore: ObservableObject {
         // the snapshot carries it now, and `restoreTicket` puts it back.
         columns.release(cardID, at: .now)
         persistColumns()
+        sizes.set(nil, for: cardID, at: .now)
+        persistSizes()
         register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
             store.restoreTicket(snapshot, undoManager: undoManager)
         }
@@ -1646,11 +1686,33 @@ final class RemindersStore: ObservableObject {
             columns.pull(cardID, into: lane, at: .now)
             persistColumns()
         }
+        if let size = snapshot.size {
+            sizes.set(size, for: cardID, at: .now)
+            persistSizes()
+        }
         register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
         scheduleRefreshAfterWrite()
         return cardID
+    }
+
+    /// Sets or removes a card's T-shirt size, with undo.
+    ///
+    /// No EventKit write at all: the size lives in the board's own file, which
+    /// is why it can be set on a card from a read-only list too.
+    func setSize(cardID: String, to size: TicketSize?, undoManager: UndoManager? = nil) {
+        let writeStamp = beginWrite()
+        let previous = sizes.size(of: cardID)
+        guard previous != size else { return }
+        sizes.set(size, for: cardID, at: .now)
+        persistSizes()
+        register(undoManager, name: String(localized: "Size"), for: cardID, at: writeStamp) { store in
+            store.setSize(cardID: cardID, to: previous, undoManager: undoManager)
+        }
+        if let index = cards.firstIndex(where: { $0.id == cardID }) {
+            cards[index].size = size
+        }
     }
 
     /// The title exactly as stored in Reminders — what an edit has to start
@@ -1997,6 +2059,8 @@ final class RemindersStore: ObservableObject {
         if calendarChanged {
             columns.rekey(from: cardID, to: reminder.calendarItemIdentifier)
             persistColumns()
+            sizes.rekey(from: cardID, to: reminder.calendarItemIdentifier)
+            persistSizes()
         }
         // Booked after the save, like every other write: an entry for a write
         // that never happened would have the app quietly "restoring" an edit

@@ -366,140 +366,41 @@ struct ColumnState: Equatable {
     /// without sync there is no foreign pull for them to outrank.
     private static let formatVersion = 1
 
-    /// The container the board's own files live in.
-    ///
-    /// In one place on purpose. Whether the Mac App Store accepts this form or
-    /// insists on a `<TeamID>.group.…` prefix is not yet settled (no team to
-    /// ask with — see BACKLOG.md), and a change here must stay a one-line
-    /// change plus one more entry in `knownFileURLs`, never a data migration.
-    /// The iOS form is chosen so the planned iOS app can use the same one.
-    static let appGroupIdentifier = "group.com.davidtrogemann.GlassKanban"
+    // The location itself lives in `BoardStorage`, shared with `sizes.json`.
+    // These forwarders keep this type's API — and its tests — unchanged.
 
-    /// One of the two places `columns.json` can live, and which one this
-    /// build actually got.
-    ///
-    /// Named rather than reduced to a bare `URL` because the answer is the
-    /// diagnostic: "which home did this build end up with" is the question
-    /// that went unanswered for three weeks (see the note on
-    /// `chooseStorageDirectory`), and a `URL` alone does not say whether it
-    /// is the intended one or the fallback.
-    enum StorageLocation: Equatable {
-        /// The shared container, reachable by a widget or an App Intent.
-        case groupContainer(URL)
-        /// The app's own sandbox — reachable by nothing else, but writable.
-        case applicationSupport(URL)
-
-        /// The directory the file goes in.
-        var directory: URL {
-            switch self {
-            case .groupContainer(let url), .applicationSupport(let url): url
-            }
-        }
-
-        /// The file itself.
-        var fileURL: URL { directory.appendingPathComponent(fileName) }
-    }
-
-    /// The folder both homes put the file in.
-    static let directoryName = "GlassKanban"
+    static let appGroupIdentifier = BoardStorage.appGroupIdentifier
+    typealias StorageLocation = BoardStorage.Location
+    static let directoryName = BoardStorage.directoryName
     /// The file's name in either home.
     static let fileName = "columns.json"
 
-    /// Picks the directory the file is written to: the group container when it
-    /// can be written, otherwise the app's own Application Support.
-    ///
-    /// **Writability, not the existence of a path, is the question — and this
-    /// is why.** Until 08.09.2026 the choice was a `??` between
-    /// `containerURL(forSecurityApplicationGroupIdentifier:)` and Application
-    /// Support, on the assumption that a build without the
-    /// `com.apple.security.application-groups` entitlement (this one — see
-    /// `project.yml`) would get `nil` and fall back. It does not: the method
-    /// answers with `~/Library/Group Containers/<id>/` whether or not the
-    /// entitlement is in the signature, and the sandbox then refuses every
-    /// write to it. The fallback therefore never fired, `save(to:)` failed on
-    /// every single pull, and because the only trace was an `os.Logger` line
-    /// this app's output cannot be found in (CLAUDE.md), the board silently
-    /// lost every column on quit for three weeks. Measured and re-measured
-    /// 08.09.2026; the whole story is in CONCEPT.md.
-    ///
-    /// Only the group container is probed. Application Support is inside this
-    /// process's own sandbox — if that is unwritable the app has no storage at
-    /// all, and there is nothing further to fall back to.
     static func chooseStorageDirectory(
         groupContainer: URL?,
         applicationSupport: URL?,
         isWritable: (URL) -> Bool
     ) -> StorageLocation? {
-        if let groupContainer {
-            let directory = groupContainer.appendingPathComponent(
-                directoryName, isDirectory: true)
-            if isWritable(directory) { return .groupContainer(directory) }
-        }
-        if let applicationSupport {
-            return .applicationSupport(
-                applicationSupport.appendingPathComponent(
-                    directoryName, isDirectory: true))
-        }
-        return nil
+        BoardStorage.chooseDirectory(
+            groupContainer: groupContainer,
+            applicationSupport: applicationSupport,
+            isWritable: isWritable)
     }
 
-    /// Answers whether this process may write into `directory` — by writing.
-    ///
-    /// Nothing cheaper is honest. `isWritableFile(atPath:)` reports POSIX
-    /// permissions, which say yes for a group container the sandbox will
-    /// still refuse; the refusal happens at write time, in a place no
-    /// permission bit records. The probe therefore does exactly what
-    /// `save(to:)` does — create the directory, write a file atomically — and
-    /// removes its file again.
     static func directoryAcceptsWrites(
         _ directory: URL, fileManager: FileManager = .default
     ) -> Bool {
-        do {
-            try fileManager.createDirectory(
-                at: directory, withIntermediateDirectories: true)
-            let probe = directory.appendingPathComponent(".write-probe")
-            try Data().write(to: probe, options: .atomic)
-            try? fileManager.removeItem(at: probe)
-            return true
-        } catch {
-            return false
-        }
+        BoardStorage.directoryAcceptsWrites(directory, fileManager: fileManager)
     }
 
-    /// Where this build writes, probed against the real file system.
-    ///
-    /// The group container is preferred, because a widget, a Live Activity and
-    /// an App Intent each run in their own process and cannot see inside the
-    /// app's own sandbox. None of them exist yet; moving the file while it is
-    /// cheap is the point, since doing it later means migrating live user data.
-    ///
-    /// An earlier version of this comment ruled out iCloud on the grounds that
-    /// a synchronising store would bring back the second writer this type
-    /// exists to remove. That reasoning was too broad and has been retired: it
-    /// holds for the reminder's notes, which every EventKit client may rewrite,
-    /// but not for a container keyed to this app's identifier, which no other
-    /// program can reach. What syncing does admit is a second *instance of
-    /// this app* — the user's own other Mac — which is a far narrower thing,
-    /// and what `merged(_:_:now:)` is for.
     static func defaultStorageLocation(
         fileManager: FileManager = .default
     ) -> StorageLocation? {
-        chooseStorageDirectory(
-            groupContainer: fileManager.containerURL(
-                forSecurityApplicationGroupIdentifier: appGroupIdentifier),
-            applicationSupport: try? fileManager.url(
-                for: .applicationSupportDirectory, in: .userDomainMask,
-                appropriateFor: nil, create: true),
-            isWritable: { directoryAcceptsWrites($0, fileManager: fileManager) })
+        BoardStorage.defaultLocation(fileManager: fileManager)
     }
 
     /// The file this build writes to, or nil if it has nowhere to write.
     static func defaultFileURL(fileManager: FileManager = .default) -> URL? {
-        guard let location = defaultStorageLocation(fileManager: fileManager)
-        else { return nil }
-        try? fileManager.createDirectory(
-            at: location.directory, withIntermediateDirectories: true)
-        return location.fileURL
+        BoardStorage.defaultFileURL(named: fileName, fileManager: fileManager)
     }
 
     /// Every place the file has ever been written, newest first.

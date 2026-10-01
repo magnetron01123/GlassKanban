@@ -623,7 +623,9 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   gestapelte Unschärfe. Der Grund ist gemessen, nicht ästhetisch: durchscheinende Karten
   koppeln ihre Helligkeit an das Wallpaper und kehren dadurch die Tiefenordnung um
   (Karten wirken dunkler als die Mulde, in der sie liegen). Das ist zugleich Apples
-  eigenes Liquid-Glass-Modell — Glas ist Chrome, nie Inhalt.
+  eigenes Liquid-Glass-Modell — Glas ist Chrome, nie Inhalt. (Eine eng gefasste Ausnahme
+  seit 01.10.2026: der durchscheinende Größen-Reiter an der Kartenkante, siehe
+  „T-Shirt-Größen".)
 - **Immer-aktiv: das Board sieht fokussiert aus, auch ohne Fokus.** macOS lässt
   inaktive Fenster bewusst zurücktreten — vibrierendes Glas graut aus, Materialien
   flachen ab, `.secondary`-Text hellt auf. Dieses Verhalten ist für Fenster gedacht,
@@ -840,6 +842,120 @@ Verworfen:
   das Verhältnis des Boards um (dort dunkeln die Spalten ab).
 - **Das Vorgänger-Icon** samt seiner Varianten (drei Scheiben, betonte Mitte, graue
   Platte, Akzentfarben): nachzulesen in der Git-Historie von `design/app-icon-concept.md`.
+
+### T-Shirt-Größen: der Reiter an der Kartenkante (29.09.–01.10.2026)
+
+**Warum es sie gibt.** Tickets sind in der Praxis nicht gleich groß geschnitten. Eine grobe
+Größe je Karte zeigt auf einen Blick, wie viel Arbeit im Backlog und in den Arbeitsspalten
+liegt. Die Funktion ist optional: Wer keine Größe setzt, sieht auf dem Board nichts davon.
+
+**Die Spannung zu Kanban, benannt.** Kanban schätzt eher nicht, es schneidet zu
+(„right-sizing"): Karten werden geteilt, bis sie ungefähr gleich groß sind, und dann trägt
+die bloße Zählung die Prognose — so rechnet das Statistik-Fenster. Größen sind trotzdem
+gängig, weil der Zuschnitt im Alltag selten gelingt. Zwei Regeln halten sie kanban-nah:
+Das **WIP-Limit zählt weiter Karten**, nicht Größenpunkte (eine zweite Währung würde die
+sichtbare Regel verwässern), und es gibt **kein XL** — was größer als L ist, wird vor dem
+Ziehen geteilt.
+
+**Drei Größen: S, M, L.** Grob schlägt fein; XS–XL stammt aus der Team-Schätzung. Unter S
+lohnt kein Etikett. Drei Stufen passen zur Priorität (`!`/`!!`/`!!!`) und bleiben
+einbuchstabig, was dem Reiter eine feste Breite gibt. Keine Zeitanker: Die Größe ist
+relativ. Editor und Kontextmenü nennen nur die Buchstaben — „Mittel (M)" direkt unter
+„Dringlichkeit: Mittel" las sich wie derselbe Wert zweimal.
+
+**Die Form: ein Karteireiter.** Die Karte ist eine linierte Karteikarte, ihr natürliches
+Etikett ist der Reiter. Er sitzt **mittig auf der rechten Kartenkante**, halb auf der Karte,
+halb im Spaltenrand, immer gleich groß (20 × 20 pt, so hoch wie die Datums-Kapsel) und
+immer an derselben Stelle: mittig auf dem ersten 38-pt-Band. Klappt die Karte beim Ziehen
+in eine Arbeitsspalte nach unten auf, bleibt der Reiter, wo er war. Er steht in allen
+offenen Spalten — die Größe bleibt wahr, wenn die Karte weiterzieht, und macht in
+„In Bearbeitung" die Verweildauer lesbar („L, seit 5 Tagen" ist normal). Nicht in
+Erledigt (dort steht nur der Titel) und nicht im Menüleisten-Panel (Planung findet auf dem
+Board statt).
+
+**Abstände: eine Regel.** Der Reiter lässt beidseits die 8 pt, die alle Elemente einer
+Kartenzeile trennen: zum Inhalt der Karte und zur Spaltenwand. Dafür braucht es 18 pt
+Spaltenrand und 18 pt rechten Innenrand statt 12. Gemessen wurden drei Fassungen: 16 × 22
+mit 4 pt Luft wirkte gedrungen; 16 × 20 mit 8 pt immer noch, weil der Buchstabe im Reiter
+seitlich 3,5 pt, oben aber 6 pt hatte; erst das Quadrat gibt ihm ringsum gleich viel Raum.
+
+**Wer die Funktion nicht nutzt, zahlt nichts.** Die breiteren Ränder gelten nur, solange
+irgendeine Karte eine Größe trägt; sonst bleibt es bei 12 pt. Der Wechsel gilt für das ganze
+Board, nicht je Spalte oder Karte — so unterscheiden sich Spalten nie voneinander, und ein
+Datum steht in jeder Zeile an derselben Stelle. Er passiert einmal, mit der ersten Größe,
+und ist animiert. Erledigte Karten mit Größe zählen mit, damit das Board nicht unter der
+Erledigung umspringt, die es gerade belohnt. Verworfen: die breiten Ränder immer (jeder
+Titel verlor 6 pt für einen Reiter, den es nie gab) und ein Wechsel je Spalte oder Karte
+(Datums-Kapseln stünden auf zwei Fluchten). Die Spalten sind seither für alle 12 pt breiter
+(292–412 statt 280–400), damit eine Karte mit Reiter so breit ist wie eine Karte vorher.
+
+**Material: mattierter, durchscheinender Kunststoff — gezeichnet, kein Systemglas.** Beide
+Systemgläser wurden gemessen (30.09.2026): `.glassEffect` wird flach grau, sobald das
+Fenster inaktiv ist — auf dem zweiten Bildschirm fast immer, ein Bruch der
+Immer-aktiv-Regel —, und `NSVisualEffectView` steht auf weißem Papier als grauer Fleck.
+Unter dem Reiter liegen zwei flache Farben und eine Kante; ein Weichzeichner hätte dort
+nichts zu tun, außer die Kante zu verwischen, die durchscheinen soll. Im Dunkelmodus hellt
+der Reiter auf, was unter ihm liegt. Im Hellmodus geht das nicht — das Papier ist schon
+weiß —, dort ist er ein dichter, leicht grauer Frost: eine Stufe dunkler als das Papier,
+eine heller als die Mulde. Der Rand fängt Licht von oben (ein gleichmäßig grauer Rahmen
+machte ihn zur Checkbox), ein kleiner Schatten hebt ihn ab. Keine Farbe: Orange heißt
+heute, Rot überfällig, Türkis WIP, dazu die Listenfarben.
+
+Das ist die einzige durchscheinende Fläche, die eine Karte berührt, und damit eine
+**bewusste, eng gefasste Ausnahme von „Glas ist Chrome, nie Inhalt"**: Der Reiter ist
+Zubehör an der Kante, keine Fläche, auf der Inhalt steht, und unter ihm liegen deckendes
+Papier und die Mulde — nicht das Hintergrundbild, dessen Helligkeit durchscheinende Karten
+scheitern ließ.
+
+**Der Buchstabe ist primär, gegen die Zwei-Stufen-Regel.** Die Größe *beschreibt* das
+Ticket nur und gehörte danach in die sekundäre Stufe. Gebaut und verworfen: Ein einzelner
+grauer Buchstabe auf hellem Reiter ist aus Board-Entfernung nicht lesbar. Dafür Medium
+statt Semibold — in Semibold wuchs einer Spalte voller Größen eine Leiter schwarzer
+Zeichen am rechten Rand, schwerer als die Titel.
+
+**Das Wiederholungs-Symbol verlässt die Backlog-Zeile.** Die Zeile ist die Planungsliste
+und trägt nur noch Prioritätsmarken, Titel und Datum; Wiederholung ist ein Detail der
+aufgeklappten Karte. VoiceOver sagt sie weiter in jeder Spalte an.
+
+**Greifen und Ziehen.** Der Reiter gehört zur Karte: Ein Klick auf seine herausragende
+Hälfte öffnet sie, und die angehobene Karte trägt ihn ganz. Letzteres brauchte einen Umweg
+(gemessen 01.10.2026): Das System fotografiert beim Ziehen den Rahmen der Ansicht, was
+immer die Inhaltsform sagt — mit der bloßen Karte als Rahmen war der Reiter halb
+abgeschnitten. Der Rahmen wird für das Ziehen um den Überstand verbreitert und danach
+wieder verengt.
+
+**Speicher: eine eigene Datei neben `columns.json`.** Nicht in Reminders (kein fremder
+Schreiber sieht oder überschreibt die Größe) und nicht in `columns.json`: Der Name
+verspräche dort Spalten, und die Zusammenführung der Spalte hat Sonderregeln (Ablage-
+Vermerke, Gleichstand geht nach Backlog), die für eine Größe nicht gelten. Ein Fehler beim
+Bau der Größen kann so auch den einzigen Spaltenspeicher nicht beschädigen. Sonst gleiche
+Logik: derselbe Ort (`BoardStorage`, aus `ColumnState` herausgezogen statt kopiert),
+Schlüssel ist die Karten-ID, jeder Eintrag datiert. Eine entfernte Größe bleibt 30 Tage als
+datierter Vermerk stehen — Abwesenheit ist keine Aussage, und ohne ihn brächte ein zweiter
+Mac die gerade entfernte Größe zurück. Ein neues Ticket, das nur eine Größe trägt, gilt
+weiter als leer: Die Größe beschreibt Inhalt, sie ersetzt ihn nicht.
+
+**Kein Schalter in den Einstellungen.** Die Funktion ist da und unsichtbar, bis man sie
+benutzt — eine Zeile im Editor, ein Eintrag im Kontextmenü, wie bei der Dringlichkeit.
+
+**Verworfene Formen** (in dieser Reihenfolge gebaut oder skizziert):
+
+| Verworfen | Grund |
+|---|---|
+| SF Symbol `m.square` in der Zeile | wirkt nicht wie ein Etikett |
+| Kapsel wie das Datum | konkurriert mit dem Datum |
+| bloßer Buchstabe | „Arbeit M" liest sich als ein Wort |
+| Kragenetikett an der Oberkante | belegt den Kopf der Karte, der dem Prozess gehört |
+| Etikett unten rechts | die Karte klappt nach unten auf, das Etikett darf nicht wandern |
+| Umriss ohne Füllung | wirkt unfertig |
+| Listenfarbe | sagt nichts über die Größe |
+| Farbskala grün bis rot | Rot heißt überfällig; eine große Aufgabe als Alarm bestraft |
+| Länge wächst mit der Größe | der Reiter soll immer gleich sein |
+| schmales Etikett im Innenrand (10 × 18) | zu gedrungen, zu schwach sichtbar |
+| Papierreiter, um die Kante gefaltet | Nutzer wählte die durchscheinende Fassung |
+| Systemglas (`.glassEffect`, `NSVisualEffectView`) | siehe Material |
+| weißer Reiter im Hellmodus | vom Papier nur am Schatten zu unterscheiden |
+| klares Glas im Dunkelmodus (Weiß 15 %) | die Kartenkante lief als harte Linie durch den Buchstaben |
 
 ### Die Einstellungen: drei Reiter (28.09.2026)
 
