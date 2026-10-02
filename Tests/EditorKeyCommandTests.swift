@@ -93,6 +93,14 @@ final class EditorKeyCommandTests: XCTestCase {
             .passThrough)
     }
 
+    /// While an input method is composing, Tab chooses a candidate.
+    func testTabDuringCompositionIsLeftAlone() {
+        XCTAssertEqual(
+            EditorKeyCommand.forKey(
+                code: EditorKeyCommand.tabKeyCode, isEditingMultilineText: true, isComposingText: true),
+            .passThrough)
+    }
+
     /// Option-Tab remains the way to type the character, and Command-Tab
     /// belongs to the system.
     func testModifiedTabIsLeftAlone() {

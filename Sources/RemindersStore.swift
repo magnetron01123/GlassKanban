@@ -259,14 +259,29 @@ final class RemindersStore: ObservableObject {
         }
     }
 
-    /// What a failed write says under its title. The app's own sentence, not
-    /// `error.localizedDescription`: that is "The operation couldn’t be
-    /// completed. (EKErrorDomain error N.)" — a domain and a number, in the
-    /// system's language rather than the app's, naming neither what happened
-    /// nor what is left (02.10.2026; the login item learned this first, see
-    /// `SettingsView`). The title above it already says which write it was.
-    static var refusedByReminders: String {
-        String(localized: "Reminders did not accept the change. The task stays as it was.")
+    /// What a failed write says under its title, and where the system's own
+    /// answer goes.
+    ///
+    /// The app's own sentence, not `error.localizedDescription`: that is "The
+    /// operation couldn’t be completed. (EKErrorDomain error N.)" — a domain
+    /// and a number, in the system's language rather than the app's
+    /// (02.10.2026; the login item learned this first, see `SettingsView`).
+    /// The title above it already says which write it was.
+    ///
+    /// The one cause the app can name itself, it names: a read-only list
+    /// refuses every write, and a user who is not told so tries again. The
+    /// error is kept — domain and code — in `UserDefaults`, because this
+    /// app's log cannot be read back (CLAUDE.md) and a sentence without a
+    /// number leaves nothing to diagnose from.
+    private func refusalMessage(_ write: String, on reminder: EKReminder?, error: Error) -> String {
+        let nsError = error as NSError
+        UserDefaults.standard.set(
+            "\(Date.now.formatted(.iso8601)) — \(write): \(nsError.domain) \(nsError.code)",
+            forKey: StoredSetting.reminderWriteLastFailure.key)
+        if reminder?.calendar?.allowsContentModifications == false {
+            return String(localized: "This list is read-only. The task stays as it was.")
+        }
+        return String(localized: "Reminders did not accept the change. The task stays as it was.")
     }
 
     struct SaveFailure: Identifiable {
@@ -1231,7 +1246,7 @@ final class RemindersStore: ObservableObject {
                 // learning that this list is read-only.
                 pendingSaveFailure = SaveFailure(
                     cardID: cardID, title: String(localized: "Not Moved"),
-                    message: Self.refusedByReminders, source: source)
+                    message: refusalMessage("move", on: reminder, error: error), source: source)
                 scheduleRefreshAfterWrite()
                 return nil
             }
@@ -1440,6 +1455,7 @@ final class RemindersStore: ObservableObject {
             try eventStore.save(reminder, commit: true)
         } catch {
             scheduleRefreshAfterWrite()
+            _ = refusalMessage("create", on: reminder, error: error)
             return .failed(String(localized: "Reminders did not accept the task"))
         }
         // Optimistic, like the "+" and like `move`: the count in the panel's
@@ -1641,7 +1657,7 @@ final class RemindersStore: ObservableObject {
             try eventStore.remove(reminder, commit: true)
         } catch {
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: String(localized: "Not Deleted"), message: Self.refusedByReminders)
+                cardID: cardID, title: String(localized: "Not Deleted"), message: refusalMessage("delete", on: reminder, error: error))
             scheduleRefreshAfterWrite()
             return
         }
@@ -1756,7 +1772,7 @@ final class RemindersStore: ObservableObject {
             try eventStore.save(reminder, commit: true)
         } catch {
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: String(localized: "Not Renamed"), message: Self.refusedByReminders)
+                cardID: cardID, title: String(localized: "Not Renamed"), message: refusalMessage("rename", on: reminder, error: error))
             scheduleRefreshAfterWrite()
             return
         }
@@ -2061,7 +2077,7 @@ final class RemindersStore: ObservableObject {
             return
         } catch {
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: String(localized: "Not Saved"), message: Self.refusedByReminders)
+                cardID: cardID, title: String(localized: "Not Saved"), message: refusalMessage("save", on: reminder, error: error))
             scheduleRefreshAfterWrite()
             return
         }

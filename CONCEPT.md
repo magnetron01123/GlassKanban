@@ -1156,7 +1156,10 @@ einem Feld, Meldungstexte aus ganzen Sätzen.
 „The operation couldn’t be completed. (EKErrorDomain error N.)" — Domäne und Nummer, in
 der Systemsprache. Der Titel sagt, was nicht geschah („Nicht umbenannt"), darunter steht
 der eigene Satz: „Erinnerungen hat die Änderung nicht angenommen. Die Aufgabe bleibt, wie
-sie war."
+sie war." Die eine Ursache, die die App selbst kennt, nennt sie: „Diese Liste ist nur
+lesbar. …" — wer das nicht erfährt, versucht es noch einmal. Domäne und Nummer des Fehlers
+gehen nicht verloren; sie stehen als `reminderWriteLastFailure` in den Einstellungen der
+App (`plutil -p` auf die Container-plist), weil das Log dieser App nicht lesbar ist.
 
 **Vorgeschichte, damit sie sich nicht wiederholt (09.08.2026):** Aus einer Marktrecherche
 kam der Vorschlag, alle Texte einem Durchgang „anbieten statt mahnen" zu unterziehen,

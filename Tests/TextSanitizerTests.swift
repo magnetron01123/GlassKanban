@@ -42,6 +42,17 @@ final class TextSanitizerTests: XCTestCase {
         XCTAssertEqual(TextSanitizer.firstLinkHost("http://localhost:8123/lovelace"), "localhost")
     }
 
+    /// Credentials in a link stay off the card.
+    func testLinkHostNeverShowsUserInfo() {
+        XCTAssertEqual(TextSanitizer.firstLinkHost("https://ghp_token@github.com/org/repo"), "github.com")
+        XCTAssertEqual(TextSanitizer.firstLinkHost("https://user:pass@www.example.com:8443/x"), "example.com")
+    }
+
+    /// An address literal is not a name; the card falls back to "Untitled".
+    func testAddressLiteralHasNoHost() {
+        XCTAssertNil(TextSanitizer.firstLinkHost("http://[::1]:8080/"))
+    }
+
     func testNoLinkHasNoHost() {
         XCTAssertNil(TextSanitizer.firstLinkHost("Ganz normaler Titel"))
         XCTAssertNil(TextSanitizer.firstLinkHost(nil))

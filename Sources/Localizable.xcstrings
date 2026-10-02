@@ -3646,6 +3646,23 @@
           }
         }
       }
+    },
+    "This list is read-only. The task stays as it was.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Liste ist nur lesbar. Die Aufgabe bleibt, wie sie war."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This list is read-only. The task stays as it was."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

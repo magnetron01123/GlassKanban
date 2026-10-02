@@ -949,6 +949,12 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
   echten Zugs und Tab/⇧Tab im Notizfeld mit echter Tastatur. Beide Regeln sind als reine
   Funktion getestet (`CardSortingTests`, `EditorKeyCommandTests`), die Geste und die Taste
   nicht — der Rechner war während der Umsetzung in Benutzung.
+- **Platzhalter außerhalb des Sichtbaren (Review 02.10.2026):** In einer aufgeklappten,
+  nach unten gerollten Spalte steht der Platzhalter für eine Karte, die nach oben sortiert
+  (heute fällig; jede Karte nach Erledigt), außerhalb des Sichtfelds — die Spalte färbt
+  sich, ein Landeplatz ist nicht zu sehen. Naheliegend: die Spalte beim Eintritt des Zugs
+  so weit rollen, dass der Platz sichtbar ist. Erst mit einem echten Zug ansehen, dann
+  bauen.
 - **Tablett, Schnellerfassung:** In der zweiten Prüfrunde rutschte der Backlog-Kopf nach
   einer getippten Erfassung um eine Zeile aus dem Panel und blieb dort (Foto). Über
   Bedienungshilfen ausgelöst blieb er stehen. Vermutung: Die Rollfläche folgt dem

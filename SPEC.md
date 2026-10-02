@@ -608,7 +608,7 @@ Blick die Verweildauer zurücksetzen. Escape wirft die Änderungen dieser Sitzun
 gefahrlos, weil bis dahin nichts geschrieben wurde — deshalb keine Rückfrage „Änderungen
 verwerfen?", die der einzige modale Dialog des Boards wäre. Im mehrzeiligen Notizfeld gehört Return
 dem Feld (Notizen sind öfter Listen als Sätze) — von dort schließt **⌘Return**. **Tab geht
-auch aus dem Notizfeld weiter** zum nächsten Feld, ⇧Tab zurück (02.10.2026; vorher schrieb
+auch aus dem Notizfeld weiter** zur URL, ⇧Tab zurück zum Titel (02.10.2026; vorher schrieb
 Tab dort ein Tabzeichen, und zur URL kam man nur mit der Maus). ⌥Tab schreibt das Zeichen.
 
 **Karten tragen keinen Tastaturfokus und keine Hover-Tooltips** — beides war kurz
@@ -1221,7 +1221,8 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   EventKit wird nichts zurückgeschrieben, auch nicht beim Umbenennen, und der Editor zeigt
   Notizen und URL-Feld ungefiltert. **Eine Ausnahme (02.10.2026):** Besteht ein Titel nur
   aus einem Link, zeigt die Karte dessen Host („example.com") statt „Ohne Titel" — sonst
-  sahen zwei verschiedene Karten gleich aus. Der Host ist reine Anzeige; Umbenennen und
+  sahen zwei verschiedene Karten gleich aus. Zugangsdaten vor einem „@" und Adressen in
+  eckigen Klammern erscheinen nie. Der Host ist reine Anzeige; Umbenennen und
   Editor arbeiten weiter mit dem gespeicherten Titel
 - **Der Fuß der Karte hat Vorrang vor der Notiz** (02.10.2026): Braucht der Titel drei
   Zeilen, kürzt die Notiz zeilenweise auf das, was die feste Höhe lässt. Vorher schob eine

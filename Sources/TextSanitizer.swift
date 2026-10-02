@@ -32,8 +32,18 @@ enum TextSanitizer {
         for scheme in ["https://", "http://"] where link.hasPrefix(scheme) {
             link.removeFirst(scheme.count)
         }
-        if link.hasPrefix("www.") { link.removeFirst(4) }
-        let host = link.prefix { !"/?#:".contains($0) }
+        // The authority is everything up to the path. Whatever stands in
+        // front of an "@" is a name or a secret and never reaches the card:
+        // "https://token@github.com/x" was hidden whole while links were
+        // only stripped, and must not come back as "token@github.com".
+        var authority = String(link.prefix { !"/?#".contains($0) })
+        if let at = authority.lastIndex(of: "@") {
+            authority = String(authority[authority.index(after: at)...])
+        }
+        // An address literal ("[::1]") names no place a reader recognises.
+        guard !authority.hasPrefix("[") else { return nil }
+        if authority.hasPrefix("www.") { authority.removeFirst(4) }
+        let host = authority.prefix { $0 != ":" }
         return host.isEmpty ? nil : String(host)
     }
 

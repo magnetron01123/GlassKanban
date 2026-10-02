@@ -50,7 +50,8 @@ enum EditorKeyCommand: Equatable {
         holdsCommand: Bool = false,
         holdsShift: Bool = false,
         holdsOption: Bool = false,
-        isEditingMultilineText: Bool = false
+        isEditingMultilineText: Bool = false,
+        isComposingText: Bool = false
     ) -> EditorKeyCommand {
         switch code {
         case escapeKeyCode:
@@ -64,7 +65,9 @@ enum EditorKeyCommand: Equatable {
             // themselves. Option-Tab stays the system's way to type the
             // character where somebody does want one, and Command-Tab is
             // not this app's key at all.
-            if !isEditingMultilineText || holdsOption || holdsCommand {
+            // Nor while an input method is composing: there Tab picks a
+            // candidate, and taking it would throw the composition away.
+            if !isEditingMultilineText || holdsOption || holdsCommand || isComposingText {
                 .passThrough
             } else {
                 holdsShift ? .focusPrevious : .focusNext

@@ -87,6 +87,9 @@ struct TicketEditSheet: View {
     /// title on purpose. A ticket the "+" just made opens for *writing*, and
     /// its first missing thing is the name.
     @FocusState private var titleFocused: Bool
+    /// Only so that Tab from the notes has a named place to go (see
+    /// `EditorKeyCommands`).
+    @FocusState private var urlFocused: Bool
 
     /// A card the "+" or ⌘N just made, as opposed to one opened to be read.
     /// Read straight from the store rather than latched in `load()`: the
@@ -167,6 +170,11 @@ struct TicketEditSheet: View {
                 isEnabled: !isDuePopoverPresented,
                 onCommit: onClose,
                 onCancel: cancel,
+                // Named targets, not "the window's next key view": the card
+                // is an overlay in the board's window, and that loop also
+                // holds the toolbar and whatever else the board owns.
+                onFocusNext: { urlFocused = true },
+                onFocusPrevious: { titleFocused = true },
                 // Closing the window is the other route AppKit takes without
                 // SwiftUI running a disappear pass — and unlike quitting, the
                 // app stays alive, so nothing later cleans up. Measured:
@@ -359,6 +367,7 @@ struct TicketEditSheet: View {
                 .font(BoardText.editorBody)
                 .textFieldStyle(.plain)
                 .lineLimit(1)
+                .focused($urlFocused)
                 // No autocorrection or capitalisation on an address — the
                 // system would otherwise "fix" a domain into a sentence.
                 .autocorrectionDisabled()
@@ -1051,6 +1060,9 @@ private struct EditorKeyCommands: NSViewRepresentable {
     var isEnabled: Bool
     var onCommit: () -> Void
     var onCancel: () -> Void
+    /// Tab and Shift-Tab out of the notes field.
+    var onFocusNext: () -> Void
+    var onFocusPrevious: () -> Void
     /// Called when the window this view lives in is about to close. The view
     /// is the one place that knows which window that is.
     var onWindowClose: () -> Void
@@ -1070,6 +1082,8 @@ private struct EditorKeyCommands: NSViewRepresentable {
         view.isEnabled = isEnabled
         view.onCommit = onCommit
         view.onCancel = onCancel
+        view.onFocusNext = onFocusNext
+        view.onFocusPrevious = onFocusPrevious
         view.onWindowClose = onWindowClose
     }
 
@@ -1077,6 +1091,8 @@ private struct EditorKeyCommands: NSViewRepresentable {
         var isEnabled = true
         var onCommit: () -> Void = {}
         var onCancel: () -> Void = {}
+        var onFocusNext: () -> Void = {}
+        var onFocusPrevious: () -> Void = {}
         var onWindowClose: () -> Void = {}
         private var monitor: Any?
         private var windowObserver: Any?
@@ -1127,7 +1143,8 @@ private struct EditorKeyCommands: NSViewRepresentable {
                 holdsCommand: event.modifierFlags.contains(.command),
                 holdsShift: event.modifierFlags.contains(.shift),
                 holdsOption: event.modifierFlags.contains(.option),
-                isEditingMultilineText: Self.isEditingMultilineText(in: window))
+                isEditingMultilineText: Self.isEditingMultilineText(in: window),
+                isComposingText: (window.firstResponder as? NSTextView)?.hasMarkedText() ?? false)
             switch command {
             case .commit:
                 hasAnswered = true
@@ -1138,10 +1155,10 @@ private struct EditorKeyCommands: NSViewRepresentable {
                 onCancel()
                 return nil
             case .focusNext:
-                window.selectNextKeyView(nil)
+                onFocusNext()
                 return nil
             case .focusPrevious:
-                window.selectPreviousKeyView(nil)
+                onFocusPrevious()
                 return nil
             case .passThrough:
                 return event
