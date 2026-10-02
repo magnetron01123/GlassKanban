@@ -298,7 +298,12 @@ struct CardView: View {
         .font(BoardText.body(scale))
         .lineLimit(3)
         .multilineTextAlignment(.leading)
-        .fixedSize(horizontal: false, vertical: true)
+        // No vertical `fixedSize`: the note takes what the fixed card height
+        // leaves and shortens by whole lines. Pinned to its own three lines,
+        // a three-line note under a three-line title pushed the footer half
+        // off the card — and the footer is where "Überfällig" stands
+        // (measured 02.10.2026). Title and footer keep their height; the
+        // note is the zone that gives.
         .padding(cardInsets(top: 8, bottom: 8))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }

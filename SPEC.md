@@ -129,7 +129,13 @@ auf Mechanik aufmerksam. Es soll einfach schon dort sein.
 - Native Toolbar (SwiftUI `.toolbar`/`NSToolbar`) statt selbstgebauter Titelleiste
 - Volles natives App-Menü + Tastaturkürzel (siehe unten)
 - Respektiert macOS-Bedienungshilfen: „Transparenz reduzieren", „Bewegung reduzieren",
-  „Kontrast erhöhen"
+  „Kontrast erhöhen". Unter „Kontrast erhöhen" werden Konturen kräftiger, der Umriss des
+  leeren Platzes doppelt so deutlich und die Zahl im Spaltenzähler primär statt sekundär
+  (02.10.2026). **Gemessene Kontraste im Normalzustand** (02.10.2026, 1×-Foto, Mindestwerte
+  wegen Kantenglättung): Sekundärtext auf Karte 4,1 : 1 (hell) und 4,4 : 1 (dunkel);
+  Spaltenkopf und Falz-Zeile auf der Mulde 3,5 und 3,1; Zahl in der Zähler-Kapsel 3,4 und
+  2,8. Das sind die Sekundärfarbe des Systems auf einer getönten Fläche; eine eigene
+  Schwelle ist nicht festgelegt
 
 ## Datenmodell
 
@@ -435,12 +441,18 @@ zurück.
 - **„Deine längste Folge bisher" steht nur, wenn es etwas heißt** — ab drei Tagen und
   während der Rekord entsteht, nicht ab der allerersten Aufgabe und nicht wochenlang.
   Aufmerksamkeit gehört Ereignissen, nicht Dauerzuständen.
+- **Unter der Folge steht eine Belohnung oder nichts** (02.10.2026). An einem Tag ohne
+  Erledigung stand dort „Eine Aufgabe hält die Folge" — ein Appell, der so lange stehen
+  blieb, wie der Tag leer war; er ist entfallen. Die Entfernung zum Rekord („Noch N Tage
+  bis zum Rekord") gibt es ab 1 und bis 5 Tage; eine Folge von ein oder zwei Tagen, die
+  ihr eigener Rekord ist, bekam vorher „Noch 0 Tage bis zum Rekord" (`StreakStats.recordNote`)
 - **Die Flamme nickt nur bei einer Erledigung** — nicht beim Rückgängigmachen und nicht um
   Mitternacht, wenn der Tageszähler auf null springt.
 - **„Erst abschließen" ist eine Korrektur, kein Zug:** kein Erledigt-Klang, kein zweiter
   Undo-Schritt. Vorher stellte ⌘Z danach genau die eben abgelehnte Überlastung wieder her.
 - **Der WIP-Dialog nennt die Zahl, mit der entschieden wurde** (die ganze Spalte), nicht
-  die gefilterte Ansicht. Der Spaltenkopf zeigt weiterhin, was auf dem Schirm ist.
+  die gefilterte Ansicht. Der Kopf einer Limit-Spalte nennt dieselbe Zahl (siehe „Was das
+  Board gegen sich selbst absichert").
 - **Ein neues Ticket landet nur in einer beschreibbaren Liste.** War die Zielliste
   schreibgeschützt, tat das „+" sichtbar nichts — beliebig oft, ohne Meldung.
 - **Umbenennen schreibt nur bei echter Änderung.** Ein gespeicherter Titel mit
@@ -493,8 +505,12 @@ Fehlerbild:
   abgehakt, war sie in beiden und erreichte das Board zweimal unter derselben ID.
 - **Das WIP-Limit zählt die ganze Spalte, nicht die gefilterte Ansicht.** Begonnene Arbeit
   ist begonnen, auch wenn ein Filter sie gerade verbirgt; ein Limit, das eine
-  Ansichtseinstellung abschaltet, ist keins. Der Spaltenkopf zeigt weiterhin die sichtbare
-  Zahl — wo beide auseinandergehen, folgt die Regel dem Board, nicht der Ansicht.
+  Ansichtseinstellung abschaltet, ist keins. **Der Kopf einer Spalte mit Limit zählt
+  deshalb ebenfalls die ganze Spalte** (02.10.2026): „Als Nächstes" und „In Bearbeitung"
+  zeigen auch gefiltert `2 / 3`, und Teal folgt dieser Zahl. Vorher stand dort die
+  sichtbare Menge — `0 / 3` über einer Spalte mit zwei Karten, während der Dialog einen
+  Moment später „4 von 3" sagte. Backlog und Erledigt tragen keine Regel im Zähler und
+  nennen weiter, was auf dem Schirm ist (`KanbanStatus.headerCount`).
 - **Die WIP-Rückfrage erscheint nur bei einem Zug, den der Nutzer gerade macht.** Bei ⌘Z
   fragte sie zu einer Entscheidung, die niemand traf, und „Erst abschließen" legte dabei
   einen neuen Undo-Schritt an — die Karte pendelte zwischen zwei Spalten.
@@ -538,7 +554,7 @@ Reminders.
 | **Drag & Drop** zwischen Spalten | Spaltenwechsel (siehe Datenmodell). Der Zug ist gegenüber macOS als *Verschieben* deklariert — der Zeiger trägt kein Kopier-Plus (05.09.2026) |
 | **Einfacher Klick** auf eine Karte | öffnet den **Karten-Editor** direkt auf dem Board |
 | **Rechtsklick** | Kontextmenü: Bearbeiten, In Erinnerungen öffnen, Verschieben nach, Größe, Umbenennen, Löschen |
-| **„+" im Backlog** | Neues Ticket anlegen und sofort im Karten-Editor öffnen |
+| **„+" im Backlog** | Neue Aufgabe anlegen und sofort im Karten-Editor öffnen |
 
 ### Karten-Editor (`TicketEditSheet`)
 
@@ -591,7 +607,9 @@ hat — eine Karte nur anzuschauen ist ein Lesevorgang, kein Schreibvorgang, son
 Blick die Verweildauer zurücksetzen. Escape wirft die Änderungen dieser Sitzung weg; das ist
 gefahrlos, weil bis dahin nichts geschrieben wurde — deshalb keine Rückfrage „Änderungen
 verwerfen?", die der einzige modale Dialog des Boards wäre. Im mehrzeiligen Notizfeld gehört Return
-dem Feld (Notizen sind öfter Listen als Sätze) — von dort schließt **⌘Return**.
+dem Feld (Notizen sind öfter Listen als Sätze) — von dort schließt **⌘Return**. **Tab geht
+auch aus dem Notizfeld weiter** zum nächsten Feld, ⇧Tab zurück (02.10.2026; vorher schrieb
+Tab dort ein Tabzeichen, und zur URL kam man nur mit der Maus). ⌥Tab schreibt das Zeichen.
 
 **Karten tragen keinen Tastaturfokus und keine Hover-Tooltips** — beides war kurz
 implementiert und wurde als bewusste Entscheidung wieder entfernt (Begründung in
@@ -911,7 +929,7 @@ Notizen verändert; die Absicherung ist Hygiene, nicht Fehlerbehebung.)
 
 | Kürzel | Wirkung |
 |---|---|
-| ⌘N | Neues Ticket im Backlog (derselbe Weg wie das „+") |
+| ⌘N | Neue Aufgabe im Backlog (derselbe Weg wie das „+") |
 | ⌘F | Finden-Popover (Suche + Filter) |
 | ⇧⌘F | Filter zurücksetzen |
 | ⇧⌘R | In Erinnerungen öffnen |
@@ -971,13 +989,14 @@ wie auf dem Board. Kein stehendes Zeichen — kein Pfeil, keine Schiene, kein Ve
 | Karte | Papier mit Streifen, Schatten, Badge, Wiederholungs-Icon | Menüzeile (26 pt, 13 pt Schrift): Punkt in Listenfarbe, Prioritätsmarken, Titel, Fälligkeit **nur bei Heute und Überfällig** (`MenuBarTray.showsDueDate`), als schlichter Text rechts, 11 pt — Überfällig in Systemrot, wie Erinnerungen es schreibt, Heute in der Textfarbe, die Verweildauer daneben sekundär: die drei Gewichte des Board-Badges als drei Textfarben, keine Kapsel (warum: CONCEPT.md, „Das Menüleisten-Panel: Messungen"). Graue Daten sind Planung, und die findet auf dem Board statt. **Zeigt eine Zeile des Abschnitts eine Fälligkeit oder eine Verweildauer, halten alle seine Zeilen die Spalte dafür frei**, damit die Titel auf einer Flucht enden — wie ein Menü allen Einträgen die Kürzel-Spalte gibt, sobald einer eins hat; Mindestbreiten, ein längeres Wort schiebt den Titel, statt selbst gekürzt zu werden. Zu lange Titel kürzt das System zeichenweise (BACKLOG.md, „Explizit abgelehnt"). Hover hebt die Zeile als hellere Glasschicht |
 | Erledigt-Karte | Durchstrich mit Zeichen-Sweep | Durchstrich, statisch — der Sweep ist die Belohnung des Boards |
 | Verweildauer | ab 3 Tagen auf jeder Karte der Arbeitsspuren, mit Uhr-Glyph | nur in „In Bearbeitung", ab derselben Schwelle, als bloße Zahl rechts vor der Fälligkeit, in ihrer eigenen Spalte. Auf den anderen Abschnitten wäre sie eine Zahl ohne Frage |
-| Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach" | dieselben, in derselben Reihenfolge: „Bearbeiten" öffnet das Board mit dem Editor der Karte (dasselbe wie ein Klick auf die Zeile), „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
+| Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach", „Größe", „Umbenennen", „Löschen" | die ersten drei, in derselben Reihenfolge — Größe, Umbenennen und Löschen bleiben dem Board: „Bearbeiten" öffnet das Board mit dem Editor der Karte (dasselbe wie ein Klick auf die Zeile), „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
 | Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
+| Keine Quelle | Hinweis in der Board-Mitte: „Keine Liste ausgewählt" / „Keine Erinnerungslisten" mit Weg hinaus | derselbe Hinweis mit demselben Weg statt der vier Abschnitte (02.10.2026) — vier Köpfe mit „0" lasen sich wie ein Board ohne Arbeit |
 | Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | in Ruhe die letzten 3 (Bestätigung, keine Liste), die Falz-Zeile öffnet das 7-Tage-Fenster |
 | Backlog | eigene Spur mit Falz-Zeile | **ein Abschnitt wie die anderen, mit der Falz-Zeile des Boards** (12.09.2026): in Ruhe schneidet er wie `BacklogFold` — erst die noch nicht fälligen weg (dieselbe Einstellung „Noch nicht Fälliges einklappen"), dann der Deckel, hier 8 statt 15. Darunter die Zeile des Boards, Wort für Wort: „N noch nicht fällig", „N weitere anzeigen", „Weniger anzeigen". Aufgeklappt alle Karten; das Panel wächst nach unten mit — **eine Bewegung auf der Falz-Kurve des Boards** (`Board.foldAnimation`, 0,35 s ease-in-out — **derselbe Antrieb wie `ColumnView.fold`:** ein `withAnimation` auf dem geteilten Token, die enthüllten Zeilen blenden ein wie die Karten des Boards, ohne Skalierung, und unter „Bewegung reduzieren" springt beides; Wiedererkennung ist der Zweck, 13.09.2026): Die Zeilen gleiten wie die Karten des Boards, und die Unterkante des Panels reist mit ihnen auf derselben Kurve; Oberkante, Seiten und alles über der Falz stehen still (gemessen 13.09.2026, Kopf und Zeilen in jedem Frame an derselben Stelle). Warum das drei Anläufe brauchte, steht in CONCEPT.md („Das Menüleisten-Panel: Messungen") —, kein Abschnitt scrollt in sich; ist der Bildschirm zu kurz, steht das Panel an seiner Unterkante, der aufgeklappte Abschnitt bleibt offen, und das ganze Panel scrollt — ohne sichtbaren Rollbalken, wie ein Menü (13.09.2026) — nur ein zu kurzer Bildschirm begrenzt das Panel, und dann scrollt es als Ganzes. Zustand pro Sitzung wie auf dem Board; das Panel öffnet in Ruhe |
 | Falz-Zeile | zentriert unter dem Stapel, Text medium sekundär, Chevron dreht, Hover hebt auf primär, kein Glas | dieselbe Zeile, **linksbündig in der Zeilenspalte, das Chevron vorn im Glyphenfeld** wie das Plus der Erfassung; ohne Punkt und ohne Glas-Hover, genau das unterscheidet sie von einem Ticket. Gilt **nur für Backlog und Erledigt**, wie auf dem Board: Als Nächstes und In Bearbeitung falten nie — ihr WIP-Limit hält sie kurz, und eine dorthin gezogene Karte muss dort zu sehen sein, wo sie gelandet ist. Erledigt ab 3 („N ältere anzeigen" öffnet das 7-Tage-Fenster des Boards; die 30 Tage bleiben dem Board) |
 | Zugziele | alle drei anderen Spuren | alle drei anderen Abschnitte, Backlog eingeschlossen — Zurücklegen ist ein Kanban-Zug, und die Karte landet in einer Zahl, die man sieht |
-| Ablegeziel | gestrichelter Umriss in Kartenform | der ganze Abschnitt hebt sich als akzentgetöntes Glas, wie eine Menüzeile unter dem Zeiger |
+| Ablegeziel | gestrichelter Umriss in Kartenform, **an der Stelle, an der die Karte nach der Sortierung der Spalte landet** (02.10.2026; vorher immer am Fuß des Stapels, wo eine heute fällige Karte nie ankam). Liegt die Stelle hinter dem Falz, steht er am Ende des sichtbaren Stapels (`KanbanCard.landingIndex`) | der ganze Abschnitt hebt sich als akzentgetöntes Glas, wie eine Menüzeile unter dem Zeiger |
 | WIP-Frage | Alert über dem Fenster | Zeile ganz oben, teal getönt, mit den beiden Knöpfen; passt beides nicht in eine Zeile — auf Deutsch der Normalfall —, stehen die Knöpfe unter der Frage, statt dass Spaltenname und Zahlen abgeschnitten werden |
 | Filter und Suche | gelten | gelten **nicht** — das Tablett hat kein Chrome, das eine fehlende Karte erklären könnte |
 | ⌘Z | ja | **nein**: kein Textfokus im Panel, und ein Eintrag wäre nur vom Board aus erreichbar |
@@ -1200,7 +1219,14 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
 - **Links werden auf der Karte immer ausgeblendet:** URL-artige Textteile werden vor der
   Anzeige aus Titel und Notizen entfernt. Das betrifft **nur die Karten-Darstellung** — in
   EventKit wird nichts zurückgeschrieben, auch nicht beim Umbenennen, und der Editor zeigt
-  Notizen und URL-Feld ungefiltert
+  Notizen und URL-Feld ungefiltert. **Eine Ausnahme (02.10.2026):** Besteht ein Titel nur
+  aus einem Link, zeigt die Karte dessen Host („example.com") statt „Ohne Titel" — sonst
+  sahen zwei verschiedene Karten gleich aus. Der Host ist reine Anzeige; Umbenennen und
+  Editor arbeiten weiter mit dem gespeicherten Titel
+- **Der Fuß der Karte hat Vorrang vor der Notiz** (02.10.2026): Braucht der Titel drei
+  Zeilen, kürzt die Notiz zeilenweise auf das, was die feste Höhe lässt. Vorher schob eine
+  dreizeilige Notiz unter einem dreizeiligen Titel Fälligkeit und Listenname halb aus der
+  Karte
 - **Hashtags in Notizen** werden angezeigt wie jedes andere Wort (seit 13.08.2026; vorher filterte die App ihr eigenes Steuerzeichen heraus)
 - **Backlog klappt über 15 Karten ein** — die 16. und alle weiteren stehen hinter „N weitere anzeigen"
 - **Keine Tooltips auf Karten** (siehe Interaktion) — Tooltips gibt es nur am Chrome:

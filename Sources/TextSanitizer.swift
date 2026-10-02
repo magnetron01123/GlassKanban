@@ -16,6 +16,27 @@ enum TextSanitizer {
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// The host of the first link in a title — "example.com" for
+    /// "https://www.example.com/a/b?c". Display only, and only for a title
+    /// that is nothing *but* links: stripped, such a card had no name left
+    /// and two different tickets both read "Ohne Titel" (measured
+    /// 02.10.2026). The host says which one it is without bringing the link
+    /// itself back onto the card.
+    ///
+    /// Kept apart from `displayTitle` on purpose. That value is what rename
+    /// and the optimistic updates compare against; a host slipped in there
+    /// would one day be written back into the reminder as its title.
+    static func firstLinkHost(_ raw: String?) -> String? {
+        guard let raw, let match = raw.firstMatch(of: urlRegex) else { return nil }
+        var link = String(match.output).lowercased()
+        for scheme in ["https://", "http://"] where link.hasPrefix(scheme) {
+            link.removeFirst(scheme.count)
+        }
+        if link.hasPrefix("www.") { link.removeFirst(4) }
+        let host = link.prefix { !"/?#:".contains($0) }
+        return host.isEmpty ? nil : String(host)
+    }
+
     /// First non-empty line of the notes after removing URLs and status tags.
     /// The card shows this in a single line; truncation happens in the view.
     static func notesPreview(_ raw: String?) -> String {

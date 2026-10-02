@@ -130,7 +130,7 @@ final class AppearanceDelegate: NSObject, NSApplicationDelegate {
 }
 
 extension Notification.Name {
-    /// Raised by "New Ticket" so the Backlog lane can run the same creation
+    /// Raised by "New Task" so the Backlog lane can run the same creation
     /// its "+" button does — one path, one set of rules.
     static let glassKanbanNewTicket = Notification.Name("GlassKanbanNewTicket")
 
@@ -205,7 +205,7 @@ struct GlassKanbanApp: App {
                 // ⌘N means "new" on every Mac, and here it opened another
                 // application. The "+" in the Backlog had no shortcut at all,
                 // so the reflex produced the one thing it never means.
-                Button("New Ticket") {
+                Button("New Task") {
                     NotificationCenter.default.post(name: .glassKanbanNewTicket, object: nil)
                 }
                 .keyboardShortcut("n")

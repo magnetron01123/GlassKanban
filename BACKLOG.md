@@ -354,9 +354,9 @@ nicht möglich)
   Pull-Signal) setzt aber eine Bedingung: Die eine Karte muss aus der bestehenden
   Board-Ordnung folgen (oberste nach automatischer Sortierung), nie aus einer neuen
   Auszeichnungs-Logik. Kanban-rein wäre alternativ, dass das Widget bei freiem
-  „In Bearbeitung"-Platz genau die bestehende Einladung zeigt („Frei für die nächste
-  Aufgabe") — dieselbe Regel „höchstens eine Einladung, nur wo Nichtstun etwas kostet",
-  nur an einem zweiten Ort.
+  „In Bearbeitung"-Platz genau die bestehende Einladung zeigt („Fertigwerden beginnt
+  hier") — dieselbe Regel „eine Einladung nur im leeren Platz, nur wo Nichtstun etwas
+  kostet" (CONCEPT.md, „Design-Anspruch"), nur an einem zweiten Ort.
   **Gewicht gestiegen (09.08.2026):** Das Widget ist nicht nur eine Mac-Nebenansicht,
   sondern das einzige technische Mittel, mit dem die App außerhalb ihres Fensters überhaupt
   präsent sein kann — auf dem Mac-Schreibtisch ebenso wie später im StandBy des iPhones
@@ -925,6 +925,54 @@ Gebaut wurde stattdessen eine Meldung, die den Systemzustand benennt (SPEC.md).
   gebaute Bewegung selbst („nur die Unterkante reist"); in Apples Panels wandert der
   Einstellungen-Link beim Aufklappen einer Liste genauso. Nicht wieder vorschlagen, ohne
   dass der Nutzer das Thema selbst öffnet.
+
+## Design-Abnahme vor dem Release (02.10.2026)
+
+Zwei Prüfrunden am gebauten Stand, danach vier Entscheidungen des Nutzers. Umgesetzt:
+
+- ~~**Limit-Spalten zählen unter einem Filter die ganze Spalte**~~ — umgesetzt 02.10.2026, SPEC.md („Was das Board gegen sich selbst absichert"); Abwägung in CONCEPT.md („Finden")
+- ~~**Ablege-Platzhalter an der Landeposition**~~ — umgesetzt 02.10.2026, SPEC.md („Menüleiste: das Tablett", Zeile „Ablegeziel")
+- ~~**Kartenfuß hat Vorrang vor der Notiz**~~, ~~**Host statt „Ohne Titel" bei reinem Link-Titel**~~ — umgesetzt 02.10.2026, SPEC.md („Karten-Anzeige")
+- ~~**Tablett ohne Listenquelle erklärt sich**~~ — umgesetzt 02.10.2026, SPEC.md („Menüleiste: das Tablett")
+- ~~**Kein Appell unter der Folge, kein „Noch 0 Tage bis zum Rekord"**~~ — umgesetzt 02.10.2026, SPEC.md („Ehrliche Zustände und Belohnungen")
+- ~~**Ein Wort: Aufgabe; Coaching-Satz aus Tooltip und VoiceOver; kein Systemtext in Meldungen; Plural bei Limit 1**~~ — umgesetzt 02.10.2026, CONCEPT.md („Ton der Texte")
+- ~~**Tab im Notizfeld geht weiter**~~ — umgesetzt 02.10.2026, SPEC.md („Karten-Editor")
+- ~~**Eine Hover-Dauer, ein Strich für gestrichelte Umrisse, „Erfasst" auf der Kante der Pop-ups, „Kontrast erhöhen" am Zähler und am leeren Platz**~~ — umgesetzt 02.10.2026, `DesignSystem.swift`, SPEC.md („Architektur")
+
+Entschieden und **nicht** geändert: mehrere Einladungen auf einem frischen Board (CONCEPT.md,
+„Design-Anspruch", Spannung benannt). Zurückgezogen, weil schon entschieden: leere Notizzone
+statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Systemformat.
+
+**Offen aus der Abnahme:**
+
+- **Am Bildschirm noch nicht gesehen:** der Platzhalter an der Landeposition während eines
+  echten Zugs und Tab/⇧Tab im Notizfeld mit echter Tastatur. Beide Regeln sind als reine
+  Funktion getestet (`CardSortingTests`, `EditorKeyCommandTests`), die Geste und die Taste
+  nicht — der Rechner war während der Umsetzung in Benutzung.
+- **Tablett, Schnellerfassung:** In der zweiten Prüfrunde rutschte der Backlog-Kopf nach
+  einer getippten Erfassung um eine Zeile aus dem Panel und blieb dort (Foto). Über
+  Bedienungshilfen ausgelöst blieb er stehen. Vermutung: Die Rollfläche folgt dem
+  fokussierten Feld, während der Inhalt eine Zeile wächst. Erst mit Tastatur nachstellen,
+  dann beheben — nichts auf Verdacht eingebaut.
+- **Prioritätsmarke allein in der ersten Zeile**, wenn das erste Wort des Titels länger
+  ist als die Zeile. Ein geschütztes Leerzeichen hält sie nicht (probiert und
+  zurückgenommen).
+- **„Heute · 0 Aufgaben" in der Statistik** ist eine stehende Null in einem Fenster, das
+  keine Fehlbeträge melden will. Bei der Abnahme gesehen, nicht entschieden.
+- **Listenfarbe als einziger Träger:** In Backlog, Erledigt und im Tablett sagt nur der
+  Streifen bzw. Punkt, zu welcher Liste eine Karte gehört; Blau und Gelb sind in Graustufen
+  und bei Tritanopie kaum zu trennen. `differentiateWithoutColor` wird nirgends gelesen.
+  Karten-Tooltips sind abgelehnt — eine Antwort müsste woanders herkommen.
+- **Kontrast im Normalzustand:** Sekundärtext auf der Mulde und im Zähler liegt unter
+  4,5 : 1 (Werte in SPEC.md, „Architektur"). Mehr als die Systemfarbe ginge nur über eine
+  dunklere Mulde oder primären Text — beides eine Gestaltungsentscheidung.
+- **Einstellungen auf dem Zweitmonitor:** `ScreenBoundedPane` misst an `NSScreen.main`
+  statt am Bildschirm des Fensters; Auswirkung nicht gemessen.
+- **Kleine Texte:** Alert-Titel „Beim Anmelden starten nicht möglich", „Aufnahme …" im
+  Kurzbefehl-Feld, die zwei langen Fußtexte der Einstellungen, drei Schreibweisen der
+  Zugriffsmeldung.
+- **Statistik-Popover über Karten** (Glas lässt Kartentext durchscheinen) und **helles
+  Icon auf hellem Grund** — beobachtet, ohne Vorschlag.
 
 ## Kleiner Rest aus dem Nutzer-Review (10.08.2026)
 

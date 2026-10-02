@@ -202,6 +202,82 @@ final class CardSortingTests: XCTestCase {
         XCTAssertEqual(sortedTitles(noDates), ["apple", "Zebra"])
     }
 
+    // MARK: - Where a dropped card lands
+
+    private func lane(_ cards: [KanbanCard]) -> [KanbanCard] {
+        cards.sorted(by: KanbanCard.openLaneOrder(calendar: calendar, now: now))
+    }
+
+    private func landing(_ card: KanbanCard, in status: KanbanStatus, among cards: [KanbanCard]) -> Int {
+        KanbanCard.landingIndex(of: card, in: status, among: cards, calendar: calendar, now: now)
+    }
+
+    /// The case that was measured: a card due today, dragged into a Backlog
+    /// of undated cards, goes to the head — not to the foot where the
+    /// placeholder used to stand.
+    func testACardDueTodayLandsAtTheHeadOfTheBacklog() {
+        let backlog = lane([
+            card("A", created: date(2026, 7, 1)),
+            card("B", created: date(2026, 7, 2)),
+        ])
+        let dragged = card("Heute", priority: 5, due: now, status: .next)
+        XCTAssertEqual(landing(dragged, in: .backlog, among: backlog), 0)
+    }
+
+    /// An undated, unprioritised card that is younger than everything in the
+    /// lane goes behind them all — the index one past the last card.
+    func testAYoungUndatedCardLandsBehindEverything() {
+        let next = lane([
+            card("A", created: date(2026, 7, 1), status: .next),
+            card("B", created: date(2026, 7, 2), status: .next),
+        ])
+        let dragged = card("Neu", created: date(2026, 7, 17))
+        XCTAssertEqual(landing(dragged, in: .next, among: next), 2)
+    }
+
+    /// In between: priority puts it behind the urgent card and ahead of the
+    /// plain ones.
+    func testAPrioritisedCardLandsBetweenUrgentAndPlain() {
+        let next = lane([
+            card("Fällig", due: now, status: .next),
+            card("Schlicht", created: date(2026, 7, 1), status: .next),
+        ])
+        let dragged = card("Wichtig", priority: 1)
+        XCTAssertEqual(landing(dragged, in: .next, among: next), 1)
+    }
+
+    /// Erledigt reads newest first, and a card finished now is the newest.
+    func testAFinishedCardLandsAtTheHeadOfDone() {
+        let done = [card("Gestern", status: .done), card("Vorgestern", status: .done)]
+        XCTAssertEqual(landing(card("Jetzt", status: .inProgress), in: .done, among: done), 0)
+    }
+
+    /// Ripeness is a Backlog matter. A recurring card with a future date is
+    /// "not yet due" there and sinks to the foot — but pulled into a working
+    /// lane it is a decision and sorts by its date like any other card.
+    func testRipenessIsJudgedInTheLaneTheCardLandsIn() {
+        let later = date(2026, 8, 1)
+        let dragged = card("Serie", due: later, recurring: true, status: .next)
+        let backlog = lane([card("A", created: date(2026, 7, 1))])
+        XCTAssertEqual(landing(dragged, in: .backlog, among: backlog), 1)
+        let next = lane([card("B", created: date(2026, 7, 1), status: .next)])
+        XCTAssertEqual(landing(dragged, in: .next, among: next), 0)
+    }
+
+    /// Whatever the lane, the answer agrees with sorting the lane afresh.
+    func testLandingAgreesWithTheLanesOwnOrder() {
+        let cards = lane([
+            card("A", priority: 1, created: date(2026, 7, 3), status: .next),
+            card("B", due: date(2026, 7, 20), status: .next),
+            card("C", created: date(2026, 7, 1), status: .next),
+            card("D", created: date(2026, 7, 5), status: .next),
+        ])
+        var dragged = card("X", priority: 5, created: date(2026, 7, 2))
+        let index = landing(dragged, in: .next, among: cards)
+        dragged.status = .next
+        XCTAssertEqual(lane(cards + [dragged]).firstIndex { $0.id == "X" }, index)
+    }
+
     // MARK: - Ripeness outranks everything else
 
     /// The reason this rule exists. A high-priority monthly chore used to sit

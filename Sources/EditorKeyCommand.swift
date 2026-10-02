@@ -18,6 +18,13 @@ enum EditorKeyCommand: Equatable {
     case commit
     /// Escape: close the card, throwing the edit away.
     case cancel
+    /// Tab in the notes: on to the next field. A note is the one place where
+    /// Tab would otherwise write a tab character — which a reminder has no
+    /// use for — and leave the keyboard with no way on to the fields below
+    /// it (measured 02.10.2026).
+    case focusNext
+    /// Shift-Tab in the notes: back to the field before.
+    case focusPrevious
     /// Not the card's key — it travels on to whatever is being typed in.
     case passThrough
 
@@ -28,6 +35,7 @@ enum EditorKeyCommand: Equatable {
     static let returnKeyCode: UInt16 = 36
     /// The numeric keypad's own Enter. Nobody means anything different by it.
     static let keypadEnterKeyCode: UInt16 = 76
+    static let tabKeyCode: UInt16 = 48
 
     /// - Parameters:
     ///   - isEditingMultilineText: true while the notes field has the cursor.
@@ -40,6 +48,8 @@ enum EditorKeyCommand: Equatable {
     static func forKey(
         code: UInt16,
         holdsCommand: Bool = false,
+        holdsShift: Bool = false,
+        holdsOption: Bool = false,
         isEditingMultilineText: Bool = false
     ) -> EditorKeyCommand {
         switch code {
@@ -49,6 +59,16 @@ enum EditorKeyCommand: Equatable {
             .cancel
         case returnKeyCode, keypadEnterKeyCode:
             isEditingMultilineText && !holdsCommand ? .passThrough : .commit
+        case tabKeyCode:
+            // Only in the notes: the one-line fields already move on by
+            // themselves. Option-Tab stays the system's way to type the
+            // character where somebody does want one, and Command-Tab is
+            // not this app's key at all.
+            if !isEditingMultilineText || holdsOption || holdsCommand {
+                .passThrough
+            } else {
+                holdsShift ? .focusPrevious : .focusNext
+            }
         default:
             .passThrough
         }

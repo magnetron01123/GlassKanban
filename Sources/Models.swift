@@ -48,6 +48,17 @@ enum KanbanStatus: String, CaseIterable, Identifiable {
     /// also keeps the app's only modal nag to a single, justified spot.
     var asksBeforeExceedingLimit: Bool { self == .inProgress }
 
+    /// The number a lane's header states while the board is narrowed down.
+    ///
+    /// A lane with a limit counts everything in it, filter or not: the limit
+    /// is a rule about started work, and "0 / 3" over a lane that holds two
+    /// cards is the header misreporting the rule it carries — while the WIP
+    /// question, a moment later, counts the whole lane (02.10.2026). A lane
+    /// without a limit states what is on screen, as it always has.
+    static func headerCount(visible: Int, total: Int, hasLimit: Bool) -> Int {
+        hasLimit ? total : visible
+    }
+
     /// Whether an empty lane of this status puts up its standing invitation
     /// — the dashed outline with a sentence in it (SPEC.md, "Leere Spalte:
     /// der angedeutete Platz").
@@ -103,6 +114,10 @@ enum CardDensity {
 struct KanbanCard: Identifiable, Equatable {
     let id: String
     var title: String
+    /// The host of the first link in the stored title, for the one case in
+    /// which `title` comes out empty because the title was nothing but a
+    /// link (see `TextSanitizer.firstLinkHost`). Shown, never written.
+    var titleLinkHost: String? = nil
     /// One line, for compact rows and tooltips.
     var notesPreview: String
     /// Several lines, for the roomier cards in the working lanes.
@@ -310,6 +325,34 @@ struct KanbanCard: Identifiable, Equatable {
                 return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
             }
         }
+    }
+
+    /// Where a card dropped into `lane` comes to rest among the cards the lane
+    /// is showing — the index the drop placeholder stands at.
+    ///
+    /// The lanes sort themselves, so a dropped card does not land where it was
+    /// let go: one due today goes to the head of the Backlog, a finished one
+    /// to the head of Erledigt. The placeholder used to stand at the foot of
+    /// the pile whatever the card, promising a place the card never took
+    /// (measured 02.10.2026). `cards` is the lane as drawn, already in its own
+    /// order; the answer is `cards.count` when the card belongs behind them
+    /// all.
+    static func landingIndex(
+        of card: KanbanCard,
+        in lane: KanbanStatus,
+        among cards: [KanbanCard],
+        calendar: Calendar = .current,
+        now: Date = .now
+    ) -> Int {
+        // Erledigt reads newest first, and a card finished this instant is
+        // the newest there is.
+        guard lane != .done else { return 0 }
+        // As it will be once it has landed: ripeness is a Backlog matter, so
+        // the lane is part of the question.
+        var landed = card
+        landed.status = lane
+        let comesBefore = openLaneOrder(calendar: calendar, now: now)
+        return cards.firstIndex { comesBefore(landed, $0) } ?? cards.count
     }
 }
 

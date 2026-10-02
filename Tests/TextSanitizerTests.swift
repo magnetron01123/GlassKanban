@@ -24,6 +24,35 @@ final class TextSanitizerTests: XCTestCase {
         XCTAssertEqual(TextSanitizer.displayTitle(nil), "")
     }
 
+    // MARK: - Link host
+
+    /// A title that is nothing but a link strips to nothing; the host is
+    /// what the card shows instead of "Untitled".
+    func testLinkHostOfALinkOnlyTitle() {
+        let raw = "https://www.Example.com/ein/pfad?x=1#frag"
+        XCTAssertEqual(TextSanitizer.displayTitle(raw), "")
+        XCTAssertEqual(TextSanitizer.firstLinkHost(raw), "example.com")
+    }
+
+    func testLinkHostWithoutScheme() {
+        XCTAssertEqual(TextSanitizer.firstLinkHost("www.example.org/x"), "example.org")
+    }
+
+    func testLinkHostDropsThePort() {
+        XCTAssertEqual(TextSanitizer.firstLinkHost("http://localhost:8123/lovelace"), "localhost")
+    }
+
+    func testNoLinkHasNoHost() {
+        XCTAssertNil(TextSanitizer.firstLinkHost("Ganz normaler Titel"))
+        XCTAssertNil(TextSanitizer.firstLinkHost(nil))
+    }
+
+    /// The host must never reach the value rename compares against — it
+    /// would be written back into the reminder as its title.
+    func testDisplayTitleNeverCarriesTheHost() {
+        XCTAssertEqual(TextSanitizer.displayTitle("https://example.com"), "")
+    }
+
     // MARK: - Notes preview
 
     func testPreviewSkipsURLOnlyLine() {

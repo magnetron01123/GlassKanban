@@ -451,6 +451,14 @@ enum Board {
     // Motion
     static let hoverAnimation: Animation = .easeOut(duration: 0.16)
     static let dropTargetAnimation: Animation = .easeOut(duration: 0.15)
+    /// A count capsule taking or losing its over-limit tint — on the board's
+    /// lane heads and in the menu bar panel alike.
+    static let capsuleAnimation: Animation = .easeInOut(duration: 0.2)
+    /// The dashed outline of a place a card belongs: the drop placeholder and
+    /// the empty lane's standing slot. One stroke, so the two read as the
+    /// same statement in two colours — they were 1 pt / 4-4 and 1.5 pt / 5-4,
+    /// under a comment promising they were identical.
+    static let slotStroke = StrokeStyle(lineWidth: 1.5, dash: [5, 4])
     /// A card changing lanes — the board's single most common movement, so
     /// its speed *is* the board's sense of pace: this one curve drives every
     /// reflow when `store.cards` changes (a card leaving one lane, arriving

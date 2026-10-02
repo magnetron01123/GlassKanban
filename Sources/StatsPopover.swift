@@ -302,66 +302,41 @@ struct StatsPopover: View {
             }
             if let note = heroNote {
                 // Ranked by weight, size and system text colour — never by an
-                // orange label, see the badge rule above.
-                //
-                // The two states are different kinds of line and are set as
-                // such. A reward states a fact about the count and stays at
-                // reading size in the primary colour. A prompt is a caption
-                // on it and drops to `meta`, which is also what stops it
-                // reading as a second figure standing level with the first.
-                Text(note.text)
-                    .font(note.isReward ? BoardText.body : BoardText.meta)
-                    .fontWeight(note.isReward ? .semibold : .regular)
-                    .foregroundStyle(note.isReward ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                // orange label, see the badge rule above. A reward states a
+                // fact about the count: reading size, primary colour.
+                Text(note)
+                    .font(BoardText.body)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(.horizontal, 4)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            [String(localized: "\(streak.current) days in a row"), heroNote?.text]
+            [String(localized: "\(streak.current) days in a row"), heroNote]
                 .compactMap { $0 }
                 .joined(separator: ". "))
     }
 
-    /// One line, three jobs, in strict priority — an invitation while today is
-    /// still empty, otherwise the goal gradient toward the personal record,
-    /// otherwise nothing.
+    /// The reward line under the figure, or nothing. Which line, and when,
+    /// is `StreakStats.recordNote`'s decision; this only puts it into words.
     ///
     /// It never reports a shortfall. "Heute 0 erledigt" would be the one line
     /// in this window that reads as an accusation, and a board whose rule is
-    /// to reward and never punish does not get to say that.
-    /// Below this, "longest streak" describes an accident rather than an
-    /// achievement — every first day is a personal best.
-    private static let minStreakWorthNaming = 3
-
-    private var heroNote: (text: String, isReward: Bool)? {
-        guard streak.todayCount > 0 else {
-            return (streak.current == 0
-                        ? String(localized: "One task starts a new streak")
-                        : String(localized: "One task keeps the streak alive"),
-                    false)
+    /// to reward and never punish does not get to say that. Nor does it
+    /// prompt: until 02.10.2026 an empty day stood under "One task keeps the
+    /// streak alive", an appeal that stayed for as long as the day stayed
+    /// empty — standing text asking for something, in a window that only
+    /// states.
+    private var heroNote: String? {
+        switch streak.recordNote {
+        case .longestYet: String(localized: "Your longest streak yet")
+        case .daysToRecord(1): String(localized: "1 day to the record")
+        case .daysToRecord(let gap): String(localized: "\(gap) days to the record")
+        case nil: nil
         }
-        guard streak.current > 0, streak.best > 0 else { return nil }
-        // Only while the record is actually being set — and only once there
-        // is a record worth the word. After the very first task the line
-        // stood there truthfully and meaninglessly, and on a long streak it
-        // then stayed for weeks: a reward that never leaves is furniture, and
-        // attention belongs to what just happened, not to a standing state.
-        if streak.current >= streak.best, streak.best >= Self.minStreakWorthNaming {
-            return (String(localized: "Your longest streak yet"), true)
-        }
-        // Goal-gradient (Hull): closeness to the goal is what accelerates
-        // effort — so this only appears once the record is actually in reach.
-        // "38 days to go" is not a pull, it is a wall.
-        let gap = streak.best - streak.current
-        guard gap <= Self.recordInReachDays else { return nil }
-        return (gap == 1
-            ? String(localized: "1 day to the record")
-            : String(localized: "\(gap) days to the record"), true)
     }
-
-    private static let recordInReachDays = 5
 
     private var forecastDays: Double? {
         WrappedStats.forecastDaysToDone(

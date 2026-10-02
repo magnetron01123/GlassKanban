@@ -259,6 +259,16 @@ final class RemindersStore: ObservableObject {
         }
     }
 
+    /// What a failed write says under its title. The app's own sentence, not
+    /// `error.localizedDescription`: that is "The operation couldn’t be
+    /// completed. (EKErrorDomain error N.)" — a domain and a number, in the
+    /// system's language rather than the app's, naming neither what happened
+    /// nor what is left (02.10.2026; the login item learned this first, see
+    /// `SettingsView`). The title above it already says which write it was.
+    static var refusedByReminders: String {
+        String(localized: "Reminders did not accept the change. The task stays as it was.")
+    }
+
     struct SaveFailure: Identifiable {
         let cardID: String
         /// What did not happen, in the user's words — "Not Moved" for
@@ -276,10 +286,12 @@ final class RemindersStore: ObservableObject {
         var id: String { cardID }
     }
 
-    /// Cards in a lane regardless of search or filters. The lane header counts
-    /// what is *visible* (documented intent), but the statistics window states
-    /// facts about the system — a Little's-Law estimate fed a filtered load
-    /// against an unfiltered throughput would quietly mix two worlds.
+    /// Cards in a lane regardless of search or filters. A lane without a limit
+    /// counts what is *visible* in its header; a lane with one counts this
+    /// (see `KanbanStatus.headerCount`), as do the WIP question and the
+    /// statistics window, which state facts about the system — a Little's-Law
+    /// estimate fed a filtered load against an unfiltered throughput would
+    /// quietly mix two worlds.
     func totalCount(for status: KanbanStatus) -> Int {
         cards.filter { $0.status == status }.count
     }
@@ -1111,6 +1123,7 @@ final class RemindersStore: ObservableObject {
         return KanbanCard(
             id: reminder.calendarItemIdentifier,
             title: TextSanitizer.displayTitle(reminder.title),
+            titleLinkHost: TextSanitizer.firstLinkHost(reminder.title),
             notesPreview: TextSanitizer.notesPreview(reminder.notes),
             notesExcerpt: TextSanitizer.notesExcerpt(reminder.notes),
             // The whole note plus the link — what the card shows is a
@@ -1218,7 +1231,7 @@ final class RemindersStore: ObservableObject {
                 // learning that this list is read-only.
                 pendingSaveFailure = SaveFailure(
                     cardID: cardID, title: String(localized: "Not Moved"),
-                    message: error.localizedDescription, source: source)
+                    message: Self.refusedByReminders, source: source)
                 scheduleRefreshAfterWrite()
                 return nil
             }
@@ -1427,7 +1440,7 @@ final class RemindersStore: ObservableObject {
             try eventStore.save(reminder, commit: true)
         } catch {
             scheduleRefreshAfterWrite()
-            return .failed(error.localizedDescription)
+            return .failed(String(localized: "Reminders did not accept the task"))
         }
         // Optimistic, like the "+" and like `move`: the count in the panel's
         // Backlog head is the only receipt the capture gives, and it cannot
@@ -1479,7 +1492,7 @@ final class RemindersStore: ObservableObject {
     /// out of "kept" come through here, so ⌘Z reaches a new ticket whether it
     /// was filled in or handed over to Reminders.
     private func registerCreation(cardID: String, undoManager: UndoManager?) {
-        register(undoManager, name: String(localized: "Create Ticket"), for: cardID, at: beginWrite()) { store in
+        register(undoManager, name: String(localized: "Create Task"), for: cardID, at: beginWrite()) { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
     }
@@ -1597,7 +1610,7 @@ final class RemindersStore: ObservableObject {
         guard let card = cards.first(where: { $0.id == cardID }) else { return }
         pendingDeletion = PendingDeletion(
             cardID: cardID,
-            title: card.title.isEmpty ? String(localized: "Untitled") : card.title)
+            title: CardParts.displayTitle(of: card))
     }
 
     /// Deletes a ticket and registers the undo that puts it back. The
@@ -1628,7 +1641,7 @@ final class RemindersStore: ObservableObject {
             try eventStore.remove(reminder, commit: true)
         } catch {
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: String(localized: "Not Deleted"), message: error.localizedDescription)
+                cardID: cardID, title: String(localized: "Not Deleted"), message: Self.refusedByReminders)
             scheduleRefreshAfterWrite()
             return
         }
@@ -1638,7 +1651,7 @@ final class RemindersStore: ObservableObject {
         persistColumns()
         sizes.set(nil, for: cardID, at: .now)
         persistSizes()
-        register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
+        register(undoManager, name: String(localized: "Delete Task"), for: cardID, at: writeStamp) { store in
             store.restoreTicket(snapshot, undoManager: undoManager)
         }
         cards.removeAll { $0.id == cardID }
@@ -1690,7 +1703,7 @@ final class RemindersStore: ObservableObject {
             sizes.set(size, for: cardID, at: .now)
             persistSizes()
         }
-        register(undoManager, name: String(localized: "Delete Ticket"), for: cardID, at: writeStamp) { store in
+        register(undoManager, name: String(localized: "Delete Task"), for: cardID, at: writeStamp) { store in
             store.deleteTicket(cardID: cardID, undoManager: undoManager)
         }
         scheduleRefreshAfterWrite()
@@ -1743,7 +1756,7 @@ final class RemindersStore: ObservableObject {
             try eventStore.save(reminder, commit: true)
         } catch {
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: String(localized: "Not Renamed"), message: error.localizedDescription)
+                cardID: cardID, title: String(localized: "Not Renamed"), message: Self.refusedByReminders)
             scheduleRefreshAfterWrite()
             return
         }
@@ -1757,6 +1770,7 @@ final class RemindersStore: ObservableObject {
             // The card carries the display form, so the optimistic update has
             // to go through the same sanitizer the refresh would apply.
             cards[index].title = TextSanitizer.displayTitle(title)
+            cards[index].titleLinkHost = TextSanitizer.firstLinkHost(title)
         }
         scheduleRefreshAfterWrite()
     }
@@ -2047,7 +2061,7 @@ final class RemindersStore: ObservableObject {
             return
         } catch {
             pendingSaveFailure = SaveFailure(
-                cardID: cardID, title: String(localized: "Not Saved"), message: error.localizedDescription)
+                cardID: cardID, title: String(localized: "Not Saved"), message: Self.refusedByReminders)
             scheduleRefreshAfterWrite()
             return
         }
@@ -2114,7 +2128,10 @@ final class RemindersStore: ObservableObject {
         }
         // Only what was written is reflected — a field left alone on the
         // reminder must not be overwritten on the card either.
-        if titleChanged { cards[index].title = TextSanitizer.displayTitle(edited.title) }
+        if titleChanged {
+            cards[index].title = TextSanitizer.displayTitle(edited.title)
+            cards[index].titleLinkHost = TextSanitizer.firstLinkHost(edited.title)
+        }
         if notesChanged {
             cards[index].notesPreview = TextSanitizer.notesPreview(rewrittenNotes)
             cards[index].notesExcerpt = TextSanitizer.notesExcerpt(rewrittenNotes)

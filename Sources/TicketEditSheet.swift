@@ -43,6 +43,7 @@ struct TicketEditSheet: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var title = ""
     @State private var notes = ""
@@ -252,7 +253,7 @@ struct TicketEditSheet: View {
                     .accessibilityLabel(isDone ? "Title, done" : "Title")
             }
             .onHover { hovering in
-                withAnimation(Board.hoverAnimation) {
+                withAnimation(reduceMotion ? nil : Board.hoverAnimation) {
                     hoveredField = hovering ? .title : (hoveredField == .title ? nil : hoveredField)
                 }
             }
@@ -332,7 +333,7 @@ struct TicketEditSheet: View {
                 }
                 .editableHint(hoveredField == .notes, scheme: colorScheme)
                 .onHover { hovering in
-                    withAnimation(Board.hoverAnimation) {
+                    withAnimation(reduceMotion ? nil : Board.hoverAnimation) {
                         hoveredField = hovering ? .notes : (hoveredField == .notes ? nil : hoveredField)
                     }
                 }
@@ -366,7 +367,7 @@ struct TicketEditSheet: View {
                 }
                 .editableHint(hoveredField == .url, scheme: colorScheme)
                 .onHover { hovering in
-                    withAnimation(Board.hoverAnimation) {
+                    withAnimation(reduceMotion ? nil : Board.hoverAnimation) {
                         hoveredField = hovering ? .url : (hoveredField == .url ? nil : hoveredField)
                     }
                 }
@@ -379,13 +380,13 @@ struct TicketEditSheet: View {
             // card is still allowed, and the field is still editable — this
             // is friction, not a veto.
             if TicketURL.rejects(url) {
-                Text("Not stored — an address has no spaces")
+                Text("Not saved — an address has no spaces")
                     .font(BoardText.editorCaption)
                     .foregroundStyle(.secondary)
                     .transition(.opacity)
             }
         }
-        .animation(Board.hoverAnimation, value: TicketURL.rejects(url))
+        .animation(reduceMotion ? nil : Board.hoverAnimation, value: TicketURL.rejects(url))
         .padding(EdgeInsets(top: 12, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
     }
 
@@ -501,7 +502,11 @@ struct TicketEditSheet: View {
     /// How far a bordered control insets its own text. Only the uncontrolled
     /// value ("Erfasst") has to add it by hand, so that all four values in
     /// the zone start on one vertical line.
-    private static let controlTextInset: CGFloat = 6
+    ///
+    /// Measured, not assumed: at 6 the date stood 6 px left of the three
+    /// values under it (02.10.2026, 1× screenshot — control edge at 310, its
+    /// text at 323, the bare date at 317).
+    private static let controlTextInset: CGFloat = 12
 
     /// A structural label, not decorative meta — it has to read clearly at a
     /// glance, so it borrows `BoardText.chip`'s semibold weight (this app's
@@ -1120,6 +1125,8 @@ private struct EditorKeyCommands: NSViewRepresentable {
             let command = EditorKeyCommand.forKey(
                 code: event.keyCode,
                 holdsCommand: event.modifierFlags.contains(.command),
+                holdsShift: event.modifierFlags.contains(.shift),
+                holdsOption: event.modifierFlags.contains(.option),
                 isEditingMultilineText: Self.isEditingMultilineText(in: window))
             switch command {
             case .commit:
@@ -1129,6 +1136,12 @@ private struct EditorKeyCommands: NSViewRepresentable {
             case .cancel:
                 hasAnswered = true
                 onCancel()
+                return nil
+            case .focusNext:
+                window.selectNextKeyView(nil)
+                return nil
+            case .focusPrevious:
+                window.selectPreviousKeyView(nil)
                 return nil
             case .passThrough:
                 return event

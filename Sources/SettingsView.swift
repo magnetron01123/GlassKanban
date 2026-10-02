@@ -335,7 +335,7 @@ struct BoardSettingsView: View {
             // position hides anything: both fold, both count what they hold,
             // both are one click from the full pile (see `BacklogFold`).
             Section {
-                Toggle("Collapse Not-Yet-Due Items", isOn: $store.foldNotYetDue)
+                Toggle("Collapse Not-Yet-Due Tasks", isOn: $store.foldNotYetDue)
             } header: {
                 Text("Backlog")
             } footer: {
@@ -377,7 +377,7 @@ struct BoardSettingsView: View {
                 // wrap left the "0" alone at the end of a line and its meaning
                 // on the next (28.09.2026, user).
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("When a lane is full, the board asks before another card goes in.")
+                    Text("When a column is full, the board asks before another card goes in.")
                     Text("0 means no limit.")
                 }
             }

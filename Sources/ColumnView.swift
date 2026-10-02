@@ -122,6 +122,15 @@ struct ColumnView: View {
     /// Only lanes that would actually receive the card light up.
     private var showsDropFeedback: Bool { isTargeted && !isDragSource }
 
+    /// The card the dragged one will come to rest in front of, nil when it
+    /// goes behind everything this lane shows (see `KanbanCard.landingIndex`).
+    private var landingBeforeID: String? {
+        guard let draggingID = store.draggingCardID,
+              let dragged = store.cards.first(where: { $0.id == draggingID }) else { return nil }
+        let index = KanbanCard.landingIndex(of: dragged, in: status, among: displayedCards)
+        return index < displayedCards.count ? displayedCards[index].id : nil
+    }
+
     /// The invitation lives in the *free slot*, not on a card: Kanban's answer
     /// to "what next" has always been the open space on the board, and putting
     /// it here means no single ticket gets singled out as the one to take.
@@ -170,6 +179,11 @@ struct ColumnView: View {
             ScrollView {
                 LazyVStack(spacing: (singleLine ? 5 : Board.cardSpacing) * scale) {
                     ForEach(displayedCards) { card in
+                        // The landing spot stands where the lane's own order
+                        // will put the card, not at the foot of the pile.
+                        if showsDropFeedback, card.id == landingBeforeID {
+                            insertionSlot
+                        }
                         // No custom drag preview: SwiftUI rasterizes preview
                         // closures into a bitmap, which turned rotation and
                         // material fills into a pixelated snapshot. The
@@ -248,7 +262,9 @@ struct ColumnView: View {
                     // to join — in a folded Backlog with a scrolled lane,
                     // often out of sight entirely.
                     if showsDropFeedback {
-                        insertionSlot
+                        // Behind every card shown: the end of the pile, or a
+                        // card that belongs under the fold.
+                        if landingBeforeID == nil { insertionSlot }
                     } else if showsEmptySlot {
                         emptySlot
                     }
@@ -428,7 +444,12 @@ struct ColumnView: View {
                 // the capsule carries the colour, the label stays legible.
                 // A solid fill would borrow the weight reserved for overdue;
                 // being over capacity is worth noticing, not an emergency.
-                .foregroundStyle(isOverLimit ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                // Primary under "Increase Contrast" too: on the capsule the
+                // secondary colour measured 2.8:1 in the dark appearance
+                // (02.10.2026), the weakest pair on the board, and until
+                // then only outlines answered that setting.
+                .foregroundStyle(isOverLimit || contrast == .increased
+                    ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .padding(.horizontal, 7 * scale)
                 .padding(.vertical, 2 * scale)
                 .background {
@@ -438,7 +459,7 @@ struct ColumnView: View {
                         Board.chipShape.fill(.quaternary.opacity(Board.chipFill))
                     }
                 }
-                .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
+                .animation(reduceMotion ? nil : Board.capsuleAnimation, value: isOverLimit)
                 // The over-limit signal is otherwise colour alone.
                 .accessibilityValue(spokenCount)
         }
@@ -455,7 +476,14 @@ struct ColumnView: View {
     }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
-    private var isOverLimit: Bool { wipLimit.map { cards.count > $0 } ?? false }
+    private var isOverLimit: Bool { wipLimit.map { limitedCount > $0 } ?? false }
+
+    /// What a lane with a limit counts: the whole lane, even while a filter
+    /// hides part of it (see `KanbanStatus.headerCount`).
+    private var limitedCount: Int {
+        KanbanStatus.headerCount(
+            visible: cards.count, total: store.totalCount(for: status), hasLimit: wipLimit != nil)
+    }
 
     /// What the capsule counts. Erledigt's membership is defined by its time
     /// window, so the capsule states what the lane shows and grows when the
@@ -469,7 +497,7 @@ struct ColumnView: View {
     /// explicit"), so the limit rides along in the count itself.
     private var countLabel: String {
         if let wipLimit {
-            return "\(cards.count) / \(wipLimit)"
+            return "\(limitedCount) / \(wipLimit)"
         }
         return "\(shownCount)"
     }
@@ -500,7 +528,7 @@ struct ColumnView: View {
     /// Every lane opens the same way, so the four read as one family.
     private var countSummary: String {
         guard let wipLimit else { return String(localized: "\(shownCount) cards") }
-        return String(localized: "\(cards.count) of \(wipLimit) cards")
+        return String(localized: "\(limitedCount) of \(wipLimit) cards")
     }
 
     private var countDetails: [String] {
@@ -516,13 +544,16 @@ struct ColumnView: View {
             if !expanded, foldedCount > 0 {
                 details.append(String(localized: "\(foldedCount) older cards"))
             } else if expanded {
-                details.append(String(localized: "Older items live in Reminders"))
+                details.append(String(localized: "Older tasks live in Reminders"))
             }
         }
+        // Only the state, and only when there is one to name. Under the
+        // limit this line used to carry a maxim ("Finish before you stack")
+        // — standing advice in a tooltip and in every VoiceOver reading of
+        // the header, long after Settings had dropped the same sentence for
+        // being one (CONCEPT.md, "Ton der Texte").
         if isOverLimit {
             details.append(String(localized: "Over your limit"))
-        } else if wipLimit != nil {
-            details.append(String(localized: "Finish before you stack"))
         }
         if let laterHint {
             details.append(laterHint)
@@ -551,7 +582,7 @@ struct ColumnView: View {
         Board.cardShape(scale)
             .strokeBorder(
                 Color.accentColor.opacity(0.35),
-                style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                style: Board.slotStroke)
             .background(Color.accentColor.opacity(0.05), in: Board.cardShape(scale))
             .frame(height: slotHeight)
             .transition(.opacity)
@@ -566,8 +597,8 @@ struct ColumnView: View {
     private var emptySlot: some View {
         Board.cardShape(scale)
             .strokeBorder(
-                Color.primary.opacity(0.25),
-                style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                Color.primary.opacity(contrast == .increased ? 0.5 : 0.25),
+                style: Board.slotStroke)
             .frame(height: emptySlotHeight)
             .overlay {
                 Text(emptySlotText)
@@ -735,8 +766,8 @@ struct ColumnView: View {
             .onHover { hovering in
                 withAnimation(reduceMotion ? nil : Board.hoverAnimation) { addHovered = hovering }
             }
-            .accessibilityLabel("Add a new card")
-            .boardTooltip(String(localized: "Add a new card"))
+            .accessibilityLabel("Add a new task")
+            .boardTooltip(String(localized: "Add a new task"))
             Spacer()
         }
         .padding(.vertical, 4 * scale)
@@ -808,7 +839,7 @@ struct ColumnView: View {
         .id(expanded)
         .transition(.opacity)
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) { moreHovered = hovering }
+            withAnimation(reduceMotion ? nil : Board.hoverAnimation) { moreHovered = hovering }
         }
     }
 
