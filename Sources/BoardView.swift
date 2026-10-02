@@ -27,8 +27,8 @@ struct BoardView: View {
             board
         }
         .environment(\.boardTooltipsSuppressed, store.draggingCardID != nil)
-        // Set for the whole board, opened card included. What must keep its
-        // size — toolbar, tooltips, popovers — simply never reads it (see
+        // Set for the whole board. What must keep its size — the opened
+        // card, toolbar, tooltips, popovers — simply never reads it (see
         // `BoardScale`).
         .environment(\.boardScale, scale)
         .background { ScreenWidthReader(width: $screenWidth) }
@@ -209,7 +209,7 @@ struct BoardView: View {
         } message: { _ in
             // The whole reason this question exists, said plainly: undo is a
             // net with a hole in it, and the hole is worth one sentence.
-            Text("⌘Z brings the ticket back — but not its subtasks or attachments.")
+            Text("⌘Z brings the task back — but not its subtasks or attachments.")
         }
         .overlay { editorOverlay }
         // A card can leave the board while its editor is open — deleted on
@@ -388,7 +388,7 @@ struct BoardView: View {
 
     private var streakPillLabel: String {
         store.streakStats.current > 0
-            ? String(localized: "Statistics. Streak: \(store.streakStats.current) days in a row with at least one task done")
+            ? String(localized: "Statistics. Streak: \(store.streakStats.current) days in a row")
             : String(localized: "Statistics. No current streak")
     }
 
@@ -423,7 +423,7 @@ struct BoardView: View {
         // rather than hidden.
         .tint(store.isFiltering ? Color.accentColor : nil)
         .accessibilityLabel(store.isFiltering
-            ? String(localized: "Find, board is filtered, \(store.activeRestrictionCount) restrictions active")
+            ? String(localized: "Find, board is filtered, \(store.activeRestrictionCount) filters active")
             : String(localized: "Find a task"))
         .help(store.isFiltering
             ? "Board is filtered — \(store.activeRestrictionCount) active (⌘F)"
@@ -463,7 +463,7 @@ struct BoardView: View {
             }
         }
         .tint(.accentColor)
-        .help("Open Apple Reminders to create or edit tasks (⇧⌘R)")
+        .help("Open Reminders to create or edit tasks (⇧⌘R)")
     }
 
     /// The real Reminders icon, read from the installed app once.

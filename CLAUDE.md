@@ -8,7 +8,8 @@ gleichrangig; ausführlich hergeleitet in CONCEPT.md (Abschnitte „Motivation" 
 
 1. **Minimalismus** — Nimmt das Element Rauschen weg oder fügt es welches hinzu?
    Vibe-Referenz: Minimal-Desk-Setup. Feste Regeln: Glas ist Chrome, nie Inhalt.
-   Höchstens eine Einladung auf dem Board, und nur dort, wo Nichtstun etwas kostet.
+   Eine Einladung steht nur im leeren Platz einer Spalte — nie auf einer Karte, nie im
+   Chrome — und nur, wo Nichtstun etwas kostet.
    Kein Dauertext, kein Dauer-Badge, keine Karten-Tooltips. Wissen entsteht im Moment
    der Berührung, nicht über Onboarding.
 2. **Psychologische Wirksamkeit** — Belohnen, nie bestrafen. Bewegung und Aufmerksamkeit
@@ -70,7 +71,7 @@ darin nicht zu finden.
 
 ## Code-Landkarte
 
-Zwei Targets (App + Tests), `Sources/` mit rund 15.400 Zeilen SwiftUI; Projektdatei wird von XcodeGen
+Zwei Targets (App + Tests), `Sources/` mit rund 15.600 Zeilen SwiftUI; Projektdatei wird von XcodeGen
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
@@ -212,7 +213,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `Tests/`, 27 Dateien mit rund 410 Tests, benannt nach der Regel
+- **Tests** — `Tests/`, 27 Dateien mit rund 435 Tests, benannt nach der Regel
   statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
   Target heißt `GlassKanbanTests`.
 
@@ -247,7 +248,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   wird nur, was **das Verhalten nicht ändert oder nachweislich funktioniert**.
 - **Ton der Texte: knapp und sachlich, benennen statt kommentieren.** Die App spricht wie
   ein Werkzeug, nicht wie ein Begleiter — kein Coaching, kein Trost, kein Ansporn.
-  Hergeleitet samt sieben Prüffragen und Beispieltabelle in CONCEPT.md („Ton der Texte");
+  Hergeleitet samt acht Prüffragen und Beispieltabelle in CONCEPT.md („Ton der Texte");
   vor jeder Textänderung dort nachlesen. Drei Regeln, die dort am häufigsten verletzt
   wurden: Besitz benennen, wo der Zustand aus einer eigenen Einstellung folgt („Über
   deinem Limit"); die Frage stellen die Knöpfe, nicht der Meldungstext; und ein Punkt

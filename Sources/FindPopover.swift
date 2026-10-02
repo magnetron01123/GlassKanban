@@ -50,7 +50,7 @@ struct FindPopover: View {
             // reset would be a permanently greyed-out control.
             if store.isFiltering {
                 Divider()
-                Button("Reset All") {
+                Button("Reset Filters") {
                     store.resetFilters()
                 }
                 .buttonStyle(.link)

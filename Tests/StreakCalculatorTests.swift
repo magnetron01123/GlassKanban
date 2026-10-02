@@ -87,4 +87,45 @@ final class StreakCalculatorTests: XCTestCase {
                                            calendar: calendar, now: date(2026, 7, 17))
         XCTAssertEqual(stats.flameLevel, 0)
     }
+
+    // MARK: - The record line
+
+    private func stats(current: Int, best: Int, today: Int) -> StreakStats {
+        StreakStats(current: current, best: best, todayCount: today)
+    }
+
+    /// An empty day gets no line — neither a prompt nor a distance.
+    func testNoRecordNoteWhileTodayIsEmpty() {
+        XCTAssertNil(stats(current: 4, best: 6, today: 0).recordNote)
+        XCTAssertNil(stats(current: 0, best: 6, today: 0).recordNote)
+    }
+
+    /// The measured fault: day one or two of a first streak is its own
+    /// record, and the distance came out as "0 days to the record".
+    func testAShortStreakThatIsItsOwnRecordSaysNothing() {
+        XCTAssertNil(stats(current: 1, best: 1, today: 1).recordNote)
+        XCTAssertNil(stats(current: 2, best: 2, today: 3).recordNote)
+    }
+
+    func testLongestYetOnceTheRecordIsWorthNaming() {
+        XCTAssertEqual(stats(current: 3, best: 3, today: 1).recordNote, .longestYet)
+        XCTAssertEqual(stats(current: 9, best: 9, today: 2).recordNote, .longestYet)
+    }
+
+    func testTheDistanceIsNamedOnlyWithinReach() {
+        XCTAssertEqual(stats(current: 5, best: 6, today: 1).recordNote, .daysToRecord(1))
+        XCTAssertEqual(stats(current: 1, best: 6, today: 1).recordNote, .daysToRecord(5))
+        XCTAssertNil(stats(current: 1, best: 7, today: 1).recordNote)
+    }
+
+    /// Whatever the numbers, a named distance is never zero or less.
+    func testTheDistanceIsNeverZero() {
+        for best in 1...12 {
+            for current in 1...best {
+                if case .daysToRecord(let gap) = stats(current: current, best: best, today: 1).recordNote {
+                    XCTAssertGreaterThanOrEqual(gap, 1)
+                }
+            }
+        }
+    }
 }

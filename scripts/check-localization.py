@@ -43,12 +43,11 @@ LANGUAGES = ("en", "de")
 # Keys that interpolate a count but need no plural rule. Each needs a reason —
 # "it reads fine" is one, "the number can never be 1" is the stronger one.
 PLURAL_EXEMPT = {
-    "%lld days to the record": "gap == 1 has its own key, so this starts at 2",
+    "%lld days to the record": "0 is ruled out by StreakStats.recordNote (tested), 1 has its own key — so this starts at 2",
     "%lld done today": "'1 done today' reads correctly",
     "%lld not yet due": "'1 not yet due' reads correctly",
     "%lld of them not yet due": "'1 of them not yet due' reads correctly",
     "%lld of %lld": "bare ratio, no noun to inflect",
-    "%lld of %lld cards": "the noun follows the limit, which is never 1 in practice",
     "Board is filtered — %lld active (⌘F)": "no noun to inflect",
     "In this column for %lld days": "only shown from agingThresholdDays (3) upwards",
     "Last %lld Days": "fixed window, WrappedStats.trendWindowDays == 30",
@@ -58,10 +57,10 @@ PLURAL_EXEMPT = {
     "Milestone reached: %lld tasks done": "milestones are 50, 100, 250 … never 1",
     "Milestone reached: %lld": "milestones are 50, 100, 250 … never 1",
     "Recurring tasks whose next due date hasn't arrived yet rest behind the fold at the bottom of the Backlog — one click brings them forward, nothing is ever hidden for good. Beyond %lld cards, the rest folds regardless.": "fixed BacklogFold.collapsedLimit (15)",
-    "Show %lld more": "'Show 1 more' reads correctly; German inherited from before the localization",
-    "Show %lld older": "'Show 1 older' reads correctly; German inherited from before the localization",
+    "Show %lld more": "'Show 1 more' reads correctly; German holds because the noun it stands for (Karte) is feminine: '1 weitere'",
+    "Show %lld older": "'Show 1 older' reads correctly; German holds for the same reason: '1 ältere'",
     "Your limit: %lld": "bare number, no noun to inflect",
-    "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law": "fixed 30-day window",
+    "Your throughput: tasks completed per week, averaged over the last %lld days — the pace in Little's Law": "the observed days, 7 to 30 (WrappedStats.minObservedDaysForWeekly) — never 1",
 }
 
 # German in a Swift literal, by its own letters or by function words that no
@@ -172,6 +171,13 @@ def main():
                 state = unit["stringUnit"].get("state")
                 if state != "translated":
                     problems.append(f"{language} is {state}: {key!r}")
+                # A plural that follows one argument among several lives in a
+                # substitution ("%1$lld of %#@cards@"), with forms of its own.
+                for name, substitution in unit.get("substitutions", {}).items():
+                    for form, sub in substitution["variations"]["plural"].items():
+                        state = sub["stringUnit"].get("state")
+                        if state != "translated":
+                            problems.append(f"{language}/{name}/{form} is {state}: {key!r}")
             elif "variations" in unit:
                 for form, sub in unit["variations"]["plural"].items():
                     state = sub["stringUnit"].get("state")
@@ -186,7 +192,10 @@ def main():
             continue
         for language in LANGUAGES:
             unit = entry.get("localizations", {}).get(language, {})
-            if "variations" not in unit:
+            substituted = any(
+                "plural" in substitution.get("variations", {})
+                for substitution in unit.get("substitutions", {}).values())
+            if "variations" not in unit and not substituted:
                 problems.append(
                     f"counts but has no plural rule ({language}): {key!r}\n"
                     f"      add variations.plural, or list it in PLURAL_EXEMPT with a reason")

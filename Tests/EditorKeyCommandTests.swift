@@ -68,4 +68,49 @@ final class EditorKeyCommandTests: XCTestCase {
                 .passThrough)
         }
     }
+
+    // MARK: - Tab
+
+    /// In the notes Tab moves on instead of writing a tab character.
+    func testTabInNotesMovesToTheNextField() {
+        XCTAssertEqual(
+            EditorKeyCommand.forKey(code: EditorKeyCommand.tabKeyCode, isEditingMultilineText: true),
+            .focusNext)
+    }
+
+    func testShiftTabInNotesMovesBack() {
+        XCTAssertEqual(
+            EditorKeyCommand.forKey(
+                code: EditorKeyCommand.tabKeyCode, holdsShift: true, isEditingMultilineText: true),
+            .focusPrevious)
+    }
+
+    /// The one-line fields move on by themselves; the card must not take the
+    /// key from them.
+    func testTabInAOneLineFieldIsLeftAlone() {
+        XCTAssertEqual(
+            EditorKeyCommand.forKey(code: EditorKeyCommand.tabKeyCode, isEditingMultilineText: false),
+            .passThrough)
+    }
+
+    /// While an input method is composing, Tab chooses a candidate.
+    func testTabDuringCompositionIsLeftAlone() {
+        XCTAssertEqual(
+            EditorKeyCommand.forKey(
+                code: EditorKeyCommand.tabKeyCode, isEditingMultilineText: true, isComposingText: true),
+            .passThrough)
+    }
+
+    /// Option-Tab remains the way to type the character, and Command-Tab
+    /// belongs to the system.
+    func testModifiedTabIsLeftAlone() {
+        XCTAssertEqual(
+            EditorKeyCommand.forKey(
+                code: EditorKeyCommand.tabKeyCode, holdsOption: true, isEditingMultilineText: true),
+            .passThrough)
+        XCTAssertEqual(
+            EditorKeyCommand.forKey(
+                code: EditorKeyCommand.tabKeyCode, holdsCommand: true, isEditingMultilineText: true),
+            .passThrough)
+    }
 }

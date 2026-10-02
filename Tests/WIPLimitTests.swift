@@ -40,6 +40,25 @@ final class WIPLimitTests: XCTestCase {
         }
     }
 
+    /// The limit is a rule about started work, not about what a filter
+    /// leaves on screen: a lane that carries one counts all of it.
+    func testALimitedLaneCountsTheWholeLaneUnderAFilter() {
+        XCTAssertEqual(KanbanStatus.headerCount(visible: 0, total: 2, hasLimit: true), 2)
+        XCTAssertEqual(KanbanStatus.headerCount(visible: 1, total: 4, hasLimit: true), 4)
+    }
+
+    /// Backlog and Erledigt carry no rule in their count and state what is
+    /// on screen, as they always have.
+    func testALaneWithoutALimitCountsWhatIsVisible() {
+        XCTAssertEqual(KanbanStatus.headerCount(visible: 1, total: 40, hasLimit: false), 1)
+    }
+
+    /// Unfiltered, both numbers are the same and the rule changes nothing.
+    func testWithoutAFilterBothCountsAgree() {
+        XCTAssertEqual(KanbanStatus.headerCount(visible: 3, total: 3, hasLimit: true), 3)
+        XCTAssertEqual(KanbanStatus.headerCount(visible: 3, total: 3, hasLimit: false), 3)
+    }
+
     /// A lane that interrupts must be one that actually has a limit.
     func testInterruptingLaneAlsoSupportsALimit() {
         for status in KanbanStatus.allCases where status.asksBeforeExceedingLimit {

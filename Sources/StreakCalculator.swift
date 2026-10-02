@@ -27,6 +27,43 @@ struct StreakStats: Equatable {
     }
 }
 
+extension StreakStats {
+    /// The one line the statistics window may put under the streak figure.
+    enum RecordNote: Equatable {
+        /// The running streak is the longest there has been.
+        case longestYet
+        /// The record is this many days away, and within reach.
+        case daysToRecord(Int)
+    }
+
+    /// Below this, "longest streak" describes an accident rather than an
+    /// achievement — every first day is a personal best.
+    static let minStreakWorthNaming = 3
+    /// Goal-gradient (Hull): closeness to the goal is what accelerates
+    /// effort, so the distance is named only once the record is in reach.
+    /// "38 days to go" is not a pull, it is a wall.
+    static let recordInReachDays = 5
+
+    /// A reward, or nothing — never a prompt. Only once something is done
+    /// today: an empty day gets no line (02.10.2026; the appeal that stood
+    /// there was standing text, see `StatsPopover.heroNote`).
+    ///
+    /// "Longest yet" only while the record is actually being set, and only
+    /// once there is a record worth the word: after the very first task the
+    /// line stood there truthfully and meaninglessly, and on a long streak
+    /// it then stayed for weeks. A streak that equals a record too small to
+    /// name gets nothing at all — it used to fall through to the distance
+    /// and report "0 days to the record".
+    var recordNote: RecordNote? {
+        guard todayCount > 0, current > 0, best > 0 else { return nil }
+        if current >= best {
+            return best >= Self.minStreakWorthNaming ? .longestYet : nil
+        }
+        let gap = best - current
+        return gap <= Self.recordInReachDays ? .daysToRecord(gap) : nil
+    }
+}
+
 /// Computes the completion streak: the number of consecutive days (ending
 /// today, or yesterday if today has no completion yet) on which at least one
 /// reminder was completed. Purely derived from completion dates — no state.

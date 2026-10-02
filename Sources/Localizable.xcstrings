@@ -255,13 +255,57 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld von %lld Karten"
+            "value": "%1$lld von %#@cards@"
+          },
+          "substitutions": {
+            "cards": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Karte"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Karten"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld of %lld cards"
+            "value": "%1$lld of %#@cards@"
+          },
+          "substitutions": {
+            "cards": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg card"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg cards"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -556,19 +600,19 @@
         }
       }
     },
-    "Add a new card": {
+    "Add a new task": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neue Karte anlegen"
+            "value": "Neue Aufgabe anlegen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add a new card"
+            "value": "Add a new task"
           }
         }
       }
@@ -800,7 +844,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klick öffnet Bearbeiten"
+            "value": "Klick zum Bearbeiten"
           }
         },
         "en": {
@@ -828,7 +872,7 @@
         }
       }
     },
-    "Collapse Not-Yet-Due Items": {
+    "Collapse Not-Yet-Due Tasks": {
       "extractionState": "manual",
       "localizations": {
         "de": {
@@ -840,7 +884,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Collapse Not-Yet-Due Items"
+            "value": "Collapse Not-Yet-Due Tasks"
           }
         }
       }
@@ -851,7 +895,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beim Anmelden starten nicht möglich"
+            "value": "Start beim Anmelden nicht möglich"
           }
         },
         "en": {
@@ -862,19 +906,19 @@
         }
       }
     },
-    "Create Ticket": {
+    "Create Task": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ticket anlegen"
+            "value": "Aufgabe anlegen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create Ticket"
+            "value": "Create Task"
           }
         }
       }
@@ -913,19 +957,19 @@
         }
       }
     },
-    "Delete Ticket": {
+    "Delete Task": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ticket löschen"
+            "value": "Aufgabe löschen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete Ticket"
+            "value": "Delete Task"
           }
         }
       }
@@ -1185,7 +1229,7 @@
         }
       }
     },
-    "Find, board is filtered, %lld restrictions active": {
+    "Find, board is filtered, %lld filters active": {
       "extractionState": "manual",
       "localizations": {
         "de": {
@@ -1194,13 +1238,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Finden, Board ist gefiltert, 1 Einschränkung aktiv"
+                  "value": "Finden, Board ist gefiltert, 1 Filter aktiv"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Finden, Board ist gefiltert, %lld Einschränkungen aktiv"
+                  "value": "Finden, Board ist gefiltert, %lld Filter aktiv"
                 }
               }
             }
@@ -1212,13 +1256,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Find, board is filtered, 1 restriction active"
+                  "value": "Find, board is filtered, 1 filter active"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Find, board is filtered, %lld restrictions active"
+                  "value": "Find, board is filtered, %lld filters active"
                 }
               }
             }
@@ -1239,23 +1283,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Finish First"
-          }
-        }
-      }
-    },
-    "Finish before you stack": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lieber abschließen als stapeln"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finish before you stack"
           }
         }
       }
@@ -1873,23 +1900,6 @@
         }
       }
     },
-    "New Ticket": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Neues Ticket"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New Ticket"
-          }
-        }
-      }
-    },
     "Next Up": {
       "extractionState": "manual",
       "localizations": {
@@ -2060,19 +2070,19 @@
         }
       }
     },
-    "No access to Reminders. Allow it in System Settings under “Privacy & Security”.": {
+    "No access to Reminders. Allow it in System Settings under Privacy & Security → Reminders.": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kein Zugriff auf Erinnerungen. In den Systemeinstellungen unter „Datenschutz & Sicherheit“ freigeben."
+            "value": "Kein Zugriff auf Erinnerungen. Erlaube ihn in den Systemeinstellungen unter Datenschutz & Sicherheit → Erinnerungen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No access to Reminders. Allow it in System Settings under “Privacy & Security”."
+            "value": "No access to Reminders. Allow it in System Settings under Privacy & Security → Reminders."
           }
         }
       }
@@ -2230,18 +2240,19 @@
         }
       }
     },
-    "Not stored — an address has no spaces": {
+    "Not saved — an address has no spaces": {
+      "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wird nicht gesichert — eine Adresse hat keine Leerzeichen"
+            "value": "Wird nicht gespeichert — eine Adresse hat keine Leerzeichen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not stored — an address has no spaces"
+            "value": "Not saved — an address has no spaces"
           }
         }
       }
@@ -2314,7 +2325,7 @@
         }
       }
     },
-    "Older items live in Reminders": {
+    "Older tasks live in Reminders": {
       "extractionState": "manual",
       "localizations": {
         "de": {
@@ -2326,41 +2337,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Older items live in Reminders"
-          }
-        }
-      }
-    },
-    "One task keeps the streak alive": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine Aufgabe hält die Folge"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "One task keeps the streak alive"
-          }
-        }
-      }
-    },
-    "One task starts a new streak": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine Aufgabe startet eine neue Folge"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "One task starts a new streak"
+            "value": "Older tasks live in Reminders"
           }
         }
       }
@@ -2382,19 +2359,19 @@
         }
       }
     },
-    "Open Apple Reminders to create or edit tasks (⇧⌘R)": {
+    "Open Reminders to create or edit tasks (⇧⌘R)": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⇧⌘R)"
+            "value": "Erinnerungen öffnen, um Aufgaben anzulegen oder zu bearbeiten (⇧⌘R)"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Apple Reminders to create or edit tasks (⇧⌘R)"
+            "value": "Open Reminders to create or edit tasks (⇧⌘R)"
           }
         }
       }
@@ -2552,19 +2529,19 @@
         }
       }
     },
-    "Recording…": {
+    "Type Shortcut": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aufnahme …"
+            "value": "Kurzbefehl eingeben"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recording…"
+            "value": "Type Shortcut"
           }
         }
       }
@@ -2677,30 +2654,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wiederholend"
+            "value": "Wiederkehrend"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Repeats"
-          }
-        }
-      }
-    },
-    "Reset All": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alles zurücksetzen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reset All"
           }
         }
       }
@@ -3011,7 +2971,7 @@
         }
       }
     },
-    "Statistics. Streak: %lld days in a row with at least one task done": {
+    "Statistics. Streak: %lld days in a row": {
       "extractionState": "manual",
       "localizations": {
         "de": {
@@ -3020,13 +2980,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Statistiken. Folge: %lld Tag mit mindestens einer erledigten Aufgabe"
+                  "value": "Statistiken. Folge: %lld Tag"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Statistiken. Folge: %lld Tage nacheinander mit mindestens einer erledigten Aufgabe"
+                  "value": "Statistiken. Folge: %lld Tage"
                 }
               }
             }
@@ -3038,13 +2998,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Statistics. Streak: %lld day with at least one task done"
+                  "value": "Statistics. Streak: %lld day"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Statistics. Streak: %lld days in a row with at least one task done"
+                  "value": "Statistics. Streak: %lld days in a row"
                 }
               }
             }
@@ -3324,7 +3284,7 @@
         }
       }
     },
-    "When a lane is full, the board asks before another card goes in.": {
+    "When a column is full, the board asks before another card goes in.": {
       "localizations": {
         "de": {
           "stringUnit": {
@@ -3335,7 +3295,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When a lane is full, the board asks before another card goes in."
+            "value": "When a column is full, the board asks before another card goes in."
           }
         }
       }
@@ -3636,19 +3596,70 @@
         }
       }
     },
-    "⌘Z brings the ticket back — but not its subtasks or attachments.": {
+    "⌘Z brings the task back — but not its subtasks or attachments.": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "⌘Z holt das Ticket zurück — Unteraufgaben und Anhänge aber nicht."
+            "value": "⌘Z holt die Aufgabe zurück — Unteraufgaben und Anhänge aber nicht."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "⌘Z brings the ticket back — but not its subtasks or attachments."
+            "value": "⌘Z brings the task back — but not its subtasks or attachments."
+          }
+        }
+      }
+    },
+    "Reminders did not accept the change. The task stays as it was.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen hat die Änderung nicht angenommen. Die Aufgabe bleibt, wie sie war."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders did not accept the change. The task stays as it was."
+          }
+        }
+      }
+    },
+    "Reminders did not accept the task": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen hat die Aufgabe nicht angenommen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders did not accept the task"
+          }
+        }
+      }
+    },
+    "This list is read-only. The task stays as it was.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Liste ist nur lesbar. Die Aufgabe bleibt, wie sie war."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This list is read-only. The task stays as it was."
           }
         }
       }

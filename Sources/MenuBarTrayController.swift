@@ -298,7 +298,14 @@ final class MenuBarTrayController: NSObject {
         naturalHeight = height
         guard let panel, panel.isVisible else { return }
         let target = clamped(height)
-        guard abs(panel.contentView!.frame.height - target) > 0.5 else { return }
+        // Both have to be right, the window and the view inside it. They
+        // parted once (02.10.2026, see `preferredContentSizeDidChange`):
+        // window 668, content view 694. Checking only the content view
+        // then kept it that way — its height matched the next report, and
+        // nothing was ever set again.
+        let windowIsOff = abs(panel.frame.height - target) > 0.5
+        let contentIsOff = abs(panel.contentView!.frame.height - target) > 0.5
+        guard windowIsOff || contentIsOff else { return }
         if isClosing { stopTravel() }
         // While a fold is travelling, `foldStarted` owns the frame; the
         // content's report (which arrives once, near the end of the rows'
@@ -719,6 +726,13 @@ private final class TrayGlassController: NSViewController {
         // writer of its frame: this hook also setting the size raced the
         // fold to a 131 pt jump at an intermediate value, and held the old
         // height for 0.4 s on the way back (measured 13.09.2026).
+        // "For the first opening only" has to be enforced, not just said.
+        // Passed up while the panel was on screen, AppKit resized the content
+        // view by the change on top of the height `contentHeightChanged` had
+        // just set: window 668, content view 694, the Backlog head 26 pt
+        // above the panel's edge (logged 02.10.2026, after a task typed into
+        // the capture).
+        guard view.window?.isVisible != true else { return }
         preferredContentSize = viewController.preferredContentSize
     }
 }

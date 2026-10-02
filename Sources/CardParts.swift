@@ -13,8 +13,11 @@ enum CardParts {
 
     // MARK: - Text
 
+    /// What a card is called on screen. A title that was nothing but a link
+    /// shows the link's host; only a title that is truly empty is "Untitled".
     static func displayTitle(of card: KanbanCard) -> String {
-        card.title.isEmpty ? String(localized: "Untitled") : card.title
+        guard card.title.isEmpty else { return card.title }
+        return card.titleLinkHost ?? String(localized: "Untitled")
     }
 
     /// Title with Reminders-style priority marks ("!!") in front. The marks

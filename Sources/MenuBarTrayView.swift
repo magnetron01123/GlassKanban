@@ -120,7 +120,28 @@ struct MenuBarTrayView: View {
     private var content: some View {
         switch store.accessState {
         case .granted:
-            tray
+            // A board without a source says so, here as there. Four heads
+            // with "0" under them read as a board with nothing to do, and
+            // the first thing that explained otherwise was the capture
+            // refusing a task (02.10.2026).
+            switch store.emptiness {
+            case .noListsSelected:
+                sourceNotice("No List Selected", action: "Choose Lists") {
+                    MenuBarTrayController.shared.close()
+                    SettingsNavigation.shared.pane = .lists
+                    // As the item's own menu does: the panel never made
+                    // this app active, so Settings would open behind.
+                    NSApp.activate(ignoringOtherApps: true)
+                    openSettings()
+                }
+            case .noListsAtAll:
+                sourceNotice("No Reminder Lists", action: "Open Reminders") {
+                    MenuBarTrayController.shared.close()
+                    store.openRemindersApp()
+                }
+            default:
+                tray
+            }
         case .denied:
             deniedNotice
         case .unknown, .requesting:
@@ -215,6 +236,20 @@ struct MenuBarTrayView: View {
     private var trayOverflow: RemindersStore.PendingOverflow? {
         guard let overflow = store.pendingOverflow, overflow.source == .tray else { return nil }
         return overflow
+    }
+
+    /// The board's own words for a board without lists, and the board's own
+    /// way out (see `EmptyBoardNotice`), in the shape of `deniedNotice`.
+    private func sourceNotice(
+        _ title: LocalizedStringKey, action: LocalizedStringKey, perform: @escaping () -> Void
+    ) -> some View {
+        VStack(spacing: 10) {
+            Text(title)
+                .font(.headline)
+            Button(action, action: perform)
+        }
+        .padding(Board.trayNoticePadding)
+        .frame(maxWidth: .infinity)
     }
 
     /// Without access the tray would be silently empty on the first launch.
@@ -739,7 +774,7 @@ private struct TraySection: View {
                         Board.chipShape.fill(Board.wipLimitTint.opacity(Board.wipCapsuleFill))
                     }
                 }
-                .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
+                .animation(reduceMotion ? nil : Board.capsuleAnimation, value: isOverLimit)
                 .accessibilityValue(countLines.joined(separator: ". "))
         }
         // A system panel's section head, measured against Wi-Fi on
@@ -767,7 +802,7 @@ private struct TraySection: View {
         var lines: [String] = []
         if let wipLimit {
             lines.append(String(localized: "\(cards.count) of \(wipLimit) cards"))
-            lines.append(String(localized: isOverLimit ? "Over your limit" : "Finish before you stack"))
+            if isOverLimit { lines.append(String(localized: "Over your limit")) }
         } else {
             lines.append(String(localized: "\(cards.count) cards"))
         }
@@ -787,6 +822,7 @@ private struct TrayRow: View {
     /// if it has nothing of its own to put there (see `TraySection.rows`).
     let reservesDwellColumn: Bool
     let reservesDueColumn: Bool
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
 
     @State private var isHovered = false
 
@@ -821,7 +857,29 @@ private struct TrayRow: View {
                 .strikethrough(card.status == .done, color: .secondary)
                 .font(BoardText.trayRow)
                 .lineLimit(1)
+                // The title is sized first; in a 340 pt row with a dwell and
+                // a due column, the list name takes what is left — it gave
+                // "!!! Rech…" when the two were equals.
+                .layoutPriority(differentiateWithoutColor ? 1 : 0)
             Spacer(minLength: 8)
+            // The list in words where the dot's colour is not allowed to be
+            // the only word about it (see `CardView.listNameLabel`).
+            if differentiateWithoutColor {
+                // The whole name or none of it: what the title leaves is
+                // sometimes a few points, and "ZZ…" or a lone "…" says less
+                // than the dot does.
+                ViewThatFits(in: .horizontal) {
+                    Text(card.listName)
+                        .font(BoardText.meta)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .fixedSize()
+                    Color.clear.frame(width: 0, height: 0)
+                }
+                // Ahead of the spacer, behind the title: offered everything
+                // the title leaves, not half of it.
+                .layoutPriority(0.5)
+            }
             // The trailing facts, each in its column. An empty label still
             // holds the column open, so the titles of a section end on one
             // line (see `TraySection.rows`); `minWidth` rather than `width`,
@@ -902,6 +960,7 @@ private struct TrayFoldLine: View {
     let action: () -> Void
 
     @State private var isHovered = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: Board.traySymbolGap) {
@@ -929,7 +988,7 @@ private struct TrayFoldLine: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) { isHovered = hovering }
+            withAnimation(reduceMotion ? nil : Board.hoverAnimation) { isHovered = hovering }
         }
         .onTapGesture(perform: action)
         // One element, like every row: without it the button trait fell on
