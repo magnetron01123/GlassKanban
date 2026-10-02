@@ -70,7 +70,7 @@ darin nicht zu finden.
 
 ## Code-Landkarte
 
-Zwei Targets (App + Tests), `Sources/` mit rund 15.100 Zeilen SwiftUI; Projektdatei wird von XcodeGen
+Zwei Targets (App + Tests), `Sources/` mit rund 15.400 Zeilen SwiftUI; Projektdatei wird von XcodeGen
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
@@ -148,7 +148,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   seinem Bildschirm), dazu `ContentView` und
   `GlassKanbanApp`.
 - **DesignSystem.swift** — alle Tokens (Farben, Maße, Animationskurven). Neue Werte
-  gehören hierher, nicht in die Views.
+  gehören hierher, nicht in die Views. Was auf dem Board mitwächst, gibt es zweimal:
+  als Funktion mit Maßstab (`BoardText.title(scale)`) und als Konstante bei 1 für
+  Tablett und Chrome; Board-Views lesen `@Environment(\.boardScale)`.
 - **Reine, testbare Regeln ohne UI/EventKit** — `AppAppearance` (System/Hell/Dunkel,
   über `NSApp.appearance`, damit auch Einstellungen, Menüs und Popover folgen),
   `ReminderWriteFailure` (erkennt ReminderKit-Fehler −3002 — das System verweigert den
@@ -159,7 +161,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   ↔ Serie über das Anlegedatum), `RecurringTagRelease` (stille Freigabe eines
   verbrauchten Pulls), `ColumnState` (die Spalte, siehe oben),
   `TicketURL` (was das URL-Feld speichern kann), `WindowPlacement` (auf welchem Bildschirm
-  das Board steht und wohin es zurückgehört), `AppPresence` (Dock, Menüleiste oder
+  das Board steht und wohin es zurückgehört), `BoardScale` (die Darstellungsgröße in drei Stufen — als Environment-Wert
+  an der Board-Wurzel, damit Tablett und Chrome dieselben Tokens bei 1 lesen, und die
+  Mindestbreite, die nie breiter wird als der Bildschirm), `AppPresence` (Dock, Menüleiste oder
   beides — samt der Regel, dass das Schließen des Boards die App nur ohne
   Menüleisten-Symbol beendet), `MenuBarTray` (was das Tablett zeigt: was je Abschnitt in Ruhe steht —
   das Backlog nach der Falz-Regel des Boards —, wann ein Zug erlaubt ist, wann eine Zeile
@@ -208,7 +212,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `Tests/`, 26 Dateien mit rund 400 Tests, benannt nach der Regel
+- **Tests** — `Tests/`, 27 Dateien mit rund 410 Tests, benannt nach der Regel
   statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
   Target heißt `GlassKanbanTests`.
 

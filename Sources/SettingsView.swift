@@ -298,11 +298,36 @@ struct GeneralSettingsView: View {
 /// rule Kanban asks to make explicit is found where the board is.
 struct BoardSettingsView: View {
     @EnvironmentObject private var store: RemindersStore
+    @ObservedObject private var boardScale = BoardScaleController.shared
 
     private static let maxWIPLimit = 20
 
     var body: some View {
         Form {
+            // First, because it is the one setting here about how the board
+            // looks rather than how it works. Segments rather than a menu:
+            // three steps, all visible, the chosen one lands on the board at
+            // once — so trying them is how one chooses.
+            // The name stands as the section's head, like its two neighbours:
+            // as a row label it pushed the segments onto a line of their own
+            // in both languages (28.09.2026).
+            Section {
+                Picker("Display Size", selection: $boardScale.selection) {
+                    ForEach(BoardScale.allCases) { option in
+                        Text(option.displayName).tag(option)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            } header: {
+                Text("Display Size")
+            } footer: {
+                // The only place the keys are named: they live on the board
+                // window, not in the menu bar (29.09.2026, user), so this is
+                // where someone looking for the size learns the shortcut.
+                Text("⌘+ and ⌘− change the size on the board as well, ⌘0 resets it.")
+            }
+
             // Where workflows differ most. Backlog is the pool of options the
             // board could pull *now*, which is why this ships on — but "now"
             // is a judgement some people would rather make themselves, with

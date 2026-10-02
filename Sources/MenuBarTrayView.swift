@@ -565,7 +565,7 @@ private struct TraySection: View {
                 _ = store.move(cardID: id, to: status, undoManager: nil, source: .tray)
             }))
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(status.displayName), \(countHelp)")
+        .accessibilityLabel(([status.displayName] + countLines).joined(separator: ". "))
     }
 
     /// The rows: what rests, or everything once the line under the pile has
@@ -740,7 +740,7 @@ private struct TraySection: View {
                     }
                 }
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
-                .accessibilityValue(countHelp)
+                .accessibilityValue(countLines.joined(separator: ". "))
         }
         // A system panel's section head, measured against Wi-Fi on
         // 23.09.2026: 13 pt semibold, secondary, no glyph in front, the
@@ -761,7 +761,9 @@ private struct TraySection: View {
     }
 
     /// Spoken with the section, since the number alone carries the rule.
-    private var countHelp: String {
+    /// Joined with a full stop where it is read out: a line break is silent
+    /// to VoiceOver.
+    private var countLines: [String] {
         var lines: [String] = []
         if let wipLimit {
             lines.append(String(localized: "\(cards.count) of \(wipLimit) cards"))
@@ -769,7 +771,7 @@ private struct TraySection: View {
         } else {
             lines.append(String(localized: "\(cards.count) cards"))
         }
-        return lines.joined(separator: "\n")
+        return lines
     }
 }
 

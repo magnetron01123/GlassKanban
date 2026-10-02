@@ -607,6 +607,15 @@ unsichtbar: Bis dahin versprach das Knopf-Merkmal einen Druck, der nichts tat. S
 „Neue Aufgabe" im Tablett editiert wird, ist die Zeile kein Knopf mehr, sondern gibt das
 Textfeld frei — wie die Karte beim Umbenennen.
 
+**VoiceOver liest in Sätzen und sagt nur, was die Karte zeigt** (28.09.2026). Karte,
+Tablett-Zeile und Spaltenkopf setzen ihre Beschriftung aus Bausteinen zusammen, getrennt
+durch einen Punkt statt eines Kommas oder Zeilenumbruchs — ein Umbruch ist für VoiceOver
+stumm, die Zeilen liefen ineinander. Die Fälligkeit heißt „Überfällig", „Heute fällig",
+„Morgen fällig" oder „Fällig 29. Sep." (vorher „Fällig Überfällig"). Eine erledigte Karte
+nennt kein Datum, und die Verweildauer wird nur auf Karten vorgelesen, die sie auch zeigen
+(Als Nächstes, In Bearbeitung) — sonst stünde bei jeder Backlog-Karte eine Zahl, die das
+Auge nie sieht.
+
 **Das URL-Feld benennt, was es nicht behalten kann** (10.08.2026). Steht dort etwas, das
 keine Adresse sein kann — eine Adresse enthält kein Leerzeichen, Prosa immer eines —,
 erscheint unter dem Feld „Wird nicht gesichert — eine Adresse hat keine Leerzeichen".
@@ -1112,7 +1121,8 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
     10 pt im Spaltenrand), 9 pt unter der Oberkante — mittig auf dem ersten 38-pt-Band, in
     der Backlog-Zeile wie in der aufgeklappten Karte. Durchscheinend, Buchstabe 12 pt medium
     in Primärfarbe. Nur wenn eine Größe gesetzt ist; nicht in Erledigt, nicht im
-    Menüleisten-Panel. Kartenhöhen bleiben 38 und 152 pt.
+    Menüleisten-Panel. Kartenhöhen bleiben 38 und 152 pt. Alle Maße gelten bei
+    Darstellungsgröße Standard und wachsen mit ihr, wie jedes Kartenmaß.
   - **Abstände:** je 8 pt zum Inhalt der Karte und zur Spaltenwand. Trägt irgendeine Karte
     des Boards eine Größe, sind Spaltenrand und rechter Karten-Innenrand 18 pt, sonst 12 pt
     — boardweit, animiert beim Wechsel.
@@ -1539,10 +1549,24 @@ Nicht-Sehen.
 - **Spalten füllen immer die volle Fensterhöhe** — bewusste Entscheidung, siehe BACKLOG.md
   („Explizit abgelehnt": Spalten enden mit dem Inhalt). Weniger Leerfläche = Fenster kleiner
   ziehen
-- **Ein Titelmaß für alle Karten: 15pt** — Arbeitsspalten semibold, Backlog und Erledigt
-  medium. Beim Verschieben ändert sich die Titelgröße dadurch nie; was sich ändert, ist der
-  Detailgrad der Karte. Die 15 statt der früheren 14 für Lesbarkeit auf Distanz; der Rest
-  der Skala bleibt unverändert (Spaltenkopf 13pt, sichtbar kleiner als beide Titel)
+- **Ein Titelmaß für alle Karten: 15pt** (bei Standardgröße) — Arbeitsspalten semibold,
+  Backlog und Erledigt medium. Beim Verschieben ändert sich die Titelgröße dadurch nie; was
+  sich ändert, ist der Detailgrad der Karte. Die 15 statt der früheren 14 für Lesbarkeit
+  auf Distanz; der Rest der Skala bleibt unverändert (Spaltenkopf 13pt, sichtbar kleiner
+  als beide Titel)
+- **Darstellungsgröße** (28.09.2026) — Einstellungen → Board: Standard, Groß, Sehr groß
+  (100 / 120 / 140 %), gilt sofort, gespeichert je Rechner (`StoredSetting.boardScale`).
+  Es wächst das Board als Ganzes: Spalten samt Mindest- und Höchstbreite, Spaltenköpfe,
+  Karten mit ihrem 38er-Raster, Marken, Falz-Zeile, „+", der Hinweis bei leerem Board.
+  Gleich bleiben Haarlinien, Listenstreifen und Schatten, damit sie scharf bleiben, sowie
+  alles, was man aus der Nähe bedient: Symbolleiste, geöffnete Karte, Menüleisten-Tablett,
+  Einstellungen, Popover, Tooltips. Übersteigt die Mindestbreite des Boards den
+  Bildschirm, auf dem das Fenster steht, werden die Spalten schmaler, statt dass das
+  Fenster über den Rand hinausragt; die Schrift bleibt dabei groß.
+  **⌘+ / ⌘− / ⌘0** (29.09.2026) gehen am Board eine Stufe größer, eine kleiner oder zurück
+  auf Standard; am Ende der Skala geschieht nichts. Sie gelten nur im Board-Fenster und
+  nicht, solange eine Karte geöffnet ist. Sie stehen bewusst in keinem Menü: Auffindbar
+  sind sie über die Fußzeile unter dem Auswahlfeld in den Einstellungen
 - Typografie/Abstände nach Apple HIG (SF Pro), Tokens in `DesignSystem.swift`
 - Bewegung wird für Dinge ausgegeben, die *gerade passiert sind* (Karte rastet in „Erledigt"
   ein), nie für stehende Einladungen

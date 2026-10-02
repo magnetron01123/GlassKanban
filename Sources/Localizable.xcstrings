@@ -17,23 +17,6 @@
         }
       }
     },
-    "%@, %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@, %@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@, %@"
-          }
-        }
-      }
-    },
     "%lld cards": {
       "extractionState": "manual",
       "localizations": {
@@ -743,6 +726,23 @@
         }
       }
     },
+    "⌘+ and ⌘− change the size on the board as well, ⌘0 resets it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘+ und ⌘− ändern die Größe auch am Board, ⌘0 setzt sie zurück."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘+ and ⌘− change the size on the board as well, ⌘0 resets it."
+          }
+        }
+      }
+    },
     "Choose, don't collect": {
       "extractionState": "manual",
       "localizations": {
@@ -947,6 +947,23 @@
         }
       }
     },
+    "Display Size": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darstellungsgröße"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Display Size"
+          }
+        }
+      }
+    },
     "Dock": {
       "extractionState": "manual",
       "localizations": {
@@ -1015,6 +1032,40 @@
         }
       }
     },
+    "Due today": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute fällig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due today"
+          }
+        }
+      }
+    },
+    "Due tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgen fällig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due tomorrow"
+          }
+        }
+      }
+    },
     "Due %@": {
       "extractionState": "manual",
       "localizations": {
@@ -1062,6 +1113,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit"
+          }
+        }
+      }
+    },
+    "Extra Large": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sehr groß"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra Large"
           }
         }
       }
@@ -1376,6 +1444,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "In use by another app"
+          }
+        }
+      }
+    },
+    "Large": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groß"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large"
           }
         }
       }
@@ -2854,6 +2939,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sound on Completion"
+          }
+        }
+      }
+    },
+    "Standard": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard"
           }
         }
       }

@@ -10,6 +10,7 @@ struct ColumnView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.boardScale) private var scale
     @State private var isTargeted = false
     @State private var expanded = false
     /// True for the length of a fold, so the cards it reveals fade in
@@ -164,10 +165,10 @@ struct ColumnView: View {
             Rectangle()
                 .fill(Board.columnBorder(contrast))
                 .frame(height: 1)
-                .padding(.horizontal, Board.laneMargin(sized: store.usesSizes))
+                .padding(.horizontal, Board.laneMargin(sized: store.usesSizes) * scale)
 
             ScrollView {
-                LazyVStack(spacing: singleLine ? 5 : Board.cardSpacing) {
+                LazyVStack(spacing: (singleLine ? 5 : Board.cardSpacing) * scale) {
                     ForEach(displayedCards) { card in
                         // No custom drag preview: SwiftUI rasterizes preview
                         // closures into a bitmap, which turned rotation and
@@ -185,12 +186,13 @@ struct ColumnView: View {
                         // overhang for the drag, and narrowed again below so
                         // the lane's layout never sees it.
                         CardView(card: card)
-                            .padding(.trailing, Board.sizeTabOverhang)
+                            .padding(.trailing, Board.sizeTabOverhang * scale)
                             .contentShape(.dragPreview, CardOutline(
                                 hasSizeTab: CardOutline.hasSizeTab(card),
-                                trailingInset: Board.sizeTabOverhang))
+                                scale: scale,
+                                trailingInset: Board.sizeTabOverhang * scale))
                             .draggable(card.id)
-                            .padding(.trailing, -Board.sizeTabOverhang)
+                            .padding(.trailing, -Board.sizeTabOverhang * scale)
                             // Runs alongside the system drag purely to note
                             // which card is moving. Deliberately additive:
                             // if it ever stops firing, dragging still works.
@@ -259,9 +261,9 @@ struct ColumnView: View {
                         addTicketButton
                     }
                 }
-                .padding(.horizontal, Board.laneMargin(sized: store.usesSizes))
-                .padding(.top, 10)
-                .padding(.bottom, 12)
+                .padding(.horizontal, Board.laneMargin(sized: store.usesSizes) * scale)
+                .padding(.top, 10 * scale)
+                .padding(.bottom, 12 * scale)
             }
             // No scroll indicator inside the wells: the system's overlay bar
             // is the one element that would draw *above* the cards and break
@@ -297,8 +299,8 @@ struct ColumnView: View {
             }
         }
         .frame(
-            minWidth: Board.columnMinWidth,
-            maxWidth: Board.columnMaxWidth,
+            minWidth: Board.columnMinWidth * scale,
+            maxWidth: Board.columnMaxWidth * scale,
             maxHeight: .infinity,
             alignment: .top)
         .background { columnSurface }
@@ -391,13 +393,13 @@ struct ColumnView: View {
         // Without this a card announces its title and nothing about where it
         // is — on a board, the lane is half the meaning.
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(status.displayName), \(countHelp)")
+        .accessibilityLabel(spokenHeader)
     }
 
     // MARK: - Header
 
     private var header: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 8 * scale) {
             // Secondary, and that is the hierarchy: the header once sat at
             // 13pt semibold in the primary colour, one point from the card
             // titles and in the same colour, so the label of a group competed
@@ -406,7 +408,7 @@ struct ColumnView: View {
             // the gap as well — but the colour is still what carries it, and
             // is what the header must keep.
             Text(status.displayName)
-                .font(BoardText.header)
+                .font(BoardText.header(scale))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
             Spacer()
@@ -416,7 +418,7 @@ struct ColumnView: View {
             // two different things. It survives in the tooltip and the
             // accessibility label — information without pixels.
             Text(countLabel)
-                .font(BoardText.chip)
+                .font(BoardText.chip(scale))
                 .monospacedDigit()
                 // Counts change one at a time; rolling the digit is how the
                 // system animates a number that means something.
@@ -427,8 +429,8 @@ struct ColumnView: View {
                 // A solid fill would borrow the weight reserved for overdue;
                 // being over capacity is worth noticing, not an emergency.
                 .foregroundStyle(isOverLimit ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                .padding(.horizontal, 7)
-                .padding(.vertical, 2)
+                .padding(.horizontal, 7 * scale)
+                .padding(.vertical, 2 * scale)
                 .background {
                     if isOverLimit {
                         Board.chipShape.fill(Board.wipLimitTint.opacity(Board.wipCapsuleFill))
@@ -438,9 +440,11 @@ struct ColumnView: View {
                 }
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isOverLimit)
                 // The over-limit signal is otherwise colour alone.
-                .accessibilityValue(countHelp)
+                .accessibilityValue(spokenCount)
         }
-        .padding(EdgeInsets(top: 12, leading: Board.laneMargin(sized: store.usesSizes), bottom: 10, trailing: Board.laneMargin(sized: store.usesSizes)))
+        .padding(EdgeInsets(
+            top: 12 * scale, leading: Board.laneMargin(sized: store.usesSizes) * scale,
+            bottom: 10 * scale, trailing: Board.laneMargin(sized: store.usesSizes) * scale))
         // The whole header band, not just the count capsule. On the capsule
         // alone the tooltip was a 20pt target nobody found — including the
         // person who asked for it — which makes "explicit" true only on
@@ -480,6 +484,17 @@ struct ColumnView: View {
     /// line rather than trailing the first behind a separator.
     private var countHelp: String {
         ([countSummary] + countDetails).joined(separator: "\n")
+    }
+
+    /// The same lines for VoiceOver. A line break is silent there, so the
+    /// tooltip's lines ran together into one breathless phrase; a full stop
+    /// gives each its own pause.
+    private var spokenCount: String {
+        ([countSummary] + countDetails).joined(separator: ". ")
+    }
+
+    private var spokenHeader: String {
+        ([status.displayName, countSummary] + countDetails).joined(separator: ". ")
     }
 
     /// Every lane opens the same way, so the four read as one family.
@@ -533,11 +548,11 @@ struct ColumnView: View {
 
     /// Dashed placeholder marking where the dragged card will land.
     private var insertionSlot: some View {
-        Board.cardShape
+        Board.cardShape(scale)
             .strokeBorder(
                 Color.accentColor.opacity(0.35),
                 style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
-            .background(Color.accentColor.opacity(0.05), in: Board.cardShape)
+            .background(Color.accentColor.opacity(0.05), in: Board.cardShape(scale))
             .frame(height: slotHeight)
             .transition(.opacity)
     }
@@ -549,7 +564,7 @@ struct ColumnView: View {
     /// standing invitation, not an event, and the board spends motion only on
     /// things that just happened.
     private var emptySlot: some View {
-        Board.cardShape
+        Board.cardShape(scale)
             .strokeBorder(
                 Color.primary.opacity(0.25),
                 style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
@@ -563,7 +578,7 @@ struct ColumnView: View {
                     // card title's size one weight down — present enough to
                     // fill the slot it occupies, light and secondary enough to
                     // stay the ghost it is.
-                    .font(BoardText.titleCompact)
+                    .font(BoardText.titleCompact(scale))
                     .foregroundStyle(.secondary)
                     // One line, always. Two of the four lanes are 38pt tall
                     // (`Board.compactCardHeight`), so a wrap would not fit the
@@ -575,7 +590,7 @@ struct ColumnView: View {
                     // reached; it is here so a future edit fails visibly small
                     // rather than silently breaking the geometry.
                     .lineLimit(1)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, 12 * scale)
             }
             .transition(.opacity)
     }
@@ -607,7 +622,7 @@ struct ColumnView: View {
     /// Matches a real card in this lane; falls back to the lane's own card
     /// metrics while the lane is still empty.
     private var slotHeight: CGFloat {
-        cardHeight ?? (singleLine ? Board.compactCardHeight : Board.fullCardHeight)
+        cardHeight ?? (singleLine ? Board.compactCardHeight : Board.fullCardHeight) * scale
     }
 
     /// The slot's height: exactly the ticket that belongs in *this* lane, not
@@ -695,14 +710,14 @@ struct ColumnView: View {
                     // one creating gesture on the board, and at the foot of a
                     // lane it has to be found without hunting. Presence through
                     // size, not colour.
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 16 * scale, weight: .semibold))
                     // Secondary, not a flat black glyph: on the earlier
                     // hand-built material the `.primary` plus sat on top of the
                     // glass instead of in it and read as pasted on. The native
                     // glass effect below composites the symbol into the surface
                     // with its own vibrancy, so a softer weight is all it needs.
                     .foregroundStyle(.secondary)
-                    .frame(width: 35, height: 35)
+                    .frame(width: 35 * scale, height: 35 * scale)
                     .modifier(AddButtonGlass(reduceTransparency: reduceTransparency, contrast: contrast))
                     // On hover the button lifts exactly like a card — same
                     // -1pt rise, same shadow, same animation — so the board
@@ -724,7 +739,7 @@ struct ColumnView: View {
             .boardTooltip(String(localized: "Add a new card"))
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 4 * scale)
     }
 
     /// The fold line of a stack lane, and the way back out.
@@ -756,20 +771,20 @@ struct ColumnView: View {
             // board's slowest curve — see there.
             toggleFold()
         } label: {
-            HStack(spacing: 5) {
+            HStack(spacing: 5 * scale) {
                 Text(moreLabel)
-                    .font(BoardText.body)
+                    .font(BoardText.body(scale))
                     // One weight up from body's regular: the only clickable
                     // line at this scale, and it has to read as a link, not
                     // as running text.
                     .fontWeight(.medium)
                 Image(systemName: "chevron.down")
-                    .font(BoardText.glyph)
+                    .font(BoardText.glyph(scale))
                     .rotationEffect(.degrees(expanded ? -180 : 0))
             }
             .foregroundStyle(moreHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 7)
+            .padding(.vertical, 7 * scale)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -829,16 +844,16 @@ struct ColumnView: View {
     // MARK: - Recessed lane surface
 
     private var columnSurface: some View {
-        Board.columnShape
+        Board.columnShape(scale)
             .fill(columnFill)
             .overlay {
                 // Accent wash while a drag hovers over the lane.
-                Board.columnShape
+                Board.columnShape(scale)
                     .fill(Color.accentColor.opacity(showsDropFeedback ? 0.07 : 0))
             }
             .overlay {
                 // Inner top shadow: the lane is carved into the board.
-                Board.columnShape
+                Board.columnShape(scale)
                     .inset(by: 0.5)
                     .strokeBorder(
                         LinearGradient(colors: [Board.columnInnerShadow(colorScheme), .clear], startPoint: .top, endPoint: .center),
@@ -849,7 +864,7 @@ struct ColumnView: View {
     }
 
     private var columnContour: some View {
-        Board.columnShape
+        Board.columnShape(scale)
             .strokeBorder(
                 showsDropFeedback ? Color.accentColor.opacity(contrast == .increased ? 1 : 0.7) : Board.columnBorder(contrast),
                 lineWidth: showsDropFeedback ? 1.5 : 1)

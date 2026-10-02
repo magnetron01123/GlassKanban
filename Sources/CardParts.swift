@@ -50,6 +50,9 @@ enum CardParts {
     /// semantics — and reduces the list colour, which is the only channel
     /// carrying the source list on compact rows, to nothing at all.
     /// The lane itself is announced by the column's accessibility container.
+    /// Joined as sentences, not a comma list: VoiceOver pauses at a full
+    /// stop, and the parts are built to stand alone (CONCEPT.md, "Ton der
+    /// Texte", rule 7).
     static func accessibilityLabel(for card: KanbanCard) -> String {
         var parts: [String] = []
         if card.status == .done {
@@ -59,20 +62,38 @@ enum CardParts {
             parts.append(priority)
         }
         parts.append(displayTitle(of: card))
-        if let due = card.dueDate {
-            parts.append(String(localized: "Due \(badge(for: due).label)"))
+        // A finished card is not overdue, whatever its date says; the badge
+        // leaves Done for the same reason (`compactBadge`).
+        if card.status != .done, let due = card.dueDate {
+            parts.append(spokenDue(due))
         }
         if card.isRecurring {
             parts.append(String(localized: "Repeats"))
         }
         parts.append(String(localized: "List \(card.listName)"))
-        if let size = card.size {
+        if CardOutline.hasSizeTab(card), let size = card.size {
             parts.append(String(localized: "Size \(size.letter)"))
         }
-        if let days = card.daysInColumn(), days >= Board.agingThresholdDays {
+        // Only where the card itself shows it. Read out on every backlog and
+        // done card, "In this column for 66 days" was a standing charge the
+        // eye never sees (CONCEPT.md, "Belohnen, nie bestrafen").
+        if card.status.cardDensity == .full,
+           let days = card.daysInColumn(), days >= Board.agingThresholdDays {
             parts.append(String(localized: "In this column for \(days) days"))
         }
-        return parts.joined(separator: ", ")
+        return parts.joined(separator: ". ")
+    }
+
+    /// The badge's word read on its own is a fragment, and "Due" in front of
+    /// it made it wrong: VoiceOver said "Due Overdue" and "Fällig Überfällig"
+    /// (measured 28.09.2026). Overdue already says it; today and tomorrow
+    /// need their own word order in German ("Heute fällig").
+    private static func spokenDue(_ due: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(due) { return String(localized: "Due today") }
+        if due < calendar.startOfDay(for: .now) { return String(localized: "Overdue") }
+        if calendar.isDateInTomorrow(due) { return String(localized: "Due tomorrow") }
+        return String(localized: "Due \(badge(for: due).label)")
     }
 
     // MARK: - Badges
@@ -131,14 +152,15 @@ enum CardParts {
 /// (today), quiet grey (everything else).
 struct CardBadgeView: View {
     let info: CardParts.BadgeInfo
+    @Environment(\.boardScale) private var scale
 
     var body: some View {
         Text(info.label)
-            .font(BoardText.chip)
+            .font(BoardText.chip(scale))
             .monospacedDigit()
             .foregroundStyle(foreground)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
+            .padding(.horizontal, 7 * scale)
+            .padding(.vertical, 3 * scale)
             .background(background, in: Board.chipShape)
     }
 
@@ -159,9 +181,11 @@ struct CardBadgeView: View {
 }
 
 struct CardRepeatIcon: View {
+    @Environment(\.boardScale) private var scale
+
     var body: some View {
         Image(systemName: "repeat")
-            .font(BoardText.glyph)
+            .font(BoardText.glyph(scale))
             .foregroundStyle(.secondary)
     }
 }
@@ -186,11 +210,13 @@ struct CardSizeTab: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.boardScale) private var scale
 
     var body: some View {
+        let shape = Board.sizeTabShape(scale)
         let shadow = Board.sizeTabShadow(colorScheme)
         return Text(size.letter)
-            .font(BoardText.sizeTab)
+            .font(BoardText.sizeTab(scale))
             // Primary, against the board's own two-rank rule (a size only
             // *describes* the ticket, see `BoardText`). Tried secondary first
             // and it failed on legibility: one grey letter on a pale tab is
@@ -198,17 +224,17 @@ struct CardSizeTab: View {
             .foregroundStyle(.primary)
             // Changing S to M swaps only the letter; the tab itself stays.
             .contentTransition(.opacity)
-            .frame(width: Board.sizeTabSize.width, height: Board.sizeTabSize.height)
+            .frame(width: Board.sizeTabSide * scale, height: Board.sizeTabSide * scale)
             .background {
-                Board.sizeTabShape
+                shape
                     .fill(reduceTransparency ? Board.cardFill(colorScheme) : Board.sizeTabFill(colorScheme))
                     .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
             }
             .overlay {
                 if reduceTransparency && contrast != .increased {
-                    Board.sizeTabShape.strokeBorder(Board.cardBorder(contrast), lineWidth: 1)
+                    shape.strokeBorder(Board.cardBorder(contrast), lineWidth: 1)
                 } else {
-                    Board.sizeTabShape.strokeBorder(Board.sizeTabRim(colorScheme, contrast), lineWidth: 1)
+                    shape.strokeBorder(Board.sizeTabRim(colorScheme, contrast), lineWidth: 1)
                 }
             }
             .accessibilityHidden(true)
@@ -220,6 +246,8 @@ struct CardSizeTab: View {
 /// past the edge was dead to the pointer and cut off the lifted card.
 struct CardOutline: Shape {
     let hasSizeTab: Bool
+    /// The board's display size; the outline grows with the card.
+    var scale: CGFloat = 1
     /// How far the card's own edge sits inside `rect` on the trailing side —
     /// non-zero where the frame was widened to hold the tab (the drag
     /// preview, see `ColumnView`).
@@ -233,12 +261,13 @@ struct CardOutline: Shape {
     func path(in rect: CGRect) -> Path {
         var rect = rect
         rect.size.width -= trailingInset
-        var path = Board.cardShape.path(in: rect)
+        var path = Board.cardShape(scale).path(in: rect)
         if hasSizeTab {
             let tab = CGRect(
-                x: rect.maxX - Board.sizeTabOverhang, y: rect.minY + Board.sizeTabTop,
-                width: Board.sizeTabSize.width, height: Board.sizeTabSize.height)
-            path.addPath(Board.sizeTabShape.path(in: tab))
+                x: rect.maxX - Board.sizeTabOverhang * scale,
+                y: rect.minY + Board.sizeTabTop * scale,
+                width: Board.sizeTabSide * scale, height: Board.sizeTabSide * scale)
+            path.addPath(Board.sizeTabShape(scale).path(in: tab))
         }
         return path
     }
@@ -249,13 +278,17 @@ struct CardOutline: Shape {
 struct CardListStripe: View {
     let card: KanbanCard
     let isSingleLine: Bool
+    @Environment(\.boardScale) private var scale
 
+    /// The width stays put at every display size: a colour code reads by
+    /// its hue, and a fatter bar would start to look like a border. Where it
+    /// sits grows with the card, so it keeps its place on the paper.
     var body: some View {
         Capsule()
             .fill(CardParts.stripeColor(of: card).opacity(card.status == .done ? 0.45 : 0.9))
             .frame(width: Board.cardStripeWidth)
-            .padding(.vertical, isSingleLine ? 7 : 9)
-            .padding(.leading, 5)
+            .padding(.vertical, (isSingleLine ? 7 : 9) * scale)
+            .padding(.leading, 5 * scale)
             .allowsHitTesting(false)
     }
 }
