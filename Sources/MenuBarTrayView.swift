@@ -850,6 +850,7 @@ private struct TrayRow: View {
     /// if it has nothing of its own to put there (see `TraySection.rows`).
     let reservesDwellColumn: Bool
     let reservesDueColumn: Bool
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
 
     @State private var isHovered = false
 
@@ -884,7 +885,29 @@ private struct TrayRow: View {
                 .strikethrough(card.status == .done, color: .secondary)
                 .font(BoardText.trayRow)
                 .lineLimit(1)
+                // The title is sized first; in a 340 pt row with a dwell and
+                // a due column, the list name takes what is left — it gave
+                // "!!! Rech…" when the two were equals.
+                .layoutPriority(differentiateWithoutColor ? 1 : 0)
             Spacer(minLength: 8)
+            // The list in words where the dot's colour is not allowed to be
+            // the only word about it (see `CardView.listNameLabel`).
+            if differentiateWithoutColor {
+                // The whole name or none of it: what the title leaves is
+                // sometimes a few points, and "ZZ…" or a lone "…" says less
+                // than the dot does.
+                ViewThatFits(in: .horizontal) {
+                    Text(card.listName)
+                        .font(BoardText.meta)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .fixedSize()
+                    Color.clear.frame(width: 0, height: 0)
+                }
+                // Ahead of the spacer, behind the title: offered everything
+                // the title leaves, not half of it.
+                .layoutPriority(0.5)
+            }
             // The trailing facts, each in its column. An empty label still
             // holds the column open, so the titles of a section end on one
             // line (see `TraySection.rows`); `minWidth` rather than `width`,

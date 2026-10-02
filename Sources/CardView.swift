@@ -16,6 +16,7 @@ struct CardView: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.undoManager) private var undoManager
@@ -343,6 +344,9 @@ struct CardView: View {
             titleOrField(font: BoardText.titleCompact(scale))
                 .lineLimit(1)
             Spacer(minLength: 0)
+            if differentiateWithoutColor {
+                listNameLabel
+            }
             if let badge = compactBadge {
                 badgeView(badge)
             }
@@ -358,14 +362,37 @@ struct CardView: View {
             alignment: .leading)
     }
 
+    /// The source list in words, for the one-line rows — only under the
+    /// system's "Differentiate without colour". There the 3 pt stripe is the
+    /// row's only word about its list, and two list colours can be one grey
+    /// (blue and yellow, measured 02.10.2026). The full card says it in its
+    /// footer already; everybody else keeps the row as quiet as it was.
+    private var listNameLabel: some View {
+        Text(card.listName)
+            .font(BoardText.meta(scale))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            // As wide as its text, up to a cap: a frame that is merely
+            // "at most" this wide claims all of it and squeezes the title.
+            .frame(maxWidth: 96 * scale, alignment: .trailing)
+            .fixedSize(horizontal: true, vertical: false)
+    }
+
     /// Erledigt: the work is done — the name is the only thing left to say.
     private var minimalBody: some View {
-        titleOrField(font: BoardText.titleCompact(scale))
-            .lineLimit(1)
-            // The overlay sits on the text itself, before the padding and
-            // the width expansion, so the line spans exactly the words —
-            // a strike across the whole row would cross empty paper.
-            .overlay(alignment: .leading) { strikeLine }
+        HStack(spacing: 8 * scale) {
+            titleOrField(font: BoardText.titleCompact(scale))
+                .lineLimit(1)
+                // The overlay sits on the text itself, before the padding
+                // and the width expansion, so the line spans exactly the
+                // words — a strike across the whole row would cross empty
+                // paper.
+                .overlay(alignment: .leading) { strikeLine }
+            if differentiateWithoutColor {
+                Spacer(minLength: 0)
+                listNameLabel
+            }
+        }
             .padding(cardInsets(top: 9, bottom: 9))
             // Same row height as Backlog — see `compactBody`.
             .frame(

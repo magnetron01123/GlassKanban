@@ -958,17 +958,13 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
 - **Prioritätsmarke allein in der ersten Zeile**, wenn das erste Wort des Titels länger
   ist als die Zeile. Ein geschütztes Leerzeichen hält sie nicht (probiert und
   zurückgenommen).
-- **„Heute · 0 Aufgaben" in der Statistik** ist eine stehende Null in einem Fenster, das
-  keine Fehlbeträge melden will. Bei der Abnahme gesehen, nicht entschieden.
-- **Listenfarbe als einziger Träger:** In Backlog, Erledigt und im Tablett sagt nur der
-  Streifen bzw. Punkt, zu welcher Liste eine Karte gehört; Blau und Gelb sind in Graustufen
-  und bei Tritanopie kaum zu trennen. `differentiateWithoutColor` wird nirgends gelesen.
-  Karten-Tooltips sind abgelehnt — eine Antwort müsste woanders herkommen.
-- **Kontrast im Normalzustand:** Sekundärtext auf der Mulde und im Zähler liegt unter
-  4,5 : 1 (Werte in SPEC.md, „Architektur"). Mehr als die Systemfarbe ginge nur über eine
-  dunklere Mulde oder primären Text — beides eine Gestaltungsentscheidung.
-- **Lange Fußtexte der Einstellungen** (Menüleiste, Backlog): bewusst so geschrieben,
-  bei der Abnahme als lang notiert, nicht gekürzt.
+- ~~**Listenfarbe als einziger Träger**~~ — umgesetzt 02.10.2026: unter „Ohne Farbe
+  unterscheiden" steht der Listenname in der Zeile, SPEC.md („Architektur").
+- **Entschieden, bleibt so (02.10.2026, Nutzer):** „Heute · 0 Aufgaben" in der Statistik
+  (ein Stand, kein Vorwurf, und die Zeile hält den Aufbau des Fensters), der Kontrast des
+  Sekundärtexts im Normalzustand (SPEC.md, „Architektur") und die zwei langen Fußtexte
+  der Einstellungen. Nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst
+  öffnet.
 - **Statistik-Popover über Karten** (Glas lässt Kartentext durchscheinen) und **helles
   Icon auf hellem Grund** — beobachtet, ohne Vorschlag.
 

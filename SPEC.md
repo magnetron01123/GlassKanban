@@ -131,11 +131,17 @@ auf Mechanik aufmerksam. Es soll einfach schon dort sein.
 - Respektiert macOS-Bedienungshilfen: „Transparenz reduzieren", „Bewegung reduzieren",
   „Kontrast erhöhen". Unter „Kontrast erhöhen" werden Konturen kräftiger, der Umriss des
   leeren Platzes doppelt so deutlich und die Zahl im Spaltenzähler primär statt sekundär
-  (02.10.2026). **Gemessene Kontraste im Normalzustand** (02.10.2026, 1×-Foto, Mindestwerte
+  (02.10.2026). **Unter „Ohne Farbe unterscheiden"** nennen die einzeiligen Karten in
+  Backlog und Erledigt und die Zeilen des Tabletts ihre Liste in Worten, rechts in der
+  Zeile — sonst sagt dort nur der Farbstreifen bzw. Punkt, zu welcher Liste eine Karte
+  gehört. Im Tablett steht der Name ganz oder gar nicht: Der Titel hat Vorrang, ein
+  angeschnittener Name sagt weniger als der Punkt (02.10.2026).
+  **Gemessene Kontraste im Normalzustand** (02.10.2026, 1×-Foto, Mindestwerte
   wegen Kantenglättung): Sekundärtext auf Karte 4,1 : 1 (hell) und 4,4 : 1 (dunkel);
   Spaltenkopf und Falz-Zeile auf der Mulde 3,5 und 3,1; Zahl in der Zähler-Kapsel 3,4 und
-  2,8. Das sind die Sekundärfarbe des Systems auf einer getönten Fläche; eine eigene
-  Schwelle ist nicht festgelegt
+  2,8. Das sind die Sekundärfarbe des Systems auf einer getönten Fläche. **Entschieden
+  (02.10.2026, Nutzer): bleibt so** — kein Eingriff ins Erscheinungsbild; wer mehr
+  braucht, bekommt es über „Kontrast erhöhen"
 
 ## Datenmodell
 
