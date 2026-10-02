@@ -949,12 +949,11 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
   echten Zugs und Tab/⇧Tab im Notizfeld mit echter Tastatur. Beide Regeln sind als reine
   Funktion getestet (`CardSortingTests`, `EditorKeyCommandTests`), die Geste und die Taste
   nicht — der Rechner war während der Umsetzung in Benutzung.
-- **Platzhalter außerhalb des Sichtbaren (Review 02.10.2026):** In einer aufgeklappten,
-  nach unten gerollten Spalte steht der Platzhalter für eine Karte, die nach oben sortiert
-  (heute fällig; jede Karte nach Erledigt), außerhalb des Sichtfelds — die Spalte färbt
-  sich, ein Landeplatz ist nicht zu sehen. Naheliegend: die Spalte beim Eintritt des Zugs
-  so weit rollen, dass der Platz sichtbar ist. Erst mit einem echten Zug ansehen, dann
-  bauen.
+- **Platzhalter in einer gerollten Spalte — gebaut, nicht gesehen (02.10.2026):** Betritt
+  ein Zug eine Spalte, rollt sie einmal so, dass der Landeplatz in Sicht ist
+  (`ColumnView`, `ScrollViewReader`). Ohne das stand der Platz in einer aufgeklappten,
+  nach unten gerollten Spalte außerhalb des Sichtfelds. Mit einem echten Zug ansehen:
+  Rollt eine lange Spalte ruhig, und bleibt eine kurze still?
 - **Tablett, Schnellerfassung:** In der zweiten Prüfrunde rutschte der Backlog-Kopf nach
   einer getippten Erfassung um eine Zeile aus dem Panel und blieb dort (Foto). Über
   Bedienungshilfen ausgelöst blieb er stehen. Vermutung: Die Rollfläche folgt dem
@@ -972,11 +971,8 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
 - **Kontrast im Normalzustand:** Sekundärtext auf der Mulde und im Zähler liegt unter
   4,5 : 1 (Werte in SPEC.md, „Architektur"). Mehr als die Systemfarbe ginge nur über eine
   dunklere Mulde oder primären Text — beides eine Gestaltungsentscheidung.
-- **Einstellungen auf dem Zweitmonitor:** `ScreenBoundedPane` misst an `NSScreen.main`
-  statt am Bildschirm des Fensters; Auswirkung nicht gemessen.
-- **Kleine Texte:** Alert-Titel „Beim Anmelden starten nicht möglich", „Aufnahme …" im
-  Kurzbefehl-Feld, die zwei langen Fußtexte der Einstellungen, drei Schreibweisen der
-  Zugriffsmeldung.
+- **Lange Fußtexte der Einstellungen** (Menüleiste, Backlog): bewusst so geschrieben,
+  bei der Abnahme als lang notiert, nicht gekürzt.
 - **Statistik-Popover über Karten** (Glas lässt Kartentext durchscheinen) und **helles
   Icon auf hellem Grund** — beobachtet, ohne Vorschlag.
 

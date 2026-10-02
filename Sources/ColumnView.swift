@@ -176,142 +176,157 @@ struct ColumnView: View {
                 .frame(height: 1)
                 .padding(.horizontal, Board.laneMargin(sized: store.usesSizes) * scale)
 
-            ScrollView {
-                LazyVStack(spacing: (singleLine ? 5 : Board.cardSpacing) * scale) {
-                    ForEach(displayedCards) { card in
-                        // The landing spot stands where the lane's own order
-                        // will put the card, not at the foot of the pile.
-                        if showsDropFeedback, card.id == landingBeforeID {
-                            insertionSlot
-                        }
-                        // No custom drag preview: SwiftUI rasterizes preview
-                        // closures into a bitmap, which turned rotation and
-                        // material fills into a pixelated snapshot. The
-                        // system's native lift preview renders the card
-                        // itself crisply and adds its own depth; the
-                        // drag-preview content shape rounds its corners so
-                        // no rectangular snapshot edge shows behind them.
-                        //
-                        // The system snapshots the view's own frame, whatever
-                        // the content shape says: with the bare card as the
-                        // frame, the half of the size tab that stands out past
-                        // the edge was cut off the lifted card (measured
-                        // 01.10.2026). So the frame is widened by the tab's
-                        // overhang for the drag, and narrowed again below so
-                        // the lane's layout never sees it.
-                        CardView(card: card)
-                            .padding(.trailing, Board.sizeTabOverhang * scale)
-                            .contentShape(.dragPreview, CardOutline(
-                                hasSizeTab: CardOutline.hasSizeTab(card),
-                                scale: scale,
-                                trailingInset: Board.sizeTabOverhang * scale))
-                            .draggable(card.id)
-                            .padding(.trailing, -Board.sizeTabOverhang * scale)
-                            // Runs alongside the system drag purely to note
-                            // which card is moving. Deliberately additive:
-                            // if it ever stops firing, dragging still works.
-                            // Threshold 0 so it can never lag the system drag
-                            // — at 6pt the source lane briefly treated the
-                            // card as foreign and offered itself as a target.
-                            .simultaneousGesture(
-                                DragGesture(minimumDistance: 0)
-                                    .onChanged { value in
-                                        // Threshold 0 keeps the gesture ahead
-                                        // of the system drag, but it also fires
-                                        // on plain mouse-down — which ghosted
-                                        // the card to 40% on every single
-                                        // click. The travel check restores the
-                                        // distinction without giving the
-                                        // threshold back: one pixel of movement
-                                        // still comes long before the system
-                                        // starts its own drag.
-                                        guard value.translation != .zero else { return }
-                                        store.beginDrag(cardID: card.id)
-                                    }
-                                    .onEnded { _ in store.endDrag() })
-                            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
-                                // One card is enough to size the placeholder.
-                                if card.id == displayedCards.first?.id {
-                                    cardHeight = height
-                                    // The pull slot next door borrows this
-                                    // measurement (see `nextTopCardHeight`).
-                                    if status == .next { store.nextTopCardHeight = height }
-                                }
+            ScrollViewReader { scroller in
+                ScrollView {
+                    LazyVStack(spacing: (singleLine ? 5 : Board.cardSpacing) * scale) {
+                        ForEach(displayedCards) { card in
+                            // The landing spot stands where the lane's own order
+                            // will put the card, not at the foot of the pile.
+                            if showsDropFeedback, card.id == landingBeforeID {
+                                insertionSlot
                             }
-                            // A card arriving in a lane settles into place
-                            // instead of blinking on: it grows the last few
-                            // percent into the shape this lane gives it.
-                            // Erledigt and In Bearbeitung are the exceptions,
-                            // both for the same reason: a card arriving there
-                            // plays its own settle (the completion pen stroke,
-                            // the pull shake-and-pop), and a second scale
-                            // running underneath it made the arrival stutter —
-                            // for the pull, the generic scale-in and the pop
-                            // even pull in opposite directions and partly
-                            // cancel.
-                            .transition(.asymmetric(
-                                insertion: isFolding || status == .done || status == .inProgress
-                                    ? .opacity
-                                    : .scale(scale: 0.93).combined(with: .opacity),
-                                removal: .opacity))
-                    }
+                            // No custom drag preview: SwiftUI rasterizes preview
+                            // closures into a bitmap, which turned rotation and
+                            // material fills into a pixelated snapshot. The
+                            // system's native lift preview renders the card
+                            // itself crisply and adds its own depth; the
+                            // drag-preview content shape rounds its corners so
+                            // no rectangular snapshot edge shows behind them.
+                            //
+                            // The system snapshots the view's own frame, whatever
+                            // the content shape says: with the bare card as the
+                            // frame, the half of the size tab that stands out past
+                            // the edge was cut off the lifted card (measured
+                            // 01.10.2026). So the frame is widened by the tab's
+                            // overhang for the drag, and narrowed again below so
+                            // the lane's layout never sees it.
+                            CardView(card: card)
+                                .padding(.trailing, Board.sizeTabOverhang * scale)
+                                .contentShape(.dragPreview, CardOutline(
+                                    hasSizeTab: CardOutline.hasSizeTab(card),
+                                    scale: scale,
+                                    trailingInset: Board.sizeTabOverhang * scale))
+                                .draggable(card.id)
+                                .padding(.trailing, -Board.sizeTabOverhang * scale)
+                                // Runs alongside the system drag purely to note
+                                // which card is moving. Deliberately additive:
+                                // if it ever stops firing, dragging still works.
+                                // Threshold 0 so it can never lag the system drag
+                                // — at 6pt the source lane briefly treated the
+                                // card as foreign and offered itself as a target.
+                                .simultaneousGesture(
+                                    DragGesture(minimumDistance: 0)
+                                        .onChanged { value in
+                                            // Threshold 0 keeps the gesture ahead
+                                            // of the system drag, but it also fires
+                                            // on plain mouse-down — which ghosted
+                                            // the card to 40% on every single
+                                            // click. The travel check restores the
+                                            // distinction without giving the
+                                            // threshold back: one pixel of movement
+                                            // still comes long before the system
+                                            // starts its own drag.
+                                            guard value.translation != .zero else { return }
+                                            store.beginDrag(cardID: card.id)
+                                        }
+                                        .onEnded { _ in store.endDrag() })
+                                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                                    // One card is enough to size the placeholder.
+                                    if card.id == displayedCards.first?.id {
+                                        cardHeight = height
+                                        // The pull slot next door borrows this
+                                        // measurement (see `nextTopCardHeight`).
+                                        if status == .next { store.nextTopCardHeight = height }
+                                    }
+                                }
+                                // A card arriving in a lane settles into place
+                                // instead of blinking on: it grows the last few
+                                // percent into the shape this lane gives it.
+                                // Erledigt and In Bearbeitung are the exceptions,
+                                // both for the same reason: a card arriving there
+                                // plays its own settle (the completion pen stroke,
+                                // the pull shake-and-pop), and a second scale
+                                // running underneath it made the arrival stutter —
+                                // for the pull, the generic scale-in and the pop
+                                // even pull in opposite directions and partly
+                                // cancel.
+                                .transition(.asymmetric(
+                                    insertion: isFolding || status == .done || status == .inProgress
+                                        ? .opacity
+                                        : .scale(scale: 0.93).combined(with: .opacity),
+                                    removal: .opacity))
+                        }
 
-                    // The landing spot belongs to the stack of cards, not
-                    // behind the lane's furniture. Below the fold line and
-                    // the "+" it sat detached from the pile it was promising
-                    // to join — in a folded Backlog with a scrolled lane,
-                    // often out of sight entirely.
-                    if showsDropFeedback {
-                        // Behind every card shown: the end of the pile, or a
-                        // card that belongs under the fold.
-                        if landingBeforeID == nil { insertionSlot }
-                    } else if showsEmptySlot {
-                        emptySlot
-                    }
+                        // The landing spot belongs to the stack of cards, not
+                        // behind the lane's furniture. Below the fold line and
+                        // the "+" it sat detached from the pile it was promising
+                        // to join — in a folded Backlog with a scrolled lane,
+                        // often out of sight entirely.
+                        if showsDropFeedback {
+                            // Behind every card shown: the end of the pile, or a
+                            // card that belongs under the fold.
+                            if landingBeforeID == nil { insertionSlot }
+                        } else if showsEmptySlot {
+                            emptySlot
+                        }
 
-                    if foldedCount > 0 {
-                        moreButton
-                    }
+                        if foldedCount > 0 {
+                            moreButton
+                        }
 
-                    if status == .backlog {
-                        addTicketButton
+                        if status == .backlog {
+                            addTicketButton
+                        }
+                    }
+                    .padding(.horizontal, Board.laneMargin(sized: store.usesSizes) * scale)
+                    .padding(.top, 10 * scale)
+                    .padding(.bottom, 12 * scale)
+                }
+                // No scroll indicator inside the wells: the system's overlay bar
+                // is the one element that would draw *above* the cards and break
+                // the lane's depth model (recessed well, paper on top). The fade
+                // below is the board's own "there is more" signal, and scrolling
+                // itself is untouched.
+                .scrollIndicators(.never)
+                // "In Bearbeitung" alone gets headroom: the pull shake pops and
+                // tilts the top card a few points past its own row, and the
+                // scroll viewport clipped those corners flat right under the
+                // header — the ticket slid *beneath* the lane's label in the one
+                // moment it is the main event. Unclipped, the shaking card draws
+                // over the hairline and header (the scroll view is the later
+                // sibling), which is the correct depth: paper above chrome. The
+                // other lanes keep their clip — with scrolling content, disabled
+                // clipping would let scrolled-away cards peek out above the
+                // viewport, and no other lane's settle ever leaves its row (the
+                // pen stroke stays inside the card).
+                // Only while the lane cannot scroll. The headroom exists for the
+                // pull shake, which lifts the top card a few points past its row
+                // — but unclipped, a lane with more cards than fit also lets the
+                // ones scrolled away draw over the header and its count. That is
+                // exactly the reason the other lanes keep their clip, and "In
+                // Bearbeitung" scrolls as soon as its soft limit is passed
+                // ("Passt schon").
+                .scrollClipDisabled(status == .inProgress && !canScroll)
+                .mask {
+                    scrollFade.padding(
+                        status == .inProgress
+                            ? EdgeInsets(top: -Self.shakeHeadroom, leading: -Self.shakeHeadroom,
+                                         bottom: 0, trailing: -Self.shakeHeadroom)
+                            : EdgeInsets())
+                }
+                // The landing spot has to be in sight. Since it stands where
+                // the lane's order puts the card, an unfolded lane scrolled
+                // to its foot would promise a place at its head, off screen:
+                // the lane tinted and no slot anywhere. Entering the lane
+                // brings the spot into view — once, on the event, never
+                // while the card merely hovers. A lane that fits its
+                // viewport has nowhere to scroll and stays still.
+                .onChange(of: showsDropFeedback) { _, shows in
+                    guard shows, let neighbour = landingBeforeID ?? displayedCards.last?.id else { return }
+                    withAnimation(reduceMotion ? nil : Board.dropTargetAnimation) {
+                        scroller.scrollTo(neighbour, anchor: .center)
                     }
                 }
-                .padding(.horizontal, Board.laneMargin(sized: store.usesSizes) * scale)
-                .padding(.top, 10 * scale)
-                .padding(.bottom, 12 * scale)
-            }
-            // No scroll indicator inside the wells: the system's overlay bar
-            // is the one element that would draw *above* the cards and break
-            // the lane's depth model (recessed well, paper on top). The fade
-            // below is the board's own "there is more" signal, and scrolling
-            // itself is untouched.
-            .scrollIndicators(.never)
-            // "In Bearbeitung" alone gets headroom: the pull shake pops and
-            // tilts the top card a few points past its own row, and the
-            // scroll viewport clipped those corners flat right under the
-            // header — the ticket slid *beneath* the lane's label in the one
-            // moment it is the main event. Unclipped, the shaking card draws
-            // over the hairline and header (the scroll view is the later
-            // sibling), which is the correct depth: paper above chrome. The
-            // other lanes keep their clip — with scrolling content, disabled
-            // clipping would let scrolled-away cards peek out above the
-            // viewport, and no other lane's settle ever leaves its row (the
-            // pen stroke stays inside the card).
-            // Only while the lane cannot scroll. The headroom exists for the
-            // pull shake, which lifts the top card a few points past its row
-            // — but unclipped, a lane with more cards than fit also lets the
-            // ones scrolled away draw over the header and its count. That is
-            // exactly the reason the other lanes keep their clip, and "In
-            // Bearbeitung" scrolls as soon as its soft limit is passed
-            // ("Passt schon").
-            .scrollClipDisabled(status == .inProgress && !canScroll)
-            .mask {
-                scrollFade.padding(
-                    status == .inProgress
-                        ? EdgeInsets(top: -Self.shakeHeadroom, leading: -Self.shakeHeadroom,
-                                     bottom: 0, trailing: -Self.shakeHeadroom)
-                        : EdgeInsets())
             }
         }
         .frame(

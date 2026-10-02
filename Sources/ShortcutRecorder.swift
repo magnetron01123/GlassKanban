@@ -121,7 +121,7 @@ final class RecorderButton: NSButton {
 
     private func refreshTitle() {
         if isRecording {
-            title = String(localized: "Recording…")
+            title = String(localized: "Type Shortcut")
         } else if let shortcut {
             title = shortcut.displayString
         } else {

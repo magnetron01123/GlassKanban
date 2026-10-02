@@ -8,14 +8,24 @@ enum SettingsMetrics {
     static let width: CGFloat = 420
 
     /// The recorder's width, so the row keeps its shape whether it says
-    /// "Kein Kurzbefehl", "Aufnahme …" or "⌥⌘K".
+    /// "Kein Kurzbefehl", "Kurzbefehl eingeben" or "⌥⌘K".
     static let shortcutWidth: CGFloat = 150
 
     /// Title bar and tab bar, which sit above the pane inside the same window.
     private static let windowChrome: CGFloat = 92
     /// The tallest a pane may be: what the screen the window is on leaves.
+    ///
+    /// The settings window's own screen, not `NSScreen.main`: that is the
+    /// screen of whichever window has the keyboard, so with the board on a
+    /// tall display and Settings on a short one the pane was measured
+    /// against the wrong one. `main` remains the answer before the window
+    /// exists.
     static var maxPaneHeight: CGFloat {
-        max(240, (NSScreen.main?.visibleFrame.height ?? 900) - windowChrome)
+        let settingsWindow = NSApp.windows.first {
+            $0.identifier?.rawValue.contains("Settings") == true
+        }
+        let screen = settingsWindow?.screen ?? NSScreen.main
+        return max(240, (screen?.visibleFrame.height ?? 900) - windowChrome)
     }
 }
 
@@ -113,7 +123,7 @@ struct ListsSettingsView: View {
                 // longer read. The state decides what is shown, never the
                 // leftovers of the last successful fetch.
                 if store.accessState == .denied {
-                    Text("No access to Reminders. Allow it in System Settings under “Privacy & Security”.")
+                    Text("No access to Reminders. Allow it in System Settings under Privacy & Security → Reminders.")
                         .foregroundStyle(.secondary)
                 } else if store.reminderCalendars.isEmpty {
                     Text("No reminder lists found")

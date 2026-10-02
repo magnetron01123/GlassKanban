@@ -895,7 +895,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beim Anmelden starten nicht möglich"
+            "value": "Start beim Anmelden nicht möglich"
           }
         },
         "en": {
@@ -2070,19 +2070,19 @@
         }
       }
     },
-    "No access to Reminders. Allow it in System Settings under “Privacy & Security”.": {
+    "No access to Reminders. Allow it in System Settings under Privacy & Security → Reminders.": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kein Zugriff auf Erinnerungen. In den Systemeinstellungen unter „Datenschutz & Sicherheit“ freigeben."
+            "value": "Kein Zugriff auf Erinnerungen. Erlaube ihn in den Systemeinstellungen unter Datenschutz & Sicherheit → Erinnerungen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No access to Reminders. Allow it in System Settings under “Privacy & Security”."
+            "value": "No access to Reminders. Allow it in System Settings under Privacy & Security → Reminders."
           }
         }
       }
@@ -2529,19 +2529,19 @@
         }
       }
     },
-    "Recording…": {
+    "Type Shortcut": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aufnahme …"
+            "value": "Kurzbefehl eingeben"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recording…"
+            "value": "Type Shortcut"
           }
         }
       }
