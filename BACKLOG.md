@@ -949,12 +949,19 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
   Landeposition, auch in einer aufgeklappten, nach unten gerollten Spalte (sie rollt beim
   Eintritt des Zugs an den Landeplatz), und Tab/⇧Tab im Notizfeld (Notiz → URL, Notiz →
   Titel, kein Tabzeichen).
-- **Tablett, Schnellerfassung — behoben, die Gegenprobe steht aus:** Wächst der Backlog
-  beim Erfassen um eine Zeile, folgte die Rollfläche dem fokussierten Feld, und der Kopf
-  mit der Zahl blieb über der Panelkante stehen (mit Tastatur nachgestellt). Passt der
-  Inhalt ins Panel, wird die Rollfläche jetzt an den Anfang gesetzt
-  (`MenuBarTrayView.settle`). Der Falz im Tablett läuft danach wie vorher (gemessen). Die
-  Erfassung selbst noch einmal mit Tastatur ansehen: Kopf und neue Zahl müssen stehen.
+- **Tablett, Schnellerfassung — Ursache gefunden und gesperrt, die Gegenprobe steht aus
+  (02.10.2026):** Nach einer *getippten* Erfassung, die den Backlog um eine Zeile wachsen
+  lässt, stand das Fenster auf der richtigen Höhe, seine Inhaltsansicht aber eine Zeile
+  höher — der Kopf mit der Zahl lag über der Panelkante (protokolliert: Fenster 668,
+  Inhalt 694). Ursache: `preferredContentSizeDidChange` reichte die Größe auch bei
+  sichtbarem Panel weiter, entgegen seinem eigenen Kommentar; jetzt nur noch vor dem
+  ersten Öffnen. Über Bedienungshilfen gemessen laufen Erfassung, beide Falze und erneutes
+  Öffnen danach deckungsgleich (Fenster = Inhalt). **Mit Tastatur noch nicht
+  nachgeprüft** — zwei frühere Versuche (Rollfläche zurücksetzen, Höhe erneut melden)
+  hatten nichts bewirkt und sind wieder entfernt. Probe: im Tablett bei kurzem Backlog
+  tippen, Return; Kopf und neue Zahl müssen stehen.
+- **Statistik:** „Jetzt" und „Rückblick" gleich hoch, mit echtem Klick gemessen (beide
+  377 pt, 02.10.2026).
 - **Prioritätsmarke allein in der ersten Zeile**, wenn das erste Wort des Titels länger
   ist als die Zeile. Ein geschütztes Leerzeichen hält sie nicht (probiert und
   zurückgenommen).

@@ -21,8 +21,6 @@ struct MenuBarTrayView: View {
     @Environment(\.openSettings) private var openSettings
     /// The panel's current height (see `TrayFit`).
     @ObservedObject private var fit = MenuBarTrayController.shared.fit
-    /// The content's own height, as last measured (see `measured`).
-    @State private var contentHeight: CGFloat = 0
 
     /// The section a row is being dragged out of, so that section alone does
     /// not light up as a target for its own row. Kept here rather than in the
@@ -82,23 +80,10 @@ struct MenuBarTrayView: View {
         // Before the first layout the height is unknown, and the root is as
         // tall as its content — which is exactly what the first measurement
         // asks.
-        ScrollViewReader { scroller in
-            ScrollView(.vertical) { measured.id(Self.topID) }
-                .scrollBounceBehavior(.basedOnSize)
-                .scrollIndicators(.never)
-                .frame(width: Board.trayWidth, height: fit.hostHeight > 0 ? fit.hostHeight : nil, alignment: .top)
-                // Content that fits stands at its top, whatever happened on
-                // the way. A task typed into the capture grows the Backlog by
-                // one row a moment before the panel grows with it; for that
-                // moment the content is taller than the panel, the scroll
-                // view follows the focused field down by exactly that row —
-                // and stays there, the Backlog head and its count cut off
-                // above the panel's edge (measured 02.10.2026, with a real
-                // keyboard; an accessibility-driven capture does not show
-                // it). The count is the capture's only receipt.
-                .onChange(of: fit.hostHeight) { _, height in settle(scroller, panel: height) }
-                .onChange(of: contentHeight) { _, _ in settle(scroller, panel: fit.hostHeight) }
-        }
+        ScrollView(.vertical) { measured }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.never)
+            .frame(width: Board.trayWidth, height: fit.hostHeight > 0 ? fit.hostHeight : nil, alignment: .top)
         // `store.start()` hangs on the board window's `.task`. In the menu
             // bar mode there is no window, so without this the tray would be
             // empty and would never have asked for access. `start()` is
@@ -127,21 +112,8 @@ struct MenuBarTrayView: View {
         content
             .frame(width: Board.trayWidth)
             .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
-                contentHeight = height
                 MenuBarTrayController.shared.contentHeightChanged(height)
             }
-    }
-
-    private static let topID = "tray-top"
-
-    /// Back to the top once the whole content is in the panel. Never while
-    /// the panel is clamped to a short screen and really scrolls — there the
-    /// position is the user's.
-    private func settle(_ scroller: ScrollViewProxy, panel: CGFloat) {
-        guard contentHeight > 0, contentHeight <= panel + 0.5 else { return }
-        var quiet = Transaction()
-        quiet.disablesAnimations = true
-        withTransaction(quiet) { scroller.scrollTo(Self.topID, anchor: .top) }
     }
 
     @ViewBuilder
