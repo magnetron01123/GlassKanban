@@ -139,6 +139,9 @@ struct KanbanCard: Identifiable, Equatable {
     /// unlike `lastModifiedDate` it never moves. Used as the stable, fair
     /// tie-breaker in the open lanes (oldest-waiting first) before the title.
     let creationDate: Date?
+    /// The card's T-shirt size, from the board's own record (`SizeState`).
+    /// Nil for the many cards nobody sized — the feature is optional.
+    var size: TicketSize? = nil
 
     /// Everything the search looks at, in one place: the title plus whatever
     /// notes the board itself would show. Computed per call — on a personal

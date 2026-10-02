@@ -70,7 +70,7 @@ darin nicht zu finden.
 
 ## Code-Landkarte
 
-Zwei Targets (App + Tests), `Sources/` mit rund 14.500 Zeilen SwiftUI; Projektdatei wird von XcodeGen
+Zwei Targets (App + Tests), `Sources/` mit rund 15.400 Zeilen SwiftUI; Projektdatei wird von XcodeGen
 erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
 
 - **RemindersStore.swift** — der ganze EventKit-Zugriff: Laden, Sync, Schreiben, Undo,
@@ -91,6 +91,13 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Datei je lag. **Übertragen wird noch nichts** — das hängt am Developer Program
   (BACKLOG.md, „Gerätesynchronisation über iCloud"; dort steht auch, wann die
   liegengebliebenen Kopien aufgeräumt werden).
+- **SizeState.swift** — **die T-Shirt-Größe** (`TicketSize`: S, M, L) je Karte, in einer
+  eigenen Datei (`sizes.json`) neben `columns.json` und nach denselben Regeln; eine
+  entfernte Größe bleibt als datierter Vermerk, damit `merged(_:_:now:)` sie nicht
+  zurückbringt. **BoardStorage.swift** ist der gemeinsame Speicherort beider Dateien —
+  am 30.09.2026 aus `ColumnState` herausgezogen, das seine alte API als Weiterleitung
+  behält (die `ColumnStateTests` laufen unverändert). Der Schreibpfad im Store ist
+  `setSize(cardID:to:)`; er berührt EventKit nicht.
 - **StatusTagger.swift** — **nur noch Migration**: liest die alten Hashtags einmal je
   Liste ein und schneidet sie danach aus den Notizen — aber **nur bei den IDs, die der
   Import namentlich vermerkt hat** (`ColumnState.pendingTagCleanup`). Diese Einschränkung
@@ -129,7 +136,9 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   Menüleisten-Panel: die Geschichte der Form").
 - **CardParts.swift** — die Bausteine einer Karte (Prioritätsmarken, Titel,
   Datums-Badge, Wiederholungs-Icon, Listenstreifen, Durchstrich), geteilt von `CardView`
-  und `TrayRow`. Angelegt beim Bau des Tabletts, damit die Anatomie einer Karte
+  und `TrayRow`; dazu `CardSizeTab`, der Größen-Reiter an der Kartenkante (nur Board), und
+  `CardOutline`, die Kartenform samt Reiter für Klick und Zieh-Vorschau. Die Ränder des
+  Boards hängen an `store.usesSizes` (`Board.laneMargin(sized:)`). Angelegt beim Bau des Tabletts, damit die Anatomie einer Karte
   nicht zweimal existiert.
 - **Views** — `BoardView` (Board + Dialoge), `ColumnView` (Spalte, Falz, Drop-Ziele),
   `CardView` (Karte, Settle-Animationen, Durchstrich), `TicketEditSheet` (Karten-Editor),
@@ -203,7 +212,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `Tests/`, 26 Dateien mit rund 390 Tests, benannt nach der Regel
+- **Tests** — `Tests/`, 27 Dateien mit rund 410 Tests, benannt nach der Regel
   statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
   Target heißt `GlassKanbanTests`.
 

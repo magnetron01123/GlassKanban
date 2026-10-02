@@ -16,8 +16,8 @@ enum Board {
     // KanbanStatus.cardDensity), not from lane geometry.
     static let boardPadding: CGFloat = 20
     static let columnSpacing: CGFloat = 20
-    static let columnMinWidth: CGFloat = 280
-    static let columnMaxWidth: CGFloat = 400
+    static let columnMinWidth: CGFloat = 292
+    static let columnMaxWidth: CGFloat = 412
     /// Four lanes at their minimum, the air between them and the margin
     /// around. Everything in it grows with the display size.
     static func boardMinWidth(_ scale: CGFloat) -> CGFloat {
@@ -29,11 +29,26 @@ enum Board {
     /// The lane's inner margin — one value for the header, its hairline, the
     /// cards and the "more" button, so everything inside a lane shares a
     /// single left edge.
-    static let laneMargin: CGFloat = 12
+    ///
+    /// Two values, chosen by the board as a whole: 12 while no card carries a
+    /// size, and room for the size tab plus its air once one does (see
+    /// `sizeTabAir`). Sizing is optional, and a board that never uses it must
+    /// not pay for it — with the wider margin always on, every title lost 6pt
+    /// and every lane stood further in for a tab that was never there
+    /// (01.10.2026). The switch is board-wide rather than per lane or per
+    /// card, so lanes never differ from each other and a date badge stands in
+    /// the same place on every row; it happens once, when the first size is
+    /// set, and animates.
+    static func laneMargin(sized: Bool) -> CGFloat {
+        sized ? sizeTabOverhang + sizeTabAir : 12
+    }
     /// A card's own text margins. Leading is wider because the list stripe
-    /// sits inside it; the zone hairlines follow the same insets.
+    /// sits inside it; the zone hairlines follow the same insets. Trailing
+    /// follows the same switch as `laneMargin(sized:)`.
     static let cardInsetLeading: CGFloat = 14
-    static let cardInsetTrailing: CGFloat = 12
+    static func cardInsetTrailing(sized: Bool) -> CGFloat {
+        sized ? sizeTabOverhang + sizeTabAir : 12
+    }
     // Card heights: one grid, two sizes.
     //
     // A ticket is one of exactly two heights, and the tall one is four of
@@ -175,6 +190,76 @@ enum Board {
         RoundedRectangle(cornerRadius: cardRadius * scale, style: .continuous)
     }
     static let cardShape = cardShape(1)
+    // The size tab — a clear index tab clipped onto the card's trailing edge
+    // (CONCEPT.md, "T-Shirt-Größen"). One rule fixes every number: the tab
+    // sits centred on the edge, half on the card and half in the lane margin,
+    // and leaves the row's own 8pt rhythm (`sizeTabAir`) on both sides — to
+    // the card's content and to the lane's wall. Lane margin and trailing
+    // inset grow from 12 to 18 for it once a size is in use (see
+    // `laneMargin(sized:)`); the columns are 12pt wider than they were
+    // before sizes existed, so a card with a tab is as wide as a card always
+    // was (01.10.2026).
+    //
+    // Two measured builds came before this one. 16×22 with 4pt of air read
+    // as crammed. 16×20 with 8pt of air still did, and the reason was inside
+    // the tab: 3.5pt beside the letter against 6pt above it. A square gives
+    // the letter the same room on all four sides, and at the date badge's
+    // height the two share their top and bottom lines.
+    //
+    // All of it in points at display size 1; like every card measure, the
+    // views multiply by the board's scale.
+    static let sizeTabSide: CGFloat = 20
+    static let sizeTabOverhang: CGFloat = sizeTabSide / 2
+    /// The gap between any two things in a card row — and so the tab's too.
+    static let sizeTabAir: CGFloat = 8
+    /// Centres the tab on the first 38pt band — the middle of a Backlog row,
+    /// and the same spot on an unfolded card, which grows downward past it.
+    static let sizeTabTop: CGFloat = (compactCardHeight - sizeTabSide) / 2
+    /// Rounder than a key cap: between the badge's capsule and the card's own
+    /// corner, so the row holds one family of round forms.
+    static func sizeTabShape(_ scale: CGFloat) -> RoundedRectangle {
+        RoundedRectangle(cornerRadius: 6.5 * scale, style: .continuous)
+    }
+    /// Frosted clear plastic, drawn rather than sampled. Both system glasses
+    /// were measured first (30.09.2026): `.glassEffect` turns flat grey
+    /// whenever the window is inactive — which on a second screen is nearly
+    /// always — and `NSVisualEffectView` reads as a grey patch on white paper.
+    /// What lies under the tab is two flat colours and one edge, so there is
+    /// nothing for a blur to do except soften the edge that is meant to show.
+    ///
+    /// Dark mode lightens what lies beneath, and the tab stands out from card
+    /// and lane alike. Light mode cannot mirror that with white — the paper is
+    /// already white, and a white tab on it was told apart by its shadow alone
+    /// (01.10.2026, user: tab and background too alike). So there it is a
+    /// dense, faintly grey frost: a step darker than the paper, a step lighter
+    /// than the lane, distinct from both. Dense also so the edge underneath is
+    /// a hint, not a split: at 0.55 the letter stood on a background cut in
+    /// two tones.
+    ///
+    /// Dark mode follows the same rule since the review of 01.10.2026: as
+    /// clear glass (white at 0.15) the card's edge ran through the letter as
+    /// a hard line. Half as clear, the edge is still there to see and the
+    /// letter stands on one surface.
+    static func sizeTabFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color(white: 0.52).opacity(0.5) : Color(white: 0.92).opacity(0.9)
+    }
+    /// The rim catches light from above, like every glass edge on macOS 26 —
+    /// a flat grey outline made the tab a checkbox. On white paper the rim
+    /// disappears and the shadow alone lifts the tab, which is the point: no
+    /// drawn line crosses the card.
+    static func sizeTabRim(_ scheme: ColorScheme, _ contrast: ColorSchemeContrast) -> LinearGradient {
+        let colors: [Color] = if contrast == .increased {
+            [cardBorder(contrast), cardBorder(contrast)]
+        } else if scheme == .dark {
+            [.white.opacity(0.42), .white.opacity(0.12)]
+        } else {
+            [.white, .white.opacity(0.55)]
+        }
+        return LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom)
+    }
+    static func sizeTabShadow(_ scheme: ColorScheme) -> (color: Color, radius: CGFloat, y: CGFloat) {
+        (Color.black.opacity(scheme == .dark ? 0.28 : 0.16), 2, 1)
+    }
     /// The opened card. Its corner grows with it — the same note brought
     /// closer, not a lane-sized corner stretched across twice the width,
     /// which is what makes an enlarged panel look flat.
@@ -527,6 +612,12 @@ enum BoardText {
     /// a letterform does.
     static func glyph(_ scale: CGFloat) -> Font { .system(size: 9 * scale, weight: .semibold) }
     static let glyph = glyph(1)
+    /// The letter on a card's size tab. One point above `chip`: a single
+    /// capital alone in a square needs the size a word in a capsule does not.
+    /// Medium, not semibold: the letter is primary for legibility, and at
+    /// semibold a lane of sized cards grew a ladder of black glyphs down its
+    /// right edge that outweighed the titles (01.10.2026).
+    static func sizeTab(_ scale: CGFloat) -> Font { .system(size: 12 * scale, weight: .medium) }
     /// A single emphasised number — the streak counter.
     static let value = Font.system(size: 12, weight: .semibold)
 

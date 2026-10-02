@@ -61,6 +61,11 @@ struct CardView: View {
             color: card.status == .done ? .clear : Board.cardShadowAmbient.color,
             radius: Board.cardShadowAmbient.radius,
             y: Board.cardShadowAmbient.y)
+        // After the shadows, so the card's shadow is not cast through the
+        // tab; before the settle and hover transforms, so the tab lifts and
+        // tilts with the card it is clipped onto.
+        .overlay(alignment: .topTrailing) { sizeTab }
+        .animation(reduceMotion ? nil : Board.hoverAnimation, value: card.size)
         .scaleEffect(settleScale)
         .rotationEffect(.degrees(settleTilt))
         .offset(y: isHovered && !reduceMotion ? -1 : 0)
@@ -69,7 +74,9 @@ struct CardView: View {
         // it says the original has been lifted.
         .opacity(store.draggingCardID == card.id ? 0.4 : 1)
         .animation(reduceMotion ? nil : Board.hoverAnimation, value: store.draggingCardID)
-        .contentShape(Board.cardShape(scale))
+        // The tab is part of the card: a click on the half that stands out
+        // past the edge opens the card too, instead of landing on the lane.
+        .contentShape(CardOutline(hasSizeTab: showsSizeTab, scale: scale))
         // Deliberately NOT `.focusable()`. Cards must not take keyboard focus
         // — settled user decision, recorded in BACKLOG.md ("Explizit
         // abgelehnt"): cards are dragged around all day, and a board that
@@ -107,6 +114,12 @@ struct CardView: View {
                         store.move(cardID: card.id, to: target, undoManager: undoManager)
                     }
                 }
+            }
+            // Optional sizing lives next to moving: both are the planning
+            // gestures a card offers without opening it.
+            Menu("Size") {
+                sizeChoice(nil)
+                ForEach(TicketSize.allCases, id: \.self) { size in sizeChoice(size) }
             }
             Divider()
             Button("Rename") { beginRename() }
@@ -150,6 +163,16 @@ struct CardView: View {
                 ForEach(moveTargets) { target in
                     Button("Move to \(target.displayName)") {
                         store.move(cardID: card.id, to: target, undoManager: undoManager)
+                    }
+                }
+                ForEach(TicketSize.allCases.filter { $0 != card.size }, id: \.self) { size in
+                    Button("Size \(size.letter)") {
+                        store.setSize(cardID: card.id, to: size, undoManager: undoManager)
+                    }
+                }
+                if card.size != nil {
+                    Button("Remove Size") {
+                        store.setSize(cardID: card.id, to: nil, undoManager: undoManager)
                     }
                 }
                 Button("Rename") { beginRename() }
@@ -287,7 +310,7 @@ struct CardView: View {
             .fill(Board.cardBorder(contrast))
             .frame(height: 1)
             .padding(.leading, Board.cardInsetLeading * scale)
-            .padding(.trailing, Board.cardInsetTrailing * scale)
+            .padding(.trailing, Board.cardInsetTrailing(sized: store.usesSizes) * scale)
     }
 
     /// Dwell time, top right in the header: process state, deliberately far
@@ -306,13 +329,10 @@ struct CardView: View {
         }
     }
 
-    /// Backlog: everything needed to decide what to pull next.
-    ///
-    /// Badge before glyph, the same order the full card's footer uses. The
-    /// two were mirrored — badge-then-glyph there, glyph-then-badge here —
-    /// so a card swapped its two meta marks around as it moved from Backlog
-    /// into a working lane, which reads as the card being rearranged rather
-    /// than relocated.
+    /// Backlog: everything needed to decide what to pull next — priority,
+    /// title, date. No repeat glyph since 30.09.2026: recurrence is a detail
+    /// of the unfolded card, and the row gives its width to the title
+    /// (CONCEPT.md, "T-Shirt-Größen"). VoiceOver still says "Repeats".
     private var compactBody: some View {
         HStack(spacing: 8 * scale) {
             titleOrField(font: BoardText.titleCompact(scale))
@@ -320,9 +340,6 @@ struct CardView: View {
             Spacer(minLength: 0)
             if let badge = compactBadge {
                 badgeView(badge)
-            }
-            if card.isRecurring {
-                repeatIcon
             }
         }
         .padding(cardInsets(top: 9, bottom: 9))
@@ -398,6 +415,32 @@ struct CardView: View {
 
     private var repeatIcon: some View { CardRepeatIcon() }
 
+    private var showsSizeTab: Bool { CardOutline.hasSizeTab(card) }
+
+    /// One entry of the Size menu, ticked when it is the card's size.
+    private func sizeChoice(_ size: TicketSize?) -> some View {
+        Toggle(
+            size?.letter ?? String(localized: "None"),
+            isOn: Binding(
+                get: { card.size == size },
+                set: { isOn in
+                    if isOn { store.setSize(cardID: card.id, to: size, undoManager: undoManager) }
+                }))
+    }
+
+    /// The size tab, centred on the trailing edge at the height of the first
+    /// 38pt band — the same spot on a Backlog row and on an unfolded card.
+    @ViewBuilder
+    private var sizeTab: some View {
+        if showsSizeTab, let size = card.size {
+            CardSizeTab(size: size)
+                .offset(x: Board.sizeTabOverhang * scale, y: Board.sizeTabTop * scale)
+                .transition(reduceMotion
+                    ? .opacity
+                    : .offset(x: -Board.sizeTabOverhang * scale).combined(with: .opacity))
+        }
+    }
+
     /// Compact rows have no room for the notes preview, so the tooltip
     /// carries it — information without pixels.
     ///
@@ -437,7 +480,7 @@ struct CardView: View {
             top: top * scale,
             leading: Board.cardInsetLeading * scale,
             bottom: bottom * scale,
-            trailing: Board.cardInsetTrailing * scale)
+            trailing: Board.cardInsetTrailing(sized: store.usesSizes) * scale)
     }
 
     /// Shared with the menu bar tray — see `CardParts.accessibilityLabel`.

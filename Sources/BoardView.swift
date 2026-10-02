@@ -119,6 +119,9 @@ struct BoardView: View {
         // own arrival rather than running a second, nearly-identical curve
         // beside it.
         .blur(radius: store.editingCardID == nil ? 0 : (reduceTransparency ? 0 : 7))
+        // The one layout change sizing causes: the lanes make room for the
+        // tabs when the first size is set, and give it back with the last.
+        .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: store.usesSizes)
         .animation(reduceMotion ? nil : Board.cardMoveAnimation, value: store.cards)
         .toolbar {
             // Shown as soon as there is any history at all — not just during

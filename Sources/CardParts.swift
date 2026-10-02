@@ -71,6 +71,9 @@ enum CardParts {
             parts.append(String(localized: "Repeats"))
         }
         parts.append(String(localized: "List \(card.listName)"))
+        if CardOutline.hasSizeTab(card), let size = card.size {
+            parts.append(String(localized: "Size \(size.letter)"))
+        }
         // Only where the card itself shows it. Read out on every backlog and
         // done card, "In this column for 66 days" was a standing charge the
         // eye never sees (CONCEPT.md, "Belohnen, nie bestrafen").
@@ -184,6 +187,89 @@ struct CardRepeatIcon: View {
         Image(systemName: "repeat")
             .font(BoardText.glyph(scale))
             .foregroundStyle(.secondary)
+    }
+}
+
+/// A card's T-shirt size, as a clear index tab clipped onto its trailing edge
+/// (CONCEPT.md, "T-Shirt-Größen"). The card places it; this is only the tab.
+///
+/// Translucent, so the card's edge runs on visibly underneath — that is what
+/// makes it read as a tab gripping the card rather than a sticker on it. It
+/// is the one see-through thing that touches a card, a deliberate and
+/// narrowed exception to "glass is chrome, never content": the tab is an
+/// accessory on the card's edge, not a surface content stands on, and what
+/// lies under it is opaque paper and the lane, not the wallpaper whose
+/// brightness made glass cards fail. Why it is drawn instead of using a
+/// system material: see `Board.sizeTabFill`.
+///
+/// "Reduce transparency" turns it into card paper, the same solid fallback
+/// every other translucent surface of the board takes.
+struct CardSizeTab: View {
+    let size: TicketSize
+
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.boardScale) private var scale
+
+    var body: some View {
+        let shape = Board.sizeTabShape(scale)
+        let shadow = Board.sizeTabShadow(colorScheme)
+        return Text(size.letter)
+            .font(BoardText.sizeTab(scale))
+            // Primary, against the board's own two-rank rule (a size only
+            // *describes* the ticket, see `BoardText`). Tried secondary first
+            // and it failed on legibility: one grey letter on a pale tab is
+            // not readable from where the board is looked at (01.10.2026).
+            .foregroundStyle(.primary)
+            // Changing S to M swaps only the letter; the tab itself stays.
+            .contentTransition(.opacity)
+            .frame(width: Board.sizeTabSide * scale, height: Board.sizeTabSide * scale)
+            .background {
+                shape
+                    .fill(reduceTransparency ? Board.cardFill(colorScheme) : Board.sizeTabFill(colorScheme))
+                    .shadow(color: shadow.color, radius: shadow.radius, y: shadow.y)
+            }
+            .overlay {
+                if reduceTransparency && contrast != .increased {
+                    shape.strokeBorder(Board.cardBorder(contrast), lineWidth: 1)
+                } else {
+                    shape.strokeBorder(Board.sizeTabRim(colorScheme, contrast), lineWidth: 1)
+                }
+            }
+            .accessibilityHidden(true)
+    }
+}
+
+/// The card's silhouette including its size tab — what a click hits and what
+/// a drag lifts. With the bare card shape the half of the tab that stands out
+/// past the edge was dead to the pointer and cut off the lifted card.
+struct CardOutline: Shape {
+    let hasSizeTab: Bool
+    /// The board's display size; the outline grows with the card.
+    var scale: CGFloat = 1
+    /// How far the card's own edge sits inside `rect` on the trailing side —
+    /// non-zero where the frame was widened to hold the tab (the drag
+    /// preview, see `ColumnView`).
+    var trailingInset: CGFloat = 0
+
+    /// Done cards say only their name, so they carry no tab.
+    static func hasSizeTab(_ card: KanbanCard) -> Bool {
+        card.size != nil && card.status != .done
+    }
+
+    func path(in rect: CGRect) -> Path {
+        var rect = rect
+        rect.size.width -= trailingInset
+        var path = Board.cardShape(scale).path(in: rect)
+        if hasSizeTab {
+            let tab = CGRect(
+                x: rect.maxX - Board.sizeTabOverhang * scale,
+                y: rect.minY + Board.sizeTabTop * scale,
+                width: Board.sizeTabSide * scale, height: Board.sizeTabSide * scale)
+            path.addPath(Board.sizeTabShape(scale).path(in: tab))
+        }
+        return path
     }
 }
 

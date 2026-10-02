@@ -165,7 +165,7 @@ struct ColumnView: View {
             Rectangle()
                 .fill(Board.columnBorder(contrast))
                 .frame(height: 1)
-                .padding(.horizontal, Board.laneMargin * scale)
+                .padding(.horizontal, Board.laneMargin(sized: store.usesSizes) * scale)
 
             ScrollView {
                 LazyVStack(spacing: (singleLine ? 5 : Board.cardSpacing) * scale) {
@@ -177,9 +177,22 @@ struct ColumnView: View {
                         // itself crisply and adds its own depth; the
                         // drag-preview content shape rounds its corners so
                         // no rectangular snapshot edge shows behind them.
+                        //
+                        // The system snapshots the view's own frame, whatever
+                        // the content shape says: with the bare card as the
+                        // frame, the half of the size tab that stands out past
+                        // the edge was cut off the lifted card (measured
+                        // 01.10.2026). So the frame is widened by the tab's
+                        // overhang for the drag, and narrowed again below so
+                        // the lane's layout never sees it.
                         CardView(card: card)
-                            .contentShape(.dragPreview, Board.cardShape(scale))
+                            .padding(.trailing, Board.sizeTabOverhang * scale)
+                            .contentShape(.dragPreview, CardOutline(
+                                hasSizeTab: CardOutline.hasSizeTab(card),
+                                scale: scale,
+                                trailingInset: Board.sizeTabOverhang * scale))
                             .draggable(card.id)
+                            .padding(.trailing, -Board.sizeTabOverhang * scale)
                             // Runs alongside the system drag purely to note
                             // which card is moving. Deliberately additive:
                             // if it ever stops firing, dragging still works.
@@ -248,7 +261,7 @@ struct ColumnView: View {
                         addTicketButton
                     }
                 }
-                .padding(.horizontal, Board.laneMargin * scale)
+                .padding(.horizontal, Board.laneMargin(sized: store.usesSizes) * scale)
                 .padding(.top, 10 * scale)
                 .padding(.bottom, 12 * scale)
             }
@@ -430,8 +443,8 @@ struct ColumnView: View {
                 .accessibilityValue(spokenCount)
         }
         .padding(EdgeInsets(
-            top: 12 * scale, leading: Board.laneMargin * scale,
-            bottom: 10 * scale, trailing: Board.laneMargin * scale))
+            top: 12 * scale, leading: Board.laneMargin(sized: store.usesSizes) * scale,
+            bottom: 10 * scale, trailing: Board.laneMargin(sized: store.usesSizes) * scale))
         // The whole header band, not just the count capsule. On the capsule
         // alone the tooltip was a 20pt target nobody found — including the
         // person who asked for it — which makes "explicit" true only on

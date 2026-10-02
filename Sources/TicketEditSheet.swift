@@ -51,6 +51,11 @@ struct TicketEditSheet: View {
     @State private var hasDueTime = false
     @State private var priority = 0
     @State private var calendarID = ""
+    /// The card's T-shirt size and what it was on opening. Kept apart from
+    /// `EditableTicket`: the size lives in the board's own file, not in the
+    /// reminder, so it is written by `setSize`, not `updateTicket`.
+    @State private var size: TicketSize?
+    @State private var loadedSize: TicketSize?
     @State private var isDuePopoverPresented = false
     /// Set by the "Open in Reminders" button, acted on after `save()` —
     /// handing over to the native app before writing would show it a stale
@@ -431,6 +436,9 @@ struct TicketEditSheet: View {
             }
             factRow("List") { listControl }
             factRow("Urgency") { priorityControl }.disabled(isReadOnly)
+            // Never disabled: a read-only list refuses writes to the reminder,
+            // and the size is not written there.
+            factRow("Size") { sizeControl }
             factRow("Due Date") { dueDateControl }.disabled(isReadOnly)
         }
         .padding(EdgeInsets(top: 14, leading: Board.openCardInset, bottom: 16, trailing: Board.openCardInset))
@@ -615,6 +623,21 @@ struct TicketEditSheet: View {
             accessibilityLabel: String(localized: "Urgency")
         ) { index in
             priority = PriorityOption.allCases[index].rawValue
+        }
+    }
+
+    /// None, then S, M, L — the same pop-up as Urgency, one row below it.
+    /// Letters only: "Medium" directly under an urgency of "Medium" read as
+    /// the same value twice.
+    private var sizeControl: some View {
+        let options: [TicketSize?] = [nil] + TicketSize.allCases
+        return FactPopUpButton(
+            titles: options.map { $0?.letter ?? String(localized: "None") },
+            selectedIndex: options.firstIndex(of: size) ?? 0,
+            width: Self.factControlWidth,
+            accessibilityLabel: String(localized: "Size")
+        ) { index in
+            size = options[index]
         }
     }
 
@@ -815,6 +838,8 @@ struct TicketEditSheet: View {
         hasDueTime = ticket.hasDueTime
         priority = ticket.priority
         calendarID = ticket.calendarID
+        size = store.cards.first { $0.id == card.id }?.size
+        loadedSize = size
         loadedTicket = ticket
         isLoaded = true
         // A brand-new ticket opens ready to type its name — from the first
@@ -853,6 +878,11 @@ struct TicketEditSheet: View {
 
     private func save() {
         guard isLoaded, let loadedTicket else { return }
+        // Before the reminder is written: a list change can rekey the card,
+        // and the size has to be under the old identifier to travel with it.
+        if size != loadedSize {
+            store.setSize(cardID: card.id, to: size, undoManager: undoManager)
+        }
         var edited = EditableTicket(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             notes: Self.normalizedNotes(notes),

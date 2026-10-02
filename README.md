@@ -17,9 +17,12 @@ Erinnerungs-Zugriff. Deutsch und Englisch, folgt der Systemsprache.
   (Bis 13.08.2026 stand die Spalte als Hashtag in den Notizen; vorhandene Tags werden
   beim ersten Start einmalig übernommen und danach aus den Notizen entfernt.)
 - **Drag & Drop** zwischen den Spalten; **Klick** auf eine Karte öffnet den Karten-Editor
-  direkt auf dem Board (Titel, Notizen, URL, Liste, Dringlichkeit, Fälligkeit)
+  direkt auf dem Board (Titel, Notizen, URL, Liste, Dringlichkeit, Größe, Fälligkeit)
+- **T-Shirt-Größen, optional:** Eine Karte kann S, M oder L tragen — sichtbar als kleiner
+  Reiter an ihrer rechten Kante. Die Größe liegt in einer eigenen Datei der App, nicht in
+  der Erinnerung; wer keine setzt, sieht nichts davon
 - **Tickets anlegen** über das „+" im Backlog — Titel tippen, Return, fertig
-- **Alles widerrufbar:** Verschieben, Bearbeiten, Umbenennen, Anlegen und Löschen lassen
+- **Alles widerrufbar:** Verschieben, Bearbeiten, Umbenennen, Größe, Anlegen und Löschen lassen
   sich auf dem Board mit ⌘Z rückgängig machen (im Menüleisten-Panel nicht); Löschen fragt zusätzlich nach, weil EventKit
   Unteraufgaben und Anhänge nicht wiederherstellen kann
 - **Bidirektionaler Live-Sync**: Änderungen in der Erinnerungen-App (auch auf

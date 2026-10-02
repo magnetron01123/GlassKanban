@@ -114,7 +114,7 @@ auf Mechanik aufmerksam. Es soll einfach schon dort sein.
 
 - Erinnerungen ausschließlich über EventKit (`EKEventStore`/`EKReminder`). Eigener Speicher
   nur für das, was keine Eigenschaft der Aufgabe ist: die Spalte (`columns.json`, siehe
-  Datenmodell) und Einstellungen (`UserDefaults`, klassifiziert in `StoredSetting`)
+  Datenmodell), die Größe (`sizes.json`, siehe „T-Shirt-Größen") und Einstellungen (`UserDefaults`, klassifiziert in `StoredSetting`)
 - Bidirektionaler Sync über `EKEventStoreChangedNotification`, kein Polling; zusätzlich
   Refresh um Mitternacht und nach dem Aufwachen aus dem Ruhezustand, damit „Heute"/
   „Überfällig" auf einem tagelang offenen Fenster nicht veralten
@@ -537,14 +537,14 @@ Reminders.
 |---|---|
 | **Drag & Drop** zwischen Spalten | Spaltenwechsel (siehe Datenmodell). Der Zug ist gegenüber macOS als *Verschieben* deklariert — der Zeiger trägt kein Kopier-Plus (05.09.2026) |
 | **Einfacher Klick** auf eine Karte | öffnet den **Karten-Editor** direkt auf dem Board |
-| **Rechtsklick** | Kontextmenü: Bearbeiten, In Erinnerungen öffnen, Verschieben nach, Umbenennen, Löschen |
+| **Rechtsklick** | Kontextmenü: Bearbeiten, In Erinnerungen öffnen, Verschieben nach, Größe, Umbenennen, Löschen |
 | **„+" im Backlog** | Neues Ticket anlegen und sofort im Karten-Editor öffnen |
 
 ### Karten-Editor (`TicketEditSheet`)
 
 Der Klick öffnet die Karte vergrößert und zentriert über dem abgeblendeten Board — dieselbe
 Karte, näher herangeholt, kein separates Formularfenster. Editierbar: **Titel, Notizen
-(mehrzeilig, Absätze bleiben erhalten), URL-Feld, Liste, Dringlichkeit, Fälligkeit** (mit
+(mehrzeilig, Absätze bleiben erhalten), URL-Feld, Liste, Dringlichkeit, Größe, Fälligkeit** (mit
 oder ohne Uhrzeit — ohne bleibt die Erinnerung ganztägig). Der
 ↗-Knopf springt zur Aufgabe in der Reminders-App, für alles, was der Editor bewusst
 auslässt. Das Notizen-Feld zeigt die Notiz so, wie sie in Reminders steht — seit
@@ -1108,9 +1108,37 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
 
 | Spalte | Karte zeigt |
 |---|---|
-| Als Nächstes, In Bearbeitung | Titel, Prioritätsmarken, Notizen-Auszug (bis 3 Zeilen), Fälligkeits-Badge, Wiederholungs-Icon, Listenname, Verweildauer |
-| Backlog | eine Zeile: Prioritätsmarken, Titel, Wiederholungs-Icon, Fälligkeits-Badge |
+| Als Nächstes, In Bearbeitung | Titel, Prioritätsmarken, Notizen-Auszug (bis 3 Zeilen), Fälligkeits-Badge, Wiederholungs-Icon, Listenname, Verweildauer, Größen-Reiter |
+| Backlog | eine Zeile: Prioritätsmarken, Titel, Fälligkeits-Badge, Größen-Reiter (kein Wiederholungs-Icon seit 30.09.2026) |
 | Erledigt | nur der Titel, durchgestrichen |
+
+- **T-Shirt-Größen (seit 01.10.2026, Herleitung in CONCEPT.md, „T-Shirt-Größen").** Jede
+  Karte kann optional eine Größe **S, M oder L** tragen. Gesetzt wird sie im Karten-Editor
+  (Zeile „Größe" unter „Dringlichkeit": Keine / S / M / L, auch bei schreibgeschützten
+  Listen) oder im Kontextmenü („Größe"); beides ist mit ⌘Z widerrufbar, ein
+  Editor-Schließen bleibt ein Schritt.
+  - **Der Reiter:** 20 × 20 pt, mittig auf der rechten Kartenkante (10 pt auf der Karte,
+    10 pt im Spaltenrand), 9 pt unter der Oberkante — mittig auf dem ersten 38-pt-Band, in
+    der Backlog-Zeile wie in der aufgeklappten Karte. Durchscheinend, Buchstabe 12 pt medium
+    in Primärfarbe. Nur wenn eine Größe gesetzt ist; nicht in Erledigt, nicht im
+    Menüleisten-Panel. Kartenhöhen bleiben 38 und 152 pt. Alle Maße gelten bei
+    Darstellungsgröße Standard und wachsen mit ihr, wie jedes Kartenmaß.
+  - **Abstände:** je 8 pt zum Inhalt der Karte und zur Spaltenwand. Trägt irgendeine Karte
+    des Boards eine Größe, sind Spaltenrand und rechter Karten-Innenrand 18 pt, sonst 12 pt
+    — boardweit, animiert beim Wechsel.
+  - **Bewegung:** Beim Setzen schiebt sich der Reiter aus der Kante, beim Entfernen zurück;
+    beim Wechsel blendet nur der Buchstabe über. Er hebt, kippt und zieht mit der Karte;
+    ein Klick auf ihn öffnet die Karte.
+  - **Ohne Wirkung auf** Sortierung, Filter, Suche und WIP-Limit (das Limit zählt Karten).
+    Ein neues Ticket, das nur eine Größe trägt, gilt als leer und wird verworfen.
+  - **Bedienungshilfen:** VoiceOver nennt „Größe M" und bietet „Größe S/M/L" und „Größe
+    entfernen" als Aktionen. „Transparenz reduzieren" macht den Reiter zu deckendem
+    Kartenpapier mit Kontur, „Kontrast erhöhen" gibt ihm die kräftigere Kontur.
+  - **Speicher:** `<Container>/Library/Application Support/GlassKanban/sizes.json`, im selben
+    Ordner und nach denselben Regeln wie `columns.json` (Karten-ID als Schlüssel, Eintrag für
+    Eintrag gelesen, atomar geschrieben, jeder Eintrag datiert). Eine entfernte Größe bleibt
+    30 Tage als datierter Vermerk; höchstens 1000 Einträge. Die Größe wandert bei
+    Listenwechsel, Löschen und Wiederherstellen mit der Karte. In Reminders steht nichts.
 
 - **Karten ohne Notiz zeigen „Keine Notizen"** statt einer leeren Zone — die
   Notizen-Zone gehört zur Ticket-Anatomie und steht immer, aber ein leerer Streifen
@@ -1295,7 +1323,7 @@ Capture-Schritt. Auch das Englische bleibt damit unter 28 Zeichen und in vier ve
 Satzbauten.
 
 Alle Sätze bleiben unter **~28 Zeichen** und einzeilig (`lineLimit(1)`) — bei minimaler
-Fensterbreite (`columnMinWidth` 280) ist das die Grenze, ab der ein Umbruch den 38-pt-Umriss
+Fensterbreite (`columnMinWidth` 292) ist das die Grenze, ab der ein Umbruch den 38-pt-Umriss
 sprengen würde.
 
 **Wann er erscheint:** Die beiden Spuren, die durch Ziehen gefüllt werden, laden nur ein, wenn

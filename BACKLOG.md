@@ -71,6 +71,7 @@ das, was Apple aus Massentauglichkeit nie bauen wird: Meinungsstärke.
 | Fokus-Filter (s. Fokus-Modi-Integration) | erfüllt | Nutzungsalltag | umkehrbar | M |
 | Tagesrückblick (neu, unten) | erfüllt | Nutzungsalltag | umkehrbar | S |
 | Trennung im Backlog (s. Board-Struktur) | erfüllt | Nutzungsalltag | umkehrbar | S |
+| ~~T-Shirt-Größen~~ | mit Vorbehalt | Nutzungsalltag | umkehrbar | **umgesetzt 01.10.2026** |
 | App Intents (s. Spätere Apple-/Mac-Ausbaustufen) | erfüllt | Nutzungsalltag | gebunden | M |
 
 ### Die ruhige Fläche im Schreibtisch-Setup (09.08.2026)
@@ -144,6 +145,8 @@ hierher gehört.
   Seit 13.08.2026 reserviert die App keinen Hashtag mehr für sich, das frühere Hindernis ist
   weg. Zurückgestellt, weil die Karte reduziert bleiben soll; offen ist die Darstellung bei
   mehreren Tags.
+- ~~**T-Shirt-Größen für Karten**~~ — umgesetzt 01.10.2026, siehe SPEC.md („Karten",
+  „T-Shirt-Größen"); Herleitung und verworfene Formen in CONCEPT.md („T-Shirt-Größen").
 
 ## Filter
 
@@ -384,6 +387,11 @@ nicht möglich)
 
 - ~~**Produktivitäts-Statistiken im Spotify-Wrapped-Stil**~~ — umgesetzt als
   Statistik-Fenster hinter der Flamme, siehe SPEC.md („Motivation").
+- **Durchlaufzeit je Größe** (Idee 01.10.2026) — seit es T-Shirt-Größen gibt, könnte das
+  Statistik-Fenster zeigen, wie lange S, M und L tatsächlich dauern („S ≈ 1 Tag, M ≈ 4 Tage").
+  Erst dieser Rückblick macht eine Schätzung überprüfbar. Offen: Die Stichprobe je Größe
+  ist klein, und die Zahl darf nie als stehende Anklage wirken (gefenstert wie die
+  Durchlaufzeit). Braucht die Größe im `CompletionRecord`.
 - **Teilbare Zusammenfassung** — der ursprüngliche Wrapped-Gedanke enthielt eine Share-Ansicht
   zum Weitergeben. Bewusst nicht mitgebaut: das Fenster ist auf einen Blick ausgelegt, eine
   Export-/Teilen-Darstellung wäre ein eigenes Layout mit eigenen Fragen (was darf ein
@@ -471,6 +479,7 @@ Abweichung gilt der Code.
 |---|---|---|
 | `pulls` (Spalten) | columns.json | geräteweit |
 | `released` (Ablage-Vermerke) | columns.json | geräteweit |
+| Größen samt Entfernungs-Vermerken (umgesetzt 01.10.2026) | sizes.json | geräteweit — `SizeState.merged` steht bereit |
 | `importedLists` | columns.json | geräteweit — die Migration ist Eigenschaft der *Daten* |
 | `wipLimits` | UserDefaults | geräteweit |
 | `foldNotYetDue` | UserDefaults | geräteweit |
