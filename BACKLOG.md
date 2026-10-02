@@ -945,20 +945,16 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
 
 **Offen aus der Abnahme:**
 
-- **Am Bildschirm noch nicht gesehen:** der Platzhalter an der Landeposition während eines
-  echten Zugs und Tab/⇧Tab im Notizfeld mit echter Tastatur. Beide Regeln sind als reine
-  Funktion getestet (`CardSortingTests`, `EditorKeyCommandTests`), die Geste und die Taste
-  nicht — der Rechner war während der Umsetzung in Benutzung.
-- **Platzhalter in einer gerollten Spalte — gebaut, nicht gesehen (02.10.2026):** Betritt
-  ein Zug eine Spalte, rollt sie einmal so, dass der Landeplatz in Sicht ist
-  (`ColumnView`, `ScrollViewReader`). Ohne das stand der Platz in einer aufgeklappten,
-  nach unten gerollten Spalte außerhalb des Sichtfelds. Mit einem echten Zug ansehen:
-  Rollt eine lange Spalte ruhig, und bleibt eine kurze still?
-- **Tablett, Schnellerfassung:** In der zweiten Prüfrunde rutschte der Backlog-Kopf nach
-  einer getippten Erfassung um eine Zeile aus dem Panel und blieb dort (Foto). Über
-  Bedienungshilfen ausgelöst blieb er stehen. Vermutung: Die Rollfläche folgt dem
-  fokussierten Feld, während der Inhalt eine Zeile wächst. Erst mit Tastatur nachstellen,
-  dann beheben — nichts auf Verdacht eingebaut.
+- **Mit echtem Zug und echter Tastatur gesehen (02.10.2026):** der Platzhalter an der
+  Landeposition, auch in einer aufgeklappten, nach unten gerollten Spalte (sie rollt beim
+  Eintritt des Zugs an den Landeplatz), und Tab/⇧Tab im Notizfeld (Notiz → URL, Notiz →
+  Titel, kein Tabzeichen).
+- **Tablett, Schnellerfassung — behoben, die Gegenprobe steht aus:** Wächst der Backlog
+  beim Erfassen um eine Zeile, folgte die Rollfläche dem fokussierten Feld, und der Kopf
+  mit der Zahl blieb über der Panelkante stehen (mit Tastatur nachgestellt). Passt der
+  Inhalt ins Panel, wird die Rollfläche jetzt an den Anfang gesetzt
+  (`MenuBarTrayView.settle`). Der Falz im Tablett läuft danach wie vorher (gemessen). Die
+  Erfassung selbst noch einmal mit Tastatur ansehen: Kopf und neue Zahl müssen stehen.
 - **Prioritätsmarke allein in der ersten Zeile**, wenn das erste Wort des Titels länger
   ist als die Zeile. Ein geschütztes Leerzeichen hält sie nicht (probiert und
   zurückgenommen).
