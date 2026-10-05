@@ -970,16 +970,18 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
   Landeposition, auch in einer aufgeklappten, nach unten gerollten Spalte (sie rollt beim
   Eintritt des Zugs an den Landeplatz), und Tab/⇧Tab im Notizfeld (Notiz → URL, Notiz →
   Titel, kein Tabzeichen).
-- **Tablett, Schnellerfassung — NICHT behoben (Stand 05.10.2026):** Nach einer *getippten*
-  Erfassung, die den Backlog um eine Zeile wachsen lässt, steht das Fenster auf der
-  richtigen Höhe, seine Inhaltsansicht aber eine Zeile höher; der Kopf mit der Zahl liegt
-  über der Panelkante (protokolliert: Fenster 668, Inhalt 694). Ein Falz oder der nächste
-  Größenwechsel heilt es. Über Bedienungshilfen ausgelöst tritt es nicht auf — nur mit
-  Tastatur. Drei Versuche ohne Wirkung: Rollfläche zurücksetzen (entfernt), Höhe erneut
-  an SwiftUI melden (entfernt), `preferredContentSizeDidChange` bei sichtbarem Panel
-  sperren (geblieben, weil es dem eigenen Kommentar entspricht und nichts verschlechtert
-  — die Ursache war es nicht). **Nächster Schritt:** in einer Kopie `setFrameSize` der
-  Container-Ansicht mit Aufrufer protokollieren und sehen, wer 694 setzt; erst dann bauen.
+- ~~**Tablett: Kopf rutscht nach getippter Erfassung aus dem Panel**~~ — behoben und mit
+  echter Tastatur nachgemessen (05.10.2026): Fenster und Inhalt nach einer und nach zwei
+  Erfassungen deckungsgleich (668 / 668, 694 / 694), Kopf an seiner Stelle. Die
+  Inhaltsansicht nimmt jetzt immer die Höhe ihres Fensters (`TrayContainerView.setFrameSize`).
+  Wer ihr die zusätzliche Zeile gab, wurde nie gefunden; drei Versuche an vermuteten
+  Aufrufern hatten nichts bewirkt. SPEC.md („Menüleiste: das Tablett").
+- **Einstellungen auf dem zweiten Monitor:** dort geöffnet, Reiter „Board" vollständig und
+  ohne Rollbalken (559 pt wie auf dem Hauptmonitor). Beide Monitore sind gleich groß, ob
+  die Höhengrenze jetzt am richtigen Bildschirm gemessen wird, lässt sich an diesem
+  Arbeitsplatz nicht unterscheiden.
+- **Fehlermeldung bei verweigertem Schreiben:** Text im Katalog geprüft, am Bildschirm
+  nicht gesehen (der erzwungene Fehler ließ sich im Hintergrund nicht auslösen).
 - **Statistik:** „Jetzt" und „Rückblick" gleich hoch, mit echtem Klick gemessen (beide
   377 pt, 02.10.2026).
 - ~~**Listenfarbe als einziger Träger**~~ — umgesetzt 02.10.2026: unter „Ohne Farbe
