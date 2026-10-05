@@ -669,6 +669,22 @@ private final class TrayGlassController: NSViewController {
     private final class TrayContainerView: NSView {
         var glass: NSView?
         var hosting: NSView?
+
+        /// As tall as its window, whoever asks. This view is the content
+        /// view of a borderless panel; there is no height it may have other
+        /// than the panel's. After a task typed into the capture it was
+        /// nevertheless given one row more than the window (logged
+        /// 02.10.2026: window 668, this view 694 — by whom was never found;
+        /// three attempts at the suspected callers changed nothing). Hung
+        /// from the bottom-left as AppKit hangs it, the extra row pushed the
+        /// Backlog head and its count above the panel's edge. So the rule is
+        /// held here, at the one door every such resize has to come through.
+        override func setFrameSize(_ newSize: NSSize) {
+            var size = newSize
+            if let window { size.height = window.frame.height }
+            super.setFrameSize(size)
+        }
+
         override func layout() {
             super.layout()
             glass?.frame = bounds
