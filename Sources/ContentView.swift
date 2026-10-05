@@ -10,7 +10,10 @@ struct ContentView: View {
             case .granted:
                 BoardView()
             case .denied:
-                AccessDeniedView()
+                ReminderAccessNotice()
+                    .frame(maxWidth: 400)
+                    .padding()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .unknown, .requesting:
                 ProgressView("Accessing Reminders…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -80,25 +83,30 @@ private struct WindowGlass: NSViewRepresentable {
     }
 }
 
-struct AccessDeniedView: View {
+/// The one way this app says it has no access to Reminders — on the board,
+/// in the menu bar panel and in Settings.
+///
+/// Until 05.10.2026 the three said it in three shapes: a lock glyph, 12 pt
+/// of air and 13 pt text on the board; no glyph, 10 pt and 12 pt in the
+/// panel; one bare sentence in Settings, without the way out. One state, one
+/// form — the surface around it only decides how much room it gets. No
+/// glyph: the sentence already says what a lock would.
+struct ReminderAccessNotice: View {
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "lock.circle")
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
+        VStack(spacing: 10) {
             Text("No Access to Reminders")
                 .font(.headline)
             Text("Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders.")
+                .font(BoardText.body)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-                .frame(maxWidth: 400)
+                .fixedSize(horizontal: false, vertical: true)
             Button("Open System Settings") {
                 if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders") {
                     NSWorkspace.shared.open(url)
                 }
             }
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
     }
 }

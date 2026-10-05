@@ -253,24 +253,11 @@ struct MenuBarTrayView: View {
     }
 
     /// Without access the tray would be silently empty on the first launch.
-    /// The same words the board uses, and the one way out it can offer from
-    /// up here.
+    /// The board's own notice, word for word and shape for shape (see
+    /// `ReminderAccessNotice`).
     private var deniedNotice: some View {
-        VStack(spacing: 10) {
-            Text("No Access to Reminders")
-                .font(.headline)
-            Text("Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders.")
-                .font(BoardText.body)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-            Button("Open System Settings") {
-                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders") {
-                    NSWorkspace.shared.open(url)
-                }
-            }
-        }
-        .padding(Board.trayNoticePadding)
-        .frame(maxWidth: .infinity)
+        ReminderAccessNotice()
+            .padding(Board.trayNoticePadding)
     }
 
     /// Hands over to the board: the tray closes first, then the window comes
@@ -335,6 +322,9 @@ struct MenuBarTrayView: View {
 /// under it and the text still in it. Nothing survives the panel closing —
 /// half a sentence that comes back days later is noise, not a draft.
 private struct BacklogCaptureRow: View {
+    /// Told which card a capture made, so the section can keep it in sight.
+    var onCreated: (String) -> Void = { _ in }
+
     @EnvironmentObject private var store: RemindersStore
 
     @State private var isEditing = false
@@ -453,10 +443,12 @@ private struct BacklogCaptureRow: View {
             return
         }
         switch store.createTicket(title: title) {
-        case .created:
-            // No confirmation of its own: the number in the head above jumps
-            // and the field is empty. That is the receipt, and it is where
-            // the eye already is.
+        case .created(let cardID):
+            // No confirmation of its own: the number in the head above jumps,
+            // the field is empty, and the task stands in the row below it
+            // (see `MenuBarTray.pinning`). That is the receipt, and it is
+            // where the eye already is.
+            onCreated(cardID)
             draft = ""
             failure = nil
             isFocused = true
@@ -518,11 +510,26 @@ private struct TraySection: View {
     }
 
     /// At rest, by the board's rules at the panel's caps.
+    /// What was typed into the capture since the panel opened, oldest first.
+    /// Those rows stand directly under the field until the panel closes
+    /// (see `MenuBarTray.pinning`).
+    @State private var captured: [String] = []
+
     private var restingCards: [KanbanCard] {
-        MenuBarTray.restingRows(cards, in: status, foldsNotYetDue: store.foldNotYetDue)
+        MenuBarTray.pinning(
+            captured,
+            onto: MenuBarTray.restingRows(cards, in: status, foldsNotYetDue: store.foldNotYetDue),
+            from: cards)
     }
-    private var shownCards: [KanbanCard] { expanded ? cards : restingCards }
-    private var foldedCards: [KanbanCard] { Array(cards.dropFirst(restingCards.count)) }
+    private var shownCards: [KanbanCard] {
+        expanded ? MenuBarTray.pinning(captured, onto: cards, from: cards) : restingCards
+    }
+    /// Everything the resting rows leave out. Not a tail any more once a
+    /// captured row is pinned, so it is what is missing, not what follows.
+    private var foldedCards: [KanbanCard] {
+        let shown = Set(restingCards.map(\.id))
+        return cards.filter { !shown.contains($0.id) }
+    }
     private var foldedCount: Int { foldedCards.count }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
@@ -546,7 +553,7 @@ private struct TraySection: View {
             // into from another app, whatever the length of the pile below.
             // The count above it is the receipt.
             if status == .backlog {
-                BacklogCaptureRow()
+                BacklogCaptureRow { captured.append($0) }
             }
             rows
             if foldedCount > 0 {
@@ -562,6 +569,7 @@ private struct TraySection: View {
             quiet.disablesAnimations = true
             withTransaction(quiet) {
                 expanded = false
+                captured = []
                 // Also the backstop for a drag that ended nowhere.
                 liftedFrom = nil
             }
@@ -776,6 +784,10 @@ private struct TraySection: View {
                 }
                 .animation(reduceMotion ? nil : Board.capsuleAnimation, value: isOverLimit)
                 .accessibilityValue(countLines.joined(separator: ". "))
+                // No "0" before the first answer, as on the board (see
+                // `ColumnView.isAwaitingFirstAnswer`).
+                .opacity(store.emptiness == .loading ? 0 : 1)
+                .accessibilityHidden(store.emptiness == .loading)
         }
         // A system panel's section head, measured against Wi-Fi on
         // 23.09.2026: 13 pt semibold, secondary, no glyph in front, the

@@ -122,6 +122,9 @@ struct KanbanCard: Identifiable, Equatable {
     var notesPreview: String
     /// Several lines, for the roomier cards in the working lanes.
     var notesExcerpt: String
+    /// The host of the first link in the note, for a note that is nothing
+    /// but links and therefore shows no excerpt (see `titleLinkHost`).
+    var notesLinkHost: String? = nil
     /// Everything about this card that Find should be able to match:
     /// the whole note, not the first three lines the card happens to show,
     /// plus the link. Searching a word that is provably in a reminder and

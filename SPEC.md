@@ -439,6 +439,10 @@ zurück.
 - **„Keine Erinnerungslisten" ist ein eigener Fall.** Gibt es auf dem Mac überhaupt keine
   Liste, führte der Weg bisher in ein Einstellungs-Register, das die schlechte Nachricht
   nur wiederholen konnte; jetzt führt er in die Erinnerungen-App, wo eine Liste entsteht.
+- **Vor der ersten Antwort steht keine Zahl** (05.10.2026). Zwischen erteiltem Zugriff und
+  erstem Abruf standen die vier Köpfe auf „0", „0 / 5", „0 / 3", „0" — ein Board, das
+  meldet, es halte nichts, einen Moment bevor es sich füllt. Die Zähler der Spalten und
+  der Abschnitte im Tablett erscheinen erst mit der ersten Antwort; ihr Platz bleibt.
 - **Leere Spalten laden nicht ein, während gefiltert wird.** „Fertigwerden beginnt hier"
   über einer Spalte, die drei Karten hält, ist eine falsche Aussage über das Board.
 - **Die Wochenzahl erscheint erst nach einer Woche.** Acht Aufgaben am ersten Tag wurden
@@ -998,6 +1002,8 @@ wie auf dem Board. Kein stehendes Zeichen — kein Pfeil, keine Schiene, kein Ve
 | Kontextmenü | „Bearbeiten", „In Erinnerungen öffnen", „Verschieben nach", „Größe", „Umbenennen", „Löschen" | die ersten drei, in derselben Reihenfolge — Größe, Umbenennen und Löschen bleiben dem Board: „Bearbeiten" öffnet das Board mit dem Editor der Karte (dasselbe wie ein Klick auf die Zeile), „In Erinnerungen öffnen" auf **jeder** Zeile, Erledigt eingeschlossen; darunter, nur bei beweglichen Zeilen, „Verschieben nach". Das Panel schließt, bevor Erinnerungen nach vorn kommt |
 | Leere Spur | Umriss mit Satz | nur der Kopf mit „0" — keine Einladung |
 | Erfassen und Kopf | — | Die Inhaltsansicht ist immer so hoch wie das Panel; einziger Schreiber der Höhe bei sichtbarem Panel ist `contentHeightChanged`. Nach einer getippten Erfassung stand der Inhalt eine Zeile höher als das Fenster und der Kopf über der Kante (02.10.2026; Gegenprobe mit Tastatur offen, BACKLOG.md) |
+| Eben erfasst | — | Was in dieser Sitzung des Panels getippt wurde, steht bis zum Schließen direkt unter dem Feld, das Neueste zuerst (05.10.2026). Die Ordnung des Backlogs bleibt unberührt — auf dem Board, und hier beim nächsten Öffnen. Vorher verschwand das Getippte auf einem vollen Backlog sofort hinter dem Falz (`MenuBarTray.pinning`) |
+| Kein Zugriff | Hinweis in der Fenstermitte | derselbe Hinweis, Wort für Wort und in derselben Form (`ReminderAccessNotice`, 05.10.2026); ebenso im Reiter „Listen" der Einstellungen |
 | Keine Quelle | Hinweis in der Board-Mitte: „Keine Liste ausgewählt" / „Keine Erinnerungslisten" mit Weg hinaus | derselbe Hinweis mit demselben Weg statt der vier Abschnitte (02.10.2026) — vier Köpfe mit „0" lasen sich wie ein Board ohne Arbeit |
 | Erledigt-Fenster | 7 Tage, „N ältere anzeigen" holt 30 | in Ruhe die letzten 3 (Bestätigung, keine Liste), die Falz-Zeile öffnet das 7-Tage-Fenster |
 | Backlog | eigene Spur mit Falz-Zeile | **ein Abschnitt wie die anderen, mit der Falz-Zeile des Boards** (12.09.2026): in Ruhe schneidet er wie `BacklogFold` — erst die noch nicht fälligen weg (dieselbe Einstellung „Noch nicht Fälliges einklappen"), dann der Deckel, hier 8 statt 15. Darunter die Zeile des Boards, Wort für Wort: „N noch nicht fällig", „N weitere anzeigen", „Weniger anzeigen". Aufgeklappt alle Karten; das Panel wächst nach unten mit — **eine Bewegung auf der Falz-Kurve des Boards** (`Board.foldAnimation`, 0,35 s ease-in-out — **derselbe Antrieb wie `ColumnView.fold`:** ein `withAnimation` auf dem geteilten Token, die enthüllten Zeilen blenden ein wie die Karten des Boards, ohne Skalierung, und unter „Bewegung reduzieren" springt beides; Wiedererkennung ist der Zweck, 13.09.2026): Die Zeilen gleiten wie die Karten des Boards, und die Unterkante des Panels reist mit ihnen auf derselben Kurve; Oberkante, Seiten und alles über der Falz stehen still (gemessen 13.09.2026, Kopf und Zeilen in jedem Frame an derselben Stelle). Warum das drei Anläufe brauchte, steht in CONCEPT.md („Das Menüleisten-Panel: Messungen") —, kein Abschnitt scrollt in sich; ist der Bildschirm zu kurz, steht das Panel an seiner Unterkante, der aufgeklappte Abschnitt bleibt offen, und das ganze Panel scrollt — ohne sichtbaren Rollbalken, wie ein Menü (13.09.2026) — nur ein zu kurzer Bildschirm begrenzt das Panel, und dann scrollt es als Ganzes. Zustand pro Sitzung wie auf dem Board; das Panel öffnet in Ruhe |
@@ -1231,6 +1237,9 @@ Die Kartendichte richtet sich nach der Spalte — das ist der Fokus-Mechanismus 
   sahen zwei verschiedene Karten gleich aus. Zugangsdaten vor einem „@" und Adressen in
   eckigen Klammern erscheinen nie. Der Host ist reine Anzeige; Umbenennen und
   Editor arbeiten weiter mit dem gespeicherten Titel
+- **Eine Notiz, die nur aus einem Link besteht, zeigt dessen Host** statt „Keine Notizen"
+  (05.10.2026) — dieselbe Regel wie beim Titel; „Keine Notizen" über einer Erinnerung mit
+  Notiz war eine falsche Aussage
 - **Der Fuß der Karte hat Vorrang vor der Notiz** (02.10.2026): Braucht der Titel drei
   Zeilen, kürzt die Notiz zeilenweise auf das, was die feste Höhe lässt. Vorher schob eine
   dreizeilige Notiz unter einem dreizeiligen Titel Fälligkeit und Listenname halb aus der

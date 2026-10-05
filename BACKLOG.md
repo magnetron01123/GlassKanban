@@ -943,6 +943,27 @@ Entschieden und **nicht** geändert: mehrere Einladungen auf einem frischen Boar
 „Design-Anspruch", Spannung benannt). Zurückgezogen, weil schon entschieden: leere Notizzone
 statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Systemformat.
 
+**Zweiter Durchgang (05.10.2026), umgesetzt:**
+
+- ~~**Ein Hinweis für „kein Zugriff"**~~ auf Board, im Tablett und in den Einstellungen — `ReminderAccessNotice`, ohne Schloss-Glyphe.
+- ~~**Kein „0" vor dem ersten Abruf**~~ — die Zähler der Spalten und Abschnitte erscheinen erst mit der ersten Antwort, SPEC.md („Ehrliche Zustände und Belohnungen").
+- ~~**Notiz nur aus einem Link**~~ zeigt den Host statt „Keine Notizen", SPEC.md („Karten-Anzeige").
+- ~~**Eben Erfasstes bleibt im Tablett in Sicht**~~ — bis zum Schließen direkt unter dem Feld, SPEC.md („Menüleiste: das Tablett"); Abwägung in CONCEPT.md.
+- ~~**Ein Polster für Zähler-Kapsel und Datums-Badge**~~ (3 pt), `DesignSystem.swift`.
+
+**Entschieden, bleibt so (05.10.2026, aus den Prinzipien hergeleitet, vom Nutzer bestätigt)
+— nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst öffnet:**
+
+- **Prioritätsmarke allein in der ersten Zeile** bei einem überlangen ersten Wort. Marke
+  und Titel getrennt zu setzen würde die zweite Titelzeile jeder Karte mit Priorität
+  einrücken — die Regel für alle ändern wegen einer Ausnahme (Prinzip 1).
+- **Statistik-Popover lässt Karten durchscheinen.** Es ist Chrome und verhält sich wie
+  das System; Abdunkeln bleibt der hochgehaltenen Karte vorbehalten.
+- **Helles Icon auf hellem Grund.** Am 28.09.2026 mit verworfenen Alternativen
+  entschieden; eine dunklere Platte nähme ihm den Bezug zum Board.
+- **Keine Flamme vor der ersten Erledigung.** Eine Statistik ohne Daten wäre ein
+  Dauer-Badge ohne Inhalt; die Flamme erscheint, wenn es etwas zu zeigen gibt.
+
 **Offen aus der Abnahme:**
 
 - **Mit echtem Zug und echter Tastatur gesehen (02.10.2026):** der Platzhalter an der
@@ -962,9 +983,6 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
   tippen, Return; Kopf und neue Zahl müssen stehen.
 - **Statistik:** „Jetzt" und „Rückblick" gleich hoch, mit echtem Klick gemessen (beide
   377 pt, 02.10.2026).
-- **Prioritätsmarke allein in der ersten Zeile**, wenn das erste Wort des Titels länger
-  ist als die Zeile. Ein geschütztes Leerzeichen hält sie nicht (probiert und
-  zurückgenommen).
 - ~~**Listenfarbe als einziger Träger**~~ — umgesetzt 02.10.2026: unter „Ohne Farbe
   unterscheiden" steht der Listenname in der Zeile, SPEC.md („Architektur").
 - **Entschieden, bleibt so (02.10.2026, Nutzer):** „Heute · 0 Aufgaben" in der Statistik
@@ -972,8 +990,6 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
   Sekundärtexts im Normalzustand (SPEC.md, „Architektur") und die zwei langen Fußtexte
   der Einstellungen. Nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst
   öffnet.
-- **Statistik-Popover über Karten** (Glas lässt Kartentext durchscheinen) und **helles
-  Icon auf hellem Grund** — beobachtet, ohne Vorschlag.
 
 ## Kleiner Rest aus dem Nutzer-Review (10.08.2026)
 

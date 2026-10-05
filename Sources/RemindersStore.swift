@@ -1141,6 +1141,7 @@ final class RemindersStore: ObservableObject {
             titleLinkHost: TextSanitizer.firstLinkHost(reminder.title),
             notesPreview: TextSanitizer.notesPreview(reminder.notes),
             notesExcerpt: TextSanitizer.notesExcerpt(reminder.notes),
+            notesLinkHost: TextSanitizer.firstLinkHost(reminder.notes),
             // The whole note plus the link — what the card shows is a
             // preview, what Find searches is the reminder. Nothing is
             // stripped: the board writes no tags, so every word in there is
@@ -2151,6 +2152,7 @@ final class RemindersStore: ObservableObject {
         if notesChanged {
             cards[index].notesPreview = TextSanitizer.notesPreview(rewrittenNotes)
             cards[index].notesExcerpt = TextSanitizer.notesExcerpt(rewrittenNotes)
+            cards[index].notesLinkHost = TextSanitizer.firstLinkHost(rewrittenNotes)
         }
         if dueChanged { cards[index].dueDate = edited.dueDate }
         if priorityChanged { cards[index].priority = edited.priority }

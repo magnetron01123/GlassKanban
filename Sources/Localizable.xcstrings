@@ -1362,13 +1362,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Glass Kanban benötigt Vollzugriff auf deine Erinnerungen, um das Board anzuzeigen. Erlaube den Zugriff in den Systemeinstellungen unter Datenschutz & Sicherheit → Erinnerungen."
+            "value": "Glass Kanban benötigt Vollzugriff auf deine Erinnerungen, um das Board anzuzeigen. Erlaube den Zugriff in den Systemeinstellungen unter Datenschutz & Sicherheit → Erinnerungen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders."
+            "value": "Glass Kanban needs full access to your reminders to show the board. Allow access in System Settings under Privacy & Security → Reminders."
           }
         }
       }
@@ -2066,23 +2066,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No URL"
-          }
-        }
-      }
-    },
-    "No access to Reminders. Allow it in System Settings under Privacy & Security → Reminders.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kein Zugriff auf Erinnerungen. Erlaube ihn in den Systemeinstellungen unter Datenschutz & Sicherheit → Erinnerungen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No access to Reminders. Allow it in System Settings under Privacy & Security → Reminders."
           }
         }
       }

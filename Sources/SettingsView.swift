@@ -123,8 +123,8 @@ struct ListsSettingsView: View {
                 // longer read. The state decides what is shown, never the
                 // leftovers of the last successful fetch.
                 if store.accessState == .denied {
-                    Text("No access to Reminders. Allow it in System Settings under Privacy & Security → Reminders.")
-                        .foregroundStyle(.secondary)
+                    ReminderAccessNotice()
+                        .padding(.vertical, 6)
                 } else if store.reminderCalendars.isEmpty {
                     Text("No reminder lists found")
                         .foregroundStyle(.secondary)

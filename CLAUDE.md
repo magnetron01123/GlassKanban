@@ -213,7 +213,7 @@ erzeugt — Änderungen **nur** in `project.yml`, nie im `.xcodeproj`.
   1 sauber" — das kann das Skript nicht nachprüfen. Ausnahmen deshalb sparsam und mit
   echtem Grund; ein umformulierter Satz ohne gebeugtes Substantiv ist besser als ein
   Eintrag in der Liste.
-- **Tests** — `Tests/`, 27 Dateien mit rund 435 Tests, benannt nach der Regel
+- **Tests** — `Tests/`, 27 Dateien mit rund 440 Tests, benannt nach der Regel
   statt nach der Datei (z. B. `BacklogFoldTests` liegt in `CardSortingTests.swift`).
   Target heißt `GlassKanbanTests`.
 
