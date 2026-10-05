@@ -16,6 +16,37 @@ enum TextSanitizer {
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// The host of the first link in a title — "example.com" for
+    /// "https://www.example.com/a/b?c". Display only, and only for a title
+    /// that is nothing *but* links: stripped, such a card had no name left
+    /// and two different tickets both read "Ohne Titel" (measured
+    /// 02.10.2026). The host says which one it is without bringing the link
+    /// itself back onto the card.
+    ///
+    /// Kept apart from `displayTitle` on purpose. That value is what rename
+    /// and the optimistic updates compare against; a host slipped in there
+    /// would one day be written back into the reminder as its title.
+    static func firstLinkHost(_ raw: String?) -> String? {
+        guard let raw, let match = raw.firstMatch(of: urlRegex) else { return nil }
+        var link = String(match.output).lowercased()
+        for scheme in ["https://", "http://"] where link.hasPrefix(scheme) {
+            link.removeFirst(scheme.count)
+        }
+        // The authority is everything up to the path. Whatever stands in
+        // front of an "@" is a name or a secret and never reaches the card:
+        // "https://token@github.com/x" was hidden whole while links were
+        // only stripped, and must not come back as "token@github.com".
+        var authority = String(link.prefix { !"/?#".contains($0) })
+        if let at = authority.lastIndex(of: "@") {
+            authority = String(authority[authority.index(after: at)...])
+        }
+        // An address literal ("[::1]") names no place a reader recognises.
+        guard !authority.hasPrefix("[") else { return nil }
+        if authority.hasPrefix("www.") { authority.removeFirst(4) }
+        let host = authority.prefix { $0 != ":" }
+        return host.isEmpty ? nil : String(host)
+    }
+
     /// First non-empty line of the notes after removing URLs and status tags.
     /// The card shows this in a single line; truncation happens in the view.
     static func notesPreview(_ raw: String?) -> String {

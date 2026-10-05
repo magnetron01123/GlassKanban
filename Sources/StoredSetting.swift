@@ -55,6 +55,10 @@ enum StoredSetting: String, CaseIterable {
     /// The last write of `columns.json` that failed, with its reason. Removed
     /// again by the next write that succeeds.
     case columnStorageLastFailure
+    /// The last write to Reminders that EventKit refused, with the error's
+    /// domain and code. The alert shows the app's own sentence; this is where
+    /// the system's answer is kept for whoever has to find out why.
+    case reminderWriteLastFailure
 
     /// The `UserDefaults` key. **A persisted contract**, exactly like
     /// `ColumnState.Lane`'s raw values: renaming one does not migrate a
@@ -122,6 +126,8 @@ enum StoredSetting: String, CaseIterable {
         // else: the other Mac may well have a different answer, and a
         // travelling failure note would accuse the wrong machine.
         case .columnStorageLocation, .columnStorageLastFailure: .thisDevice
+        // A fact about one write on this Mac.
+        case .reminderWriteLastFailure: .thisDevice
         }
     }
 

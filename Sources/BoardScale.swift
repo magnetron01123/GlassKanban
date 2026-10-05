@@ -7,7 +7,7 @@ import SwiftUI
 /// find again, and each one is checked on screen as a whole board — a slider
 /// would promise every size in between without anyone having looked at them.
 ///
-/// Scales the content only: lanes, cards, the opened card. The toolbar, the
+/// Scales the content only: lanes and cards. The opened card, the toolbar, the
 /// menu bar panel, Settings, popovers and tooltips keep their size — they are
 /// used up close, and a menu bar panel is measured against the system's own.
 /// That is why the factor travels as an environment value set on the board

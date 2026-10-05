@@ -510,11 +510,14 @@ Erinnerungen-Knopf (anlegen) — zwei klar getrennte Funktionen, keine Sammlung 
 - *Eigene Filterleiste unter der Toolbar* — dauerhafte Fläche für eine gelegentliche
   Funktion; genau das Gegenteil des Ziels.
 
-**Offener Punkt, den die Suche mit den bestehenden Filtern teilt:** Ist gefiltert, zeigen
-die Spaltenzähler die *sichtbare*, nicht die tatsächliche Menge (mit WIP-Limit also z. B.
-`1 / 3`, obwohl real vier Karten in Bearbeitung sind). Das ist heute schon so und fällt mit
-einer Suche nur häufiger auf. Der eingefärbte Zustand am Finden-Symbol ist die minimale
-Antwort darauf — eine Markierung an einer Stelle statt an jeder Spalte.
+**Spaltenzähler unter einem Filter (02.10.2026, Nutzer):** Bis dahin zeigten alle vier
+Zähler die *sichtbare* Menge — mit WIP-Limit also z. B. `1 / 3`, obwohl real vier Karten
+in Bearbeitung waren —, und der eingefärbte Zustand am Finden-Symbol war die einzige
+Antwort darauf. Entschieden: Eine Spalte **mit Limit** zählt immer die ganze Spalte. Das
+Limit im Zähler ist eine Regel („make policies explicit"), und eine Regel, deren Zahl ein
+Filter verändert, sagt etwas Falsches; der WIP-Dialog zählte ohnehin schon so. Backlog und
+Erledigt tragen keine Regel und nennen weiter das Sichtbare. Verworfen: alle vier immer
+voll zählen (Backlog „40" über zwei Treffern) und so lassen.
 
 ## Motivation (leichtgewichtige Gamification)
 
@@ -691,6 +694,16 @@ Konkrete Prinzipien, abgeleitet aus dieser Stimmung:
   (besonders beim ersten Start, wenn alles im Backlog liegt) und die Aufforderung mehrdeutig
   machen. Backlog und Erledigt schweigen leer ohnehin — „In Bearbeitung" ist die begründete
   Ausnahme, nicht „Als Nächstes" die vergessene.
+  **Abgelöst am 27.07.2026, Spannung benannt am 02.10.2026 (Nutzer):** Seither trägt *jede*
+  leere Spalte ihren Umriss mit einem Satz (SPEC.md, „Leere Spalte") — eine Spalte, die
+  leer gar nichts sagt, las sich als Darstellungsfehler. Auf einem frischen Board, auf dem
+  alles im Backlog liegt, stehen damit drei Sätze nebeneinander; genau das Bild, vor dem
+  der Absatz oben warnt. Abgewogen bei der Design-Abnahme gegen „nur die erste leere
+  Spalte in Flussrichtung spricht" und gegen „Umrisse überall, Satz nur in einer".
+  Entschieden für den Bestand: Im Alltag ist selten mehr als eine Spalte leer, und die
+  vier Sätze sind als Folge gebaut, die den Fluss erklärt. Die Regel heißt seither genauer:
+  **Eine Einladung steht nur im leeren Platz einer Spalte — nie auf einer Karte, nie im
+  Chrome — und nur, wo Nichtstun etwas kostet.**
 - **Beispiel Hover-Tipps:** An Stellen, wo die App bereits eine stille Kanban-Regel *hat*,
   aber nirgends *erklärt* (z. B. ein WIP-Limit, das Pull-Prinzip im Backlog, der Unterschied
   zwischen Zusage-Warteschlange und Ablage), trägt das jeweilige UI-Element einen kurzen
@@ -993,7 +1006,9 @@ einen Rollbalken auf jedem (Nutzer: „mega nervig und überflüssig"). Jeder l�
 Fußtext und jede Übersetzung hätte die Zahl wieder verschoben. Die Regel ist deshalb eine
 Konstruktion, keine Zahl: `ScreenBoundedPane` fragt das Formular im selben
 Layout-Durchgang nach seiner Wunschhöhe und begrenzt sie nur durch den Bildschirm.
-Gemessen danach: 454, 375 und 435 pt Fensterhöhe, kein Rollbalken. Nachträglich zu messen
+Gemessen danach: 454, 375 und 435 pt Fensterhöhe, kein Rollbalken (am 02.10.2026: 454,
+449 und 559 — der Reiter „Listen" hängt an der Zahl der Listen, „Board" wuchs um die
+Darstellungsgröße; die Zahlen sind Messwerte, keine Vorgaben). Nachträglich zu messen
 (nach dem Erscheinen) bleibt ausgeschlossen — das war das Ruckeln vom Juli 2026.
 
 ### Die Darstellungsgröße: das Board wächst, das Werkzeug nicht (28.09.2026)
@@ -1115,11 +1130,36 @@ aus den drei bestehenden ab:
 | Leistung | „Dein Schnitt an aktiven Tagen" | „Du warst an 4 Tagen untätig" |
 | Zahlenzeile | „Dein Limit: 3" | „Dein Limit: 3." |
 | Regel erklärt (10.08.2026) | „Ist eine Spalte voll, fragt das Board vor der nächsten Karte nach. 0 heißt: kein Limit." | „Finish before you stack" — eine Maxime, dazu nur beim Überfahren sichtbar |
-| Verworfene Eingabe (10.08.2026) | „Wird nicht gesichert — eine Adresse hat keine Leerzeichen" | kommentarlos verschwinden lassen, oder „Ungültige URL" (benennt den Nutzer als im Unrecht, nicht die Folge) |
+| Verworfene Eingabe (10.08.2026) | „Wird nicht gespeichert — eine Adresse hat keine Leerzeichen" (bis 02.10.2026 „gesichert"; der Fehlertitel daneben heißt „Nicht gespeichert") | kommentarlos verschwinden lassen, oder „Ungültige URL" (benennt den Nutzer als im Unrecht, nicht die Folge) |
 
 Für VoiceOver-Beschriftungen gilt dasselbe, nur schärfer: Sie werden bei jedem Anlaufen
 erneut vorgelesen und vertragen kein Wort zu viel. Ein Motivationssatz als Beschriftung ist
-derselbe Dauertext, den das Board an anderer Stelle bereits abgeschafft hat.
+derselbe Dauertext, den das Board an anderer Stelle bereits abgeschafft hat. Genau das
+stand bis 02.10.2026 noch im Tooltip und in der VoiceOver-Ansage jedes Spaltenkopfs mit
+Limit („Lieber abschließen als stapeln") — sieben Wochen, nachdem die Einstellungen
+denselben Satz verloren hatten.
+
+**Ein Wort für eine Sache (02.10.2026, Nutzer).** Was man anlegt, löscht und zurückholt,
+heißt **Aufgabe / Task** — so heißt es in Erinnerungen und im Panel. **Karte / Card** ist
+das Objekt auf dem Board: im Spaltenzähler („3 Karten"), in „Karte schließen", in „vor der
+nächsten Karte". „Ticket" ist ein Wort des Codes und steht nirgends in der Oberfläche.
+Vorher hieß dieselbe Handlung im Menü „Neues Ticket", im Panel „Neue Aufgabe" und am „+"
+„Neue Karte anlegen". Verworfen: überall „Karte" (weicht von Erinnerungen ab, wo die
+Aufgabe herkommt).
+
+**Zu Frage 7, klargestellt (02.10.2026):** Merksätze und Statuszeilen stehen ohne Punkt,
+auch wenn sie ein Verb haben — „Fertigwerden beginnt hier", „Weniger gleichzeitig, mehr
+fertig", „Wird nicht gespeichert — …". Der Punkt gehört dem Fließtext: Erklärungen unter
+einem Feld, Meldungstexte aus ganzen Sätzen.
+
+**Meldungen tragen keinen Systemtext (02.10.2026).** `error.localizedDescription` ist
+„The operation couldn’t be completed. (EKErrorDomain error N.)" — Domäne und Nummer, in
+der Systemsprache. Der Titel sagt, was nicht geschah („Nicht umbenannt"), darunter steht
+der eigene Satz: „Erinnerungen hat die Änderung nicht angenommen. Die Aufgabe bleibt, wie
+sie war." Die eine Ursache, die die App selbst kennt, nennt sie: „Diese Liste ist nur
+lesbar. …" — wer das nicht erfährt, versucht es noch einmal. Domäne und Nummer des Fehlers
+gehen nicht verloren; sie stehen als `reminderWriteLastFailure` in den Einstellungen der
+App (`plutil -p` auf die Container-plist), weil das Log dieser App nicht lesbar ist.
 
 **Vorgeschichte, damit sie sich nicht wiederholt (09.08.2026):** Aus einer Marktrecherche
 kam der Vorschlag, alle Texte einem Durchgang „anbieten statt mahnen" zu unterziehen,
@@ -1189,7 +1229,7 @@ Zwei Richtungen als Canvas, beide aus den echten Tokens gebaut (Mulde 14 pt, Pap
   hervorgehoben. Ist das Fenster geschlossen (reiner Menüleisten-Betrieb), ist das
   sogar die *einzige* Einladung — die Regel „höchstens eine" bleibt wörtlich erfüllt.
 - *WIP als Reibung.* Ein Zug über das Limit stellt dieselbe Rückfrage wie auf dem Board
-  (`Über deinem Limit` mit den beiden Knöpfen). Offen ist nur die Form im kleinen
+  („In Bearbeitung: N von M" mit den beiden Knöpfen). Offen ist nur die Form im kleinen
   Element — kein Sheet über einem Popover; eher eine Zeile in der Mulde, die den Zug
   hält, bis geantwortet ist. Nie stilles Zulassen, nie stilles Verbot.
 - *Das Symbol in der Menüleiste ist stumm.* Ein monochromes Template-Glyph — das

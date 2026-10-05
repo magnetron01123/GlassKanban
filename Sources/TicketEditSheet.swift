@@ -43,6 +43,7 @@ struct TicketEditSheet: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var title = ""
     @State private var notes = ""
@@ -86,6 +87,9 @@ struct TicketEditSheet: View {
     /// title on purpose. A ticket the "+" just made opens for *writing*, and
     /// its first missing thing is the name.
     @FocusState private var titleFocused: Bool
+    /// Only so that Tab from the notes has a named place to go (see
+    /// `EditorKeyCommands`).
+    @FocusState private var urlFocused: Bool
 
     /// A card the "+" or ⌘N just made, as opposed to one opened to be read.
     /// Read straight from the store rather than latched in `load()`: the
@@ -166,6 +170,11 @@ struct TicketEditSheet: View {
                 isEnabled: !isDuePopoverPresented,
                 onCommit: onClose,
                 onCancel: cancel,
+                // Named targets, not "the window's next key view": the card
+                // is an overlay in the board's window, and that loop also
+                // holds the toolbar and whatever else the board owns.
+                onFocusNext: { urlFocused = true },
+                onFocusPrevious: { titleFocused = true },
                 // Closing the window is the other route AppKit takes without
                 // SwiftUI running a disappear pass — and unlike quitting, the
                 // app stays alive, so nothing later cleans up. Measured:
@@ -252,7 +261,7 @@ struct TicketEditSheet: View {
                     .accessibilityLabel(isDone ? "Title, done" : "Title")
             }
             .onHover { hovering in
-                withAnimation(Board.hoverAnimation) {
+                withAnimation(reduceMotion ? nil : Board.hoverAnimation) {
                     hoveredField = hovering ? .title : (hoveredField == .title ? nil : hoveredField)
                 }
             }
@@ -332,7 +341,7 @@ struct TicketEditSheet: View {
                 }
                 .editableHint(hoveredField == .notes, scheme: colorScheme)
                 .onHover { hovering in
-                    withAnimation(Board.hoverAnimation) {
+                    withAnimation(reduceMotion ? nil : Board.hoverAnimation) {
                         hoveredField = hovering ? .notes : (hoveredField == .notes ? nil : hoveredField)
                     }
                 }
@@ -358,6 +367,7 @@ struct TicketEditSheet: View {
                 .font(BoardText.editorBody)
                 .textFieldStyle(.plain)
                 .lineLimit(1)
+                .focused($urlFocused)
                 // No autocorrection or capitalisation on an address — the
                 // system would otherwise "fix" a domain into a sentence.
                 .autocorrectionDisabled()
@@ -366,7 +376,7 @@ struct TicketEditSheet: View {
                 }
                 .editableHint(hoveredField == .url, scheme: colorScheme)
                 .onHover { hovering in
-                    withAnimation(Board.hoverAnimation) {
+                    withAnimation(reduceMotion ? nil : Board.hoverAnimation) {
                         hoveredField = hovering ? .url : (hoveredField == .url ? nil : hoveredField)
                     }
                 }
@@ -379,13 +389,13 @@ struct TicketEditSheet: View {
             // card is still allowed, and the field is still editable — this
             // is friction, not a veto.
             if TicketURL.rejects(url) {
-                Text("Not stored — an address has no spaces")
+                Text("Not saved — an address has no spaces")
                     .font(BoardText.editorCaption)
                     .foregroundStyle(.secondary)
                     .transition(.opacity)
             }
         }
-        .animation(Board.hoverAnimation, value: TicketURL.rejects(url))
+        .animation(reduceMotion ? nil : Board.hoverAnimation, value: TicketURL.rejects(url))
         .padding(EdgeInsets(top: 12, leading: Board.openCardInset, bottom: 12, trailing: Board.openCardInset))
     }
 
@@ -501,7 +511,11 @@ struct TicketEditSheet: View {
     /// How far a bordered control insets its own text. Only the uncontrolled
     /// value ("Erfasst") has to add it by hand, so that all four values in
     /// the zone start on one vertical line.
-    private static let controlTextInset: CGFloat = 6
+    ///
+    /// Measured, not assumed: at 6 the date stood 6 px left of the three
+    /// values under it (02.10.2026, 1× screenshot — control edge at 310, its
+    /// text at 323, the bare date at 317).
+    private static let controlTextInset: CGFloat = 12
 
     /// A structural label, not decorative meta — it has to read clearly at a
     /// glance, so it borrows `BoardText.chip`'s semibold weight (this app's
@@ -1046,6 +1060,9 @@ private struct EditorKeyCommands: NSViewRepresentable {
     var isEnabled: Bool
     var onCommit: () -> Void
     var onCancel: () -> Void
+    /// Tab and Shift-Tab out of the notes field.
+    var onFocusNext: () -> Void
+    var onFocusPrevious: () -> Void
     /// Called when the window this view lives in is about to close. The view
     /// is the one place that knows which window that is.
     var onWindowClose: () -> Void
@@ -1065,6 +1082,8 @@ private struct EditorKeyCommands: NSViewRepresentable {
         view.isEnabled = isEnabled
         view.onCommit = onCommit
         view.onCancel = onCancel
+        view.onFocusNext = onFocusNext
+        view.onFocusPrevious = onFocusPrevious
         view.onWindowClose = onWindowClose
     }
 
@@ -1072,6 +1091,8 @@ private struct EditorKeyCommands: NSViewRepresentable {
         var isEnabled = true
         var onCommit: () -> Void = {}
         var onCancel: () -> Void = {}
+        var onFocusNext: () -> Void = {}
+        var onFocusPrevious: () -> Void = {}
         var onWindowClose: () -> Void = {}
         private var monitor: Any?
         private var windowObserver: Any?
@@ -1120,7 +1141,10 @@ private struct EditorKeyCommands: NSViewRepresentable {
             let command = EditorKeyCommand.forKey(
                 code: event.keyCode,
                 holdsCommand: event.modifierFlags.contains(.command),
-                isEditingMultilineText: Self.isEditingMultilineText(in: window))
+                holdsShift: event.modifierFlags.contains(.shift),
+                holdsOption: event.modifierFlags.contains(.option),
+                isEditingMultilineText: Self.isEditingMultilineText(in: window),
+                isComposingText: (window.firstResponder as? NSTextView)?.hasMarkedText() ?? false)
             switch command {
             case .commit:
                 hasAnswered = true
@@ -1129,6 +1153,12 @@ private struct EditorKeyCommands: NSViewRepresentable {
             case .cancel:
                 hasAnswered = true
                 onCancel()
+                return nil
+            case .focusNext:
+                onFocusNext()
+                return nil
+            case .focusPrevious:
+                onFocusPrevious()
                 return nil
             case .passThrough:
                 return event

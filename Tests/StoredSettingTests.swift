@@ -27,6 +27,7 @@ final class StoredSettingTests: XCTestCase {
         XCTAssertEqual(StoredSetting.tagReleaseMemory.key, "tagReleaseMemory")
         XCTAssertEqual(StoredSetting.columnStorageLocation.key, "columnStorageLocation")
         XCTAssertEqual(StoredSetting.columnStorageLastFailure.key, "columnStorageLastFailure")
+        XCTAssertEqual(StoredSetting.reminderWriteLastFailure.key, "reminderWriteLastFailure")
     }
 
     func testKeysAreDistinct() {

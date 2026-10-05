@@ -354,9 +354,9 @@ nicht möglich)
   Pull-Signal) setzt aber eine Bedingung: Die eine Karte muss aus der bestehenden
   Board-Ordnung folgen (oberste nach automatischer Sortierung), nie aus einer neuen
   Auszeichnungs-Logik. Kanban-rein wäre alternativ, dass das Widget bei freiem
-  „In Bearbeitung"-Platz genau die bestehende Einladung zeigt („Frei für die nächste
-  Aufgabe") — dieselbe Regel „höchstens eine Einladung, nur wo Nichtstun etwas kostet",
-  nur an einem zweiten Ort.
+  „In Bearbeitung"-Platz genau die bestehende Einladung zeigt („Fertigwerden beginnt
+  hier") — dieselbe Regel „eine Einladung nur im leeren Platz, nur wo Nichtstun etwas
+  kostet" (CONCEPT.md, „Design-Anspruch"), nur an einem zweiten Ort.
   **Gewicht gestiegen (09.08.2026):** Das Widget ist nicht nur eine Mac-Nebenansicht,
   sondern das einzige technische Mittel, mit dem die App außerhalb ihres Fensters überhaupt
   präsent sein kann — auf dem Mac-Schreibtisch ebenso wie später im StandBy des iPhones
@@ -925,6 +925,55 @@ Gebaut wurde stattdessen eine Meldung, die den Systemzustand benennt (SPEC.md).
   gebaute Bewegung selbst („nur die Unterkante reist"); in Apples Panels wandert der
   Einstellungen-Link beim Aufklappen einer Liste genauso. Nicht wieder vorschlagen, ohne
   dass der Nutzer das Thema selbst öffnet.
+
+## Design-Abnahme vor dem Release (02.10.2026)
+
+Zwei Prüfrunden am gebauten Stand, danach vier Entscheidungen des Nutzers. Umgesetzt:
+
+- ~~**Limit-Spalten zählen unter einem Filter die ganze Spalte**~~ — umgesetzt 02.10.2026, SPEC.md („Was das Board gegen sich selbst absichert"); Abwägung in CONCEPT.md („Finden")
+- ~~**Ablege-Platzhalter an der Landeposition**~~ — umgesetzt 02.10.2026, SPEC.md („Menüleiste: das Tablett", Zeile „Ablegeziel")
+- ~~**Kartenfuß hat Vorrang vor der Notiz**~~, ~~**Host statt „Ohne Titel" bei reinem Link-Titel**~~ — umgesetzt 02.10.2026, SPEC.md („Karten-Anzeige")
+- ~~**Tablett ohne Listenquelle erklärt sich**~~ — umgesetzt 02.10.2026, SPEC.md („Menüleiste: das Tablett")
+- ~~**Kein Appell unter der Folge, kein „Noch 0 Tage bis zum Rekord"**~~ — umgesetzt 02.10.2026, SPEC.md („Ehrliche Zustände und Belohnungen")
+- ~~**Ein Wort: Aufgabe; Coaching-Satz aus Tooltip und VoiceOver; kein Systemtext in Meldungen; Plural bei Limit 1**~~ — umgesetzt 02.10.2026, CONCEPT.md („Ton der Texte")
+- ~~**Tab im Notizfeld geht weiter**~~ — umgesetzt 02.10.2026, SPEC.md („Karten-Editor")
+- ~~**Eine Hover-Dauer, ein Strich für gestrichelte Umrisse, „Erfasst" auf der Kante der Pop-ups, „Kontrast erhöhen" am Zähler und am leeren Platz**~~ — umgesetzt 02.10.2026, `DesignSystem.swift`, SPEC.md („Architektur")
+
+Entschieden und **nicht** geändert: mehrere Einladungen auf einem frischen Board (CONCEPT.md,
+„Design-Anspruch", Spannung benannt). Zurückgezogen, weil schon entschieden: leere Notizzone
+statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Systemformat.
+
+**Offen aus der Abnahme:**
+
+- **Mit echtem Zug und echter Tastatur gesehen (02.10.2026):** der Platzhalter an der
+  Landeposition, auch in einer aufgeklappten, nach unten gerollten Spalte (sie rollt beim
+  Eintritt des Zugs an den Landeplatz), und Tab/⇧Tab im Notizfeld (Notiz → URL, Notiz →
+  Titel, kein Tabzeichen).
+- **Tablett, Schnellerfassung — Ursache gefunden und gesperrt, die Gegenprobe steht aus
+  (02.10.2026):** Nach einer *getippten* Erfassung, die den Backlog um eine Zeile wachsen
+  lässt, stand das Fenster auf der richtigen Höhe, seine Inhaltsansicht aber eine Zeile
+  höher — der Kopf mit der Zahl lag über der Panelkante (protokolliert: Fenster 668,
+  Inhalt 694). Ursache: `preferredContentSizeDidChange` reichte die Größe auch bei
+  sichtbarem Panel weiter, entgegen seinem eigenen Kommentar; jetzt nur noch vor dem
+  ersten Öffnen. Über Bedienungshilfen gemessen laufen Erfassung, beide Falze und erneutes
+  Öffnen danach deckungsgleich (Fenster = Inhalt). **Mit Tastatur noch nicht
+  nachgeprüft** — zwei frühere Versuche (Rollfläche zurücksetzen, Höhe erneut melden)
+  hatten nichts bewirkt und sind wieder entfernt. Probe: im Tablett bei kurzem Backlog
+  tippen, Return; Kopf und neue Zahl müssen stehen.
+- **Statistik:** „Jetzt" und „Rückblick" gleich hoch, mit echtem Klick gemessen (beide
+  377 pt, 02.10.2026).
+- **Prioritätsmarke allein in der ersten Zeile**, wenn das erste Wort des Titels länger
+  ist als die Zeile. Ein geschütztes Leerzeichen hält sie nicht (probiert und
+  zurückgenommen).
+- ~~**Listenfarbe als einziger Träger**~~ — umgesetzt 02.10.2026: unter „Ohne Farbe
+  unterscheiden" steht der Listenname in der Zeile, SPEC.md („Architektur").
+- **Entschieden, bleibt so (02.10.2026, Nutzer):** „Heute · 0 Aufgaben" in der Statistik
+  (ein Stand, kein Vorwurf, und die Zeile hält den Aufbau des Fensters), der Kontrast des
+  Sekundärtexts im Normalzustand (SPEC.md, „Architektur") und die zwei langen Fußtexte
+  der Einstellungen. Nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst
+  öffnet.
+- **Statistik-Popover über Karten** (Glas lässt Kartentext durchscheinen) und **helles
+  Icon auf hellem Grund** — beobachtet, ohne Vorschlag.
 
 ## Kleiner Rest aus dem Nutzer-Review (10.08.2026)
 
