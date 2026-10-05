@@ -943,28 +943,47 @@ Entschieden und **nicht** geändert: mehrere Einladungen auf einem frischen Boar
 „Design-Anspruch", Spannung benannt). Zurückgezogen, weil schon entschieden: leere Notizzone
 statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Systemformat.
 
+**Zweiter Durchgang (05.10.2026), umgesetzt:**
+
+- ~~**Ein Hinweis für „kein Zugriff"**~~ auf Board, im Tablett und in den Einstellungen — `ReminderAccessNotice`, ohne Schloss-Glyphe.
+- ~~**Kein „0" vor dem ersten Abruf**~~ — die Zähler der Spalten und Abschnitte erscheinen erst mit der ersten Antwort, SPEC.md („Ehrliche Zustände und Belohnungen").
+- ~~**Notiz nur aus einem Link**~~ zeigt den Host statt „Keine Notizen", SPEC.md („Karten-Anzeige").
+- ~~**Eben Erfasstes bleibt im Tablett in Sicht**~~ — bis zum Schließen direkt unter dem Feld, SPEC.md („Menüleiste: das Tablett"); Abwägung in CONCEPT.md.
+- ~~**Ein Polster für Zähler-Kapsel und Datums-Badge**~~ (3 pt), `DesignSystem.swift`.
+
+**Entschieden, bleibt so (05.10.2026, aus den Prinzipien hergeleitet, vom Nutzer bestätigt)
+— nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst öffnet:**
+
+- **Prioritätsmarke allein in der ersten Zeile** bei einem überlangen ersten Wort. Marke
+  und Titel getrennt zu setzen würde die zweite Titelzeile jeder Karte mit Priorität
+  einrücken — die Regel für alle ändern wegen einer Ausnahme (Prinzip 1).
+- **Statistik-Popover lässt Karten durchscheinen.** Es ist Chrome und verhält sich wie
+  das System; Abdunkeln bleibt der hochgehaltenen Karte vorbehalten.
+- **Helles Icon auf hellem Grund.** Am 28.09.2026 mit verworfenen Alternativen
+  entschieden; eine dunklere Platte nähme ihm den Bezug zum Board.
+- **Keine Flamme vor der ersten Erledigung.** Eine Statistik ohne Daten wäre ein
+  Dauer-Badge ohne Inhalt; die Flamme erscheint, wenn es etwas zu zeigen gibt.
+
 **Offen aus der Abnahme:**
 
 - **Mit echtem Zug und echter Tastatur gesehen (02.10.2026):** der Platzhalter an der
   Landeposition, auch in einer aufgeklappten, nach unten gerollten Spalte (sie rollt beim
   Eintritt des Zugs an den Landeplatz), und Tab/⇧Tab im Notizfeld (Notiz → URL, Notiz →
   Titel, kein Tabzeichen).
-- **Tablett, Schnellerfassung — Ursache gefunden und gesperrt, die Gegenprobe steht aus
-  (02.10.2026):** Nach einer *getippten* Erfassung, die den Backlog um eine Zeile wachsen
-  lässt, stand das Fenster auf der richtigen Höhe, seine Inhaltsansicht aber eine Zeile
-  höher — der Kopf mit der Zahl lag über der Panelkante (protokolliert: Fenster 668,
-  Inhalt 694). Ursache: `preferredContentSizeDidChange` reichte die Größe auch bei
-  sichtbarem Panel weiter, entgegen seinem eigenen Kommentar; jetzt nur noch vor dem
-  ersten Öffnen. Über Bedienungshilfen gemessen laufen Erfassung, beide Falze und erneutes
-  Öffnen danach deckungsgleich (Fenster = Inhalt). **Mit Tastatur noch nicht
-  nachgeprüft** — zwei frühere Versuche (Rollfläche zurücksetzen, Höhe erneut melden)
-  hatten nichts bewirkt und sind wieder entfernt. Probe: im Tablett bei kurzem Backlog
-  tippen, Return; Kopf und neue Zahl müssen stehen.
+- ~~**Tablett: Kopf rutscht nach getippter Erfassung aus dem Panel**~~ — behoben und mit
+  echter Tastatur nachgemessen (05.10.2026): Fenster und Inhalt nach einer und nach zwei
+  Erfassungen deckungsgleich (668 / 668, 694 / 694), Kopf an seiner Stelle. Die
+  Inhaltsansicht nimmt jetzt immer die Höhe ihres Fensters (`TrayContainerView.setFrameSize`).
+  Wer ihr die zusätzliche Zeile gab, wurde nie gefunden; drei Versuche an vermuteten
+  Aufrufern hatten nichts bewirkt. SPEC.md („Menüleiste: das Tablett").
+- **Einstellungen auf dem zweiten Monitor:** dort geöffnet, Reiter „Board" vollständig und
+  ohne Rollbalken (559 pt wie auf dem Hauptmonitor). Beide Monitore sind gleich groß, ob
+  die Höhengrenze jetzt am richtigen Bildschirm gemessen wird, lässt sich an diesem
+  Arbeitsplatz nicht unterscheiden.
+- **Fehlermeldung bei verweigertem Schreiben:** Text im Katalog geprüft, am Bildschirm
+  nicht gesehen (der erzwungene Fehler ließ sich im Hintergrund nicht auslösen).
 - **Statistik:** „Jetzt" und „Rückblick" gleich hoch, mit echtem Klick gemessen (beide
   377 pt, 02.10.2026).
-- **Prioritätsmarke allein in der ersten Zeile**, wenn das erste Wort des Titels länger
-  ist als die Zeile. Ein geschütztes Leerzeichen hält sie nicht (probiert und
-  zurückgenommen).
 - ~~**Listenfarbe als einziger Träger**~~ — umgesetzt 02.10.2026: unter „Ohne Farbe
   unterscheiden" steht der Listenname in der Zeile, SPEC.md („Architektur").
 - **Entschieden, bleibt so (02.10.2026, Nutzer):** „Heute · 0 Aufgaben" in der Statistik
@@ -972,8 +991,6 @@ statt „Keine Notizen", Menüeinträge für ⌘+/⌘−/⌘0, Fälligkeit im Sy
   Sekundärtexts im Normalzustand (SPEC.md, „Architektur") und die zwei langen Fußtexte
   der Einstellungen. Nicht wieder vorschlagen, ohne dass der Nutzer das Thema selbst
   öffnet.
-- **Statistik-Popover über Karten** (Glas lässt Kartentext durchscheinen) und **helles
-  Icon auf hellem Grund** — beobachtet, ohne Vorschlag.
 
 ## Kleiner Rest aus dem Nutzer-Review (10.08.2026)
 

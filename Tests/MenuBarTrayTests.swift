@@ -171,4 +171,44 @@ final class EmptyLaneInvitationTests: XCTestCase {
             XCTAssertTrue(KanbanStatus.done.invitesWhenEmpty(nextIsEmpty: true, backlogIsEmpty: backlogIsEmpty))
         }
     }
+
+    // MARK: - Captured rows stay in sight
+
+    private func row(_ title: String) -> KanbanCard {
+        KanbanCard(
+            id: title, title: title, notesPreview: "", notesExcerpt: "", dueDate: nil,
+            priority: 0, status: .backlog, listID: "l", listName: "L", listColor: .accentColor,
+            completionDate: nil, isRecurring: false, lastModifiedDate: nil, creationDate: nil)
+    }
+
+    /// What was just typed stands first, although the lane's order puts it
+    /// at the foot of the pile and behind the fold.
+    func testACapturedCardStandsFirst() {
+        let all = ["A", "B", "C", "Neu"].map { row($0) }
+        let resting = Array(all.prefix(2))
+        XCTAssertEqual(
+            MenuBarTray.pinning(["Neu"], onto: resting, from: all).map(\.id), ["Neu", "A", "B"])
+    }
+
+    /// Several captures in one sitting: the newest directly under the field.
+    func testCapturesStandNewestFirst() {
+        let all = ["A", "Eins", "Zwei"].map { row($0) }
+        XCTAssertEqual(
+            MenuBarTray.pinning(["Eins", "Zwei"], onto: [all[0]], from: all).map(\.id),
+            ["Zwei", "Eins", "A"])
+    }
+
+    /// A captured card that is already among the rows is not shown twice.
+    func testAPinnedCardIsNotRepeated() {
+        let all = ["A", "Neu", "B"].map { row($0) }
+        XCTAssertEqual(MenuBarTray.pinning(["Neu"], onto: all, from: all).map(\.id), ["Neu", "A", "B"])
+    }
+
+    /// Pulled, finished or deleted since: no longer in the Backlog, no
+    /// longer pinned — and with nothing captured the rows are untouched.
+    func testACaptureThatLeftTheBacklogIsNotPinned() {
+        let all = ["A", "B"].map { row($0) }
+        XCTAssertEqual(MenuBarTray.pinning(["Weg"], onto: all, from: all).map(\.id), ["A", "B"])
+        XCTAssertEqual(MenuBarTray.pinning([], onto: all, from: all).map(\.id), ["A", "B"])
+    }
 }

@@ -288,6 +288,15 @@ enum Board {
     /// The search field deliberately stays a rounded rect: it is an input
     /// control, not a value, and should not read as one.
     static let chipShape = Capsule()
+    /// The air inside a chip — the lane's count capsule and the card's date
+    /// badge alike. They were 2 pt and 3 pt tall, under the line above that
+    /// says one shape serves every chip; 3 pt is the one the size tab is
+    /// measured against (20 pt, "as tall as the date capsule"). The menu bar
+    /// panel's over-limit count is not a chip: it is head text that takes a
+    /// tint, and keeps its own tighter fit so the head does not change
+    /// height when the limit is passed.
+    static let chipPaddingHorizontal: CGFloat = 7
+    static let chipPaddingVertical: CGFloat = 3
     static let chipFill: Double = 0.7
 
     /// A WIP limit is a statement about *capacity*, not urgency, so it stays

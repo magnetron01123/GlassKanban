@@ -465,8 +465,8 @@ struct ColumnView: View {
                 // then only outlines answered that setting.
                 .foregroundStyle(isOverLimit || contrast == .increased
                     ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                .padding(.horizontal, 7 * scale)
-                .padding(.vertical, 2 * scale)
+                .padding(.horizontal, Board.chipPaddingHorizontal * scale)
+                .padding(.vertical, Board.chipPaddingVertical * scale)
                 .background {
                     if isOverLimit {
                         Board.chipShape.fill(Board.wipLimitTint.opacity(Board.wipCapsuleFill))
@@ -477,6 +477,14 @@ struct ColumnView: View {
                 .animation(reduceMotion ? nil : Board.capsuleAnimation, value: isOverLimit)
                 // The over-limit signal is otherwise colour alone.
                 .accessibilityValue(spokenCount)
+                // Nothing is claimed before the first answer is in — and "0"
+                // is a claim. Between access being granted and the first
+                // fetch the four heads stood at "0", "0 / 5", "0 / 3", "0":
+                // a board announcing it holds nothing, a moment before it
+                // fills. Hidden rather than removed, so the head does not
+                // change shape when the number arrives.
+                .opacity(isAwaitingFirstAnswer ? 0 : 1)
+                .accessibilityHidden(isAwaitingFirstAnswer)
         }
         .padding(EdgeInsets(
             top: 12 * scale, leading: Board.laneMargin(sized: store.usesSizes) * scale,
@@ -489,6 +497,9 @@ struct ColumnView: View {
         .contentShape(Rectangle())
         .boardTooltip(countHelp)
     }
+
+    /// True until the store has heard from EventKit once.
+    private var isAwaitingFirstAnswer: Bool { store.emptiness == .loading }
 
     private var wipLimit: Int? { store.wipLimit(for: status) }
     private var isOverLimit: Bool { wipLimit.map { limitedCount > $0 } ?? false }
@@ -537,7 +548,8 @@ struct ColumnView: View {
     }
 
     private var spokenHeader: String {
-        ([status.displayName, countSummary] + countDetails).joined(separator: ". ")
+        guard !isAwaitingFirstAnswer else { return status.displayName }
+        return ([status.displayName, countSummary] + countDetails).joined(separator: ". ")
     }
 
     /// Every lane opens the same way, so the four read as one family.

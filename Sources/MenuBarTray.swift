@@ -34,6 +34,29 @@ enum MenuBarTray {
         }
     }
 
+    /// The rows of the Backlog with what was just captured standing first.
+    ///
+    /// A task typed into the capture sorts by the lane's own order — undated
+    /// and unprioritised, that is the foot of the pile, which on any real
+    /// Backlog lies behind the fold: the field emptied, a number went up by
+    /// one, and the words just typed were nowhere (measured 02.10.2026, 43
+    /// cards). Until the panel closes, what was captured in this sitting
+    /// stands directly under the field, newest first. The order of the lane
+    /// is untouched — on the board, and here again the next time the panel
+    /// opens. (The tension with "the board shows what the data says" is
+    /// named in CONCEPT.md, "Das Menüleisten-Panel".)
+    ///
+    /// `captured` is in the order typed. A card that has left the Backlog
+    /// since — pulled, finished, deleted — is simply not pinned.
+    static func pinning(
+        _ captured: [String], onto rows: [KanbanCard], from all: [KanbanCard]
+    ) -> [KanbanCard] {
+        let pinned = captured.reversed().compactMap { id in all.first { $0.id == id } }
+        guard !pinned.isEmpty else { return rows }
+        let pinnedIDs = Set(pinned.map(\.id))
+        return pinned + rows.filter { !pinnedIDs.contains($0.id) }
+    }
+
     /// The rows a section shows at rest — the board's own fold rules, at the
     /// panel's caps. The Backlog cuts exactly as `BacklogFold` does
     /// (not-yet-due first, then the cap), so a card resting behind the fold

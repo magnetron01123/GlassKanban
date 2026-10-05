@@ -42,7 +42,6 @@ struct TicketEditSheet: View {
     @EnvironmentObject private var store: RemindersStore
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var contrast
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var title = ""

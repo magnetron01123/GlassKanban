@@ -298,11 +298,8 @@ final class MenuBarTrayController: NSObject {
         naturalHeight = height
         guard let panel, panel.isVisible else { return }
         let target = clamped(height)
-        // Both have to be right, the window and the view inside it. They
-        // parted once (02.10.2026, see `preferredContentSizeDidChange`):
-        // window 668, content view 694. Checking only the content view
-        // then kept it that way — its height matched the next report, and
-        // nothing was ever set again.
+        // Both have to be right, the window and the view inside it (see
+        // `TrayContainerView.setFrameSize` for the day they parted).
         let windowIsOff = abs(panel.frame.height - target) > 0.5
         let contentIsOff = abs(panel.contentView!.frame.height - target) > 0.5
         guard windowIsOff || contentIsOff else { return }
@@ -669,6 +666,23 @@ private final class TrayGlassController: NSViewController {
     private final class TrayContainerView: NSView {
         var glass: NSView?
         var hosting: NSView?
+
+        /// As tall as its window, whoever asks. This view is the content
+        /// view of a borderless panel; there is no height it may have other
+        /// than the panel's. After a task typed into the capture it was
+        /// nevertheless given one row more than the window (logged
+        /// 02.10.2026: window 668, this view 694 — by whom was never found;
+        /// three attempts at the suspected callers changed nothing; with
+        /// this in place a typed capture measures 668 / 668). Hung
+        /// from the bottom-left as AppKit hangs it, the extra row pushed the
+        /// Backlog head and its count above the panel's edge. So the rule is
+        /// held here, at the one door every such resize has to come through.
+        override func setFrameSize(_ newSize: NSSize) {
+            var size = newSize
+            if let window { size.height = window.frame.height }
+            super.setFrameSize(size)
+        }
+
         override func layout() {
             super.layout()
             glass?.frame = bounds
@@ -726,12 +740,7 @@ private final class TrayGlassController: NSViewController {
         // writer of its frame: this hook also setting the size raced the
         // fold to a 131 pt jump at an intermediate value, and held the old
         // height for 0.4 s on the way back (measured 13.09.2026).
-        // "For the first opening only" has to be enforced, not just said.
-        // Passed up while the panel was on screen, AppKit resized the content
-        // view by the change on top of the height `contentHeightChanged` had
-        // just set: window 668, content view 694, the Backlog head 26 pt
-        // above the panel's edge (logged 02.10.2026, after a task typed into
-        // the capture).
+        // "For the first opening only", enforced.
         guard view.window?.isVisible != true else { return }
         preferredContentSize = viewController.preferredContentSize
     }

@@ -14,7 +14,6 @@ struct CardView: View {
     private var density: CardDensity { card.status.cardDensity }
 
     @EnvironmentObject private var store: RemindersStore
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @Environment(\.colorScheme) private var colorScheme
@@ -288,7 +287,13 @@ struct CardView: View {
     @ViewBuilder
     private var notesZone: some View {
         Group {
-            if card.notesExcerpt.isEmpty {
+            if card.notesExcerpt.isEmpty, let host = card.notesLinkHost {
+                // A note that is nothing but a link is not "no notes": the
+                // card said so while the reminder held one. The host stands
+                // for it, as it does for a link-only title.
+                Text(host)
+                    .foregroundStyle(.primary)
+            } else if card.notesExcerpt.isEmpty {
                 Text("No Notes")
                     .foregroundStyle(.secondary)
             } else {

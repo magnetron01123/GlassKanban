@@ -1228,6 +1228,15 @@ Zwei Richtungen als Canvas, beide aus den echten Tokens gebaut (Mulde 14 pt, Pap
   Board — dieselbe eine Einladung, nur an einem zweiten Ort; keine Karte wird
   hervorgehoben. Ist das Fenster geschlossen (reiner Menüleisten-Betrieb), ist das
   sogar die *einzige* Einladung — die Regel „höchstens eine" bleibt wörtlich erfüllt.
+- *Eben Erfasstes bleibt in Sicht (05.10.2026).* **Spannung, benannt:** Das Panel zeigt
+  die Ordnung des Boards, und eine frisch getippte Aufgabe gehört nach dieser Ordnung ans
+  Ende — auf einem vollen Backlog hinter den Falz. Dann leert sich das Feld, eine Zahl
+  steigt um eins, und das Getippte ist nirgends. Kanban („das Board zeigt, was in den
+  Daten steht") gegen Psychologie (Aufmerksamkeit gehört dem Ereignis, das gerade
+  passiert ist). Entschieden für das Ereignis, und nur für seine Dauer: Was in dieser
+  Sitzung erfasst wurde, steht bis zum Schließen unter dem Feld; die Sortierung selbst
+  wird nicht angefasst. Verworfen: neue Aufgaben grundsätzlich oben einsortieren (ändert
+  die FIFO-Regel des Backlogs) und eine eigene Bestätigungszeile (Dauertext).
 - *WIP als Reibung.* Ein Zug über das Limit stellt dieselbe Rückfrage wie auf dem Board
   („In Bearbeitung: N von M" mit den beiden Knöpfen). Offen ist nur die Form im kleinen
   Element — kein Sheet über einem Popover; eher eine Zeile in der Mulde, die den Zug

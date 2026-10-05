@@ -162,8 +162,8 @@ struct CardBadgeView: View {
             .font(BoardText.chip(scale))
             .monospacedDigit()
             .foregroundStyle(foreground)
-            .padding(.horizontal, 7 * scale)
-            .padding(.vertical, 3 * scale)
+            .padding(.horizontal, Board.chipPaddingHorizontal * scale)
+            .padding(.vertical, Board.chipPaddingVertical * scale)
             .background(background, in: Board.chipShape)
     }
 
